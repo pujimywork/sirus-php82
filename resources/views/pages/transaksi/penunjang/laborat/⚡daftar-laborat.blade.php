@@ -448,4 +448,8 @@ new class extends Component {
 
     {{-- Tambah pemeriksaan lab (self-entry, setara fitur tambah radiologi) --}}
     <livewire:pages::transaksi.penunjang.laborat.daftar-laborat-tambah-actions wire:key="lab-tambah-actions" />
+
+    {{-- Sibling cetak etiket identitas pasien (di-trigger via global event dari modal actions) --}}
+    <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-lab" />
+    <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-lab" />
 </div>

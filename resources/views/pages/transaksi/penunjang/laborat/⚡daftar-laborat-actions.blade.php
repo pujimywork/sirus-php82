@@ -31,11 +31,7 @@ new class extends Component {
     public int $sumTotal = 0;
 
     // -- Sub-Tab Menu --
-    public array $EmrMenuLab = [
-        ['ermMenuId' => 'PemeriksaanLab', 'ermMenuName' => 'Pemeriksaan Laboratorium'],
-        ['ermMenuId' => 'PemeriksaanLuar', 'ermMenuName' => 'Pemeriksaan Luar'],
-        ['ermMenuId' => 'Obat', 'ermMenuName' => 'Obat dan Bahan'],
-    ];
+    public array $EmrMenuLab = [['ermMenuId' => 'PemeriksaanLab', 'ermMenuName' => 'Pemeriksaan Laboratorium'], ['ermMenuId' => 'PemeriksaanLuar', 'ermMenuName' => 'Pemeriksaan Luar'], ['ermMenuId' => 'Obat', 'ermMenuName' => 'Obat dan Bahan']];
 
     /* =======================
      | Mount
@@ -87,27 +83,7 @@ new class extends Component {
      * ======================= */
     private function loadHeader(): void
     {
-        $header = DB::table('lbtxn_checkuphdrs as a')
-            ->join('rsmst_pasiens as c', 'a.reg_no', '=', 'c.reg_no')
-            ->leftJoin('rsmst_doctors as f', 'a.dr_id', '=', 'f.dr_id')
-            ->select(
-                'a.checkup_no',
-                DB::raw("to_char(a.checkup_date,'dd/mm/yyyy hh24:mi:ss') as checkup_date"),
-                'a.reg_no',
-                'c.reg_name',
-                'c.sex',
-                DB::raw("to_char(c.birth_date,'dd/mm/yyyy') as birth_date"),
-                'c.address',
-                'a.dr_id',
-                'f.dr_name',
-                'a.emp_id',
-                'a.checkup_status',
-                'a.status_rjri',
-                'a.ref_no',
-                'a.checkup_kesimpulan',
-            )
-            ->where('a.checkup_no', $this->checkupNo)
-            ->first();
+        $header = DB::table('lbtxn_checkuphdrs as a')->join('rsmst_pasiens as c', 'a.reg_no', '=', 'c.reg_no')->leftJoin('rsmst_doctors as f', 'a.dr_id', '=', 'f.dr_id')->select('a.checkup_no', DB::raw("to_char(a.checkup_date,'dd/mm/yyyy hh24:mi:ss') as checkup_date"), 'a.reg_no', 'c.reg_name', 'c.sex', DB::raw("to_char(c.birth_date,'dd/mm/yyyy') as birth_date"), 'c.address', 'a.dr_id', 'f.dr_name', 'a.emp_id', 'a.checkup_status', 'a.status_rjri', 'a.ref_no', 'a.checkup_kesimpulan')->where('a.checkup_no', $this->checkupNo)->first();
 
         $this->headerData = $header ? (array) $header : [];
     }
@@ -121,17 +97,11 @@ new class extends Component {
             return;
         }
 
-        $this->countDtl = (int) DB::table('lbtxn_checkupdtls')
-            ->where('checkup_no', $this->checkupNo)
-            ->count();
+        $this->countDtl = (int) DB::table('lbtxn_checkupdtls')->where('checkup_no', $this->checkupNo)->count();
 
-        $this->countOutDtl = (int) DB::table('lbtxn_checkupoutdtls')
-            ->where('checkup_no', $this->checkupNo)
-            ->count();
+        $this->countOutDtl = (int) DB::table('lbtxn_checkupoutdtls')->where('checkup_no', $this->checkupNo)->count();
 
-        $this->countObat = (int) DB::table('lbtxn_checkupobats')
-            ->where('checkup_no', $this->checkupNo)
-            ->count();
+        $this->countObat = (int) DB::table('lbtxn_checkupobats')->where('checkup_no', $this->checkupNo)->count();
     }
 
     /* =======================
@@ -144,20 +114,13 @@ new class extends Component {
         }
 
         // Total pemeriksaan lab (price dari LBTXN_CHECKUPDTLS)
-        $this->sumPemeriksaan = (int) DB::table('lbtxn_checkupdtls')
-            ->where('checkup_no', $this->checkupNo)
-            ->sum('price');
+        $this->sumPemeriksaan = (int) DB::table('lbtxn_checkupdtls')->where('checkup_no', $this->checkupNo)->sum('price');
 
         // Total pemeriksaan luar (labout_price dari LBTXN_CHECKUPOUTDTLS)
-        $this->sumPemeriksaanLuar = (int) DB::table('lbtxn_checkupoutdtls')
-            ->where('checkup_no', $this->checkupNo)
-            ->sum('labout_price');
+        $this->sumPemeriksaanLuar = (int) DB::table('lbtxn_checkupoutdtls')->where('checkup_no', $this->checkupNo)->sum('labout_price');
 
         // Total obat/bahan (qty * price dari LBTXN_CHECKUPOBATS)
-        $this->sumObat = (int) DB::table('lbtxn_checkupobats')
-            ->where('checkup_no', $this->checkupNo)
-            ->selectRaw('NVL(SUM(NVL(price, 0) * NVL(qty, 0)), 0) as total')
-            ->value('total');
+        $this->sumObat = (int) DB::table('lbtxn_checkupobats')->where('checkup_no', $this->checkupNo)->selectRaw('NVL(SUM(NVL(price, 0) * NVL(qty, 0)), 0) as total')->value('total');
 
         $this->sumTotal = $this->sumPemeriksaan + $this->sumPemeriksaanLuar + $this->sumObat;
     }
@@ -198,10 +161,7 @@ new class extends Component {
 
             try {
                 DB::transaction(function () {
-                    $hdr = DB::table('lbtxn_checkuphdrs')
-                        ->where('checkup_no', $this->checkupNo)
-                        ->lockForUpdate()
-                        ->first();
+                    $hdr = DB::table('lbtxn_checkuphdrs')->where('checkup_no', $this->checkupNo)->lockForUpdate()->first();
 
                     if (!$hdr || $hdr->checkup_status !== 'P') {
                         throw new \RuntimeException('Status sudah berubah, silakan refresh.');
@@ -212,18 +172,11 @@ new class extends Component {
                     $checkupDate = $hdr->checkup_date;
 
                     // Hitung total biaya lab (pemeriksaan + luar + obat)
-                    $totalCheckup = (int) DB::table('lbtxn_checkupdtls')
-                        ->where('checkup_no', $this->checkupNo)
-                        ->sum('price');
+                    $totalCheckup = (int) DB::table('lbtxn_checkupdtls')->where('checkup_no', $this->checkupNo)->sum('price');
 
-                    $totalCheckupOut = (int) DB::table('lbtxn_checkupoutdtls')
-                        ->where('checkup_no', $this->checkupNo)
-                        ->sum('labout_price');
+                    $totalCheckupOut = (int) DB::table('lbtxn_checkupoutdtls')->where('checkup_no', $this->checkupNo)->sum('labout_price');
 
-                    $totalBahanAlat = (int) DB::table('lbtxn_checkupobats')
-                        ->where('checkup_no', $this->checkupNo)
-                        ->selectRaw('NVL(SUM(NVL(price, 0) * NVL(qty, 0)), 0) as total')
-                        ->value('total');
+                    $totalBahanAlat = (int) DB::table('lbtxn_checkupobats')->where('checkup_no', $this->checkupNo)->selectRaw('NVL(SUM(NVL(price, 0) * NVL(qty, 0)), 0) as total')->value('total');
 
                     $totalLabPrice = $totalCheckup + $totalCheckupOut + $totalBahanAlat;
 
@@ -275,9 +228,7 @@ new class extends Component {
                         $updateData['waktu_masuk_pelayanan'] = DB::raw('SYSDATE');
                     }
 
-                    DB::table('lbtxn_checkuphdrs')
-                        ->where('checkup_no', $this->checkupNo)
-                        ->update($updateData);
+                    DB::table('lbtxn_checkuphdrs')->where('checkup_no', $this->checkupNo)->update($updateData);
                 });
 
                 $this->loadHeader();
@@ -308,9 +259,7 @@ new class extends Component {
             }
 
             // Validasi emp_id harus terisi
-            $empId = DB::table('lbtxn_checkuphdrs')
-                ->where('checkup_no', $this->checkupNo)
-                ->value('emp_id');
+            $empId = DB::table('lbtxn_checkuphdrs')->where('checkup_no', $this->checkupNo)->value('emp_id');
 
             if (empty($empId)) {
                 $this->dispatch('toast', type: 'error', message: 'Kolom pemeriksa masih kosong. Pastikan EMP ID sudah diisi di profil user, lalu proses ulang pemeriksaan.');
@@ -319,10 +268,7 @@ new class extends Component {
 
             try {
                 DB::transaction(function () {
-                    $hdr = DB::table('lbtxn_checkuphdrs')
-                        ->where('checkup_no', $this->checkupNo)
-                        ->lockForUpdate()
-                        ->first();
+                    $hdr = DB::table('lbtxn_checkuphdrs')->where('checkup_no', $this->checkupNo)->lockForUpdate()->first();
 
                     if (!$hdr || $hdr->checkup_status !== 'C') {
                         throw new \RuntimeException('Status sudah berubah, silakan refresh.');
@@ -332,9 +278,7 @@ new class extends Component {
 
                     // Set waktu_masuk_pelayanan dari checkup_date jika belum ada
                     if (empty($hdr->waktu_masuk_pelayanan)) {
-                        $updateData['waktu_masuk_pelayanan'] = DB::raw(
-                            "TO_DATE(TO_CHAR(checkup_date,'dd/mm/yyyy hh24:mi:ss'),'dd/mm/yyyy hh24:mi:ss')"
-                        );
+                        $updateData['waktu_masuk_pelayanan'] = DB::raw("TO_DATE(TO_CHAR(checkup_date,'dd/mm/yyyy hh24:mi:ss'),'dd/mm/yyyy hh24:mi:ss')");
                     }
 
                     // Set waktu_selesai_pelayanan
@@ -342,9 +286,7 @@ new class extends Component {
                         $updateData['waktu_selesai_pelayanan'] = DB::raw('SYSDATE');
                     }
 
-                    DB::table('lbtxn_checkuphdrs')
-                        ->where('checkup_no', $this->checkupNo)
-                        ->update($updateData);
+                    DB::table('lbtxn_checkuphdrs')->where('checkup_no', $this->checkupNo)->update($updateData);
                 });
 
                 $this->loadHeader();
@@ -379,7 +321,7 @@ new class extends Component {
     public function batalkanTransaksi(): void
     {
         if (!$this->isAllowedBatal()) {
-            $this->dispatch('toast', type: 'error', message: 'Batal transaksi hanya bisa dilakukan Supervisor Penunjang atau Manager Umum.');
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berhak membatalkan transaksi ini.');
             return;
         }
 
@@ -399,10 +341,7 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
-                $hdr = DB::table('lbtxn_checkuphdrs')
-                    ->where('checkup_no', $this->checkupNo)
-                    ->lockForUpdate()
-                    ->first();
+                $hdr = DB::table('lbtxn_checkuphdrs')->where('checkup_no', $this->checkupNo)->lockForUpdate()->first();
 
                 if (!$hdr) {
                     throw new \RuntimeException('Data tidak ditemukan.');
@@ -473,6 +412,54 @@ new class extends Component {
         }
     }
 
+    /* Batal PENDAFTARAN lab dari status P (Terdaftar) -> F (Dibatalkan).
+       Beda dari batalkanTransaksi() yang rollback H/C -> P: di status P belum ada
+       biaya lab yang di-post ke transaksi induk (RJ/UGD/RI), jadi cukup set F. */
+    public function batalkanPendaftaran(): void
+    {
+        if (!$this->isAllowedBatal()) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berhak membatalkan transaksi ini.');
+            return;
+        }
+
+        $currentStatus = $this->headerData['checkup_status'] ?? '';
+        if ($currentStatus !== 'P') {
+            $this->dispatch('toast', type: 'error', message: 'Hanya pendaftaran berstatus Terdaftar yang bisa dibatalkan di sini.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $hdr = DB::table('lbtxn_checkuphdrs')->where('checkup_no', $this->checkupNo)->lockForUpdate()->first();
+
+                if (!$hdr) {
+                    throw new \RuntimeException('Data tidak ditemukan.');
+                }
+                if ($hdr->checkup_status !== 'P') {
+                    throw new \RuntimeException('Status sudah berubah, silakan refresh.');
+                }
+
+                DB::table('lbtxn_checkuphdrs')
+                    ->where('checkup_no', $this->checkupNo)
+                    ->update([
+                        'checkup_status' => 'F',
+                        'waktu_masuk_pelayanan' => null,
+                        'waktu_selesai_pelayanan' => null,
+                    ]);
+            });
+
+            $this->loadHeader();
+            $this->loadCounts();
+            $this->loadSums();
+            $this->dispatch('refresh-after-lab.saved');
+            $this->dispatch('toast', type: 'success', message: 'Pendaftaran lab dibatalkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membatalkan: ' . $e->getMessage());
+        }
+    }
+
     /* =======================
      | CETAK HASIL LABORATORIUM
      * ======================= */
@@ -483,7 +470,8 @@ new class extends Component {
         }
 
         $header = collect(
-            DB::select("
+            DB::select(
+                "
                 SELECT DISTINCT a.emp_id, a.checkup_no,
                        to_char(checkup_date,'dd/mm/yyyy hh24:mi:ss') AS checkup_date,
                        a.reg_no, reg_name, a.dr_id, dr_name,
@@ -494,7 +482,9 @@ new class extends Component {
                 JOIN rsmst_doctors f ON a.dr_id = f.dr_id
                 LEFT JOIN immst_employers g ON a.emp_id = g.emp_id
                 WHERE a.checkup_no = :cno
-            ", ['cno' => $this->checkupNo]),
+            ",
+                ['cno' => $this->checkupNo],
+            ),
         )->first();
 
         if (!$header) {
@@ -502,7 +492,8 @@ new class extends Component {
             return null;
         }
 
-        $txn = DB::select("
+        $txn = DB::select(
+            "
             SELECT b.clabitem_id, clabitem_desc, clab_desc, app_seq, item_seq,
                    lab_result, unit_desc, unit_convert, item_code,
                    normal_f, normal_m, high_limit_m, high_limit_f,
@@ -518,25 +509,48 @@ new class extends Component {
             WHERE a.checkup_no = :cno
               AND nvl(hidden_status,'N') = 'N'
             ORDER BY app_seq, item_seq, clabitem_desc
-        ", ['cno' => $this->checkupNo]);
+        ",
+            ['cno' => $this->checkupNo],
+        );
 
-        $txnLuar = DB::select("
+        $txnLuar = DB::select(
+            "
             SELECT ('  ' || labout_desc) AS labout_desc, labout_result, labout_normal
             FROM lbtxn_checkuphdrs a
             JOIN lbtxn_checkupoutdtls b ON a.checkup_no = b.checkup_no
             WHERE a.checkup_no = :cno
             ORDER BY labout_dtl, labout_desc
-        ", ['cno' => $this->checkupNo]);
-
-        $pdf = Pdf::loadView(
-            'pages.components.rekam-medis.penunjang.laboratorium-display.laboratorium-display-print',
-            compact('header', 'txn', 'txnLuar')
-        )->setPaper('a4', 'portrait');
-
-        return response()->streamDownload(
-            fn() => print $pdf->output(),
-            'hasil-laboratorium-' . $this->checkupNo . '.pdf'
+        ",
+            ['cno' => $this->checkupNo],
         );
+
+        $pdf = Pdf::loadView('pages.components.rekam-medis.penunjang.laboratorium-display.laboratorium-display-print', compact('header', 'txn', 'txnLuar'))->setPaper('a4', 'portrait');
+
+        return response()->streamDownload(fn() => print $pdf->output(), 'hasil-laboratorium-' . $this->checkupNo . '.pdf');
+    }
+
+    /* Cetak Etiket (download PDF) — trigger sibling <cetak-etiket> page-level
+     via global event. Pakai No. Registrasi pasien yang sedang dibuka. */
+    public function cetakEtiket(): void
+    {
+        $regNo = $this->headerData['reg_no'] ?? '';
+        if (trim($regNo) === '') {
+            $this->dispatch('toast', type: 'error', message: 'Data pasien belum termuat.');
+            return;
+        }
+        $this->dispatch('cetak-etiket.open', regNo: $regNo);
+    }
+
+    /* Auto-Print Etiket (silent) via sirus-print-agent.exe — trigger sibling
+     <cetak-etiket-auto> page-level via global event ke printer "etiket". */
+    public function autoPrintEtiket(): void
+    {
+        $regNo = $this->headerData['reg_no'] ?? '';
+        if (trim($regNo) === '') {
+            $this->dispatch('toast', type: 'error', message: 'Data pasien belum termuat.');
+            return;
+        }
+        $this->dispatch('cetak-etiket-auto.print', regNo: $regNo);
     }
 
     /* =======================
@@ -552,7 +566,7 @@ new class extends Component {
         return $user->hasAnyRole(['Admin', 'Laboratorium']);
     }
 
-    /* Batal transaksi hanya boleh Admin + Supervisor Penunjang + Manager Umum
+    /* Batal transaksi hanya boleh Admin + Supervisor Penunjang
        (operator Lab tidak boleh batal sendiri — escalate ke atasan). */
     private function isAllowedBatal(): bool
     {
@@ -561,7 +575,7 @@ new class extends Component {
             return false;
         }
 
-        return $user->hasAnyRole(['Admin', 'Supervisor Penunjang', 'Manager Umum']);
+        return $user->hasAnyRole(['Admin', 'Supervisor Penunjang']);
     }
 };
 ?>
@@ -569,8 +583,7 @@ new class extends Component {
 <div>
     {{-- Modal Lab Actions --}}
     <x-modal name="lab-actions" size="full" height="full" focusable>
-        <div class="flex flex-col h-full"
-            wire:key="{{ $this->renderKey('lab-actions-modal', [$checkupNo ?: 'empty']) }}">
+        <div class="flex flex-col h-full" wire:key="{{ $this->renderKey('lab-actions-modal', [$checkupNo ?: 'empty']) }}">
 
             {{-- MODAL HEADER --}}
             <div class="relative px-6 py-4 border-b border-hairline dark:border-gray-700">
@@ -604,11 +617,7 @@ new class extends Component {
 
                             {{-- Grid biaya --}}
                             <div class="grid flex-1 grid-cols-3 gap-1.5">
-                                @foreach ([
-                                    ['label' => 'Pemeriksaan', 'value' => $sumPemeriksaan],
-                                    ['label' => 'Pemeriksaan Luar', 'value' => $sumPemeriksaanLuar],
-                                    ['label' => 'Obat dan Bahan', 'value' => $sumObat],
-                                ] as $item)
+                                @foreach ([['label' => 'Pemeriksaan', 'value' => $sumPemeriksaan], ['label' => 'Pemeriksaan Luar', 'value' => $sumPemeriksaanLuar], ['label' => 'Obat dan Bahan', 'value' => $sumObat]] as $item)
                                     <div
                                         class="px-2.5 py-1.5 bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700">
                                         <p class="text-xs text-muted dark:text-gray-400 mb-0.5 truncate">
@@ -627,8 +636,7 @@ new class extends Component {
                                     class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
                                     Total Tagihan
                                 </p>
-                                <p
-                                    class="text-2xl font-bold text-ink dark:text-white tabular-nums whitespace-nowrap">
+                                <p class="text-2xl font-bold text-ink dark:text-white tabular-nums whitespace-nowrap">
                                     Rp {{ number_format($sumTotal) }}
                                 </p>
                             </div>
@@ -640,13 +648,13 @@ new class extends Component {
                         @if (!empty($headerData))
                             @php
                                 $st = $headerData['checkup_status'] ?? '';
-                                $stText = match($st) {
+                                $stText = match ($st) {
                                     'H' => 'Selesai',
                                     'C' => 'Proses',
                                     'P' => 'Terdaftar',
                                     default => '-',
                                 };
-                                $stVariant = match($st) {
+                                $stVariant = match ($st) {
                                     'H' => 'success',
                                     'C' => 'warning',
                                     default => 'gray',
@@ -676,8 +684,7 @@ new class extends Component {
                         {{-- Display Pasien --}}
                         <div>
                             <livewire:pages::transaksi.penunjang.laborat.display-pasien-laborat.display-pasien-laborat
-                                :checkupNo="$checkupNo"
-                                wire:key="display-pasien-laborat-{{ $checkupNo }}" />
+                                :checkupNo="$checkupNo" wire:key="display-pasien-laborat-{{ $checkupNo }}" />
                         </div>
 
                         {{-- SUB-TAB --}}
@@ -690,7 +697,7 @@ new class extends Component {
                                         x-on:click="tab = '{{ $menu['ermMenuId'] }}'">
                                         {{ $menu['ermMenuName'] }}
                                         @php
-                                            $count = match($menu['ermMenuId']) {
+                                            $count = match ($menu['ermMenuId']) {
                                                 'PemeriksaanLab' => $countDtl,
                                                 'PemeriksaanLuar' => $countOutDtl,
                                                 'Obat' => $countObat,
@@ -698,7 +705,8 @@ new class extends Component {
                                             };
                                         @endphp
                                         @if ($count > 0)
-                                            <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-brand-green/20 text-brand-green">{{ $count }}</span>
+                                            <span
+                                                class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-brand-green/20 text-brand-green">{{ $count }}</span>
                                         @endif
                                     </x-tab>
                                 @endforeach
@@ -717,10 +725,8 @@ new class extends Component {
                                         // C = proses (bisa input hasil, tidak bisa tambah/hapus item)
                                         // H = selesai (semua terkunci)
                                     @endphp
-                                    <livewire:pages::transaksi.penunjang.laborat.pemeriksaan-laborat
-                                        :checkupNo="$checkupNo"
-                                        :sex="$headerData['sex'] ?? 'L'"
-                                        :labStatus="$labStatus"
+                                    <livewire:pages::transaksi.penunjang.laborat.pemeriksaan-laborat :checkupNo="$checkupNo"
+                                        :sex="$headerData['sex'] ?? 'L'" :labStatus="$labStatus"
                                         wire:key="tab-pemeriksaan-laborat-{{ $checkupNo }}" />
                                 </div>
 
@@ -730,8 +736,7 @@ new class extends Component {
                                     x-transition:enter-start="opacity-0 translate-y-1"
                                     x-transition:enter-end="opacity-100 translate-y-0">
                                     <livewire:pages::transaksi.penunjang.laborat.pemeriksaan-luar-laborat
-                                        :checkupNo="$checkupNo"
-                                        :labStatus="$labStatus"
+                                        :checkupNo="$checkupNo" :labStatus="$labStatus"
                                         wire:key="tab-pemeriksaan-luar-laborat-{{ $checkupNo }}" />
                                 </div>
 
@@ -740,10 +745,8 @@ new class extends Component {
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
                                     x-transition:enter-end="opacity-100 translate-y-0">
-                                    <livewire:pages::transaksi.penunjang.laborat.obat-laborat
-                                        :checkupNo="$checkupNo"
-                                        :labStatus="$labStatus"
-                                        wire:key="tab-obat-laborat-{{ $checkupNo }}" />
+                                    <livewire:pages::transaksi.penunjang.laborat.obat-laborat :checkupNo="$checkupNo"
+                                        :labStatus="$labStatus" wire:key="tab-obat-laborat-{{ $checkupNo }}" />
                                 </div>
 
                             </div>
@@ -759,11 +762,10 @@ new class extends Component {
 
                     {{-- KESIMPULAN --}}
                     <div class="flex items-center gap-2 flex-1">
-                        <label class="text-sm font-medium text-body dark:text-gray-300 whitespace-nowrap">Kesimpulan:</label>
-                        <x-text-input type="text"
-                            value="{{ $headerData['checkup_kesimpulan'] ?? '' }}"
-                            wire:change="saveKesimpulan($event.target.value)"
-                            class="flex-1 text-sm"
+                        <label
+                            class="text-sm font-medium text-body dark:text-gray-300 whitespace-nowrap">Kesimpulan:</label>
+                        <x-text-input type="text" value="{{ $headerData['checkup_kesimpulan'] ?? '' }}"
+                            wire:change="saveKesimpulan($event.target.value)" class="flex-1 text-sm"
                             placeholder="Masukkan kesimpulan..." />
                     </div>
 
@@ -771,14 +773,12 @@ new class extends Component {
                     <div class="flex items-center gap-2">
                         @php $st = $headerData['checkup_status'] ?? ''; @endphp
 
-                        {{-- Batal (terpisah jauh dari tombol utama) — Admin, Supervisor Penunjang, Manager Umum --}}
+                        {{-- Batal (terpisah jauh dari tombol utama) — Admin, Supervisor Penunjang --}}
                         @if ($st === 'H')
-                            @hasanyrole(['Admin', 'Supervisor Penunjang', 'Manager Umum'])
-                                <x-confirm-button variant="danger" action="batalkanTransaksi()"
-                                    title="Batalkan Transaksi"
+                            @hasanyrole(['Admin', 'Supervisor Penunjang'])
+                                <x-confirm-button variant="danger" action="batalkanTransaksi()" title="Batalkan Transaksi"
                                     message="Apakah anda ingin membatalkan transaksi ini? Data transaksi akan dihapus."
-                                    confirmText="Ya, batalkan" cancelText="Batal"
-                                    class="text-xs">
+                                    confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
@@ -792,29 +792,45 @@ new class extends Component {
 
                         {{-- Tombol utama --}}
                         @if ($st === 'P')
-                            <x-secondary-button type="button" wire:click="updateCheckupStatus('C')"
-                                wire:loading.attr="disabled"
-                                class="text-xs !bg-amber-50 !text-amber-700 !border-amber-300 hover:!bg-amber-100">
-                                <span wire:loading.remove wire:target="updateCheckupStatus('C')">Proses Administrasi</span>
-                                <span wire:loading wire:target="updateCheckupStatus('C')" class="flex items-center gap-1.5">
+                            <x-primary-button type="button" wire:click="updateCheckupStatus('C')"
+                                wire:loading.attr="disabled" class="text-xs">
+                                <span wire:loading.remove wire:target="updateCheckupStatus('C')">Proses
+                                    Administrasi</span>
+                                <span wire:loading wire:target="updateCheckupStatus('C')"
+                                    class="flex items-center gap-1.5">
                                     <x-loading /> Memproses Administrasi...
                                 </span>
-                            </x-secondary-button>
+                            </x-primary-button>
+
+                            {{-- Batal pendaftaran (P -> F) — Admin, Supervisor Penunjang --}}
+                            @hasanyrole(['Admin', 'Supervisor Penunjang'])
+                                <x-confirm-button variant="danger" action="batalkanPendaftaran()"
+                                    title="Batalkan Pendaftaran"
+                                    message="Batalkan pendaftaran laboratorium ini? Status akan menjadi Dibatalkan."
+                                    confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                    Batalkan Pendaftaran
+                                </x-confirm-button>
+                            @endhasanyrole
                         @elseif ($st === 'C')
                             <x-primary-button type="button" wire:click="updateCheckupStatus('H')"
-                                wire:loading.attr="disabled"
-                                class="text-xs">
-                                <span wire:loading.remove wire:target="updateCheckupStatus('H')">Simpan Hasil Laboratorium</span>
-                                <span wire:loading wire:target="updateCheckupStatus('H')" class="flex items-center gap-1.5">
+                                wire:loading.attr="disabled" class="text-xs">
+                                <span wire:loading.remove wire:target="updateCheckupStatus('H')">Simpan Hasil
+                                    Laboratorium</span>
+                                <span wire:loading wire:target="updateCheckupStatus('H')"
+                                    class="flex items-center gap-1.5">
                                     <x-loading /> Menyimpan Hasil...
                                 </span>
                             </x-primary-button>
                         @elseif ($st === 'H')
                             <x-badge variant="success">Sudah Selesai</x-badge>
-                            <x-primary-button type="button" wire:click="cetakHasilLab"
-                                wire:loading.attr="disabled" wire:target="cetakHasilLab"
-                                class="text-xs">
-                                <span wire:loading.remove wire:target="cetakHasilLab" class="flex items-center gap-1.5">
+                            <x-primary-button type="button" wire:click="cetakHasilLab" wire:loading.attr="disabled"
+                                wire:target="cetakHasilLab" class="text-xs">
+                                <span wire:loading.remove wire:target="cetakHasilLab"
+                                    class="flex items-center gap-1.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -825,6 +841,43 @@ new class extends Component {
                                     <x-loading /> Mencetak...
                                 </span>
                             </x-primary-button>
+                        @endif
+
+                        {{-- Cetak Etiket identitas pasien — tampil selama data pasien termuat.
+                             Reuse sibling <cetak-etiket> & <cetak-etiket-auto> via global event. --}}
+                        @if (trim($headerData['reg_no'] ?? '') !== '')
+                            <x-secondary-button type="button" wire:click="cetakEtiket" wire:loading.attr="disabled"
+                                wire:target="cetakEtiket" class="text-xs">
+                                <span wire:loading.remove wire:target="cetakEtiket" class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Etiket
+                                </span>
+                                <span wire:loading wire:target="cetakEtiket" class="flex items-center gap-1">
+                                    <x-loading /> Mencetak...
+                                </span>
+                            </x-secondary-button>
+
+                            {{-- Print Etiket via sirus-print-agent (silent, langsung ke printer "etiket") --}}
+                            <x-secondary-button type="button" wire:click="autoPrintEtiket"
+                                wire:loading.attr="disabled" wire:target="autoPrintEtiket" class="text-xs"
+                                title="Cetak langsung (silent) via local print agent ke printer 'etiket'">
+                                <span wire:loading.remove wire:target="autoPrintEtiket"
+                                    class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                    </svg>
+                                    Print Etiket
+                                </span>
+                                <span wire:loading wire:target="autoPrintEtiket" class="flex items-center gap-1">
+                                    <x-loading /> Mencetak...
+                                </span>
+                            </x-secondary-button>
                         @endif
 
                         <x-secondary-button type="button" wire:click="closeActions">
