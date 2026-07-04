@@ -95,7 +95,7 @@ new class extends Component {
 
     /* =======================
      | STATUS TRANSAKSI INDUK — kunci tombol batal bila induk sudah pulang/
-     | ditutup (RJ/UGD: L, RI: P), dibatalkan (F), atau transfer ke RI (I).
+     | ditutup (RJ/UGD: L, RI: P), dibatalkan (F), atau transfer (I: RJ→UGD, UGD→RI).
      | Dipakai untuk men-disable tombol (UX), guard sesungguhnya tetap di method batal.
      * ======================= */
     private function evaluasiIndukTerkunci(): void
@@ -114,7 +114,7 @@ new class extends Component {
             $this->indukTerkunciAlasan = match ($s) {
                 'L' => 'Tidak bisa dibatalkan — transaksi RJ sudah ditutup/pulang.',
                 'F' => 'Tidak bisa dibatalkan — transaksi RJ sudah dibatalkan.',
-                'I' => 'Tidak bisa dibatalkan — transaksi RJ ditransfer ke rawat inap.',
+                'I' => 'Tidak bisa dibatalkan — transaksi RJ sudah ditransfer ke UGD.',
                 default => '',
             };
         } elseif ($statusRjri === 'UGD') {
@@ -396,7 +396,7 @@ new class extends Component {
                         throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ sudah dibatalkan.');
                     }
                     if ($rjStatus === 'I') {
-                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ ditransfer ke rawat inap.');
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ ditransfer ke UGD.');
                     }
                     // Hapus biaya lab dari RJ
                     DB::table('rstxn_rjlabs')->where('checkup_no', $this->checkupNo)->delete();
@@ -485,7 +485,7 @@ new class extends Component {
                         throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ sudah dibatalkan.');
                     }
                     if ($rjStatus === 'I') {
-                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ ditransfer ke rawat inap.');
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ ditransfer ke UGD.');
                     }
                 } elseif ($statusRjri === 'UGD' && $refNo) {
                     $ugdStatus = DB::table('rstxn_ugdhdrs')->where('rj_no', $refNo)->value('rj_status');
