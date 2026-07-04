@@ -16,6 +16,7 @@ Lokasi utama: `resources/views/pages/transaksi/penunjang/radiologi/`. Semua Volt
 | `⚡upload-radiologi-foto-actions.blade.php` | Modal **upload Foto** (`rad-upload-foto`). Listen `radiologi.foto.open`. |
 | `⚡upload-radiologi-bacaan-actions.blade.php` | Modal **Hasil Bacaan** — upload PDF (`rad-upload-pdf`) + Generate PDF dari TinyMCE (`rad-generate`). Listen `radiologi.bacaan.upload.open` / `radiologi.bacaan.generate.open`. |
 | `⚡upload-radiologi-tambah-actions.blade.php` | Modal **Tambah order** (`rad-tambah`) — pola **keranjang** seperti lab: toggle sumber in-modal + pilih pasien aktif + grid multi-item `rsmst_radiologis` (tarif editable per item). Listen `radiologi.tambah.open`. |
+| `⚡upload-radiologi-view-actions.blade.php` | Modal **viewer file** (`view-radiologi-pdf`) — baca foto/hasil di iframe (pola `radiologi-display` RM), bukan tab baru. Generik: terima `file`+`title`. Foto & Hasil Bacaan dilihat **sendiri-sendiri** (tombol Lihat masing-masing). Listen `radiologi.view.open`. |
 
 **Ordering pemeriksaan** dilakukan dari **EMR** (bukan folder penunjang):
 - RJ: `transaksi/rj/emr-rj/pemeriksaan/penunjang/radiologi/rm-radiologi-rj-actions.blade.php` (+ `rm-daftar-radiologi-rj.blade.php`)

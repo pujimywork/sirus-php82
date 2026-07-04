@@ -688,7 +688,8 @@ new class extends Component {
                                             <x-input-label value="Foto" class="mb-1.5 text-xs" />
                                             <div class="flex flex-wrap items-center gap-1">
                                             @if ($isFotoOk)
-                                                <a href="{{ $fotoUrl }}" target="_blank"
+                                                <button type="button"
+                                                    wire:click="$dispatch('radiologi.view.open', { file: '{{ addslashes($row->rad_upload_pdf_foto) }}', title: 'Foto Radiologi — {{ addslashes($row->rad_desc) }}' })"
                                                     class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -699,7 +700,7 @@ new class extends Component {
                                                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                     </svg>
                                                     Lihat
-                                                </a>
+                                                </button>
                                                 <x-secondary-button type="button"
                                                     wire:click="$dispatch('radiologi.foto.open', { source: '{{ $row->src }}', dtlNo: {{ $row->dtl_no }}, refNo: {{ $row->ref_no }} })"
                                                     class="px-3 py-1.5 text-sm">
@@ -736,7 +737,8 @@ new class extends Component {
                                             <x-input-label value="Hasil Bacaan" class="mb-1.5 text-xs" />
                                             <div class="flex flex-wrap items-center gap-1">
                                             @if ($isHasilOk)
-                                                <a href="{{ $hasilUrl }}" target="_blank"
+                                                <button type="button"
+                                                    wire:click="$dispatch('radiologi.view.open', { file: '{{ addslashes($row->rad_upload_pdf) }}', title: 'Hasil Radiologi — {{ addslashes($row->rad_desc) }}' })"
                                                     class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -747,7 +749,7 @@ new class extends Component {
                                                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                     </svg>
                                                     Lihat
-                                                </a>
+                                                </button>
                                             @endif
                                             @if ($isHasilOk || !empty($row->hasil_bacaan))
                                                 {{-- Sudah ada hasil (PDF terupload / bacaan tergenerate) → secondary, pembeda dari yg belum (ala Replace di Foto) --}}
@@ -840,6 +842,10 @@ new class extends Component {
                 wire:key="upload-radiologi-bacaan-actions" />
             <livewire:pages::transaksi.penunjang.radiologi.upload-radiologi-tambah-actions
                 wire:key="upload-radiologi-tambah-actions" />
+
+            {{-- Sibling: viewer file foto/hasil di dalam modal (listen radiologi.view.open) --}}
+            <livewire:pages::transaksi.penunjang.radiologi.upload-radiologi-view-actions
+                wire:key="upload-radiologi-view-actions" />
 
         </div> {{-- /.px-6 pt-2 pb-6 (inner) --}}
     </div> {{-- /.w-full min-h (outer) --}}
