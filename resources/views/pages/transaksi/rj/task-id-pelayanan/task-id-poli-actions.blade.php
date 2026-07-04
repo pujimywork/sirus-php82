@@ -1,31 +1,48 @@
 <?php
 
 use Livewire\Component;
-use Livewire\Attributes\Reactive;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\BPJS\AntrianTrait;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 
 /**
- * Aksi Task ID tahap POLI RJ (TaskId4 Masuk Poli, TaskId5 Panggil Antrian,
- * Get TaskId Antrean dari BPJS) dalam SATU komponen per baris — padanan tahap apotek
- * di task-id-apotek-actions (TaskId6/7).
+ * KOMPONEN AKSI Task ID tahap POLI RJ (TaskId4 Masuk Poli, TaskId5 Panggil
+ * Antrian, Get TaskId Antrean dari BPJS) — berisi SEMUA fungsi/logika.
  *
- * Sebelumnya 3 komponen Livewire terpisah di-mount per baris di pelayanan-rj →
- * 3× jumlah komponen di list (pemicu payload berat / TooManyComponents). Digabung
- * jadi 1 komponen/baris: logika tiap aksi tetap identik, spinner per-tombol tetap
- * terisolasi via wire:target masing-masing method. Hanya dipakai di pelayanan-rj.
+ * Arsitektur "cetak-pattern": komponen ini di-mount SEKALI sebagai sibling di
+ * pelayanan-rj (bukan per baris). Tombol tiap baris ada di pelayanan-rj dan
+ * memicu komponen ini via wire:click="$dispatch('task-id-poli-proses', {...})"
+ * (aksi Livewire, bukan Alpine).
+ *
+ * Sebelumnya komponen ini di-mount per baris dengan prop #[Reactive]. Saat list
+ * re-render pasca 'refresh-after-rj.saved', SEMUA child reactive (s/d 100 baris)
+ * ikut di-sync satu batch → TooManyComponents (100 baris + list = 101). Dengan
+ * mount sekali, batch pasca-simpan tak lagi skala jumlah baris.
  */
 new class extends Component {
     use EmrRJTrait, AntrianTrait;
 
     public ?int $rjNo = null;
-    // #[Reactive] → tombol ikut redup saat parent re-render (refresh-after-rj.saved), tanpa remount.
-    #[Reactive]
-    public bool $isDone4 = false;
-    #[Reactive]
-    public bool $isDone5 = false;
+
+    /* ===============================
+     | ROUTER — dipicu tombol baris via wire:click $dispatch
+     |
+     | Detail event: { rjNo, aksi } dengan aksi ∈ {'4','5','antrean'}.
+     =============================== */
+    #[On('task-id-poli-proses')]
+    public function proses(int $rjNo, string $aksi): void
+    {
+        $this->rjNo = $rjNo;
+
+        match ($aksi) {
+            '4'       => $this->prosesTaskId4(),
+            '5'       => $this->prosesTaskId5(),
+            'antrean' => $this->prosesTaskidAntrean(),
+            default   => null,
+        };
+    }
 
     /* ===============================
      | PROSES TASK ID 4 (Masuk Poli)
@@ -287,25 +304,13 @@ new class extends Component {
 };
 ?>
 
-<div class="flex space-x-1">
-    {{-- TaskId4 (Masuk Poli) --}}
-    <x-info-button wire:click="prosesTaskId4" wire:loading.attr="disabled" wire:target="prosesTaskId4"
-        class="!px-4 !py-2 text-sm {{ $isDone4 ? '!opacity-60' : '' }}" title="{{ $isDone4 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId4 (Masuk Poli)' }}">
-        <span wire:loading.remove wire:target="prosesTaskId4">TaskId4</span>
-        <span wire:loading wire:target="prosesTaskId4"><x-loading /></span>
-    </x-info-button>
-
-    {{-- TaskId5 (Panggil Antrian) --}}
-    <x-warning-button wire:click="prosesTaskId5" wire:loading.attr="disabled" wire:target="prosesTaskId5"
-        class="!px-4 !py-2 text-sm {{ $isDone5 ? '!opacity-60' : '' }}" title="{{ $isDone5 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId5 (Panggil Antrian)' }}">
-        <span wire:loading.remove wire:target="prosesTaskId5">TaskId5</span>
-        <span wire:loading wire:target="prosesTaskId5"><x-loading /></span>
-    </x-warning-button>
-
-    {{-- Get TaskId Antrean (dari BPJS) --}}
-    <x-primary-button wire:click="prosesTaskidAntrean" wire:loading.attr="disabled" wire:target="prosesTaskidAntrean"
-        class="!px-4 !py-2 text-sm" title="Klik untuk mengambil TaskId Antrean dari BPJS">
-        <span wire:loading.remove wire:target="prosesTaskidAntrean">TaskId Antrean</span>
-        <span wire:loading wire:target="prosesTaskidAntrean"><x-loading /></span>
-    </x-primary-button>
+{{-- Indikator proses global (host tak punya tombol sendiri — tombol ada di baris pelayanan).
+     Muncul saat salah satu aksi Task ID sedang diproses. --}}
+<div wire:key="task-id-poli-actions-host">
+    <div wire:loading wire:target="proses, prosesTaskId4, prosesTaskId5, prosesTaskidAntrean"
+        class="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 text-sm font-medium
+               text-white bg-blue-600 rounded-xl shadow-lg dark:bg-blue-500">
+        <x-loading />
+        Memproses Task ID…
+    </div>
 </div>
