@@ -5,9 +5,14 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Txn\Rj\EmrRJTrait;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
+use App\Http\Traits\Txn\Ri\EmrRITrait;
 
 new class extends Component {
     use WithRenderVersioningTrait;
+    // EMR traits dipakai untuk appendAdminLog{RJ,UGD,RI} + lock{RJ,UGD,RI}Row (audit log ke transaksi induk).
+    use EmrRJTrait, EmrUGDTrait, EmrRITrait;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['lab-actions-modal'];
@@ -131,6 +136,28 @@ new class extends Component {
         }
 
         $this->indukTerkunci = $this->indukTerkunciAlasan !== '';
+    }
+
+    /* Audit log terpadu — tulis ke userLogs transaksi induk (RJ/UGD/RI) sesuai
+       status_rjri. Panggil DI DALAM DB::transaction (lock parent dulu). Kategori MR
+       (aksi domain lab/penunjang). Diam bila induk tak diketahui. */
+    private function logKeParent(string $statusRjri, $refNo, string $keterangan): void
+    {
+        if (empty($refNo)) {
+            return;
+        }
+        $ref = (int) $refNo;
+
+        if ($statusRjri === 'RJ') {
+            $this->lockRJRow($ref);
+            $this->appendAdminLogRJ($ref, $keterangan, 'MR');
+        } elseif ($statusRjri === 'UGD') {
+            $this->lockUGDRow($ref);
+            $this->appendAdminLogUGD($ref, $keterangan, 'MR');
+        } elseif ($statusRjri === 'RI') {
+            $this->lockRIRow($ref);
+            $this->appendAdminLogRI($ref, $keterangan, 'MR');
+        }
     }
 
     /* =======================
@@ -430,6 +457,8 @@ new class extends Component {
                         'waktu_masuk_pelayanan' => null,
                         'waktu_selesai_pelayanan' => null,
                     ]);
+
+                $this->logKeParent($statusRjri, $refNo, 'Batal Transaksi Lab (checkup ' . $this->checkupNo . ')');
             });
 
             $this->loadHeader();
@@ -512,6 +541,8 @@ new class extends Component {
                         'waktu_masuk_pelayanan' => null,
                         'waktu_selesai_pelayanan' => null,
                     ]);
+
+                $this->logKeParent($statusRjri, $refNo, 'Batal Pendaftaran Lab (checkup ' . $this->checkupNo . ')');
             });
 
             $this->loadHeader();
