@@ -426,6 +426,40 @@ new class extends Component {
                     throw new \RuntimeException('Status sudah berubah, silakan refresh.');
                 }
 
+                $statusRjri = strtoupper($hdr->status_rjri ?? '');
+                $refNo = $hdr->ref_no;
+
+                // Cek status transaksi induk (RJ/UGD/RI) — tidak boleh batal bila induk
+                // sudah pulang/ditutup (L / RI:P), dibatalkan (F), atau transfer ke RI (I).
+                if ($statusRjri === 'RJ' && $refNo) {
+                    $rjStatus = DB::table('rstxn_rjhdrs')->where('rj_no', $refNo)->value('rj_status');
+                    if ($rjStatus === 'L') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ sudah ditutup.');
+                    }
+                    if ($rjStatus === 'F') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ sudah dibatalkan.');
+                    }
+                    if ($rjStatus === 'I') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ ditransfer ke rawat inap.');
+                    }
+                } elseif ($statusRjri === 'UGD' && $refNo) {
+                    $ugdStatus = DB::table('rstxn_ugdhdrs')->where('rj_no', $refNo)->value('rj_status');
+                    if ($ugdStatus === 'L') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi UGD sudah ditutup.');
+                    }
+                    if ($ugdStatus === 'F') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi UGD sudah dibatalkan.');
+                    }
+                    if ($ugdStatus === 'I') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi UGD ditransfer ke rawat inap.');
+                    }
+                } elseif ($statusRjri === 'RI' && $refNo) {
+                    $riStatus = DB::table('rstxn_rihdrs')->where('rihdr_no', $refNo)->value('ri_status');
+                    if ($riStatus === 'P') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RI sudah ditutup.');
+                    }
+                }
+
                 DB::table('lbtxn_checkuphdrs')
                     ->where('checkup_no', $this->checkupNo)
                     ->update([
