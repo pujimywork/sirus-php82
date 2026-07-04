@@ -12,7 +12,7 @@ Modul lab berdiri sendiri untuk petugas lab (bukan lab di dalam EMR). Lokasi:
 | `⚡daftar-laborat-tambah-actions.blade.php` | Modal tambah order lab (self-entry). |
 | `pemeriksaan-laborat.blade.php` | Tab "Pemeriksaan Laboratorium" — tabel item + input hasil + **Kesimpulan**. |
 | `pemeriksaan-luar-laborat.blade.php`, `obat-laborat.blade.php` | Tab pemeriksaan luar & obat/bahan. |
-| `display-pasien-laborat/` | Display antrian (layar tunggu). |
+| `display-pasien-laborat/` | Header identitas pasien di modal (via `MasterPasienTrait`, tema disamakan dgn display RJ/RI/UGD: card unified + 📍📞🆔 no telp/NIK/BPJS). |
 | `lab-luar/⚡lab-luar.blade.php` | Lab rujukan luar. |
 
 Cetak/hasil dipakai dari `resources/views/pages/components/rekam-medis/penunjang/laboratorium-display/`
