@@ -81,7 +81,10 @@ new class extends Component {
     {
         $searchKeyword = trim($this->searchKeyword);
 
-        $query = DB::table('users as u')->select('u.id', 'u.myuser_code', 'u.myuser_name', 'u.email', 'u.myuser_sip', 'u.myuser_profesi', 'u.myuser_ttd_image', 'u.emp_id', 'u.active_status', DB::raw("TO_CHAR(u.created_at, 'dd/mm/yyyy HH24:MI:SS') as created_at"))->orderBy('u.myuser_name', 'asc');
+        $query = DB::table('users as u')
+            ->leftJoin('immst_employers as e', 'u.emp_id', '=', 'e.emp_id')
+            ->select('u.id', 'u.myuser_code', 'u.myuser_name', 'u.email', 'u.myuser_sip', 'u.myuser_profesi', 'u.myuser_ttd_image', 'u.emp_id', 'e.emp_name', 'u.active_status', DB::raw("TO_CHAR(u.created_at, 'dd/mm/yyyy HH24:MI:SS') as created_at"))
+            ->orderBy('u.myuser_name', 'asc');
 
         if ($this->filterRole !== '') {
             $query->whereIn('u.id', function ($sub) {
@@ -325,65 +328,82 @@ new class extends Component {
             <div
                 class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-muted bg-surface-card dark:bg-gray-800 dark:text-gray-200">
-                            <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">Nama & Kode</th>
-                                <th class="px-4 py-3 font-semibold">Email</th>
-                                <th class="px-4 py-3 font-semibold">EMP ID</th>
-                                <th class="px-4 py-3 font-semibold">TTD</th>
-                                <th class="px-4 py-3 font-semibold">Role</th>
-                                <th class="px-4 py-3 font-semibold">Profesi</th>
-                                <th class="px-4 py-3 font-semibold">Status</th>
-                                <th class="px-4 py-3 font-semibold">Dibuat</th>
-                                <th class="px-4 py-3 font-semibold">Aksi</th>
+                    <table class="w-full min-w-full text-sm border-separate border-spacing-y-3 -mt-3 table-fixed">
+                        <thead
+                            class="sticky top-0 z-10 text-muted bg-surface-card dark:bg-gray-800 dark:text-gray-200 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
+                            <tr class="text-left text-xs font-semibold tracking-wide uppercase">
+                                <th class="px-5 py-3 w-[30%]">User</th>
+                                <th class="px-5 py-3 w-[30%]">Setup</th>
+                                <th class="px-5 py-3 w-[14%]">Role</th>
+                                <th class="px-5 py-3 w-[26%]">Aksi & Status</th>
                             </tr>
                         </thead>
-                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body dark:text-gray-200">
                             @forelse($this->rows as $row)
                                 @php
                                     $allRoles = $this->allRoles;
                                     $userRoles = $row->role_list ?? [];
+                                    $isAktif = (string) ($row->active_status ?? '1') === '1';
                                 @endphp
                                 <tr wire:key="user-row-{{ $row->id }}"
-                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
+                                    class="transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
+                                    {{ $isAktif
+                                        ? 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800'
+                                        : 'bg-error/5 dark:bg-red-900/10 hover:bg-error/10 dark:hover:bg-red-900/20 border-l-4 border-error' }}">
 
-                                    <td class="px-4 py-3">
-                                        <div class="font-semibold">{{ $row->myuser_name ?? '-' }}</div>
-                                        <div class="text-xs font-mono text-muted">{{ $row->myuser_code ?? '-' }}
+                                    {{-- USER — identitas dasar (nama, email) + TTD; "Dibuat" rata bawah --}}
+                                    <td class="px-5 py-4 rounded-l-2xl">
+                                        <div class="flex justify-between h-full gap-4">
+                                            <div class="flex flex-col justify-between min-w-0">
+                                                <div>
+                                                    <div class="text-lg font-semibold text-brand dark:text-white">{{ $row->myuser_name ?? '-' }}</div>
+                                                    <div class="mt-0.5 text-sm font-semibold break-all text-body dark:text-gray-300">{{ $row->email ?? '-' }}</div>
+                                                </div>
+                                                <div class="pt-3 ds-caption text-muted-soft">Dibuat {{ $row->created_at ?? '-' }}</div>
+                                            </div>
+
+                                            {{-- TTD (besar, di samping) — legacy 'UserTtd/abc.jpg' vs filename saja → prepend 'UserTtd/'. --}}
+                                            @if ($row->myuser_ttd_image)
+                                                <img src="{{ asset(str_contains($row->myuser_ttd_image, '/') ? 'storage/' . $row->myuser_ttd_image : 'storage/UserTtd/' . $row->myuser_ttd_image) }}"
+                                                    class="self-start w-auto border rounded-lg h-16 border-hairline dark:border-gray-600 shrink-0 bg-white" alt="TTD">
+                                            @endif
                                         </div>
                                     </td>
 
-                                    <td class="px-4 py-3">
-                                        <div>{{ $row->email ?? '-' }}</div>
-                                        @if ($row->myuser_sip)
-                                            <div class="text-xs text-muted">SIP: {{ $row->myuser_sip }}</div>
-                                        @endif
-                                    </td>
-
-                                    <td class="px-4 py-3">
-                                        @if ($row->emp_id)
-                                            <x-badge variant="alternative">{{ $row->emp_id }}</x-badge>
-                                        @else
-                                            <span class="text-muted-soft">—</span>
-                                        @endif
-                                    </td>
-
-                                    <td class="px-4 py-3">
-                                        @if ($row->myuser_ttd_image)
-                                            {{-- Resolve: legacy DB simpan 'UserTtd/abc.jpg' (with slash), standar baru
-                                                 simpan filename saja '19052026143907.jpg' → prepend 'UserTtd/'.
-                                                 Logic sama dgn Blade directive @ttdSrc (AppServiceProvider). --}}
-                                            <img src="{{ asset(str_contains($row->myuser_ttd_image, '/') ? 'storage/' . $row->myuser_ttd_image : 'storage/UserTtd/' . $row->myuser_ttd_image) }}"
-                                                class="h-8 w-auto rounded border border-hairline dark:border-gray-600"
-                                                alt="TTD">
-                                        @else
-                                            <span class="text-muted-soft">-</span>
-                                        @endif
+                                    {{-- SETUP / INTEGRASI — data penghubung user ke master & transaksi (bukan identitas biasa) --}}
+                                    <td class="px-5 py-4 align-top">
+                                        <dl class="space-y-1">
+                                            <div class="flex gap-2">
+                                                <dt class="w-20 pt-0.5 shrink-0 ds-caption-up text-muted-soft">Kode</dt>
+                                                <dd class="ds-td-token dark:text-gray-200">{{ $row->myuser_code ?? '-' }}</dd>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <dt class="w-20 pt-0.5 shrink-0 ds-caption-up text-muted-soft">Karyawan</dt>
+                                                <dd class="ds-caption text-body dark:text-gray-300">{{ $row->emp_id ? ($row->emp_name ?? ('EMP ' . $row->emp_id)) : '—' }}</dd>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <dt class="w-20 pt-0.5 shrink-0 ds-caption-up text-muted-soft">SIP</dt>
+                                                <dd class="ds-caption text-body dark:text-gray-300">{{ $row->myuser_sip ?: '—' }}</dd>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <dt class="w-20 pt-0.5 shrink-0 ds-caption-up text-muted-soft">Profesi</dt>
+                                                <dd>
+                                                    @if (!empty($row->myuser_profesi))
+                                                        <span class="{{ $this->roleBadgeClass($row->myuser_profesi) }}">{{ $row->myuser_profesi }}</span>
+                                                    @else
+                                                        <span class="ds-caption text-muted-soft">—</span>
+                                                    @endif
+                                                </dd>
+                                            </div>
+                                        </dl>
+                                        <p class="mt-2 text-[11px] leading-snug text-muted-soft">
+                                            🔗 <b>Kode</b> = kaitan master dokter · <b>Karyawan</b> = atribusi transaksi (emp_id) ·
+                                            <b>SIP/Profesi</b> = dokter &amp; TTD CPPT/SBAR
+                                        </p>
                                     </td>
 
                                     {{-- Role — badge berwarna + dropdown --}}
-                                    <td class="px-4 py-3">
+                                    <td class="px-5 py-4 align-top">
                                         <div class="relative" x-data="{ open: false }">
                                             <button type="button" @click="open = !open" @click.outside="open = false"
                                                 class="flex items-center gap-1.5 group">
@@ -448,29 +468,10 @@ new class extends Component {
                                         </div>
                                     </td>
 
-                                    {{-- Profesi klinis (TTD CPPT/SBAR) — dari users.myuser_profesi; '-' = otomatis ikut role pertama --}}
-                                    <td class="px-4 py-3">
-                                        @if (!empty($row->myuser_profesi))
-                                            <span class="{{ $this->roleBadgeClass($row->myuser_profesi) }}">{{ $row->myuser_profesi }}</span>
-                                        @else
-                                            <span class="text-xs italic text-muted-soft">-</span>
-                                        @endif
-                                    </td>
-
-                                    {{-- Status akun — Aktif (boleh login) / Nonaktif (diblokir login) --}}
-                                    <td class="px-4 py-3">
-                                        @if ((string) ($row->active_status ?? '1') === '1')
-                                            <x-badge variant="success">Aktif</x-badge>
-                                        @else
-                                            <x-badge variant="danger">Nonaktif</x-badge>
-                                        @endif
-                                    </td>
-
-                                    <td class="px-4 py-3 text-xs text-muted">{{ $row->created_at ?? '-' }}</td>
-
-                                    {{-- Aksi — ikut pola master-poli --}}
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-2">
+                                    {{-- Aksi + Status (digabung 1 kolom) --}}
+                                    <td class="px-5 py-4 align-top rounded-r-2xl">
+                                        <div class="space-y-2.5">
+                                            <div class="flex flex-wrap gap-2">
                                             {{-- ✅ Edit: x-outline-button (sama seperti master-poli) --}}
                                             <x-outline-button type="button"
                                                 wire:click="openEdit({{ $row->id }})">
@@ -489,26 +490,26 @@ new class extends Component {
                                                 @endif
                                             </x-secondary-button>
 
-                                            {{-- Toggle Aktif/Nonaktif — nonaktif = tak bisa login --}}
-                                            <x-confirm-button variant="secondary" :action="'toggleActive(' . $row->id . ')'"
-                                                title="{{ (string) ($row->active_status ?? '1') === '1' ? 'Nonaktifkan User' : 'Aktifkan User' }}"
-                                                message="{{ (string) ($row->active_status ?? '1') === '1' ? 'Nonaktifkan' : 'Aktifkan' }} user {{ $row->myuser_name }}? {{ (string) ($row->active_status ?? '1') === '1' ? 'Ia tidak akan bisa login.' : 'Ia bisa login kembali.' }}"
-                                                confirmText="Ya" cancelText="Batal">
-                                                {{ (string) ($row->active_status ?? '1') === '1' ? 'Nonaktifkan' : 'Aktifkan' }}
-                                            </x-confirm-button>
-
                                             {{-- ✅ Hapus: x-confirm-button variant="danger" (sama seperti master-poli) --}}
                                             <x-confirm-button variant="danger" :action="'requestDelete(' . $row->id . ')'" title="Hapus User"
                                                 message="Yakin hapus user {{ $row->myuser_name }}? Semua data terkait termasuk akses kas akan dihapus."
                                                 confirmText="Ya, hapus" cancelText="Batal">
                                                 Hapus
                                             </x-confirm-button>
+                                            </div>
+
+                                            {{-- Status akun — toggle Aktif/Nonaktif, di bawah tombol Edit User --}}
+                                            <x-toggle wire:key="toggle-active-{{ $row->id }}-{{ (string) ($row->active_status ?? '1') }}"
+                                                :current="(string) ($row->active_status ?? '1')" trueValue="1" falseValue="0"
+                                                wireClick="toggleActive({{ $row->id }})">
+                                                {{ (string) ($row->active_status ?? '1') === '1' ? 'Aktif' : 'Nonaktif' }}
+                                            </x-toggle>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9"
+                                    <td colspan="4"
                                         class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         @if ($filterRole !== '')
                                             Tidak ada user dengan role

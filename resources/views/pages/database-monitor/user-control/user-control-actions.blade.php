@@ -440,14 +440,11 @@ new class extends Component {
 
                             {{-- Status Akun — nonaktif = tidak bisa login (mis. dokter yang sudah tidak bekerja) --}}
                             <div>
-                                <x-input-label value="Status Akun" class="mb-1" />
-                                <x-select-input wire:model="active_status" class="w-full"
-                                    :error="$errors->has('active_status')">
-                                    <option value="1">Aktif — boleh login</option>
-                                    <option value="0">Nonaktif — diblokir login</option>
-                                </x-select-input>
-                                <x-input-error :messages="$errors->get('active_status')" class="mt-1" />
-                                <p class="mt-1 text-xs text-muted dark:text-gray-400">
+                                <x-input-label value="Status Akun" class="mb-1.5" />
+                                <x-toggle wire:model.live="active_status" trueValue="1" falseValue="0">
+                                    {{ $active_status === '1' ? 'Aktif — boleh login' : 'Nonaktif — diblokir login' }}
+                                </x-toggle>
+                                <p class="mt-1.5 text-xs text-muted dark:text-gray-400">
                                     🔒 Nonaktifkan (bukan hapus) untuk user yang sudah tidak bekerja — datanya tetap
                                     tersimpan tapi tidak bisa masuk ke sistem.
                                 </p>
