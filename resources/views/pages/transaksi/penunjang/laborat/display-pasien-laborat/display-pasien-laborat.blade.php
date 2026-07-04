@@ -30,23 +30,7 @@ new class extends Component {
             return;
         }
 
-        $header = DB::table('lbtxn_checkuphdrs as a')
-            ->leftJoin('rsmst_doctors as d', 'a.dr_id', '=', 'd.dr_id')
-            ->leftJoin('immst_employers as e', 'a.emp_id', '=', 'e.emp_id')
-            ->select(
-                'a.checkup_no',
-                DB::raw("to_char(a.checkup_date,'dd/mm/yyyy hh24:mi:ss') as checkup_date"),
-                'a.reg_no',
-                'd.dr_name',
-                'a.emp_id',
-                'e.emp_name',
-                'a.checkup_status',
-                'a.status_rjri',
-                'a.ref_no',
-                'a.klinis_desc',
-            )
-            ->where('a.checkup_no', $this->checkupNo)
-            ->first();
+        $header = DB::table('lbtxn_checkuphdrs as a')->leftJoin('rsmst_doctors as d', 'a.dr_id', '=', 'd.dr_id')->leftJoin('immst_employers as e', 'a.emp_id', '=', 'e.emp_id')->select('a.checkup_no', DB::raw("to_char(a.checkup_date,'dd/mm/yyyy hh24:mi:ss') as checkup_date"), 'a.reg_no', 'd.dr_name', 'a.emp_id', 'e.emp_name', 'a.checkup_status', 'a.status_rjri', 'a.ref_no', 'a.klinis_desc')->where('a.checkup_no', $this->checkupNo)->first();
 
         if (!$header) {
             return;
@@ -110,6 +94,7 @@ new class extends Component {
         | CARD UTAMA: Pasien (kiri) + Info Pemeriksaan Lab (kanan) — 1 card
         | Tema disamakan dengan display-pasien RJ/RI/UGD.
         ================================================================= --}}
+
         <div class="px-4 py-3 text-base leading-relaxed border border-hairline rounded-lg bg-canvas dark:bg-gray-900">
             <div class="grid grid-cols-5 gap-x-6 gap-y-2.5">
 
@@ -179,10 +164,12 @@ new class extends Component {
                     {{-- BARIS 1: Layanan + Status | No Checkup --}}
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                            <span class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $layananColor }}">
+                            <span
+                                class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $layananColor }}">
                                 {{ $layanan ?: '-' }}
                             </span>
-                            <span class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClass }}">
+                            <span
+                                class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClass }}">
                                 {{ $statusText }}
                             </span>
                         </div>
@@ -195,14 +182,16 @@ new class extends Component {
                     {{-- BARIS 2: Dokter --}}
                     <div>
                         <span class="text-muted">Dokter:</span>
-                        <span class="ml-1 font-semibold text-brand dark:text-brand-lime">{{ $h['dr_name'] ?? '-' }}</span>
+                        <span
+                            class="ml-1 font-semibold text-brand dark:text-brand-lime">{{ $h['dr_name'] ?? '-' }}</span>
                     </div>
 
                     {{-- BARIS 3: Diagnosis/Ket. Klinis (jika ada) --}}
                     @if (!empty($h['klinis_desc']))
                         <div>
                             <span class="text-muted">Diagnosis/Ket. Klinis:</span>
-                            <span class="ml-1 font-medium text-amber-700 dark:text-amber-400">{{ $h['klinis_desc'] }}</span>
+                            <span
+                                class="ml-1 font-medium text-amber-700 dark:text-amber-400">{{ $h['klinis_desc'] }}</span>
                         </div>
                     @endif
 
