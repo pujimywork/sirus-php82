@@ -391,6 +391,7 @@ new class extends Component {
     {
         $this->dispatch('cetak-etiket-auto.print', regNo: $regNo);
     }
+
 };
 ?>
 
@@ -915,15 +916,33 @@ new class extends Component {
                                                     <x-slot name="content">
                                                         <div class="p-2 space-y-2">
 
-                                                            {{-- Task ID 4/5 + Get — Perawat saja (Admin otomatis via super-user) --}}
+                                                            {{-- Task ID 4/5 + Get — Perawat saja (Admin otomatis via super-user).
+                                                                 Tombol di sini; logika di komponen host task-id-poli-actions (mount 1×).
+                                                                 wire:click="$dispatch(...)" = aksi Livewire (BUKAN Alpine) → host tangkap
+                                                                 via #[On]. Nol komponen Livewire per baris. Redup dari $row->task_id4/5. --}}
                                                             @hasanyrole('Perawat|Admin')
-                                                                {{-- 3 aksi Task ID digabung jadi 1 komponen/baris (dulu 3 Livewire terpisah)
-                                                                     — kurangi jumlah komponen nested di list. --}}
-                                                                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-poli-actions
-                                                                    :rjNo="$row->rj_no"
-                                                                    :isDone4="(bool) $row->task_id4"
-                                                                    :isDone5="(bool) $row->task_id5"
-                                                                    wire:key="taskidpoli-{{ $row->rj_no }}" />
+                                                                <div class="flex space-x-1">
+                                                                    <x-info-button type="button"
+                                                                        wire:click="$dispatch('task-id-poli-proses', { rjNo: {{ $row->rj_no }}, aksi: '4' })"
+                                                                        class="!px-4 !py-2 text-sm {{ $row->task_id4 ? '!opacity-60' : '' }}"
+                                                                        title="{{ $row->task_id4 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId4 (Masuk Poli)' }}">
+                                                                        TaskId4
+                                                                    </x-info-button>
+
+                                                                    <x-warning-button type="button"
+                                                                        wire:click="$dispatch('task-id-poli-proses', { rjNo: {{ $row->rj_no }}, aksi: '5' })"
+                                                                        class="!px-4 !py-2 text-sm {{ $row->task_id5 ? '!opacity-60' : '' }}"
+                                                                        title="{{ $row->task_id5 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId5 (Panggil Antrian)' }}">
+                                                                        TaskId5
+                                                                    </x-warning-button>
+
+                                                                    <x-primary-button type="button"
+                                                                        wire:click="$dispatch('task-id-poli-proses', { rjNo: {{ $row->rj_no }}, aksi: 'antrean' })"
+                                                                        class="!px-4 !py-2 text-sm"
+                                                                        title="Klik untuk mengambil TaskId Antrean dari BPJS">
+                                                                        TaskId Antrean
+                                                                    </x-primary-button>
+                                                                </div>
                                                             @endhasanyrole
 
                                                             {{-- GRID 2 KOLOM --}}
@@ -1040,6 +1059,12 @@ new class extends Component {
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
             <livewire:pages::transaksi.rj.daftar-rj.info-kelengkapan-emr wire:key="info-kelengkapan-emr-rj" />
+
+            {{-- Host aksi Task ID poli (berisi fungsi) — mount 1×. Tombol tiap baris
+                 dispatch 'task-id-poli-proses' ke sini via wire:click. --}}
+            @hasanyrole('Perawat|Admin')
+                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-poli-actions wire:key="task-id-poli-actions-host" />
+            @endhasanyrole
 
         </div>
     </div>

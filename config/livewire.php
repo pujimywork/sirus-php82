@@ -290,6 +290,6 @@ return [
         'max_size' => 1024 * 1024,   // 1MB - maximum request payload size in bytes
         'max_nesting_depth' => 10,   // Maximum depth of dot-notation property paths
         'max_calls' => 50,           // Maximum method calls per request
-        'max_components' => 250,     // Maximum components per batch request (vendor default 200; guard payload. 100→250 karena halaman EMR/daftar RJ nested tembus 101, headroom lega)
+        'max_components' => 200,     // Maximum components per batch request = default vendor. Kembali ke 200 setelah task-id-poli dijadikan host tunggal (cetak-pattern) → batch pasca-simpan tak lagi skala jumlah baris
     ],
 ];
