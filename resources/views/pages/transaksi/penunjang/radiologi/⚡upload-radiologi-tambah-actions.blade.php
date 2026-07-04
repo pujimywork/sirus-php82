@@ -2,20 +2,17 @@
 // resources/views/pages/transaksi/penunjang/radiologi/⚡upload-radiologi-tambah-actions.blade.php
 //
 // Sibling action component — TAMBAH PEMERIKSAAN RADIOLOGI.
-// Radiologi bisa menambahkan order pemeriksaan untuk pasien yang AKTIF hari ini
-// (RJ/UGD: rj_status='A' & rj_date hari ini; RI: ri_status='I' tanpa filter tgl).
-//
-// Listener event dari halaman utama:
-//   - radiologi.tambah.open  (source)
-//
-// Insert mengikuti pola administrasi per-modul:
+// Model diseragamkan dengan modul lab (daftar-laborat-tambah-actions):
+//   - toggle sumber (RJ/UGD/RI) di dalam modal
+//   - keranjang MULTI-item (grid rsmst_radiologis + selectedItems)
+//   - TARIF editable per item (khas radiologi — lab tarifnya fixed)
+// Insert: satu baris rstxn_*rads per item (loop). dr_pengirim disimpan NAMA dokter.
 //   RJ  → rstxn_rjrads      (PK rad_dtl  = nvl(max+1,1), ref rj_no)
 //   UGD → rstxn_ugdrads     (PK rad_dtl  = nvl(max+1,1), ref rj_no)
 //   RI  → rstxn_riradiologs (PK rirad_no = nvl(max+1,1), ref rihdr_no)
-//
-// Setelah insert sukses, dispatch 'radiologi-refresh' ke parent.
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +22,7 @@ use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 
 new class extends Component {
-    use WithValidationToastTrait;
+    use WithPagination, WithValidationToastTrait;
     // Audit log terpadu — pakai helper appendAdminLog{RJ,UGD,RI} yang sudah ada.
     use EmrRJTrait, EmrUGDTrait, EmrRITrait;
 
@@ -36,12 +33,12 @@ new class extends Component {
     public ?int $selectedRefNo = null;
     public array $selectedPatient = []; // reg_no, reg_name, sex, birth_date, umur_format, address
 
-    // Form pemeriksaan
-    public array $formEntryRad = ['radId' => '', 'radDesc' => '', 'radPrice' => ''];
+    // Keranjang pemeriksaan (keyed by rad_id → [rad_id, rad_desc, price])
+    public string $searchItem = '';
+    public array $selectedItems = [];
+
     public ?string $drId = null; // dr_id terpilih; nama di-lookup saat insert ke dr_pengirim
     public ?string $klinisDesc = null;
-
-    public int $lovKey = 0; // bump utk re-mount LOV radiologi setelah pilih/tambah
 
     /* ===============================
      | OPEN / CLOSE MODAL
@@ -62,10 +59,20 @@ new class extends Component {
 
     private function resetState(): void
     {
-        $this->reset(['patientSearch', 'selectedRefNo', 'selectedPatient', 'drId', 'klinisDesc']);
-        $this->formEntryRad = ['radId' => '', 'radDesc' => '', 'radPrice' => ''];
+        $this->reset(['patientSearch', 'selectedRefNo', 'selectedPatient', 'searchItem', 'selectedItems', 'drId', 'klinisDesc']);
         $this->resetValidation();
-        $this->lovKey++;
+        $this->resetPage();
+    }
+
+    public function setSource(string $source): void
+    {
+        if (!in_array($source, ['RJ', 'UGD', 'RI'], true) || $source === $this->source) {
+            return;
+        }
+        $this->source = $source;
+        $this->reset(['patientSearch', 'selectedRefNo', 'selectedPatient', 'searchItem', 'selectedItems', 'drId', 'klinisDesc']);
+        unset($this->activePatients);
+        $this->resetPage();
     }
 
     /* ===============================
@@ -181,30 +188,60 @@ new class extends Component {
     }
 
     /* ===============================
-     | LOV RADIOLOGI
+     | ITEM PEMERIKSAAN RADIOLOGI (paginated)
      =============================== */
-    #[On('lov.selected.radiologi-tambah')]
-    public function onRadiologiSelected(?array $payload): void
+    #[Computed]
+    public function items()
     {
-        if (!$payload) {
-            $this->formEntryRad = ['radId' => '', 'radDesc' => '', 'radPrice' => ''];
-            return;
-        }
+        $search = trim($this->searchItem);
 
-        $this->formEntryRad['radId'] = $payload['rad_id'] ?? '';
-        $this->formEntryRad['radDesc'] = $payload['rad_desc'] ?? '';
-        $this->formEntryRad['radPrice'] = $payload['rad_price'] ?? '';
+        return DB::table('rsmst_radiologis')
+            ->select('rad_id', 'rad_desc', 'rad_price')
+            ->whereNotNull('rad_desc')
+            ->when($search, function ($q) use ($search) {
+                $upper = '%' . mb_strtoupper($search) . '%';
+                $q->where(fn($w) => $w->whereRaw('UPPER(rad_desc) LIKE ?', [$upper])->orWhereRaw('UPPER(rad_id) LIKE ?', [$upper]));
+            })
+            ->orderBy('rad_desc')
+            ->orderBy('rad_id')
+            ->paginate(15);
     }
 
-    public function clearRad(): void
+    public function toggleItem(string $id, string $desc, ?float $price): void
     {
-        $this->formEntryRad = ['radId' => '', 'radDesc' => '', 'radPrice' => ''];
-        $this->resetValidation();
-        $this->lovKey++;
+        if (isset($this->selectedItems[$id])) {
+            unset($this->selectedItems[$id]);
+        } else {
+            $this->selectedItems[$id] = [
+                'rad_id' => $id,
+                'rad_desc' => $desc,
+                'price' => (int) ($price ?? 0), // default dari master, tetap bisa diedit di keranjang
+            ];
+        }
+    }
+
+    public function isSelected(string $id): bool
+    {
+        return isset($this->selectedItems[$id]);
+    }
+
+    public function removeSelected(string $id): void
+    {
+        unset($this->selectedItems[$id]);
+    }
+
+    public function updatedSearchItem(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPatientSearch(): void
+    {
+        unset($this->activePatients);
     }
 
     /* ===============================
-     | INSERT PEMERIKSAAN
+     | INSERT ORDER RADIOLOGI (loop item)
      =============================== */
     public function insertRad(): void
     {
@@ -212,23 +249,29 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Pilih pasien dulu.');
             return;
         }
+        if (empty($this->selectedItems)) {
+            $this->dispatch('toast', type: 'warning', message: 'Pilih minimal satu pemeriksaan.');
+            return;
+        }
 
         $this->validateWithToast(
             [
-                'formEntryRad.radId' => 'bail|required|exists:rsmst_radiologis,rad_id',
-                'formEntryRad.radDesc' => 'bail|required',
-                'formEntryRad.radPrice' => 'bail|required|numeric|min:0',
+                'drId' => 'bail|required',
                 'klinisDesc' => 'bail|required|string',
             ],
             [
-                'formEntryRad.radId.required' => 'Pemeriksaan radiologi harus dipilih.',
-                'formEntryRad.radId.exists' => 'Radiologi tidak valid.',
-                'formEntryRad.radDesc.required' => 'Deskripsi radiologi kosong.',
-                'formEntryRad.radPrice.required' => 'Tarif harus diisi.',
-                'formEntryRad.radPrice.numeric' => 'Tarif harus berupa angka.',
+                'drId.required' => 'Dokter pengirim harus dipilih.',
                 'klinisDesc.required' => 'Keterangan klinis harus diisi.',
             ],
         );
+
+        // Validasi tarif per item (harus angka ≥ 0)
+        foreach ($this->selectedItems as $sel) {
+            if (!is_numeric($sel['price'] ?? null) || (float) $sel['price'] < 0) {
+                $this->dispatch('toast', type: 'error', message: 'Tarif "' . ($sel['rad_desc'] ?? '') . '" harus berupa angka ≥ 0.');
+                return;
+            }
+        }
 
         // dr_pengirim disimpan sebagai NAMA dokter (selaras pola kirim radiologi).
         $drPengirim = null;
@@ -237,68 +280,72 @@ new class extends Component {
             $drPengirim = $name ? trim($name) : null;
         }
         $klinis = trim((string) $this->klinisDesc) ?: null;
-        $price = 0 + $this->formEntryRad['radPrice'];
 
         try {
-            DB::transaction(function () use ($drPengirim, $klinis, $price) {
+            DB::transaction(function () use ($drPengirim, $klinis) {
                 if ($this->source === 'RJ') {
                     $this->lockHeader('rstxn_rjhdrs', 'rj_no');
-                    $last = DB::table('rstxn_rjrads')->select(DB::raw('nvl(max(rad_dtl)+1,1) as rad_dtl_max'))->first();
-                    $next = (int) $last->rad_dtl_max;
-                    DB::table('rstxn_rjrads')->insert([
-                        'rad_dtl' => $next,
-                        'rj_no' => $this->selectedRefNo,
-                        'rad_id' => $this->formEntryRad['radId'],
-                        'rad_price' => $price,
-                        'dr_pengirim' => $drPengirim,
-                        'klinis_desc' => $klinis,
-                        'waktu_entry' => DB::raw('sysdate'),
-                    ]);
+                    foreach ($this->selectedItems as $sel) {
+                        $next = (int) DB::scalar('SELECT NVL(MAX(rad_dtl)+1,1) FROM rstxn_rjrads');
+                        DB::table('rstxn_rjrads')->insert([
+                            'rad_dtl' => $next,
+                            'rj_no' => $this->selectedRefNo,
+                            'rad_id' => $sel['rad_id'],
+                            'rad_price' => 0 + $sel['price'],
+                            'dr_pengirim' => $drPengirim,
+                            'klinis_desc' => $klinis,
+                            'waktu_entry' => DB::raw('sysdate'),
+                        ]);
+                    }
                 } elseif ($this->source === 'UGD') {
                     $this->lockHeader('rstxn_ugdhdrs', 'rj_no');
-                    $last = DB::table('rstxn_ugdrads')->select(DB::raw('nvl(max(rad_dtl)+1,1) as rad_dtl_max'))->first();
-                    $next = (int) $last->rad_dtl_max;
-                    DB::table('rstxn_ugdrads')->insert([
-                        'rad_dtl' => $next,
-                        'rj_no' => $this->selectedRefNo,
-                        'rad_id' => $this->formEntryRad['radId'],
-                        'rad_price' => $price,
-                        'dr_pengirim' => $drPengirim,
-                        'klinis_desc' => $klinis,
-                        'waktu_entry' => DB::raw('sysdate'),
-                    ]);
+                    foreach ($this->selectedItems as $sel) {
+                        $next = (int) DB::scalar('SELECT NVL(MAX(rad_dtl)+1,1) FROM rstxn_ugdrads');
+                        DB::table('rstxn_ugdrads')->insert([
+                            'rad_dtl' => $next,
+                            'rj_no' => $this->selectedRefNo,
+                            'rad_id' => $sel['rad_id'],
+                            'rad_price' => 0 + $sel['price'],
+                            'dr_pengirim' => $drPengirim,
+                            'klinis_desc' => $klinis,
+                            'waktu_entry' => DB::raw('sysdate'),
+                        ]);
+                    }
                 } else {
                     // RI
                     $this->lockHeader('rstxn_rihdrs', 'rihdr_no');
-                    $next = (int) DB::scalar('SELECT NVL(MAX(TO_NUMBER(rirad_no)) + 1, 1) FROM rstxn_riradiologs');
-                    DB::table('rstxn_riradiologs')->insert([
-                        'rirad_no' => $next,
-                        'rihdr_no' => $this->selectedRefNo,
-                        'rad_id' => $this->formEntryRad['radId'],
-                        'rirad_price' => $price,
-                        'dr_pengirim' => $drPengirim,
-                        'klinis_desc' => $klinis,
-                        'waktu_entry' => DB::raw('sysdate'),
-                        'rirad_date' => DB::raw('sysdate'),
-                    ]);
+                    foreach ($this->selectedItems as $sel) {
+                        $next = (int) DB::scalar('SELECT NVL(MAX(TO_NUMBER(rirad_no)) + 1, 1) FROM rstxn_riradiologs');
+                        DB::table('rstxn_riradiologs')->insert([
+                            'rirad_no' => $next,
+                            'rihdr_no' => $this->selectedRefNo,
+                            'rad_id' => $sel['rad_id'],
+                            'rirad_price' => 0 + $sel['price'],
+                            'dr_pengirim' => $drPengirim,
+                            'klinis_desc' => $klinis,
+                            'waktu_entry' => DB::raw('sysdate'),
+                            'rirad_date' => DB::raw('sysdate'),
+                        ]);
+                    }
                 }
 
                 // Audit log terpadu (tab "Log Aktivitas") — dari sisi radiologi.
-                $this->appendLog('Tambah Order Radiologi (dari radiologi) - ' . $this->formEntryRad['radDesc']);
+                $namaItem = collect($this->selectedItems)->pluck('rad_desc')->implode(', ');
+                $this->appendLog('Tambah Order Radiologi (dari radiologi) - ' . $namaItem);
             });
 
-            $this->dispatch('toast', type: 'success', message: 'Pemeriksaan ' . $this->formEntryRad['radDesc'] . ' ditambahkan.');
-            // Pertahankan pasien terpilih → bisa tambah pemeriksaan lagi dengan cepat.
-            $this->clearRad();
+            $count = count($this->selectedItems);
+            $this->dispatch('toast', type: 'success', message: $count . ' pemeriksaan radiologi berhasil ditambahkan.');
             $this->dispatch('radiologi-refresh');
+            $this->closeTambahModal();
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menambah: ' . $e->getMessage());
         }
     }
 
-    // Lock baris header (cegah race PK rad_dtl/rirad_no) + pastikan ref valid.
+    // Lock baris header (cegah race PK) + pastikan ref valid.
     private function lockHeader(string $table, string $pkColumn): void
     {
         $exists = DB::table($table)->where($pkColumn, $this->selectedRefNo)->lockForUpdate()->exists();
@@ -319,11 +366,6 @@ new class extends Component {
             $this->appendAdminLogRJ($ref, $keterangan, 'MR');
         }
     }
-
-    public function updatedPatientSearch(): void
-    {
-        unset($this->activePatients);
-    }
 };
 ?>
 
@@ -331,7 +373,7 @@ new class extends Component {
     <x-modal name="rad-tambah" size="full" height="full" focusable>
         <div class="flex flex-col h-full">
 
-            {{-- HEADER (komposisi & typografi selaras master-poli-actions) --}}
+            {{-- HEADER --}}
             <div class="px-6 py-5 border-b bg-surface-soft border-hairline dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <div class="flex items-start justify-between gap-4">
                     <div>
@@ -343,9 +385,7 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="ds-display-sm dark:text-gray-100">
-                                    Tambah Pemeriksaan Radiologi
-                                </h2>
+                                <h2 class="ds-display-sm dark:text-gray-100">Tambah Pemeriksaan Radiologi</h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Pasien aktif hari ini
                                     @if ($source === 'RI')
@@ -356,10 +396,19 @@ new class extends Component {
                                 </p>
                             </div>
                         </div>
-                        <div class="mt-3">
-                            <x-badge variant="alternative">
-                                Sumber: {{ ['RJ' => 'Rawat Jalan', 'UGD' => 'Unit Gawat Darurat', 'RI' => 'Rawat Inap'][$source] ?? $source }}
-                            </x-badge>
+
+                        {{-- Toggle sumber --}}
+                        <div class="inline-flex mt-3 overflow-hidden border rounded-lg border-hairline dark:border-gray-700">
+                            @foreach (['RJ' => 'Rawat Jalan', 'UGD' => 'UGD', 'RI' => 'Rawat Inap'] as $key => $label)
+                                <button type="button" wire:click="setSource('{{ $key }}')"
+                                    @class([
+                                        'px-3 py-1.5 text-sm font-medium transition',
+                                        'bg-brand-green text-white' => $source === $key,
+                                        'bg-canvas text-body hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800' => $source !== $key,
+                                    ])>
+                                    {{ $label }}
+                                </button>
+                            @endforeach
                         </div>
                     </div>
 
@@ -375,14 +424,13 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-6 py-5 space-y-5 overflow-y-auto">
+            <div class="flex flex-col flex-1 min-h-0 overflow-y-auto">
 
                 {{-- STEP 1: PILIH PASIEN --}}
-                <div>
+                <div class="px-6 py-5 border-b border-hairline dark:border-gray-700">
                     <x-input-label value="1. Pasien" class="mb-1.5" />
 
                     @if ($selectedRefNo)
-                        {{-- Pasien terpilih (typografi identitas standar list) --}}
                         @php
                             $selSex = ($selectedPatient['sex'] ?? null) === 'L' ? 'Laki-Laki' : (($selectedPatient['sex'] ?? null) === 'P' ? 'Perempuan' : '-');
                         @endphp
@@ -409,7 +457,6 @@ new class extends Component {
                             </x-secondary-button>
                         </div>
                     @else
-                        {{-- Cari + daftar pasien aktif --}}
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -421,7 +468,7 @@ new class extends Component {
                                 placeholder="Cari No RM / Nama pasien aktif..." />
                         </div>
 
-                        <div class="mt-2 overflow-y-auto border divide-y border-hairline rounded-xl divide-hairline-soft dark:border-gray-700 dark:divide-gray-800 max-h-64">
+                        <div class="mt-2 overflow-y-auto border divide-y border-hairline rounded-xl divide-hairline-soft dark:border-gray-700 dark:divide-gray-800 max-h-56">
                             @forelse ($this->activePatients as $pasien)
                                 @php
                                     $sexLabel = $pasien->sex === 'L' ? 'Laki-Laki' : ($pasien->sex === 'P' ? 'Perempuan' : '-');
@@ -464,61 +511,128 @@ new class extends Component {
                     @endif
                 </div>
 
-                {{-- STEP 2: PILIH PEMERIKSAAN (aktif setelah pasien dipilih) --}}
-                <div @class(['opacity-50 pointer-events-none' => !$selectedRefNo])>
-                    @if (empty($formEntryRad['radId']))
-                        <div wire:key="lov-rad-tambah-{{ $lovKey }}">
-                            <livewire:lov.radiologi.lov-radiologi target="radiologi-tambah"
-                                label="2. Pemeriksaan Radiologi" placeholder="Ketik kode/nama radiologi..."
-                                wire:key="lov-rad-tambah-inner-{{ $lovKey }}" />
-                        </div>
-                    @else
-                        <x-input-label value="2. Pemeriksaan Radiologi" class="mb-1.5" />
-                        <div class="p-4 space-y-3 border border-hairline rounded-xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
-                            <div class="flex items-end gap-3">
-                                <div class="w-28">
-                                    <x-input-label value="Kode" class="mb-1 text-xs" />
-                                    <x-text-input wire:model="formEntryRad.radId" disabled class="w-full text-sm" />
-                                </div>
-                                <div class="flex-1">
-                                    <x-input-label value="Pemeriksaan" class="mb-1 text-xs" />
-                                    <x-text-input wire:model="formEntryRad.radDesc" disabled class="w-full text-sm" />
-                                </div>
-                                <div class="w-40">
-                                    <x-input-label value="Tarif" class="mb-1 text-xs" />
-                                    <x-text-input-number wire:model="formEntryRad.radPrice"
-                                        :error="$errors->has('formEntryRad.radPrice')" />
-                                </div>
-                                <x-secondary-button type="button" wire:click="clearRad" class="px-3 py-2 text-xs shrink-0">
-                                    Ganti
-                                </x-secondary-button>
-                            </div>
-                            @error('formEntryRad.radPrice')
-                                <x-input-error :messages="$message" />
-                            @enderror
+                {{-- STEP 2: PILIH PEMERIKSAAN + DOKTER/KLINIS (aktif setelah pasien dipilih) --}}
+                <div class="flex flex-col flex-1 min-h-0 lg:flex-row" @class(['opacity-50 pointer-events-none' => !$selectedRefNo])>
 
-                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <div>
-                                    <x-input-label value="Dokter Pengirim" class="mb-1 text-xs" />
-                                    <x-select-input wire:model="drId" class="text-sm">
-                                        <option value="">— Pilih dokter pengirim —</option>
-                                        @foreach ($this->relatedDoctors as $dr)
-                                            <option value="{{ $dr->dr_id }}">{{ $dr->dr_name }}</option>
-                                        @endforeach
-                                    </x-select-input>
+                    {{-- KIRI: Search + Item Grid --}}
+                    <div class="flex flex-col flex-1 min-h-0">
+                        <div class="px-6 py-3 border-b border-hairline-soft dark:border-gray-700">
+                            <x-input-label value="2. Pemeriksaan Radiologi" class="mb-1.5" />
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
                                 </div>
-                                <div>
-                                    <x-input-label value="Keterangan Klinis" required class="mb-1 text-xs" />
-                                    <x-textarea wire:model="klinisDesc" rows="2"
-                                        placeholder="Diagnosis kerja / keterangan klinis pasien..."
-                                        :error="$errors->has('klinisDesc')" class="text-sm" />
-                                    @error('klinisDesc')
-                                        <x-input-error :messages="$message" class="mt-1" />
-                                    @enderror
-                                </div>
+                                <x-text-input wire:model.live.debounce.300ms="searchItem" class="block w-full pl-10"
+                                    placeholder="Cari kode/nama pemeriksaan radiologi..." />
                             </div>
                         </div>
-                    @endif
+
+                        <div class="flex-1 p-5 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
+                            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                                @forelse ($this->items as $item)
+                                    @php $selected = $this->isSelected($item->rad_id); @endphp
+                                    <button type="button"
+                                        wire:click="toggleItem('{{ $item->rad_id }}', '{{ addslashes($item->rad_desc) }}', {{ $item->rad_price ?? 'null' }})"
+                                        class="relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all
+                                            {{ $selected
+                                                ? 'border-brand-green bg-brand-green/10 text-brand-green shadow-sm'
+                                                : 'border-hairline bg-canvas hover:border-brand-green/40 hover:bg-brand-green/5 text-body dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300' }}">
+                                        @if ($selected)
+                                            <span class="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 bg-brand-green rounded-full">
+                                                <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </span>
+                                        @endif
+                                        <p class="text-sm font-medium leading-tight">{{ $item->rad_desc }}</p>
+                                        @if ($item->rad_price)
+                                            <p class="mt-1 text-[10px] {{ $selected ? 'text-brand-green/70' : 'text-muted-soft' }}">
+                                                {{ number_format($item->rad_price) }}
+                                            </p>
+                                        @endif
+                                    </button>
+                                @empty
+                                    <div class="py-12 text-center text-muted-soft col-span-full">
+                                        <p class="text-base">Tidak ada pemeriksaan ditemukan</p>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            @if ($this->items->hasPages())
+                                <div class="mt-4">
+                                    {{ $this->items->links() }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- KANAN: Dokter + Klinis + Keranjang (tarif editable per item) --}}
+                    <div class="flex flex-col w-full min-h-0 border-t lg:w-[26rem] shrink-0 lg:border-t-0 lg:border-l border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-900">
+
+                        {{-- Dokter Pengirim --}}
+                        <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-700">
+                            <x-input-label value="Dokter Pengirim" required class="text-xs" />
+                            <x-select-input wire:model="drId" class="mt-1 text-sm">
+                                <option value="">— Pilih dokter pengirim —</option>
+                                @foreach ($this->relatedDoctors as $dr)
+                                    <option value="{{ $dr->dr_id }}">{{ $dr->dr_name }}</option>
+                                @endforeach
+                            </x-select-input>
+                            <x-input-error :messages="$errors->get('drId')" class="mt-1" />
+                        </div>
+
+                        {{-- Keterangan Klinis --}}
+                        <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-700">
+                            <x-input-label value="Keterangan Klinis" required class="text-xs" />
+                            <x-textarea wire:model="klinisDesc" rows="2"
+                                placeholder="Diagnosis kerja / keterangan klinis pasien..."
+                                :error="$errors->has('klinisDesc')" class="mt-1 text-sm" />
+                            <x-input-error :messages="$errors->get('klinisDesc')" class="mt-1" />
+                        </div>
+
+                        {{-- Header keranjang --}}
+                        <div class="flex items-center justify-between px-5 pt-3 pb-1.5">
+                            <p class="text-sm font-semibold text-ink dark:text-gray-100">Pemeriksaan Dipilih</p>
+                            @if (!empty($selectedItems))
+                                <span class="px-2 py-0.5 text-xs font-semibold text-brand-green bg-brand-green/10 border border-brand-green/30 rounded-full">
+                                    {{ count($selectedItems) }}
+                                </span>
+                            @endif
+                        </div>
+
+                        {{-- List item dipilih + tarif editable --}}
+                        <div class="flex-1 px-5 pb-4 space-y-1.5 overflow-y-auto">
+                            @forelse ($selectedItems as $id => $sel)
+                                <div class="p-2.5 border rounded-lg border-brand-green/20 bg-brand-green/5">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <p class="min-w-0 text-sm font-medium leading-tight text-brand-green">
+                                            {{ $sel['rad_desc'] }}
+                                        </p>
+                                        <button type="button" wire:click="removeSelected('{{ $id }}')"
+                                            class="mt-0.5 shrink-0 text-muted-soft hover:text-red-500 transition-colors">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1.5">
+                                        <span class="text-[11px] text-muted-soft shrink-0">Tarif</span>
+                                        <x-text-input-number wire:model="selectedItems.{{ $id }}.price" class="!w-36 text-sm" />
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="flex flex-col items-center justify-center h-full py-10 text-center text-muted-soft">
+                                    <p class="text-sm font-medium">Belum ada pemeriksaan dipilih</p>
+                                    <p class="mt-0.5 text-xs text-muted-soft">Klik item di kiri untuk memilih</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -526,12 +640,12 @@ new class extends Component {
             <div class="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-t border-hairline bg-canvas dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <x-secondary-button type="button" wire:click="closeTambahModal">Tutup</x-secondary-button>
                 <x-primary-button type="button" wire:click="insertRad" wire:loading.attr="disabled"
-                    wire:target="insertRad" :disabled="!$selectedRefNo || empty($formEntryRad['radId'])">
+                    wire:target="insertRad" :disabled="!$selectedRefNo || empty($selectedItems)">
                     <span wire:loading.remove wire:target="insertRad" class="inline-flex items-center gap-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        Tambah
+                        Tambah Order
                     </span>
                     <span wire:loading wire:target="insertRad"><x-loading class="w-4 h-4" /></span>
                 </x-primary-button>

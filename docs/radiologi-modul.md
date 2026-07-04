@@ -91,7 +91,11 @@ VALUES ((SELECT NVL(MAX(TO_NUMBER(rad_dtl))+1,1) FROM rstxn_rjrads),
 
 ### B. Tambah dari modul radiologi (`insertRad()`, `upload-radiologi-tambah-actions.blade.php`)
 
-Pola INSERT sama; pakai `lockHeader()` (`lockForUpdate` pada header induk) + `appendAdminLog{RJ,UGD,RI}`.
+Modal tambah **diseragamkan dengan modul lab** (pola keranjang): **toggle sumber RJ/UGD/RI di dalam modal**
+(`setSource`), Step 1 pilih pasien aktif, Step 2 **grid `rsmst_radiologis` + keranjang multi-item**
+(`items` paginated, `toggleItem`/`removeSelected`) dengan **tarif editable per item** (`selectedItems.{id}.price`
+— khas radiologi; lab tarifnya fixed). `insertRad()` **loop** `selectedItems` → 1 baris `rstxn_*rads` per item
+(`lockHeader` + `appendAdminLog{RJ,UGD,RI}` kategori MR). `dr_pengirim` disimpan **nama** dokter.
 
 ### C. Simpan Hasil Bacaan / Expertise (`upload-radiologi-bacaan-actions.blade.php`)
 
@@ -110,7 +114,9 @@ CLOB `hasil_bacaan` dibaca via `stream_get_contents` bila resource.
 ### D. Edit inline (`upload-radiologi.blade.php`)
 
 `updateKeterangan` / `updateDrPengirim` / `saveTarif` (UPDATE kolom terkait). `saveTarif` dijaga
-`isRefLocked()` (lihat bawah).
+`isRefLocked()` (lihat bawah). **Ketiganya kini ter-audit**: dibungkus `DB::transaction` + `lock{RJ,UGD,RI}Row`
++ `appendAdminLog{RJ,UGD,RI}(..., 'MR')` via helper `logEditKeParent()` (log "Ubah Tarif/Dokter Pengirim/
+Keterangan Radiologi #…"). Jadi semua mutasi radiologi (order/tambah/batal/edit) ter-audit di userLogs induk.
 
 > Tidak ada perpindahan status `P→C→H` — konsep itu tidak ada di radiologi.
 
@@ -133,6 +139,9 @@ DELETE FROM rstxn_ugdrads      WHERE rad_dtl  = :dtl AND rj_no    = :ref;  -- UG
 DELETE FROM rstxn_riradiologs  WHERE rirad_no = :dtl AND rihdr_no = :ref;  -- RI
 ```
 
+- **Role** `isAllowedBatal()` = **Admin + Supervisor Penunjang** (seragam lab; staff Radiologi TIDAK boleh
+  batal — harus eskalasi ke atasan). Tombol pakai **`x-confirm-button`** (modal konfirmasi, sama gaya lab) +
+  di-gate `@hasanyrole` sehingga hilang untuk non-supervisor.
 - **Lock induk** `isRefLocked(source, refNo)`: pasien pulang (RJ/UGD `rj_status != 'A'`, RI `ri_status != 'I'`)
   → order terkunci, tak bisa dibatalkan (toast).
 - **Audit log** `appendAdminLog{RJ,UGD,RI}($ref, 'Batal Order Radiologi #'.$dtl, 'MR')` di dalam
@@ -205,6 +214,6 @@ Modul radiologi tidak punya tombol Etiket (fitur ini eksklusif modul lab).
 | Kesimpulan | Kolom `checkup_kesimpulan` | Menyatu di `hasil_bacaan` (CLOB HTML) |
 | Import alat | Mindray (`oracle_mindray`) | Tidak ada (upload manual) |
 | Etiket | Ada | Tidak ada |
-| Role guard | `isAllowedRole`/`isAllowedBatal` di blade | Hanya di menu (`AppMenu.php`), role `radiologi` |
+| Role guard | `isAllowedRole`/`isAllowedBatal` di blade | Akses halaman via menu (`AppMenu.php`, role `radiologi`); **batal** dijaga `isAllowedBatal` = Admin + Supervisor Penunjang |
 | display-pasien | `display-pasien-laborat` (MasterPasienTrait, telp/NIK/BPJS) | Query inline, tanpa telp/NIK/BPJS |
 | Fitur unik | Mindray, etiket, kesimpulan | Upload Foto + Generate PDF bacaan (TinyMCE→dompdf), edit inline tarif, view `rsview_rads` |

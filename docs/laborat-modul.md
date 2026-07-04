@@ -47,8 +47,9 @@ Disimpan di header (`lbtxn_checkuphdrs.checkup_kesimpulan`), tampil **di bawah t
 
 ## Batal — dua jenis
 
-Keduanya dijaga role `isAllowedBatal()` = **Admin · Supervisor Penunjang** (operator Lab tidak boleh
-batal sendiri). Tombol ada di **zona kiri footer** (terpisah dari tombol utama di kanan).
+Keduanya dijaga role `isAllowedBatal()` = **Admin · Supervisor Penunjang**.
+**Petugas/staff Laboratorium TIDAK boleh membatalkan sendiri** — batal harus dieskalasi ke **atasan
+(Supervisor Penunjang)**. Tombol ada di **zona kiri footer** (terpisah dari tombol utama di kanan).
 
 | Method | Transisi | Efek | Hapus biaya induk? |
 |---|---|---|---|

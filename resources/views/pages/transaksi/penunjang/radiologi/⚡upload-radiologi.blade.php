@@ -194,19 +194,38 @@ new class extends Component {
         $this->updateRadColumn($source, $dtlNo, $refNo, 'dr_pengirim', $value, 'Dokter Pengirim');
     }
 
+    /* Audit log edit inline → userLogs transaksi induk (kategori MR). Panggil DI
+       DALAM DB::transaction (lock parent dulu). Selaras logKeParent modul lab. */
+    private function logEditKeParent(string $source, int $refNo, string $keterangan): void
+    {
+        if ($source === 'RJ') {
+            $this->lockRJRow($refNo);
+            $this->appendAdminLogRJ($refNo, $keterangan, 'MR');
+        } elseif ($source === 'UGD') {
+            $this->lockUGDRow($refNo);
+            $this->appendAdminLogUGD($refNo, $keterangan, 'MR');
+        } elseif ($source === 'RI') {
+            $this->lockRIRow($refNo);
+            $this->appendAdminLogRI($refNo, $keterangan, 'MR');
+        }
+    }
+
     private function updateRadColumn(string $source, int $dtlNo, int $refNo, string $column, string $value, string $label): void
     {
         $value = trim($value);
         $payload = $value === '' ? null : $value;
 
         try {
-            if ($source === 'RJ') {
-                DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update([$column => $payload]);
-            } elseif ($source === 'UGD') {
-                DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update([$column => $payload]);
-            } elseif ($source === 'RI') {
-                DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->update([$column => $payload]);
-            }
+            DB::transaction(function () use ($source, $dtlNo, $refNo, $column, $payload, $label) {
+                if ($source === 'RJ') {
+                    DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update([$column => $payload]);
+                } elseif ($source === 'UGD') {
+                    DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update([$column => $payload]);
+                } elseif ($source === 'RI') {
+                    DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->update([$column => $payload]);
+                }
+                $this->logEditKeParent($source, $refNo, 'Ubah ' . $label . ' Radiologi #' . $dtlNo);
+            });
             $this->dispatch('toast', type: 'success', message: $label . ' disimpan.');
             unset($this->rows);
         } catch (\Exception $e) {
@@ -264,13 +283,16 @@ new class extends Component {
         $payload = 0 + $value;
 
         try {
-            if ($source === 'RJ') {
-                DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['rad_price' => $payload]);
-            } elseif ($source === 'UGD') {
-                DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['rad_price' => $payload]);
-            } elseif ($source === 'RI') {
-                DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->update(['rirad_price' => $payload]);
-            }
+            DB::transaction(function () use ($source, $dtlNo, $refNo, $payload) {
+                if ($source === 'RJ') {
+                    DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['rad_price' => $payload]);
+                } elseif ($source === 'UGD') {
+                    DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['rad_price' => $payload]);
+                } elseif ($source === 'RI') {
+                    DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->update(['rirad_price' => $payload]);
+                }
+                $this->logEditKeParent($source, (int) $refNo, 'Ubah Tarif Radiologi #' . $dtlNo . ' → Rp' . number_format((int) $payload));
+            });
             $this->dispatch('toast', type: 'success', message: 'Tarif disimpan.');
             $this->cancelEditTarif();
             unset($this->rows);
@@ -294,11 +316,23 @@ new class extends Component {
         return $row && !empty($row->rj_status) && $row->rj_status !== 'A';
     }
 
-    /* Batalkan (hapus) order radiologi oleh petugas radiologi di program penunjang.
-       Hapus baris rstxn_*rads (sekaligus biaya) sesuai source. Guard lock induk
+    /* Batal order hanya boleh ATASAN — Admin + Supervisor Penunjang (staff Radiologi
+       tidak boleh batal sendiri, harus eskalasi). Seragam dgn isAllowedBatal modul lab. */
+    private function isAllowedBatal(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->hasAnyRole(['Admin', 'Supervisor Penunjang']);
+    }
+
+    /* Batalkan (hapus permanen) order radiologi di program penunjang. Hapus baris
+       rstxn_*rads (sekaligus biaya) sesuai source. Guard role + lock induk
        (isRefLocked: pasien pulang → tak boleh) + audit log ke userLogs induk. */
     public function batalkanOrder(string $source, int $dtlNo, int $refNo): void
     {
+        if (!$this->isAllowedBatal()) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berhak membatalkan order (hanya Admin / Supervisor Penunjang).');
+            return;
+        }
         if ($this->isRefLocked($source, $refNo)) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang — order terkunci, tidak bisa dibatalkan.');
             return;
@@ -761,22 +795,23 @@ new class extends Component {
                                             </div>
                                         </div>
 
-                                        {{-- BATALKAN ORDER — hapus order radiologi oleh petugas radiologi.
-                                             Lock (pasien pulang) & audit log ditangani server-side. --}}
-                                        <div class="pt-3 mt-3 border-t border-hairline dark:border-gray-700">
-                                            <button type="button"
-                                                wire:click="batalkanOrder('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }})"
-                                                wire:confirm="Batalkan order radiologi ini? Order akan dihapus."
-                                                wire:loading.attr="disabled"
-                                                wire:target="batalkanOrder('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }})"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/20">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                                Batalkan Order
-                                            </button>
-                                        </div>
+                                        {{-- BATALKAN ORDER — hanya ATASAN (Admin + Supervisor Penunjang); staff Radiologi tak bisa.
+                                             Hapus record permanen; lock (pasien pulang) & audit log server-side. --}}
+                                        @hasanyrole(['Admin', 'Supervisor Penunjang'])
+                                            <div class="pt-3 mt-3 border-t border-hairline dark:border-gray-700">
+                                                <x-confirm-button variant="danger"
+                                                    action="batalkanOrder('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }})"
+                                                    title="Batalkan Order Radiologi"
+                                                    message="Batalkan order radiologi ini? Order akan dihapus permanen."
+                                                    confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    Batalkan Order
+                                                </x-confirm-button>
+                                            </div>
+                                        @endhasanyrole
                                     </td>
                                 </tr>
                             @empty
