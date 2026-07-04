@@ -63,6 +63,11 @@ batal sendiri). Tombol ada di **zona kiri footer** (terpisah dari tombol utama d
 Induk ditentukan `status_rjri` (RJ/UGD/RI) + `ref_no` (→ `rstxn_rjhdrs.rj_no` / `rstxn_ugdhdrs.rj_no` /
 `rstxn_rihdrs.rihdr_no`). Semua batal pakai `DB::transaction` + `lockForUpdate` + re-cek status (anti double-submit).
 
+**Audit log:** kedua batal menulis entry ke `userLogs` transaksi induk via `appendAdminLog{RJ,UGD,RI}`
+(kategori `MR`) lewat helper `logKeParent()` (di dalam transaksi, lock parent dulu). Butuh `EmrRJ/UGD/RITrait`
+di-`use` pada `daftar-laborat-actions` (trait tanpa mount/properti → tak ada collision). Lab **tambah**
+(`daftar-laborat-tambah-actions`) juga sudah dilog; proses/simpan hasil belum.
+
 **UX disable:** status induk juga dievaluasi di `evaluasiIndukTerkunci()` (saat `loadHeader`) → set
 `$indukTerkunci` + `$indukTerkunciAlasan`. Bila terkunci, tombol batal di-**disable** (`:disabled`) dan
 tampil **keterangan alasan** di sebelahnya (+ tooltip). Guard di method tetap ada sebagai defense in depth.

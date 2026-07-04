@@ -114,13 +114,32 @@ CLOB `hasil_bacaan` dibaca via `stream_get_contents` bila resource.
 
 > Tidak ada perpindahan status `P→C→H` — konsep itu tidak ada di radiologi.
 
-## BATAL — TIDAK ADA
+## HAPUS ORDER (batal) — di Administrasi, bukan modul upload
 
-Modul radiologi **tidak punya** `batalkanPendaftaran` / `batalkanTransaksi`, tidak ada tombol batal/hapus
-order, dan tidak menghapus baris biaya dari `rstxn_*rads`. Tidak ada `isAllowedBatal` maupun guard status
-induk untuk batal.
+> Modul **upload** (`upload-radiologi`) memang tidak punya batal. Tapi **hapus order radiologi ADA** di
+> tab **Administrasi RJ/UGD/RI → Radiologi** (`administrasi-{rj,ugd,ri}/radiologi-{rj,ugd,ri}.blade.php`).
 
-Satu-satunya "kunci" adalah **lock tarif** (bukan batal) — `isRefLocked()` (`upload-radiologi.blade.php:280`):
+`removeRad(radDtl|riradNo)` menghapus satu baris order **sekaligus baris biaya**-nya:
+
+```sql
+DELETE FROM rstxn_rjrads       WHERE rad_dtl  = :dtl;   -- RJ
+DELETE FROM rstxn_ugdrads      WHERE rad_dtl  = :dtl;   -- UGD
+DELETE FROM rstxn_riradiologs  WHERE rirad_no = :no;    -- RI
+```
+
+Karakteristik (RJ/UGD/RI sudah seragam):
+- **Lock ke transaksi induk** via `isFormLocked` (`evaluasiLockRJ/UGD` cek `rj_status`, RI cek `ri_status`)
+  dengan **reason granular** (seragam gaya modul lab): `A` aktif; `L`=pulang, `F`=batal,
+  `I`=transfer (RJ→UGD / UGD→RI); RI: `I`=dirawat (aktif), `P`=ditutup, `F`=batal. Bila terkunci → banner
+  + toast pakai `$formLockReason`, tombol hapus disembunyikan.
+- **Audit log**: `appendAdminLog{RJ,UGD,RI}($ref, 'Hapus Radiologi #'.$dtl)` (kategori ADMIN default),
+  di dalam `DB::transaction` + `lock{RJ,UGD,RI}Row`.
+- Tidak ada isAllowedBatal khusus — akses lewat modul Administrasi.
+
+> Catatan: dulu RI (`administrasi-ri/radiologi-ri`) read-only tanpa hapus; `removeRad` + lock + log
+> ditambahkan agar setara RJ/UGD.
+
+Selain hapus, ada juga **lock tarif** di modul upload — `isRefLocked()` (`upload-radiologi.blade.php:280`):
 
 ```php
 // RI: ri_status harus 'I' (dirawat) agar bisa edit; RJ/UGD: rj_status harus 'A'
@@ -182,7 +201,7 @@ Modul radiologi tidak punya tombol Etiket (fitur ini eksklusif modul lab).
 |---|---|---|
 | Alur status | `P→C→H→F` (`checkup_status`) | Tidak ada — hanya kelengkapan upload |
 | Proses Administrasi (post biaya) | Ya (`P→C`) | Tidak — biaya di-post saat INSERT order |
-| Batal | Ada, role-guarded | **Tidak ada sama sekali** |
+| Batal/hapus | `batalkanPendaftaran`/`batalkanTransaksi` di modal lab (role-guarded, ada log) | `removeRad` di Administrasi RJ/UGD/RI (hapus order+biaya, lock induk + log) |
 | Header/detail | Terpisah (`checkuphdrs`/`checkupdtls`) | 1 baris = 1 pemeriksaan (`rstxn_*rads`) |
 | Kesimpulan | Kolom `checkup_kesimpulan` | Menyatu di `hasil_bacaan` (CLOB HTML) |
 | Import alat | Mindray (`oracle_mindray`) | Tidak ada (upload manual) |
