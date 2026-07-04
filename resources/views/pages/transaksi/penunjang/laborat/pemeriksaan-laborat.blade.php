@@ -15,6 +15,7 @@ new class extends Component {
     #[Reactive]
     public string $labStatus = 'P'; // P=administrasi, C=input hasil, H=selesai
     public array $dtlRows = [];
+    public string $kesimpulan = ''; // checkup_kesimpulan (di bawah tabel hasil)
 
     // Item picker (grid card style seperti RJ)
     public string $searchLabItem = '';
@@ -103,6 +104,30 @@ new class extends Component {
             $row['hasil_display'] = $this->formatHasilDisplay($row);
             return $row;
         })->toArray();
+
+        // Kesimpulan lab (disimpan di header, ditampilkan di bawah tabel hasil)
+        $this->kesimpulan = (string) (DB::table('lbtxn_checkuphdrs')
+            ->where('checkup_no', $this->checkupNo)
+            ->value('checkup_kesimpulan') ?? '');
+    }
+
+    /* =======================
+     | SAVE KESIMPULAN (di bawah tabel hasil — hanya saat input hasil / C)
+     * ======================= */
+    public function saveKesimpulan(string $value): void
+    {
+        if ($this->labStatus !== 'C') {
+            $this->dispatch('toast', type: 'warning', message: 'Kesimpulan hanya bisa diisi saat input hasil.');
+            return;
+        }
+
+        $value = trim($value);
+        DB::table('lbtxn_checkuphdrs')
+            ->where('checkup_no', $this->checkupNo)
+            ->update(['checkup_kesimpulan' => $value]);
+
+        $this->kesimpulan = $value;
+        $this->dispatch('toast', type: 'success', message: 'Kesimpulan berhasil disimpan.');
     }
 
     /* =======================
@@ -920,5 +945,22 @@ new class extends Component {
                     @endif
             </table>
         </div>
+
+        {{-- KESIMPULAN (di bawah tabel hasil) — editable saat input hasil (C), read-only saat selesai (H) --}}
+        @if (in_array($labStatus, ['C', 'H'], true))
+            <div class="mt-4">
+                <label class="block mb-1 text-sm font-medium text-body dark:text-gray-300">Kesimpulan</label>
+                @if ($labStatus === 'C')
+                    <x-textarea rows="3" wire:change="saveKesimpulan($event.target.value)"
+                        placeholder="Masukkan kesimpulan hasil pemeriksaan...">{{ $kesimpulan }}</x-textarea>
+                    <p class="mt-1 text-xs text-muted-soft">Otomatis tersimpan saat pindah/klik keluar dari kolom.</p>
+                @else
+                    <div
+                        class="px-3 py-2 text-sm rounded-lg bg-surface-soft dark:bg-gray-800 text-body dark:text-gray-300 whitespace-pre-line">
+                        {{ $kesimpulan !== '' ? $kesimpulan : '-' }}
+                    </div>
+                @endif
+            </div>
+        @endif
     </div>
 </div>

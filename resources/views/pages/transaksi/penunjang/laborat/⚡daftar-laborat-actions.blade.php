@@ -303,19 +303,6 @@ new class extends Component {
     }
 
     /* =======================
-     | SAVE KESIMPULAN
-     * ======================= */
-    public function saveKesimpulan(string $value): void
-    {
-        DB::table('lbtxn_checkuphdrs')
-            ->where('checkup_no', $this->checkupNo)
-            ->update(['checkup_kesimpulan' => $value]);
-
-        $this->headerData['checkup_kesimpulan'] = $value;
-        $this->dispatch('toast', type: 'success', message: 'Kesimpulan berhasil disimpan.');
-    }
-
-    /* =======================
      | BATALKAN TRANSAKSI (H/C -> F)
      * ======================= */
     public function batalkanTransaksi(): void
@@ -790,15 +777,6 @@ new class extends Component {
                                 </x-confirm-button>
                             @endhasanyrole
                         @endif
-                    </div>
-
-                    {{-- TENGAH: KESIMPULAN --}}
-                    <div class="flex items-center gap-2 flex-1">
-                        <label
-                            class="text-sm font-medium text-body dark:text-gray-300 whitespace-nowrap">Kesimpulan:</label>
-                        <x-text-input type="text" value="{{ $headerData['checkup_kesimpulan'] ?? '' }}"
-                            wire:change="saveKesimpulan($event.target.value)" class="flex-1 text-sm"
-                            placeholder="Masukkan kesimpulan..." />
                     </div>
 
                     {{-- KANAN: STATUS BUTTONS --}}
