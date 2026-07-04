@@ -321,30 +321,39 @@ new class extends Component {
                                             : 'gray');
 
                                     $layanan = strtoupper($row->checkup_rjri ?? '');
+                                    // Warna layanan — samakan dengan display rekam medis (display-pasien): +border.
                                     $layananColor = match($layanan) {
-                                        'RJ' => 'text-blue-700 bg-blue-100',
-                                        'UGD' => 'text-red-700 bg-red-100',
-                                        'RI' => 'text-purple-700 bg-purple-100',
-                                        default => 'text-body bg-surface-soft',
+                                        'RJ' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                        'UGD' => 'bg-red-100 text-red-700 border-red-200',
+                                        'RI' => 'bg-purple-100 text-purple-700 border-purple-200',
+                                        default => 'bg-surface-soft text-muted border-hairline',
+                                    };
+                                    $layananLabel = match ($layanan) {
+                                        'RJ' => 'Rawat Jalan',
+                                        'UGD' => 'Unit Gawat Darurat',
+                                        'RI' => 'Rawat Inap',
+                                        default => $layanan ?: '-',
                                     };
 
-                                    // Status transaksi INDUK — label & warna per sumber + kode status.
-                                    // RJ/UGD: A=Aktif L=Pulang F=Batal I=Transfer(UGD/RI). RI: I=Dirawat P=Pulang F=Batal.
+                                    // Status transaksi INDUK — warna DISAMAKAN dengan display-pasien (rekam medis):
+                                    // RJ/UGD A=warning L=success F=error I=blue; RI I=brand(Dirawat) P=amber(Pulang) L=muted F=error.
                                     $ps = strtoupper($row->parent_status ?? '');
-                                    [$parentLabel, $parentVariant] = match (true) {
-                                        $ps === '' => ['-', 'gray'],
-                                        $layanan === 'RJ' && $ps === 'A' => ['Aktif', 'success'],
-                                        $layanan === 'RJ' && $ps === 'L' => ['Pulang', 'gray'],
-                                        $layanan === 'RJ' && $ps === 'I' => ['Transfer UGD', 'warning'],
-                                        $layanan === 'RJ' && $ps === 'F' => ['Batal', 'danger'],
-                                        $layanan === 'UGD' && $ps === 'A' => ['Aktif', 'success'],
-                                        $layanan === 'UGD' && $ps === 'L' => ['Pulang', 'gray'],
-                                        $layanan === 'UGD' && $ps === 'I' => ['Transfer RI', 'warning'],
-                                        $layanan === 'UGD' && $ps === 'F' => ['Batal', 'danger'],
-                                        $layanan === 'RI' && $ps === 'I' => ['Dirawat', 'success'],
-                                        $layanan === 'RI' && $ps === 'P' => ['Pulang', 'gray'],
-                                        $layanan === 'RI' && $ps === 'F' => ['Batal', 'danger'],
-                                        default => [$ps, 'gray'],
+                                    $psMuted = 'bg-surface-soft text-muted border-hairline';
+                                    [$parentLabel, $parentClass] = match (true) {
+                                        $ps === '' => ['-', $psMuted],
+                                        $layanan === 'RJ'  && $ps === 'A' => ['Aktif', 'bg-warning/10 text-warning border-warning/30'],
+                                        $layanan === 'RJ'  && $ps === 'L' => ['Selesai', 'bg-success/10 text-success border-success/30'],
+                                        $layanan === 'RJ'  && $ps === 'F' => ['Batal', 'bg-error/10 text-error border-error/30'],
+                                        $layanan === 'RJ'  && $ps === 'I' => ['Transfer UGD', 'bg-blue-100 text-blue-700 border-blue-200'],
+                                        $layanan === 'UGD' && $ps === 'A' => ['Aktif', 'bg-warning/10 text-warning border-warning/30'],
+                                        $layanan === 'UGD' && $ps === 'L' => ['Selesai', 'bg-success/10 text-success border-success/30'],
+                                        $layanan === 'UGD' && $ps === 'F' => ['Batal', 'bg-error/10 text-error border-error/30'],
+                                        $layanan === 'UGD' && $ps === 'I' => ['Transfer Rawat Inap', 'bg-blue-100 text-blue-700 border-blue-200'],
+                                        $layanan === 'RI'  && $ps === 'I' => ['Dirawat', 'bg-brand/10 text-brand border-brand/30'],
+                                        $layanan === 'RI'  && $ps === 'P' => ['Pulang', 'bg-amber-100 text-amber-700 border-amber-200'],
+                                        $layanan === 'RI'  && $ps === 'L' => ['Pulang', $psMuted],
+                                        $layanan === 'RI'  && $ps === 'F' => ['Batal', 'bg-error/10 text-error border-error/30'],
+                                        default => [$ps, $psMuted],
                                     };
                                 @endphp
 
@@ -382,21 +391,22 @@ new class extends Component {
 
                                     {{-- TANGGAL / LAYANAN --}}
                                     <td class="px-6 py-4 space-y-2 align-top">
-                                        <div class="font-mono text-sm text-body dark:text-gray-300">
-                                            {{ $row->checkup_date_display ?? '-' }}
-                                        </div>
-                                        <div class="font-mono text-xs text-muted">
+                                        {{-- No pemeriksaan — paling atas; gaya sama dengan No RM (reg_no) --}}
+                                        <div class="text-base font-medium text-body dark:text-gray-300">
                                             No: {{ $row->checkup_no }}
                                         </div>
-                                        <span
-                                            class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full {{ $layananColor }}">
-                                            {{ $layanan ?: '-' }}
-                                        </span>
-
-                                        {{-- Status transaksi induk (RJ/UGD/RI) --}}
-                                        <div class="flex items-center gap-1.5 mt-1">
-                                            <span class="text-[10px] uppercase tracking-wide text-muted-soft">Induk</span>
-                                            <x-badge :variant="$parentVariant">{{ $parentLabel }}</x-badge>
+                                        {{-- Layanan (nama lengkap) + status transaksi induk, sebelahan --}}
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="inline-flex px-2.5 py-0.5 text-xs font-semibold border rounded-full {{ $layananColor }}">
+                                                {{ $layananLabel }}
+                                            </span>
+                                            <span class="inline-flex px-2.5 py-0.5 text-xs font-semibold border rounded-full {{ $parentClass }}">
+                                                {{ $parentLabel }}
+                                            </span>
+                                        </div>
+                                        {{-- Tanggal --}}
+                                        <div class="font-mono text-sm text-body dark:text-gray-300">
+                                            {{ $row->checkup_date_display ?? '-' }}
                                         </div>
                                     </td>
 
