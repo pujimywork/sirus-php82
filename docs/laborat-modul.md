@@ -42,6 +42,9 @@ Disimpan di header (`lbtxn_checkuphdrs.checkup_kesimpulan`), tampil **di bawah t
 - Sudah tampil otomatis di **display layar** (`laboratorium-display.blade.php`) & **cetak PDF**
   (`laboratorium-display-print.blade.php`, pakai `nl2br`), keduanya conditional (hanya bila terisi).
 
+> **Administrasi RJ/UGD/RI (tab Laboratorium) READ-ONLY** — hanya tampil daftar biaya + total. Order lewat
+> EMR, batal/kelola lewat modul penunjang lab (modal `daftar-laborat`). Tidak ada entry/edit/hapus di Administrasi.
+
 ## Batal — dua jenis
 
 Keduanya dijaga role `isAllowedBatal()` = **Admin · Supervisor Penunjang** (operator Lab tidak boleh

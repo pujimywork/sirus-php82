@@ -6,9 +6,14 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Http\Traits\Txn\Rj\EmrRJTrait;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
+use App\Http\Traits\Txn\Ri\EmrRITrait;
 
 new class extends Component {
     use WithPagination;
+    // EMR traits utk lock{RJ,UGD,RI}Row + appendAdminLog{RJ,UGD,RI} (audit log batal order ke induk).
+    use EmrRJTrait, EmrUGDTrait, EmrRITrait;
 
     /*
      | Modul: Upload Hasil Radiologi
@@ -287,6 +292,40 @@ new class extends Component {
         $table = $source === 'UGD' ? 'rstxn_ugdhdrs' : 'rstxn_rjhdrs';
         $row = DB::table($table)->select('rj_status')->where('rj_no', $refNo)->first();
         return $row && !empty($row->rj_status) && $row->rj_status !== 'A';
+    }
+
+    /* Batalkan (hapus) order radiologi oleh petugas radiologi di program penunjang.
+       Hapus baris rstxn_*rads (sekaligus biaya) sesuai source. Guard lock induk
+       (isRefLocked: pasien pulang → tak boleh) + audit log ke userLogs induk. */
+    public function batalkanOrder(string $source, int $dtlNo, int $refNo): void
+    {
+        if ($this->isRefLocked($source, $refNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang — order terkunci, tidak bisa dibatalkan.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($source, $dtlNo, $refNo) {
+                if ($source === 'RJ') {
+                    $this->lockRJRow($refNo);
+                    DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->delete();
+                    $this->appendAdminLogRJ($refNo, 'Batal Order Radiologi #' . $dtlNo, 'MR');
+                } elseif ($source === 'UGD') {
+                    $this->lockUGDRow($refNo);
+                    DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->delete();
+                    $this->appendAdminLogUGD($refNo, 'Batal Order Radiologi #' . $dtlNo, 'MR');
+                } elseif ($source === 'RI') {
+                    $this->lockRIRow($refNo);
+                    DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->delete();
+                    $this->appendAdminLogRI($refNo, 'Batal Order Radiologi #' . $dtlNo, 'MR');
+                }
+            });
+
+            $this->dispatch('toast', type: 'success', message: 'Order radiologi berhasil dibatalkan.');
+            unset($this->rows);
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membatalkan: ' . $e->getMessage());
+        }
     }
 
     /* ===============================
@@ -720,6 +759,23 @@ new class extends Component {
                                                 </span>
                                             </x-secondary-button>
                                             </div>
+                                        </div>
+
+                                        {{-- BATALKAN ORDER — hapus order radiologi oleh petugas radiologi.
+                                             Lock (pasien pulang) & audit log ditangani server-side. --}}
+                                        <div class="pt-3 mt-3 border-t border-hairline dark:border-gray-700">
+                                            <button type="button"
+                                                wire:click="batalkanOrder('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }})"
+                                                wire:confirm="Batalkan order radiologi ini? Order akan dihapus."
+                                                wire:loading.attr="disabled"
+                                                wire:target="batalkanOrder('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }})"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/20">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Batalkan Order
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
