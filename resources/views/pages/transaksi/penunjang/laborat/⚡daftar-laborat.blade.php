@@ -132,6 +132,15 @@ new class extends Component {
                     FROM lbtxn_checkuphdrs k
                     WHERE k.checkup_no = rsview_checkups.checkup_no
                 ) AS klinis_desc"),
+                // Status transaksi INDUK (RJ/UGD/RI) — resolve per source dari header induk.
+                DB::raw("(
+                    SELECT CASE UPPER(h.status_rjri)
+                        WHEN 'RJ'  THEN (SELECT rj_status FROM rstxn_rjhdrs  WHERE rj_no    = h.ref_no)
+                        WHEN 'UGD' THEN (SELECT rj_status FROM rstxn_ugdhdrs WHERE rj_no    = h.ref_no)
+                        WHEN 'RI'  THEN (SELECT ri_status FROM rstxn_rihdrs  WHERE rihdr_no = h.ref_no)
+                    END
+                    FROM lbtxn_checkuphdrs h WHERE h.checkup_no = rsview_checkups.checkup_no
+                ) AS parent_status"),
             )
             ->whereBetween('checkup_date', [$start, $end])
             ->orderBy('checkup_date', 'desc');
@@ -318,6 +327,25 @@ new class extends Component {
                                         'RI' => 'text-purple-700 bg-purple-100',
                                         default => 'text-body bg-surface-soft',
                                     };
+
+                                    // Status transaksi INDUK — label & warna per sumber + kode status.
+                                    // RJ/UGD: A=Aktif L=Pulang F=Batal I=Transfer(UGD/RI). RI: I=Dirawat P=Pulang F=Batal.
+                                    $ps = strtoupper($row->parent_status ?? '');
+                                    [$parentLabel, $parentVariant] = match (true) {
+                                        $ps === '' => ['-', 'gray'],
+                                        $layanan === 'RJ' && $ps === 'A' => ['Aktif', 'success'],
+                                        $layanan === 'RJ' && $ps === 'L' => ['Pulang', 'gray'],
+                                        $layanan === 'RJ' && $ps === 'I' => ['Transfer UGD', 'warning'],
+                                        $layanan === 'RJ' && $ps === 'F' => ['Batal', 'danger'],
+                                        $layanan === 'UGD' && $ps === 'A' => ['Aktif', 'success'],
+                                        $layanan === 'UGD' && $ps === 'L' => ['Pulang', 'gray'],
+                                        $layanan === 'UGD' && $ps === 'I' => ['Transfer RI', 'warning'],
+                                        $layanan === 'UGD' && $ps === 'F' => ['Batal', 'danger'],
+                                        $layanan === 'RI' && $ps === 'I' => ['Dirawat', 'success'],
+                                        $layanan === 'RI' && $ps === 'P' => ['Pulang', 'gray'],
+                                        $layanan === 'RI' && $ps === 'F' => ['Batal', 'danger'],
+                                        default => [$ps, 'gray'],
+                                    };
                                 @endphp
 
                                 <tr wire:key="daftar-laborat-{{ $row->checkup_no ?? $idx }}"
@@ -364,6 +392,12 @@ new class extends Component {
                                             class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full {{ $layananColor }}">
                                             {{ $layanan ?: '-' }}
                                         </span>
+
+                                        {{-- Status transaksi induk (RJ/UGD/RI) --}}
+                                        <div class="flex items-center gap-1.5 mt-1">
+                                            <span class="text-[10px] uppercase tracking-wide text-muted-soft">Induk</span>
+                                            <x-badge :variant="$parentVariant">{{ $parentLabel }}</x-badge>
+                                        </div>
                                     </td>
 
                                     {{-- ITEM PEMERIKSAAN --}}
