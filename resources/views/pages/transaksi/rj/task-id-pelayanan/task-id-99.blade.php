@@ -1,17 +1,36 @@
 <?php
 
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\BPJS\AntrianTrait;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 
+/**
+ * KOMPONEN AKSI Batal antrian RJ (TaskId99) — berisi fungsi.
+ *
+ * Cetak-pattern: di-mount SEKALI sebagai sibling di daftar-rj. Tombol Batal tiap
+ * baris ada di daftar-rj dan memicu komponen ini via
+ * wire:click="$dispatch('task-id-batal-proses-rj', { rjNo })" (aksi Livewire).
+ * Nol komponen Livewire per baris → batch pasca 'refresh-after-rj.saved' tak skala
+ * jumlah baris. Logika prosesTaskId99 (guard taskId4/5, push BPJS 99, simpan
+ * atomik) IDENTIK versi lama.
+ */
 new class extends Component {
     use EmrRJTrait, AntrianTrait;
 
     public ?int $rjNo = null;
-    public bool $isLoading = false;
-    public bool $isDone = false;
+
+    /* ===============================
+     | ROUTER — dipicu tombol Batal baris via wire:click $dispatch
+     =============================== */
+    #[On('task-id-batal-proses-rj')]
+    public function proses(int $rjNo): void
+    {
+        $this->rjNo = $rjNo;
+        $this->prosesTaskId99();
+    }
 
     /* ===============================
      | PROSES TASK ID 99 (Batal Antrian)
@@ -31,8 +50,6 @@ new class extends Component {
             $this->dispatch('toast', type: 'warning', message: 'Nomor RJ tidak boleh kosong', title: 'Peringatan');
             return;
         }
-
-        $this->isLoading = true;
 
         try {
             // 2. Ambil data RJ — tanpa lock dulu, hanya untuk baca awal
@@ -117,8 +134,6 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage(), title: 'Error');
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Terjadi kesalahan: ' . $e->getMessage(), title: 'Error');
-        } finally {
-            $this->isLoading = false;
         }
     }
 
@@ -132,14 +147,12 @@ new class extends Component {
 };
 ?>
 
-<div class="inline-block">
-    <x-danger-button wire:click="prosesTaskId99" wire:loading.attr="disabled" wire:target="prosesTaskId99"
-        class="!px-4 !py-2 text-sm {{ $isDone ? '!opacity-60' : '' }}" title="{{ $isDone ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk membatalkan antrian (hanya bisa sebelum TaskId4/5)' }}">
-        <span wire:loading.remove wire:target="prosesTaskId99">
-            Batal
-        </span>
-        <span wire:loading wire:target="prosesTaskId99">
-            <x-loading />
-        </span>
-    </x-danger-button>
+{{-- Indikator proses global (host tak punya tombol sendiri — tombol Batal ada di baris daftar-rj). --}}
+<div wire:key="task-id-99-rj-host">
+    <div wire:loading wire:target="proses, prosesTaskId99"
+        class="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 text-sm font-medium
+               text-white bg-rose-600 rounded-xl shadow-lg dark:bg-rose-500">
+        <x-loading />
+        Membatalkan antrian…
+    </div>
 </div>

@@ -587,13 +587,16 @@ new class extends Component {
                                         @else
                                         <div class="flex flex-col gap-2">
 
-                                            {{-- Batal — Admin only (UGD-specific) --}}
+                                            {{-- Batal — Admin only (UGD-specific). Tombol di sini; logika di host
+                                                 task-id-99 (mount 1×). wire:click="$dispatch(...)" = aksi Livewire. --}}
                                             @role('Admin')
                                                 <div class="flex justify-end">
-                                                    <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no"
-                                                        :isDone="(bool) $row->task_id99"
-                                                        wire:key="taskid99-{{ $row->rj_no }}" />
+                                                    <x-danger-button type="button"
+                                                        wire:click="$dispatch('task-id-batal-proses-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                        class="!px-2 !py-1 text-xs {{ $row->task_id99 ? '!opacity-60' : '' }}"
+                                                        title="{{ $row->task_id99 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk membatalkan antrian (hanya bisa sebelum TaskId6/7)' }}">
+                                                        Batal
+                                                    </x-danger-button>
                                                 </div>
                                             @endrole
 
@@ -601,12 +604,22 @@ new class extends Component {
                                             <div class="grid grid-cols-2 gap-2">
                                                 {{-- Group T6+T7 (sub-grid 2 kolom) --}}
                                                 <div class="grid grid-cols-2 gap-1">
-                                                    {{-- T6+T7 digabung jadi 1 komponen/baris (dulu 2 Livewire terpisah) --}}
-                                                    <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-apotek-actions
-                                                        :rjNo="$row->rj_no"
-                                                        :isDone6="(bool) $row->task_id6"
-                                                        :isDone7="(bool) $row->task_id7"
-                                                        wire:key="taskidapotek-{{ $row->rj_no }}" />
+                                                    {{-- Tombol di sini; logika di komponen host task-id-apotek-actions (mount 1×).
+                                                         wire:click="$dispatch(...)" = aksi Livewire (BUKAN Alpine) → host tangkap
+                                                         via #[On]. Nol komponen Livewire per baris. Redup dari $row->task_id6/7. --}}
+                                                    <x-primary-button type="button"
+                                                        wire:click="$dispatch('task-id-apotek-proses-ugd', { rjNo: {{ $row->rj_no }}, aksi: '6' })"
+                                                        class="!px-4 !py-2 text-sm {{ $row->task_id6 ? '!opacity-60' : '' }}"
+                                                        title="{{ $row->task_id6 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId6 (Masuk Apotek)' }}">
+                                                        TaskId6
+                                                    </x-primary-button>
+
+                                                    <x-primary-button type="button"
+                                                        wire:click="$dispatch('task-id-apotek-proses-ugd', { rjNo: {{ $row->rj_no }}, aksi: '7' })"
+                                                        class="!px-4 !py-2 text-sm {{ $row->task_id7 ? '!opacity-60' : '' }}"
+                                                        title="{{ $row->task_id7 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId7 (Keluar Apotek)' }}">
+                                                        TaskId7
+                                                    </x-primary-button>
                                                 </div>
 
                                                 {{-- Telaah --}}
@@ -708,6 +721,17 @@ new class extends Component {
             </div>
 
         </div>{{-- end auto-refresh wrapper --}}
+
+        {{-- Host aksi Task ID apotek (berisi fungsi) — mount 1×. Tombol tiap baris
+             dispatch 'task-id-apotek-proses-ugd' ke sini via wire:click. --}}
+        <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-apotek-actions
+            wire:key="task-id-apotek-actions-ugd-host" />
+
+        {{-- Host aksi Batal (task-id-99) — mount 1×, Admin only. --}}
+        @role('Admin')
+            <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-99
+                wire:key="task-id-99-ugd-host" />
+        @endrole
 
         <livewire:pages::transaksi.ugd.antrian-apotek-ugd.antrian-apotek-ugd-actions
             wire:key="antrian-apotek-ugd-actions" />

@@ -2,16 +2,33 @@
 // resources/views/pages/transaksi/ugd/..../taskid99-ugd.blade.php
 
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 
+/**
+ * KOMPONEN AKSI Batal antrian apotek UGD (TaskId99) — berisi fungsi.
+ *
+ * Cetak-pattern: di-mount SEKALI sebagai sibling di antrian-apotek-ugd. Tombol Batal
+ * tiap baris ada di antrian-apotek-ugd dan memicu komponen ini via
+ * wire:click="$dispatch('task-id-batal-proses-ugd', { rjNo })" (aksi Livewire).
+ * Nol komponen Livewire per baris. Logika prosesTaskId99 IDENTIK versi lama.
+ */
 new class extends Component {
     use EmrUGDTrait;
 
     public ?int $rjNo = null;
-    public bool $isLoading = false;
-    public bool $isDone = false;
+
+    /* ===============================
+     | ROUTER — dipicu tombol Batal baris via wire:click $dispatch
+     =============================== */
+    #[On('task-id-batal-proses-ugd')]
+    public function proses(int $rjNo): void
+    {
+        $this->rjNo = $rjNo;
+        $this->prosesTaskId99();
+    }
 
     /* ===============================
      | PROSES TASKID99 — Batalkan Antrian
@@ -28,8 +45,6 @@ new class extends Component {
             $this->dispatch('toast', type: 'warning', message: 'Nomor UGD tidak boleh kosong.');
             return;
         }
-
-        $this->isLoading = true;
 
         try {
             $message = '';
@@ -76,17 +91,17 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Terjadi kesalahan: ' . $e->getMessage());
-        } finally {
-            $this->isLoading = false;
         }
     }
 };
 ?>
 
-<div class="inline-block">
-    <x-danger-button wire:click="prosesTaskId99" wire:loading.attr="disabled" wire:target="prosesTaskId99"
-        class="!px-2 !py-1 text-xs {{ $isDone ? '!opacity-60' : '' }}" title="{{ $isDone ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk membatalkan antrian (hanya bisa sebelum TaskId6/7)' }}">
-        <span wire:loading.remove wire:target="prosesTaskId99">Batal</span>
-        <span wire:loading wire:target="prosesTaskId99"><x-loading /></span>
-    </x-danger-button>
+{{-- Indikator proses global (host tak punya tombol sendiri — tombol Batal ada di baris antrian-apotek-ugd). --}}
+<div wire:key="task-id-99-ugd-host">
+    <div wire:loading wire:target="proses, prosesTaskId99"
+        class="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 text-sm font-medium
+               text-white bg-rose-600 rounded-xl shadow-lg dark:bg-rose-500">
+        <x-loading />
+        Membatalkan antrian…
+    </div>
 </div>
