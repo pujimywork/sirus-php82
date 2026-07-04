@@ -1354,12 +1354,18 @@ new class extends Component {
                                                 </x-dropdown>
                                                 </div>{{-- /baris atas tombol aksi sejajar --}}
 
-                                                {{-- Batal (Task ID 99) — baris bawah. Manager Medis/Umum (Admin otomatis via super-user) --}}
+                                                {{-- Batal (Task ID 99) — baris bawah. Manager Medis/Umum (Admin otomatis via super-user).
+                                                     Tombol di sini; logika di host task-id-99 (mount 1×). wire:click="$dispatch(...)"
+                                                     = aksi Livewire → host tangkap via #[On]. Redup dari $row->task_id99. --}}
                                                 @hasanyrole('Admin|Manager Medis|Manager Umum')
-                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no"
-                                                        :isDone="(bool) $row->task_id99"
-                                                        wire:key="taskid99-{{ $row->rj_no }}" />
+                                                    <div class="inline-block">
+                                                        <x-danger-button type="button"
+                                                            wire:click="$dispatch('task-id-batal-proses-rj', { rjNo: {{ $row->rj_no }} })"
+                                                            class="!px-4 !py-2 text-sm {{ $row->task_id99 ? '!opacity-60' : '' }}"
+                                                            title="{{ $row->task_id99 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk membatalkan antrian (hanya bisa sebelum TaskId4/5)' }}">
+                                                            Batal
+                                                        </x-danger-button>
+                                                    </div>
                                                 @endhasanyrole
 
                                             </div>
@@ -1391,6 +1397,14 @@ new class extends Component {
             </div>
 
             {{-- Sibling components — pendaftaran: Create/Edit + Satu Sehat (Mr/Admin) + Cetak Etiket + Info Kelengkapan EMR --}}
+
+            {{-- Host aksi Batal antrian (task-id-99) — mount 1×. Tombol Batal tiap baris
+                 dispatch 'task-id-batal-proses-rj' ke sini via wire:click. --}}
+            @hasanyrole('Admin|Manager Medis|Manager Umum')
+                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
+                    wire:key="task-id-99-rj-host" />
+            @endhasanyrole
+
             <livewire:pages::transaksi.rj.daftar-rj.daftar-rj-actions wire:key="daftar-rj-actions" />
             <livewire:pages::transaksi.rj.daftar-rj.satu-sehat-rj-actions wire:key="satu-sehat-rj-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />

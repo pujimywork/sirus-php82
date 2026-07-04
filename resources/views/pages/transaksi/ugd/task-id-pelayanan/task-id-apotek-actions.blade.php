@@ -1,33 +1,50 @@
 <?php
 
 use Livewire\Component;
-use Livewire\Attributes\Reactive;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Support\OracleLob;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 
 /**
- * Gabungan aksi Task ID apotek UGD (TaskId6 Masuk Apotek, TaskId7 Keluar Apotek)
- * dalam SATU komponen per baris.
+ * KOMPONEN AKSI Task ID apotek UGD (TaskId6 Masuk Apotek, TaskId7 Keluar Apotek)
+ * — berisi SEMUA fungsi/logika.
  *
- * Sebelumnya 2 komponen Livewire terpisah (task-id-6, task-id-7) di-mount per baris
- * di antrian-apotek-ugd → 2x jumlah komponen (pemicu payload berat / TooManyComponents).
- * Digabung: logika tiap aksi identik (lock → find → guard idempoten → penomoran
- * noAntrianApotek anti-race → updateJson), spinner per tombol tetap terisolasi via
- * wire:target. Root display:contents + wrapper inline-block per tombol → tata letak
- * grid parent tidak berubah. Tombol Batal (task-id-99) tetap komponen terpisah karena
- * posisi & gate role-nya berbeda. Hanya dipakai di antrian-apotek-ugd.
+ * Arsitektur "cetak-pattern": komponen ini di-mount SEKALI sebagai sibling di
+ * antrian-apotek-ugd (bukan per baris). Tombol tiap baris ada di antrian-apotek-ugd
+ * dan memicu komponen ini via
+ * wire:click="$dispatch('task-id-apotek-proses-ugd', { rjNo, aksi })" (aksi
+ * Livewire, bukan Alpine).
+ *
+ * Sebelumnya komponen ini di-mount per baris dengan prop #[Reactive] → saat list
+ * re-render pasca 'refresh-after-apotek.saved', semua child reactive ikut satu
+ * batch → TooManyComponents saat baris banyak. Dengan mount sekali, batch tak lagi
+ * skala jumlah baris. Tombol Batal (task-id-99) tetap terpisah.
+ *
+ * ⚠️ Logika tiap aksi (lock → find → guard idempoten → penomoran noAntrianApotek
+ *    anti-race → updateJson) IDENTIK versi lama.
  */
 new class extends Component {
     use EmrUGDTrait;
 
     public ?int $rjNo = null;
-    // #[Reactive] → tombol ikut redup saat parent re-render (refresh-after-apotek.saved), tanpa remount.
-    #[Reactive]
-    public bool $isDone6 = false;
-    #[Reactive]
-    public bool $isDone7 = false;
+
+    /* ===============================
+     | ROUTER — dipicu tombol baris via wire:click $dispatch
+     | Detail event: { rjNo, aksi } dengan aksi ∈ {'6','7'}.
+     =============================== */
+    #[On('task-id-apotek-proses-ugd')]
+    public function proses(int $rjNo, string $aksi): void
+    {
+        $this->rjNo = $rjNo;
+
+        match ($aksi) {
+            '6' => $this->prosesTaskId6(),
+            '7' => $this->prosesTaskId7(),
+            default => null,
+        };
+    }
 
     /* ===============================
      | PROSES TASKID6 — Masuk Apotek
@@ -193,22 +210,12 @@ new class extends Component {
 };
 ?>
 
-<div class="contents">
-    {{-- TaskId6 (Masuk Apotek) --}}
-    <div class="inline-block">
-        <x-primary-button wire:click="prosesTaskId6" wire:loading.attr="disabled" wire:target="prosesTaskId6"
-            class="!px-4 !py-2 text-sm {{ $isDone6 ? '!opacity-60' : '' }}" title="{{ $isDone6 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId6 (Masuk Apotek)' }}">
-            <span wire:loading.remove wire:target="prosesTaskId6">TaskId6</span>
-            <span wire:loading wire:target="prosesTaskId6"><x-loading /></span>
-        </x-primary-button>
-    </div>
-
-    {{-- TaskId7 (Keluar Apotek) --}}
-    <div class="inline-block">
-        <x-primary-button wire:click="prosesTaskId7" wire:loading.attr="disabled" wire:target="prosesTaskId7"
-            class="!px-4 !py-2 text-sm {{ $isDone7 ? '!opacity-60' : '' }}" title="{{ $isDone7 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId7 (Keluar Apotek)' }}">
-            <span wire:loading.remove wire:target="prosesTaskId7">TaskId7</span>
-            <span wire:loading wire:target="prosesTaskId7"><x-loading /></span>
-        </x-primary-button>
+{{-- Indikator proses global (host tak punya tombol sendiri — tombol ada di baris antrian-apotek-ugd). --}}
+<div wire:key="task-id-apotek-actions-ugd-host">
+    <div wire:loading wire:target="proses, prosesTaskId6, prosesTaskId7"
+        class="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 text-sm font-medium
+               text-white bg-blue-600 rounded-xl shadow-lg dark:bg-blue-500">
+        <x-loading />
+        Memproses Task ID Apotek…
     </div>
 </div>
