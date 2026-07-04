@@ -46,6 +46,30 @@ new class extends Component {
         $this->dispatch('userControl.requestDelete', userId: $userId);
     }
 
+    /* Toggle status aktif/nonaktif user langsung dari list. Nonaktif = tak bisa login.
+       Guard: tidak boleh menonaktifkan akun sendiri (cegah lockout). */
+    public function toggleActive(int $userId): void
+    {
+        if ($userId === (int) auth()->id()) {
+            $this->dispatch('toast', type: 'error', message: 'Tidak bisa menonaktifkan akun sendiri.');
+            return;
+        }
+
+        $user = DB::table('users')->select('active_status', 'myuser_name')->where('id', $userId)->first();
+        if (!$user) {
+            $this->dispatch('toast', type: 'error', message: 'User tidak ditemukan.');
+            return;
+        }
+
+        $new = ((string) ($user->active_status ?? '1')) === '1' ? '0' : '1';
+        DB::table('users')->where('id', $userId)->update([
+            'active_status' => $new,
+            'updated_at' => DB::raw('SYSDATE'),
+        ]);
+
+        $this->dispatch('toast', type: 'success', message: 'User ' . ($user->myuser_name ?? '') . ' → ' . ($new === '1' ? 'Aktif' : 'Nonaktif') . '.');
+    }
+
     #[On('refresh-after-user-control.saved')]
     public function refreshAfterSaved(): void
     {
@@ -57,7 +81,7 @@ new class extends Component {
     {
         $searchKeyword = trim($this->searchKeyword);
 
-        $query = DB::table('users as u')->select('u.id', 'u.myuser_code', 'u.myuser_name', 'u.email', 'u.myuser_sip', 'u.myuser_profesi', 'u.myuser_ttd_image', 'u.emp_id', DB::raw("TO_CHAR(u.created_at, 'dd/mm/yyyy HH24:MI:SS') as created_at"))->orderBy('u.myuser_name', 'asc');
+        $query = DB::table('users as u')->select('u.id', 'u.myuser_code', 'u.myuser_name', 'u.email', 'u.myuser_sip', 'u.myuser_profesi', 'u.myuser_ttd_image', 'u.emp_id', 'u.active_status', DB::raw("TO_CHAR(u.created_at, 'dd/mm/yyyy HH24:MI:SS') as created_at"))->orderBy('u.myuser_name', 'asc');
 
         if ($this->filterRole !== '') {
             $query->whereIn('u.id', function ($sub) {
@@ -310,6 +334,7 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">TTD</th>
                                 <th class="px-4 py-3 font-semibold">Role</th>
                                 <th class="px-4 py-3 font-semibold">Profesi</th>
+                                <th class="px-4 py-3 font-semibold">Status</th>
                                 <th class="px-4 py-3 font-semibold">Dibuat</th>
                                 <th class="px-4 py-3 font-semibold">Aksi</th>
                             </tr>
@@ -432,6 +457,15 @@ new class extends Component {
                                         @endif
                                     </td>
 
+                                    {{-- Status akun — Aktif (boleh login) / Nonaktif (diblokir login) --}}
+                                    <td class="px-4 py-3">
+                                        @if ((string) ($row->active_status ?? '1') === '1')
+                                            <x-badge variant="success">Aktif</x-badge>
+                                        @else
+                                            <x-badge variant="danger">Nonaktif</x-badge>
+                                        @endif
+                                    </td>
+
                                     <td class="px-4 py-3 text-xs text-muted">{{ $row->created_at ?? '-' }}</td>
 
                                     {{-- Aksi — ikut pola master-poli --}}
@@ -455,6 +489,14 @@ new class extends Component {
                                                 @endif
                                             </x-secondary-button>
 
+                                            {{-- Toggle Aktif/Nonaktif — nonaktif = tak bisa login --}}
+                                            <x-confirm-button variant="secondary" :action="'toggleActive(' . $row->id . ')'"
+                                                title="{{ (string) ($row->active_status ?? '1') === '1' ? 'Nonaktifkan User' : 'Aktifkan User' }}"
+                                                message="{{ (string) ($row->active_status ?? '1') === '1' ? 'Nonaktifkan' : 'Aktifkan' }} user {{ $row->myuser_name }}? {{ (string) ($row->active_status ?? '1') === '1' ? 'Ia tidak akan bisa login.' : 'Ia bisa login kembali.' }}"
+                                                confirmText="Ya" cancelText="Batal">
+                                                {{ (string) ($row->active_status ?? '1') === '1' ? 'Nonaktifkan' : 'Aktifkan' }}
+                                            </x-confirm-button>
+
                                             {{-- ✅ Hapus: x-confirm-button variant="danger" (sama seperti master-poli) --}}
                                             <x-confirm-button variant="danger" :action="'requestDelete(' . $row->id . ')'" title="Hapus User"
                                                 message="Yakin hapus user {{ $row->myuser_name }}? Semua data terkait termasuk akses kas akan dihapus."
@@ -466,7 +508,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8"
+                                    <td colspan="9"
                                         class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         @if ($filterRole !== '')
                                             Tidak ada user dengan role

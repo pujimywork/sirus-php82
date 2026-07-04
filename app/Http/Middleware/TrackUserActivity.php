@@ -22,6 +22,18 @@ class TrackUserActivity
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
+            // Enforce user NONAKTIF: kalau active_status jadi '0' saat user sedang login,
+            // tendang keluar di request berikutnya. Fail-safe: kolom belum ada / null → aktif.
+            if ((string) (Auth::user()->active_status ?? '1') === '0') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Akun Anda dinonaktifkan. Hubungi administrator.',
+                ]);
+            }
+
             $userId = Auth::id();
             $cacheKey = "user_activity:{$userId}";
             if (!Cache::has($cacheKey)) {

@@ -49,6 +49,17 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Blokir user NONAKTIF (active_status '0'), mis. dokter yang sudah tidak bekerja.
+        // Fail-safe: kolom belum ada / null → dianggap aktif ('1') sehingga login tetap jalan.
+        if ((string) (Auth::user()->active_status ?? '1') === '0') {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda dinonaktifkan. Hubungi administrator.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

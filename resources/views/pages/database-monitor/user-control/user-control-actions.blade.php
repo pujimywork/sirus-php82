@@ -27,6 +27,9 @@ new class extends Component {
     /* ── Profesi klinis tetap (TTD CPPT/SBAR) — utk user multi-role; '' = otomatis ikut role pertama ── */
     public string $myuser_profesi = '';
 
+    /* ── Status aktif: '1' = aktif (boleh login), '0' = nonaktif (diblokir login) ── */
+    public string $active_status = '1';
+
     /* ── EMP ID — diisi via LOV employer ── */
     public ?string $emp_id = null;
     public ?string $emp_name = null; // tampilan saja, tidak disimpan ke users
@@ -78,6 +81,7 @@ new class extends Component {
         $this->email = $user->email ?? '';
         $this->myuser_sip = $user->myuser_sip ?? '';
         $this->myuser_profesi = $user->myuser_profesi ?? '';
+        $this->active_status = (string) ($user->active_status ?? '1');
         $this->existing_ttd_image = $user->myuser_ttd_image ?? null;
         $this->emp_id = $user->emp_id ? (string) $user->emp_id : null;
         $this->emp_name = null;
@@ -127,6 +131,7 @@ new class extends Component {
             'email' => 'required|email|max:100|unique:users,email',
             'myuser_sip' => 'nullable|string|max:50',
             'myuser_profesi' => 'nullable|in:Dokter,Perawat,Apoteker,Gizi',
+            'active_status' => 'required|in:0,1',
             'emp_id' => 'nullable|string|max:20',
             'myuser_ttd_image' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
         ];
@@ -189,6 +194,7 @@ new class extends Component {
                     'email' => $this->email,
                     'myuser_sip' => $this->myuser_sip,
                     'myuser_profesi' => $this->myuser_profesi ?: null,
+                    'active_status' => $this->active_status,
                     'emp_id' => $this->emp_id ?: null,
                     'updated_at' => DB::raw('SYSDATE'),
                 ];
@@ -290,7 +296,7 @@ new class extends Component {
         $this->existing_ttd_image = null;
         $this->emp_id = null;
         $this->emp_name = null;
-        $this->reset(['myuser_code', 'myuser_name', 'email', 'password', 'password_confirmation', 'myuser_sip', 'myuser_profesi', 'myuser_ttd_image']);
+        $this->reset(['myuser_code', 'myuser_name', 'email', 'password', 'password_confirmation', 'myuser_sip', 'myuser_profesi', 'active_status', 'myuser_ttd_image']);
     }
 };
 ?>
@@ -429,6 +435,21 @@ new class extends Component {
                                 <p class="mt-1 text-xs text-muted dark:text-gray-400">
                                     ✍️ Untuk user multi-role (mis. Perawat + Dokter/Manager): profesi yang
                                     tercatat saat menulis CPPT/SBAR. Kosongkan jika role-nya cuma satu.
+                                </p>
+                            </div>
+
+                            {{-- Status Akun — nonaktif = tidak bisa login (mis. dokter yang sudah tidak bekerja) --}}
+                            <div>
+                                <x-input-label value="Status Akun" class="mb-1" />
+                                <x-select-input wire:model="active_status" class="w-full"
+                                    :error="$errors->has('active_status')">
+                                    <option value="1">Aktif — boleh login</option>
+                                    <option value="0">Nonaktif — diblokir login</option>
+                                </x-select-input>
+                                <x-input-error :messages="$errors->get('active_status')" class="mt-1" />
+                                <p class="mt-1 text-xs text-muted dark:text-gray-400">
+                                    🔒 Nonaktifkan (bukan hapus) untuk user yang sudah tidak bekerja — datanya tetap
+                                    tersimpan tapi tidak bisa masuk ke sistem.
                                 </p>
                             </div>
 
