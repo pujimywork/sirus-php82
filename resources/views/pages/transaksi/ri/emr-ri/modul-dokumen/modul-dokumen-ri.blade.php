@@ -180,6 +180,14 @@ new class extends Component {
                             Pelayanan Bedah
                         </x-tab>
 
+                        <x-tab variant="underline" active-expr="activeTab === 'vkKebidanan'"
+                            x-on:click="activeTab = 'vkKebidanan'" class="inline-flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            VK / Kebidanan
+                        </x-tab>
+
                     </div>
                 </div>
 
@@ -241,6 +249,13 @@ new class extends Component {
                     <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pelayanan-bedah-ri.rm-pelayanan-bedah-ri-actions
                         :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
                         wire:key="pelayanan-bedah-ri-{{ $riHdrNo ?? 'init' }}" />
+                </div>
+
+                {{-- TAB: VK / KEBIDANAN (umbrella sub-tab semua dokumen kebidanan) --}}
+                <div x-show="activeTab === 'vkKebidanan'" x-transition.opacity.duration.200ms style="display:none">
+                    <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.vk-kebidanan-ri.rm-vk-kebidanan-ri-actions
+                        :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
+                        wire:key="vk-kebidanan-ri-{{ $riHdrNo ?? 'init' }}" />
                 </div>
 
             </div>{{-- end body --}}

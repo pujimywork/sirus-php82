@@ -31,6 +31,15 @@ trait WithValidationToastTrait
      */
     protected function validateWithToast($rules = null, $messages = [], $attributes = []): array
     {
+        // Tanpa rules eksplisit & komponen tak punya rule apa pun (rules() kosong)
+        // → lewati validasi, cegah MissingRulesException. (Kasus ini dulu selalu error.)
+        if ($rules === null) {
+            $resolved = method_exists($this, 'rules') ? $this->rules() : (property_exists($this, 'rules') ? $this->rules : []);
+            if (empty($resolved)) {
+                return [];
+            }
+        }
+
         try {
             return $this->validate($rules, $messages, $attributes);
         } catch (ValidationException $e) {
