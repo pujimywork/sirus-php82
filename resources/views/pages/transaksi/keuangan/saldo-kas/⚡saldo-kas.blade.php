@@ -22,6 +22,13 @@ new class extends Component {
     public function updatedTanggal(): void { /* recompute saldo */ }
     public function updatedSearchKeyword(): void { /* refilter */ }
 
+    /** Reset filter ke kondisi awal (dipakai tombol Reset toolbar standar). */
+    public function resetFilters(): void
+    {
+        $this->tanggal = now()->toDateString();
+        $this->searchKeyword = '';
+    }
+
     public function openEdit(string $accId): void
     {
         if (!$this->canEditSaldo()) {
@@ -153,6 +160,8 @@ new class extends Component {
                                 placeholder="Kode / nama akun kas..."
                                 class="block w-full" />
                         </div>
+
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
 
                     <div class="px-4 py-2 text-right border rounded-lg bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800">
