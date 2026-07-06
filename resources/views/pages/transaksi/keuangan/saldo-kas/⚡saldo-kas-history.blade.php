@@ -452,23 +452,25 @@ new class extends Component {
                                 </tr>
                             @endforelse
 
-                            @if ($this->rows->count() > 0)
-                                <tr class="font-semibold bg-emerald-50 dark:bg-emerald-900/20">
-                                    <td colspan="3" class="px-3 py-2 text-xs uppercase">
+                        </tbody>
+                        @if ($this->rows->count() > 0)
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="sticky bottom-0 z-10 px-3 py-3 text-sm font-bold uppercase border-t-2 bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-900 dark:border-emerald-700 dark:text-emerald-200">
                                         Saldo per {{ \Carbon\Carbon::parse($this->sampaiTanggal)->format('d/m/Y') }}
                                     </td>
-                                    <td class="px-3 py-2 font-mono text-sm text-right text-blue-700 dark:text-blue-300">
+                                    <td class="sticky bottom-0 z-10 px-3 py-3 font-mono text-sm font-semibold text-right border-t-2 bg-emerald-100 border-emerald-300 text-blue-700 dark:bg-emerald-900 dark:border-emerald-700 dark:text-blue-300">
                                         {{ number_format($this->totalDebit, 0, ',', '.') }}
                                     </td>
-                                    <td class="px-3 py-2 font-mono text-sm text-right text-error dark:text-rose-300">
+                                    <td class="sticky bottom-0 z-10 px-3 py-3 font-mono text-sm font-semibold text-right border-t-2 bg-emerald-100 border-emerald-300 text-error dark:bg-emerald-900 dark:border-emerald-700 dark:text-rose-300">
                                         {{ number_format($this->totalKredit, 0, ',', '.') }}
                                     </td>
-                                    <td class="px-3 py-2 font-mono text-base text-right text-emerald-700 dark:text-emerald-300">
+                                    <td class="sticky bottom-0 z-10 px-3 py-3 font-mono text-lg font-bold text-right border-t-2 bg-emerald-100 border-emerald-300 {{ $this->saldoAkhir < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-800 dark:text-emerald-200' }} dark:bg-emerald-900 dark:border-emerald-700">
                                         {{ number_format($this->saldoAkhir, 0, ',', '.') }}
                                     </td>
                                 </tr>
-                            @endif
-                        </tbody>
+                            </tfoot>
+                        @endif
                     </table>
                 </div>
             </div>
