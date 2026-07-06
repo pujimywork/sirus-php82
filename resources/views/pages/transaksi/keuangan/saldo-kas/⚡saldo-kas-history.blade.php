@@ -451,23 +451,14 @@ new class extends Component {
             <div class="px-4 py-3 bg-canvas border-b border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                        {{-- Toggle mode: Harian / Per Shift / Bulanan --}}
+                        {{-- Toggle mode: Harian / Per Shift / Bulanan (Standar UI: x-tabs variant pill) --}}
                         <div>
                             <x-input-label value="Tampilan" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
-                            <div class="inline-flex overflow-hidden border rounded-lg border-hairline dark:border-gray-700">
-                                <button type="button" wire:click="setMode('harian')"
-                                    class="px-4 py-2 text-sm font-medium transition {{ $mode === 'harian' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
-                                    Harian
-                                </button>
-                                <button type="button" wire:click="setMode('shift')"
-                                    class="px-4 py-2 text-sm font-medium transition border-l border-hairline dark:border-gray-700 {{ $mode === 'shift' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
-                                    Per Shift
-                                </button>
-                                <button type="button" wire:click="setMode('bulanan')"
-                                    class="px-4 py-2 text-sm font-medium transition border-l border-hairline dark:border-gray-700 {{ $mode === 'bulanan' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
-                                    Bulanan
-                                </button>
-                            </div>
+                            <x-tabs variant="pill">
+                                <x-tab :active="$mode === 'harian'" color="emerald" wire:click="setMode('harian')">Harian</x-tab>
+                                <x-tab :active="$mode === 'shift'" color="emerald" wire:click="setMode('shift')">Per Shift</x-tab>
+                                <x-tab :active="$mode === 'bulanan'" color="emerald" wire:click="setMode('bulanan')">Bulanan</x-tab>
+                            </x-tabs>
                         </div>
 
                         @if ($mode === 'bulanan')
