@@ -202,7 +202,7 @@ new class extends Component {
                     <div>
                         <dt class="text-xs text-muted dark:text-gray-400">Saldo Saat Ini</dt>
                         <dd class="font-mono font-medium">
-                            Rp {{ number_format((float) $saldoCurrent, 0, ',', '.') }}
+                            Rp {{ number_format((float) $saldoCurrent, 0, '.', ',') }}
                         </dd>
                     </div>
                     <div>

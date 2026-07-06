@@ -23,8 +23,10 @@ new class extends Component {
     /** Format input user: 'MM/YYYY' */
     public string $periodeInput = '';
 
-    /** Tanggal untuk mode harian: 'YYYY-MM-DD' */
+    /** Tanggal internal mode harian/shift: 'YYYY-MM-DD' */
     public string $tanggalHarian = '';
+    /** Input user (ketik manual, tiru daftar RJ): 'DD/MM/YYYY' */
+    public string $tanggalHarianInput = '';
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal'];
@@ -60,7 +62,7 @@ new class extends Component {
         $this->mode = $mode;
         // Pindah ke mode harian/shift tanpa tanggal → default ke hari terakhir periode terpilih.
         if ($this->isModeHarian() && $this->tanggalHarian === '' && $this->periode !== '') {
-            $this->tanggalHarian = Carbon::parse($this->periode . '-01')->endOfMonth()->toDateString();
+            $this->setTanggalHarian(Carbon::parse($this->periode . '-01')->endOfMonth()->toDateString());
         }
     }
 
@@ -103,12 +105,27 @@ new class extends Component {
         $this->periode = "{$tahun}-{$bulan}";
     }
 
-    /** Date input harian berubah → sinkron periode agar konsisten saat balik ke bulanan. */
-    public function updatedTanggalHarian(string $value): void
+    /**
+     * User ketik manual "DD/MM/YYYY" (tiru daftar RJ) → parse ke internal YYYY-MM-DD.
+     * Format belum lengkap/invalid → biarkan (tabel pakai tanggal valid terakhir).
+     */
+    public function updatedTanggalHarianInput(string $value): void
     {
-        if ($value !== '') {
-            $this->setPeriode(substr($value, 0, 7));
+        $value = trim($value);
+        if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $value)) {
+            return;
         }
+        try {
+            $tgl = Carbon::createFromFormat('d/m/Y', $value)->startOfDay();
+        } catch (\Throwable) {
+            return;
+        }
+        // tolak overflow (mis. 32/01/2026 → Carbon normalisasi jadi 01/02)
+        if ($tgl->format('d/m/Y') !== $value) {
+            return;
+        }
+        $this->tanggalHarian = $tgl->format('Y-m-d');
+        $this->setPeriode(substr($this->tanggalHarian, 0, 7));
     }
 
     private function setPeriode(string $ym): void
@@ -120,6 +137,7 @@ new class extends Component {
     private function setTanggalHarian(string $ymd): void
     {
         $this->tanggalHarian = $ymd;
+        $this->tanggalHarianInput = Carbon::parse($ymd)->format('d/m/Y');
         $this->setPeriode(substr($ymd, 0, 7));
     }
 
@@ -145,10 +163,9 @@ new class extends Component {
         $this->accDesc     = (string) ($row->acc_name ?? '');
         $this->accDkStatus = (string) ($row->acc_dk_status ?? 'D');
 
-        // Default: mode harian pada tanggal terpilih di parent; periode disinkron utk mode bulanan.
+        // Default: mode harian pada tanggal terpilih di parent (set tanggalHarian + input + periode).
         $this->mode = 'harian';
-        $this->setPeriode(substr($tanggal, 0, 7));
-        $this->tanggalHarian = $tanggal;
+        $this->setTanggalHarian($tanggal);
 
         $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'saldo-kas-history');
@@ -418,7 +435,7 @@ new class extends Component {
 
     public function closeModal(): void
     {
-        $this->reset(['accId', 'accDesc', 'accDkStatus', 'mode', 'periode', 'periodeInput', 'tanggalHarian']);
+        $this->reset(['accId', 'accDesc', 'accDkStatus', 'mode', 'periode', 'periodeInput', 'tanggalHarian', 'tanggalHarianInput']);
         $this->dispatch('close-modal', name: 'saldo-kas-history');
         $this->resetVersion();
     }
@@ -483,15 +500,16 @@ new class extends Component {
                         @else
                             {{-- Picker harian --}}
                             <div>
-                                <x-input-label for="tanggalHarian" value="Tanggal (dd/mm/yyyy)" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
+                                <x-input-label for="tanggalHarianInput" value="Tanggal (dd/mm/yyyy)" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                                 <div class="flex items-stretch gap-1">
                                     <x-secondary-button type="button" wire:click="prevDay"
                                         class="px-3" title="Hari sebelumnya">
                                         ◀
                                     </x-secondary-button>
-                                    <x-text-input id="tanggalHarian" type="date"
-                                        wire:model.live="tanggalHarian"
-                                        class="w-40 text-center font-mono" />
+                                    <x-text-input id="tanggalHarianInput" type="text"
+                                        wire:model.live.debounce.500ms="tanggalHarianInput"
+                                        placeholder="dd/mm/yyyy" maxlength="10"
+                                        class="w-32 text-center font-mono" />
                                     <x-secondary-button type="button" wire:click="nextDay"
                                         class="px-3" title="Hari berikutnya">
                                         ▶
@@ -523,7 +541,7 @@ new class extends Component {
                                         Saldo per {{ \Carbon\Carbon::parse($this->dariTanggal)->subDay()->format('d/m/Y') }}
                                     </td>
                                     <td class="px-3 py-2 font-mono text-sm font-semibold text-right">
-                                        {{ number_format($this->saldoAwalPeriode, 0, ',', '.') }}
+                                        {{ number_format($this->saldoAwalPeriode, 0, '.', ',') }}
                                     </td>
                                 </tr>
                             @endif
@@ -541,31 +559,31 @@ new class extends Component {
                                             class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                             <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
                                                 <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
-                                                <div class="text-[10px] text-muted-soft">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
+                                                <div class="text-xs font-medium text-muted dark:text-gray-300">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
                                             </td>
                                             <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
                                             <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
-                                                <div class="font-mono">{{ $row->lawan_acc_id }}</div>
+                                                <div class="font-mono text-xs font-semibold text-ink dark:text-gray-200">{{ $row->lawan_acc_id }}</div>
                                                 @if (!empty($row->lawan_acc_name))
-                                                    <div class="text-[10px] truncate">{{ $row->lawan_acc_name }}</div>
+                                                    <div class="text-xs truncate text-muted dark:text-gray-400">{{ $row->lawan_acc_name }}</div>
                                                 @endif
                                             </td>
                                             <td class="px-3 py-2 font-mono text-sm text-right align-top text-blue-700 dark:text-blue-300">
                                                 @if ((float) $row->debit_kita > 0)
-                                                    {{ number_format((float) $row->debit_kita, 0, ',', '.') }}
+                                                    {{ number_format((float) $row->debit_kita, 0, '.', ',') }}
                                                 @else
                                                     <span class="text-gray-300">—</span>
                                                 @endif
                                             </td>
                                             <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
                                                 @if ((float) $row->kredit_kita > 0)
-                                                    {{ number_format((float) $row->kredit_kita, 0, ',', '.') }}
+                                                    {{ number_format((float) $row->kredit_kita, 0, '.', ',') }}
                                                 @else
                                                     <span class="text-gray-300">—</span>
                                                 @endif
                                             </td>
                                             <td class="px-3 py-2 font-mono text-sm font-semibold text-right align-top {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
-                                                {{ number_format((float) $row->saldo_berjalan, 0, ',', '.') }}
+                                                {{ number_format((float) $row->saldo_berjalan, 0, '.', ',') }}
                                             </td>
                                         </tr>
                                     @endforeach
@@ -574,13 +592,13 @@ new class extends Component {
                                             Subtotal Shift {{ $group->shift }}
                                         </td>
                                         <td class="px-3 py-1.5 font-mono text-sm text-right text-blue-700 dark:text-blue-300">
-                                            {{ number_format($group->subtotalDebit, 0, ',', '.') }}
+                                            {{ number_format($group->subtotalDebit, 0, '.', ',') }}
                                         </td>
                                         <td class="px-3 py-1.5 font-mono text-sm text-right text-error dark:text-rose-300">
-                                            {{ number_format($group->subtotalKredit, 0, ',', '.') }}
+                                            {{ number_format($group->subtotalKredit, 0, '.', ',') }}
                                         </td>
                                         <td class="px-3 py-1.5 font-mono text-sm text-right {{ $group->saldoAkhir < 0 ? 'text-red-600' : '' }}">
-                                            {{ number_format($group->saldoAkhir, 0, ',', '.') }}
+                                            {{ number_format($group->saldoAkhir, 0, '.', ',') }}
                                         </td>
                                     </tr>
                                 @empty
@@ -597,31 +615,31 @@ new class extends Component {
                                         class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                         <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
                                             <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
-                                            <div class="text-[10px] text-muted-soft">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
+                                            <div class="text-xs font-medium text-muted dark:text-gray-300">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
                                         </td>
                                         <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
                                         <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
-                                            <div class="font-mono">{{ $row->lawan_acc_id }}</div>
+                                            <div class="font-mono text-xs font-semibold text-ink dark:text-gray-200">{{ $row->lawan_acc_id }}</div>
                                             @if (!empty($row->lawan_acc_name))
-                                                <div class="text-[10px] truncate">{{ $row->lawan_acc_name }}</div>
+                                                <div class="text-xs truncate text-muted dark:text-gray-400">{{ $row->lawan_acc_name }}</div>
                                             @endif
                                         </td>
                                         <td class="px-3 py-2 font-mono text-sm text-right align-top text-blue-700 dark:text-blue-300">
                                             @if ((float) $row->debit_kita > 0)
-                                                {{ number_format((float) $row->debit_kita, 0, ',', '.') }}
+                                                {{ number_format((float) $row->debit_kita, 0, '.', ',') }}
                                             @else
                                                 <span class="text-gray-300">—</span>
                                             @endif
                                         </td>
                                         <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
                                             @if ((float) $row->kredit_kita > 0)
-                                                {{ number_format((float) $row->kredit_kita, 0, ',', '.') }}
+                                                {{ number_format((float) $row->kredit_kita, 0, '.', ',') }}
                                             @else
                                                 <span class="text-gray-300">—</span>
                                             @endif
                                         </td>
                                         <td class="px-3 py-2 font-mono text-sm font-semibold text-right align-top {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
-                                            {{ number_format((float) $row->saldo_berjalan, 0, ',', '.') }}
+                                            {{ number_format((float) $row->saldo_berjalan, 0, '.', ',') }}
                                         </td>
                                     </tr>
                                 @empty
@@ -641,13 +659,13 @@ new class extends Component {
                                         Saldo per {{ \Carbon\Carbon::parse($this->sampaiTanggal)->format('d/m/Y') }}
                                     </td>
                                     <td class="sticky bottom-0 z-10 px-3 py-3 font-mono text-sm font-semibold text-right border-t-2 bg-emerald-100 border-emerald-300 text-blue-700 dark:bg-emerald-900 dark:border-emerald-700 dark:text-blue-300">
-                                        {{ number_format($this->totalDebit, 0, ',', '.') }}
+                                        {{ number_format($this->totalDebit, 0, '.', ',') }}
                                     </td>
                                     <td class="sticky bottom-0 z-10 px-3 py-3 font-mono text-sm font-semibold text-right border-t-2 bg-emerald-100 border-emerald-300 text-error dark:bg-emerald-900 dark:border-emerald-700 dark:text-rose-300">
-                                        {{ number_format($this->totalKredit, 0, ',', '.') }}
+                                        {{ number_format($this->totalKredit, 0, '.', ',') }}
                                     </td>
                                     <td class="sticky bottom-0 z-10 px-3 py-3 font-mono text-lg font-bold text-right border-t-2 bg-emerald-100 border-emerald-300 {{ $this->saldoAkhir < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-800 dark:text-emerald-200' }} dark:bg-emerald-900 dark:border-emerald-700">
-                                        {{ number_format($this->saldoAkhir, 0, ',', '.') }}
+                                        {{ number_format($this->saldoAkhir, 0, '.', ',') }}
                                     </td>
                                 </tr>
                             </tfoot>

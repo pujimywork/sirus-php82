@@ -4,7 +4,7 @@
 
     @php
         // Semua tanggal sudah dipra-format di method cetakRekap() — di sini hanya format angka.
-        $formatAngka = fn($nilai) => number_format((float) $nilai, 0, ',', '.');
+        $formatAngka = fn($nilai) => number_format((float) $nilai, 0, '.', ',');
     @endphp
 
     {{-- ── INFO AKUN & PERIODE ── --}}

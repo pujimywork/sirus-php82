@@ -153,7 +153,7 @@ new class extends Component {
                             Total Saldo
                         </div>
                         <div class="text-xl font-bold text-emerald-800 dark:text-emerald-200">
-                            Rp {{ number_format($this->totalSaldo, 0, ',', '.') }}
+                            Rp {{ number_format($this->totalSaldo, 0, '.', ',') }}
                         </div>
                     </div>
                 </div>
@@ -191,23 +191,24 @@ new class extends Component {
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 font-mono text-right align-middle">
-                                        <span class="text-lg font-bold {{ $row->saldo < 0 ? 'text-red-600' : 'text-ink dark:text-gray-100' }}">
-                                            Rp {{ number_format($row->saldo, 0, ',', '.') }}
+                                        <span class="text-lg font-bold {{ $row->saldo < 0 ? 'text-red-600' : 'text-brand dark:text-brand-lime' }}">
+                                            Rp {{ number_format($row->saldo, 0, '.', ',') }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 align-middle">
                                         <div class="flex items-center gap-2 flex-nowrap">
-                                            <x-secondary-button type="button"
+                                            <x-outline-button type="button"
                                                 wire:click="openHistory('{{ $row->acc_id }}')"
                                                 class="px-3 py-1.5 text-sm whitespace-nowrap">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
                                                 Riwayat
-                                            </x-secondary-button>
+                                            </x-outline-button>
                                             @if ($this->canEditSaldo())
-                                                <x-secondary-button type="button"
+                                                <x-action-edit
                                                     wire:click="openEdit('{{ $row->acc_id }}')"
-                                                    class="px-3 py-1.5 text-sm whitespace-nowrap">
-                                                    Edit Saldo
-                                                </x-secondary-button>
+                                                    class="whitespace-nowrap">Edit Saldo</x-action-edit>
                                             @endif
                                         </div>
                                     </td>
