@@ -563,27 +563,43 @@ new class extends Component {
                             </div>
                         @endif
                     </div>
+                </div>
 
-                    {{-- Rekap per jenis transaksi — collapsible (default tutup) biar tak ganggu fungsi utama --}}
-                    <div class="lg:max-w-[48%] lg:text-right" x-data="{ openRekap: false }">
-                        <button type="button" x-on:click="openRekap = !openRekap"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg text-muted border-hairline hover:bg-surface-soft dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-                            <svg class="w-4 h-4 transition-transform" x-bind:class="openRekap ? 'rotate-180' : ''"
+                {{-- Rekap per jenis transaksi — kartu collapsible (gaya kartu step casemix) --}}
+                <div class="mt-3 border shadow-sm border-hairline rounded-xl bg-canvas dark:bg-gray-900 dark:border-gray-700"
+                     x-data="{ openRekap: false }">
+                    <button type="button" x-on:click="openRekap = !openRekap"
+                        class="flex items-center justify-between w-full gap-3 px-4 py-2.5 text-left">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-brand-green/10 text-brand-green dark:bg-brand-lime/15 dark:text-brand-lime">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold text-ink dark:text-gray-100">Rekap per Jenis Transaksi</div>
+                                <div class="text-xs text-muted dark:text-gray-400">Jumlah &amp; total nominal tiap jenis{{ $mode === 'shift' ? ' — dipisah per shift' : '' }}.</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-surface-soft text-muted dark:bg-gray-800 dark:text-gray-300">{{ $this->rekapJenis->count() }} jenis</span>
+                            <svg class="w-4 h-4 text-muted transition-transform" x-bind:class="openRekap ? 'rotate-180' : ''"
                                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
-                            Rekap per Jenis Transaksi
-                            <span class="px-1.5 rounded bg-surface-soft text-muted-soft dark:bg-gray-900">{{ $this->rekapJenis->count() }}</span>
-                        </button>
-                        <div x-show="openRekap" x-transition class="mt-2 space-y-2">
-                            @if ($mode === 'shift')
-                                {{-- Per shift: tiap shift punya rekap jenisnya sendiri --}}
+                        </div>
+                    </button>
+
+                    <div x-show="openRekap" x-transition class="px-4 pt-3 pb-4 border-t border-hairline dark:border-gray-700">
+                        @if ($mode === 'shift')
+                            {{-- Per shift: tiap shift punya rekap jenisnya sendiri --}}
+                            <div class="space-y-3">
                                 @forelse ($this->rekapJenisPerShift as $grup)
-                                    <div class="lg:text-right">
-                                        <div class="mb-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                    <div>
+                                        <div class="mb-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                                             Shift {{ $grup->shift }}@if ($grup->range) <span class="font-normal text-muted">({{ $grup->range }})</span>@endif
                                         </div>
-                                        <div class="flex flex-wrap gap-1.5 lg:justify-end">
+                                        <div class="flex flex-wrap gap-1.5">
                                             @foreach ($grup->rekap as $rekap)
                                                 <div class="inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
                                                     <span class="text-xs font-semibold text-ink dark:text-gray-200">{{ $rekap->jenis }}</span>
@@ -596,21 +612,21 @@ new class extends Component {
                                 @empty
                                     <span class="text-xs text-muted-soft">Tidak ada transaksi.</span>
                                 @endforelse
-                            @else
-                                {{-- Harian/bulanan: rekap jenis se-periode --}}
-                                <div class="flex flex-wrap gap-1.5 lg:justify-end">
-                                    @forelse ($this->rekapJenis as $rekap)
-                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
-                                            <span class="text-xs font-semibold text-ink dark:text-gray-200">{{ $rekap->jenis }}</span>
-                                            <span class="px-1.5 text-xs font-medium rounded text-muted bg-canvas dark:bg-gray-900 dark:text-gray-400">{{ $rekap->count }} trx</span>
-                                            <span class="text-xs font-mono font-semibold text-brand dark:text-brand-lime">Rp {{ number_format($rekap->nominal, 0, '.', ',') }}</span>
-                                        </div>
-                                    @empty
-                                        <span class="text-xs text-muted-soft">Tidak ada transaksi.</span>
-                                    @endforelse
-                                </div>
-                            @endif
-                        </div>
+                            </div>
+                        @else
+                            {{-- Harian/bulanan: rekap jenis se-periode --}}
+                            <div class="flex flex-wrap gap-1.5">
+                                @forelse ($this->rekapJenis as $rekap)
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
+                                        <span class="text-xs font-semibold text-ink dark:text-gray-200">{{ $rekap->jenis }}</span>
+                                        <span class="px-1.5 text-xs font-medium rounded text-muted bg-canvas dark:bg-gray-900 dark:text-gray-400">{{ $rekap->count }} trx</span>
+                                        <span class="text-xs font-mono font-semibold text-brand dark:text-brand-lime">Rp {{ number_format($rekap->nominal, 0, '.', ',') }}</span>
+                                    </div>
+                                @empty
+                                    <span class="text-xs text-muted-soft">Tidak ada transaksi.</span>
+                                @endforelse
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

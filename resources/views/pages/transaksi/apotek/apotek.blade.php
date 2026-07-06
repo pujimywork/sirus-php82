@@ -69,19 +69,42 @@ new class extends Component {
             @endif
         </div>
 
-        {{-- MODAL CEK SALDO KAS — komponen saldo-kas di-embed, lazy via $showCekSaldo --}}
+        {{-- MODAL CEK SALDO KAS — struktur mengikuti master-poli-actions (header + body) --}}
         <x-modal name="cek-saldo-kas" size="full" height="full" focusable>
-            <div class="relative h-full">
-                <button type="button" title="Tutup"
-                    x-on:click="$dispatch('close-modal', { name: 'cek-saldo-kas' })"
-                    class="absolute z-50 inline-flex items-center justify-center rounded-lg top-4 right-4 w-9 h-9 text-muted bg-surface-soft hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-                @if ($showCekSaldo)
-                    <livewire:pages::transaksi.keuangan.saldo-kas.saldo-kas wire:key="cek-saldo-kas-inner" />
-                @endif
+            <div class="flex flex-col h-full">
+
+                {{-- HEADER --}}
+                <div class="px-6 py-5 border-b shrink-0 bg-surface-soft border-hairline dark:border-gray-700">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
+                                <svg class="w-6 h-6 text-brand-green dark:text-brand-lime" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2-8h8a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6a2 2 0 012-2zm5 5a1 1 0 11-2 0 1 1 0 012 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="ds-display-sm dark:text-gray-100">Cek Saldo Kas</h2>
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
+                                    Saldo kas/bank per tanggal — hanya akun yang menjadi hak akses Anda.
+                                </p>
+                            </div>
+                        </div>
+
+                        <x-icon-button color="gray" type="button" x-on:click="$dispatch('close-modal', { name: 'cek-saldo-kas' })">
+                            <span class="sr-only">Tutup</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </x-icon-button>
+                    </div>
+                </div>
+
+                {{-- BODY: komponen saldo-kas, lazy via $showCekSaldo --}}
+                <div class="flex-1 min-h-0">
+                    @if ($showCekSaldo)
+                        <livewire:pages::transaksi.keuangan.saldo-kas.saldo-kas :embedded="true" wire:key="cek-saldo-kas-inner" />
+                    @endif
+                </div>
             </div>
         </x-modal>
 

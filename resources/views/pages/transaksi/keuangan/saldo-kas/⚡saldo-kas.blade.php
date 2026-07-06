@@ -9,8 +9,13 @@ new class extends Component {
     public string $tanggal = '';
     public string $searchKeyword = '';
 
-    public function mount(): void
+    /** Saat di-embed dalam modal (mis. tombol Cek Saldo Kasir/Apotek): sembunyikan page-title
+     *  & sesuaikan tinggi/sticky agar tak menimpa header modal. */
+    public bool $embedded = false;
+
+    public function mount(bool $embedded = false): void
     {
+        $this->embedded = $embedded;
         $this->tanggal = now()->toDateString();
     }
 
@@ -119,18 +124,20 @@ new class extends Component {
 ?>
 
 <div>
-    @php
-        $saldoKasSubtitle = 'Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal).'
-            . ($this->canEditSaldo() ? '' : ' Mode tampilan saja — edit saldo hanya untuk Manager ke atas.');
-    @endphp
-    <x-page-title
-        title="Saldo Kas Per Tanggal"
-        subtitle="{{ $saldoKasSubtitle }}" />
+    @unless ($embedded)
+        @php
+            $saldoKasSubtitle = 'Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal).'
+                . ($this->canEditSaldo() ? '' : ' Mode tampilan saja — edit saldo hanya untuk Manager ke atas.');
+        @endphp
+        <x-page-title
+            title="Saldo Kas Per Tanggal"
+            subtitle="{{ $saldoKasSubtitle }}" />
+    @endunless
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
+    <div class="w-full flex flex-col bg-surface-soft dark:bg-gray-800 {{ $embedded ? 'h-full' : 'h-[calc(100vh-5rem)]' }}">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline dark:bg-gray-900 dark:border-gray-700 {{ $embedded ? 'top-0' : 'top-20' }}">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
                         <div class="w-full sm:w-52">
