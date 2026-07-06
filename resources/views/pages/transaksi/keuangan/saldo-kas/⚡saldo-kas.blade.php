@@ -119,9 +119,13 @@ new class extends Component {
 ?>
 
 <div>
+    @php
+        $saldoKasSubtitle = 'Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal).'
+            . ($this->isAdmin() ? '' : ' Mode tampilan saja — edit saldo hanya untuk admin.');
+    @endphp
     <x-page-title
         title="Saldo Kas Per Tanggal"
-        subtitle="Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal). @if (!$this->isAdmin()) Mode tampilan saja — edit saldo hanya untuk admin. @endif" />
+        subtitle="{{ $saldoKasSubtitle }}" />
 
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
