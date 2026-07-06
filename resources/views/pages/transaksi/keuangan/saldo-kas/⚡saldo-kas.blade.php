@@ -19,8 +19,8 @@ new class extends Component {
 
     public function openEdit(string $accId): void
     {
-        if (!auth()->user()?->hasRole('Admin')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya admin yang bisa mengedit saldo.');
+        if (!$this->canEditSaldo()) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Manager ke atas yang bisa mengedit saldo.');
             return;
         }
         $this->dispatch('keuangan.saldo-kas.openEdit', accId: $accId, tanggal: $this->tanggal);
@@ -34,9 +34,9 @@ new class extends Component {
     #[On('keuangan.saldo-kas.saved')]
     public function refreshAfterSaved(): void { /* trigger re-render */ }
 
-    public function isAdmin(): bool
+    public function canEditSaldo(): bool
     {
-        return (bool) auth()->user()?->hasRole('Admin');
+        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
     }
 
     /**
@@ -121,7 +121,7 @@ new class extends Component {
 <div>
     @php
         $saldoKasSubtitle = 'Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal).'
-            . ($this->isAdmin() ? '' : ' Mode tampilan saja — edit saldo hanya untuk admin.');
+            . ($this->canEditSaldo() ? '' : ' Mode tampilan saja — edit saldo hanya untuk Manager ke atas.');
     @endphp
     <x-page-title
         title="Saldo Kas Per Tanggal"
@@ -168,7 +168,7 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">AKUN KAS</th>
                                 <th class="px-4 py-3 font-semibold w-24 text-center">D/K</th>
                                 <th class="px-4 py-3 font-semibold w-60 text-right">SALDO PER {{ \Carbon\Carbon::parse($tanggal)->format('d/m/Y') }}</th>
-                                <th class="px-4 py-3 font-semibold {{ $this->isAdmin() ? 'w-56' : 'w-32' }}">AKSI</th>
+                                <th class="px-4 py-3 font-semibold {{ $this->canEditSaldo() ? 'w-56' : 'w-32' }}">AKSI</th>
                             </tr>
                         </thead>
                         <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
@@ -202,7 +202,7 @@ new class extends Component {
                                                 class="px-3 py-1.5 text-sm whitespace-nowrap">
                                                 Riwayat
                                             </x-secondary-button>
-                                            @if ($this->isAdmin())
+                                            @if ($this->canEditSaldo())
                                                 <x-secondary-button type="button"
                                                     wire:click="openEdit('{{ $row->acc_id }}')"
                                                     class="px-3 py-1.5 text-sm whitespace-nowrap">
@@ -225,7 +225,7 @@ new class extends Component {
             </div>
 
             <livewire:pages::transaksi.keuangan.saldo-kas.saldo-kas-history wire:key="saldo-kas-history" />
-            @if ($this->isAdmin())
+            @if ($this->canEditSaldo())
                 <livewire:pages::transaksi.keuangan.saldo-kas.saldo-kas-actions wire:key="saldo-kas-actions" />
             @endif
         </div>

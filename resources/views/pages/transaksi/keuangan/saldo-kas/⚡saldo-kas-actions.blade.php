@@ -27,8 +27,8 @@ new class extends Component {
     #[On('keuangan.saldo-kas.openEdit')]
     public function openEdit(string $accId, string $tanggal): void
     {
-        if (!auth()->user()?->hasRole('Admin')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya admin yang bisa mengedit saldo.');
+        if (!auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Manager ke atas yang bisa mengedit saldo.');
             return;
         }
 
@@ -90,8 +90,8 @@ new class extends Component {
 
     public function save(): void
     {
-        if (!auth()->user()?->hasRole('Admin')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya admin yang bisa mengedit saldo.');
+        if (!auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Manager ke atas yang bisa mengedit saldo.');
             return;
         }
 
