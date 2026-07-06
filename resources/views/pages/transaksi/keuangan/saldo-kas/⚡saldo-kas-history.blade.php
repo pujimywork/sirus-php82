@@ -4,6 +4,8 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
@@ -13,8 +15,8 @@ new class extends Component {
     public string $accDesc     = '';
     public string $accDkStatus = 'D';
 
-    /** Mode tampilan: 'bulanan' (satu bulan penuh) | 'harian' (satu tanggal) */
-    public string $mode = 'bulanan';
+    /** Mode tampilan: 'harian' (satu tanggal) | 'shift' (satu tanggal, dipotong per shift) | 'bulanan' (satu bulan penuh) */
+    public string $mode = 'harian';
 
     /** Format internal: 'YYYY-MM' (mode bulanan) */
     public string $periode = '';
@@ -27,10 +29,16 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['modal'];
 
+    /** Mode berbasis satu tanggal (harian & per-shift), lawan dari bulanan. */
+    private function isModeHarian(): bool
+    {
+        return in_array($this->mode, ['harian', 'shift'], true);
+    }
+
     #[Computed]
     public function dariTanggal(): string
     {
-        if ($this->mode === 'harian') {
+        if ($this->isModeHarian()) {
             return $this->tanggalHarian;
         }
         return $this->periode === '' ? '' : $this->periode . '-01';
@@ -39,45 +47,45 @@ new class extends Component {
     #[Computed]
     public function sampaiTanggal(): string
     {
-        if ($this->mode === 'harian') {
+        if ($this->isModeHarian()) {
             return $this->tanggalHarian;
         }
         if ($this->periode === '') return '';
-        return \Carbon\Carbon::parse($this->periode . '-01')->endOfMonth()->toDateString();
+        return Carbon::parse($this->periode . '-01')->endOfMonth()->toDateString();
     }
 
     public function setMode(string $mode): void
     {
-        if (!in_array($mode, ['bulanan', 'harian'], true)) return;
+        if (!in_array($mode, ['harian', 'shift', 'bulanan'], true)) return;
         $this->mode = $mode;
-        // Pindah ke harian tanpa tanggal → default ke hari terakhir periode terpilih.
-        if ($mode === 'harian' && $this->tanggalHarian === '' && $this->periode !== '') {
-            $this->tanggalHarian = \Carbon\Carbon::parse($this->periode . '-01')->endOfMonth()->toDateString();
+        // Pindah ke mode harian/shift tanpa tanggal → default ke hari terakhir periode terpilih.
+        if ($this->isModeHarian() && $this->tanggalHarian === '' && $this->periode !== '') {
+            $this->tanggalHarian = Carbon::parse($this->periode . '-01')->endOfMonth()->toDateString();
         }
     }
 
     public function prevMonth(): void
     {
         if ($this->periode === '') return;
-        $this->setPeriode(\Carbon\Carbon::parse($this->periode . '-01')->subMonth()->format('Y-m'));
+        $this->setPeriode(Carbon::parse($this->periode . '-01')->subMonth()->format('Y-m'));
     }
 
     public function nextMonth(): void
     {
         if ($this->periode === '') return;
-        $this->setPeriode(\Carbon\Carbon::parse($this->periode . '-01')->addMonth()->format('Y-m'));
+        $this->setPeriode(Carbon::parse($this->periode . '-01')->addMonth()->format('Y-m'));
     }
 
     public function prevDay(): void
     {
         if ($this->tanggalHarian === '') return;
-        $this->setTanggalHarian(\Carbon\Carbon::parse($this->tanggalHarian)->subDay()->toDateString());
+        $this->setTanggalHarian(Carbon::parse($this->tanggalHarian)->subDay()->toDateString());
     }
 
     public function nextDay(): void
     {
         if ($this->tanggalHarian === '') return;
-        $this->setTanggalHarian(\Carbon\Carbon::parse($this->tanggalHarian)->addDay()->toDateString());
+        $this->setTanggalHarian(Carbon::parse($this->tanggalHarian)->addDay()->toDateString());
     }
 
     /**
@@ -106,7 +114,7 @@ new class extends Component {
     private function setPeriode(string $ym): void
     {
         $this->periode = $ym;
-        $this->periodeInput = \Carbon\Carbon::parse($ym . '-01')->format('m/Y');
+        $this->periodeInput = Carbon::parse($ym . '-01')->format('m/Y');
     }
 
     private function setTanggalHarian(string $ymd): void
@@ -137,8 +145,8 @@ new class extends Component {
         $this->accDesc     = (string) ($row->acc_name ?? '');
         $this->accDkStatus = (string) ($row->acc_dk_status ?? 'D');
 
-        // Default: mode bulanan, bulan dari tanggal terpilih di parent; tanggal harian = tanggal parent
-        $this->mode = 'bulanan';
+        // Default: mode harian pada tanggal terpilih di parent; periode disinkron utk mode bulanan.
+        $this->mode = 'harian';
         $this->setPeriode(substr($tanggal, 0, 7));
         $this->tanggalHarian = $tanggal;
 
@@ -186,7 +194,7 @@ new class extends Component {
     public function saldoAwalPeriode(): float
     {
         if ($this->dariTanggal === '') return 0;
-        $prev = \Carbon\Carbon::parse($this->dariTanggal)->subDay()->toDateString();
+        $prev = Carbon::parse($this->dariTanggal)->subDay()->toDateString();
         return $this->hitungSaldoTanggal($prev);
     }
 
@@ -259,6 +267,155 @@ new class extends Component {
         });
     }
 
+    /** Definisi shift (rstxn_shiftctls) — pola konsisten dgn penerimaan/pengeluaran kas TU. */
+    #[Computed]
+    public function shiftDefs()
+    {
+        return DB::table('rstxn_shiftctls')
+            ->select('shift', 'shift_start', 'shift_end')
+            ->whereNotNull('shift_start')
+            ->whereNotNull('shift_end')
+            ->orderBy('shift_start')
+            ->get();
+    }
+
+    /** Resolve nomor shift dari jam transaksi (mirror `time BETWEEN shift_start AND shift_end`, fallback '1'). */
+    private function resolveShift(string $txnDate): string
+    {
+        $jam = Carbon::parse($txnDate)->format('H:i:s');
+        foreach ($this->shiftDefs as $def) {
+            $mulai   = (string) $def->shift_start;
+            $selesai = (string) $def->shift_end;
+            $cocok = $mulai <= $selesai
+                ? ($jam >= $mulai && $jam <= $selesai)          // rentang normal
+                : ($jam >= $mulai || $jam <= $selesai);         // rentang melewati tengah malam
+            if ($cocok) {
+                return (string) $def->shift;
+            }
+        }
+        return '1';
+    }
+
+    /**
+     * Kelompokkan transaksi harian per shift (urut kemunculan/kronologis), dengan subtotal & saldo per shift.
+     * Dipakai tampilan mode 'shift' & cetak rekap per shift.
+     */
+    private function susunKelompokShift(): array
+    {
+        $perShift = [];
+        foreach ($this->rows as $row) {
+            $perShift[$this->resolveShift($row->txn_date)][] = $row;
+        }
+
+        $kelompok = [];
+        $saldoAwalShift = $this->saldoAwalPeriode;
+        foreach ($perShift as $shift => $items) {
+            $def = $this->shiftDefs->first(fn($d) => (string) $d->shift === (string) $shift);
+            $subtotalDebit = 0.0;
+            $subtotalKredit = 0.0;
+            foreach ($items as $item) {
+                $subtotalDebit  += (float) $item->debit_kita;
+                $subtotalKredit += (float) $item->kredit_kita;
+            }
+            $saldoAkhirShift = (float) end($items)->saldo_berjalan;
+
+            $kelompok[] = (object) [
+                'shift'          => (string) $shift,
+                'range'          => $def ? substr((string) $def->shift_start, 0, 5) . '–' . substr((string) $def->shift_end, 0, 5) : null,
+                'items'          => $items,
+                'subtotalDebit'  => $subtotalDebit,
+                'subtotalKredit' => $subtotalKredit,
+                'saldoAwal'      => $saldoAwalShift,
+                'saldoAkhir'     => $saldoAkhirShift,
+            ];
+            $saldoAwalShift = $saldoAkhirShift;
+        }
+        return $kelompok;
+    }
+
+    #[Computed]
+    public function shiftGroups(): array
+    {
+        if ($this->mode !== 'shift' || $this->dariTanggal === '') {
+            return [];
+        }
+        return $this->susunKelompokShift();
+    }
+
+    public function cetakRekap(): mixed
+    {
+        if ($this->accId === '' || $this->dariTanggal === '' || $this->sampaiTanggal === '') {
+            $this->dispatch('toast', type: 'error', message: 'Tidak ada data untuk dicetak.');
+            return null;
+        }
+
+        // Pra-format tanggal di sini (class zone) supaya blade cetak bebas Carbon.
+        $formatItem = function ($row) {
+            $tglTransaksi = Carbon::parse($row->txn_date);
+            return (object) [
+                'tglLabel'      => $tglTransaksi->format('d/m/Y'),
+                'jamLabel'      => $tglTransaksi->format('H:i'),
+                'deskripsi'     => $row->txn_name,
+                'lawanAccId'    => $row->lawan_acc_id,
+                'lawanAccName'  => $row->lawan_acc_name,
+                'debit'         => (float) $row->debit_kita,
+                'kredit'        => (float) $row->kredit_kita,
+                'saldoBerjalan' => (float) $row->saldo_berjalan,
+            ];
+        };
+
+        $transaksiList = $this->rows->map($formatItem)->values();
+
+        // Mode per shift: susun kelompok dgn item ter-format.
+        $shiftGroups = [];
+        if ($this->mode === 'shift') {
+            foreach ($this->susunKelompokShift() as $kelompok) {
+                $shiftGroups[] = (object) [
+                    'shift'          => $kelompok->shift,
+                    'range'          => $kelompok->range,
+                    'items'          => collect($kelompok->items)->map($formatItem)->values(),
+                    'subtotalDebit'  => $kelompok->subtotalDebit,
+                    'subtotalKredit' => $kelompok->subtotalKredit,
+                    'saldoAwal'      => $kelompok->saldoAwal,
+                    'saldoAkhir'     => $kelompok->saldoAkhir,
+                ];
+            }
+        }
+
+        $tglMulai  = Carbon::parse($this->dariTanggal);
+        $tglSampai = Carbon::parse($this->sampaiTanggal);
+        $modeLabel = ['harian' => 'Harian', 'shift' => 'Harian (per Shift)', 'bulanan' => 'Bulanan'][$this->mode] ?? 'Harian';
+
+        $dataCetak = [
+            'accId'        => $this->accId,
+            'accDesc'      => $this->accDesc,
+            'mode'         => $this->mode,
+            'modeLabel'    => $modeLabel,
+            'periodeLabel' => $this->isModeHarian()
+                ? $tglMulai->format('d/m/Y')
+                : $tglMulai->format('d/m/Y') . ' — ' . $tglSampai->format('d/m/Y'),
+            'saldoAwalTgl' => $tglMulai->copy()->subDay()->format('d/m/Y'),
+            'sampaiLabel'  => $tglSampai->format('d/m/Y'),
+            'dicetakPada'  => now()->format('d/m/Y H:i'),
+            'saldoAwal'    => $this->saldoAwalPeriode,
+            'totalDebit'   => $this->totalDebit,
+            'totalKredit'  => $this->totalKredit,
+            'saldoAkhir'   => $this->saldoAkhir,
+            'transaksiList' => $transaksiList,
+            'shiftGroups'   => $shiftGroups,
+        ];
+
+        $pdf = Pdf::loadView('pages.transaksi.keuangan.saldo-kas.saldo-kas-history-print', $dataCetak)
+            ->setPaper('a4', 'portrait');
+
+        $akhiranPeriode = $this->isModeHarian()
+            ? $tglMulai->format('Ymd')
+            : $tglMulai->format('Ym');
+        $namaFile = 'rekap-kas-' . $this->accId . '-' . $akhiranPeriode . '.pdf';
+
+        return response()->streamDownload(fn() => print $pdf->output(), $namaFile);
+    }
+
     public function closeModal(): void
     {
         $this->reset(['accId', 'accDesc', 'accDkStatus', 'mode', 'periode', 'periodeInput', 'tanggalHarian']);
@@ -294,17 +451,21 @@ new class extends Component {
             <div class="px-4 py-3 bg-canvas border-b border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                        {{-- Toggle mode: Bulanan / Harian --}}
+                        {{-- Toggle mode: Harian / Per Shift / Bulanan --}}
                         <div>
                             <x-input-label value="Tampilan" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                             <div class="inline-flex overflow-hidden border rounded-lg border-hairline dark:border-gray-700">
-                                <button type="button" wire:click="setMode('bulanan')"
-                                    class="px-4 py-2 text-sm font-medium transition {{ $mode === 'bulanan' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
-                                    Bulanan
-                                </button>
                                 <button type="button" wire:click="setMode('harian')"
-                                    class="px-4 py-2 text-sm font-medium transition border-l border-hairline dark:border-gray-700 {{ $mode === 'harian' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
+                                    class="px-4 py-2 text-sm font-medium transition {{ $mode === 'harian' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
                                     Harian
+                                </button>
+                                <button type="button" wire:click="setMode('shift')"
+                                    class="px-4 py-2 text-sm font-medium transition border-l border-hairline dark:border-gray-700 {{ $mode === 'shift' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
+                                    Per Shift
+                                </button>
+                                <button type="button" wire:click="setMode('bulanan')"
+                                    class="px-4 py-2 text-sm font-medium transition border-l border-hairline dark:border-gray-700 {{ $mode === 'bulanan' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
+                                    Bulanan
                                 </button>
                             </div>
                         </div>
@@ -353,36 +514,8 @@ new class extends Component {
                                         ▶
                                     </x-secondary-button>
                                 </div>
-                                <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
-                                    @if ($tanggalHarian !== '')
-                                        {{ \Carbon\Carbon::parse($tanggalHarian)->format('d/m/Y') }}
-                                    @else
-                                        <span class="text-error">Pilih tanggal</span>
-                                    @endif
-                                </p>
                             </div>
                         @endif
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-3 text-right">
-                        <div class="px-3 py-2 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
-                            <div class="text-[10px] tracking-wider text-muted uppercase">Saldo Awal</div>
-                            <div class="font-mono text-sm font-semibold">
-                                {{ number_format($this->saldoAwalPeriode, 0, ',', '.') }}
-                            </div>
-                        </div>
-                        <div class="px-3 py-2 border rounded-lg bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-                            <div class="text-[10px] tracking-wider text-blue-700 uppercase dark:text-blue-300">Debit</div>
-                            <div class="font-mono text-sm font-semibold text-blue-700 dark:text-blue-300">
-                                {{ number_format($this->totalDebit, 0, ',', '.') }}
-                            </div>
-                        </div>
-                        <div class="px-3 py-2 border rounded-lg bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800">
-                            <div class="text-[10px] tracking-wider text-error uppercase dark:text-rose-300">Kredit</div>
-                            <div class="font-mono text-sm font-semibold text-error dark:text-rose-300">
-                                {{ number_format($this->totalKredit, 0, ',', '.') }}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -412,45 +545,110 @@ new class extends Component {
                                 </tr>
                             @endif
 
-                            @forelse ($this->rows as $i => $row)
-                                <tr wire:key="hist-{{ $i }}-{{ $row->txn_date }}"
-                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
-                                    <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
-                                        <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
-                                        <div class="text-[10px] text-muted-soft">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
-                                    <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
-                                        <div class="font-mono">{{ $row->lawan_acc_id }}</div>
-                                        @if (!empty($row->lawan_acc_name))
-                                            <div class="text-[10px] truncate">{{ $row->lawan_acc_name }}</div>
-                                        @endif
-                                    </td>
-                                    <td class="px-3 py-2 font-mono text-sm text-right align-top text-blue-700 dark:text-blue-300">
-                                        @if ((float) $row->debit_kita > 0)
-                                            {{ number_format((float) $row->debit_kita, 0, ',', '.') }}
-                                        @else
-                                            <span class="text-gray-300">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
-                                        @if ((float) $row->kredit_kita > 0)
-                                            {{ number_format((float) $row->kredit_kita, 0, ',', '.') }}
-                                        @else
-                                            <span class="text-gray-300">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-3 py-2 font-mono text-sm font-semibold text-right align-top {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
-                                        {{ number_format((float) $row->saldo_berjalan, 0, ',', '.') }}
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="px-4 py-10 text-center text-muted dark:text-gray-400">
-                                        Tidak ada transaksi pada periode ini.
-                                    </td>
-                                </tr>
-                            @endforelse
+                            @if ($mode === 'shift')
+                                {{-- Mode Per Shift: transaksi dikelompokkan per shift + subtotal --}}
+                                @forelse ($this->shiftGroups as $group)
+                                    <tr class="bg-brand-green/10 dark:bg-emerald-900/30">
+                                        <td colspan="6" class="px-3 py-1.5 text-xs font-bold tracking-wide uppercase text-emerald-800 dark:text-emerald-200">
+                                            Shift {{ $group->shift }}@if ($group->range)<span class="ml-1 font-normal normal-case text-muted">({{ $group->range }})</span>@endif
+                                        </td>
+                                    </tr>
+                                    @foreach ($group->items as $i => $row)
+                                        <tr wire:key="shift-{{ $group->shift }}-{{ $i }}-{{ $row->txn_date }}"
+                                            class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
+                                            <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
+                                                <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
+                                                <div class="text-[10px] text-muted-soft">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
+                                            </td>
+                                            <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
+                                            <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
+                                                <div class="font-mono">{{ $row->lawan_acc_id }}</div>
+                                                @if (!empty($row->lawan_acc_name))
+                                                    <div class="text-[10px] truncate">{{ $row->lawan_acc_name }}</div>
+                                                @endif
+                                            </td>
+                                            <td class="px-3 py-2 font-mono text-sm text-right align-top text-blue-700 dark:text-blue-300">
+                                                @if ((float) $row->debit_kita > 0)
+                                                    {{ number_format((float) $row->debit_kita, 0, ',', '.') }}
+                                                @else
+                                                    <span class="text-gray-300">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
+                                                @if ((float) $row->kredit_kita > 0)
+                                                    {{ number_format((float) $row->kredit_kita, 0, ',', '.') }}
+                                                @else
+                                                    <span class="text-gray-300">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-3 py-2 font-mono text-sm font-semibold text-right align-top {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
+                                                {{ number_format((float) $row->saldo_berjalan, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    <tr class="font-semibold bg-surface-soft dark:bg-gray-800/50">
+                                        <td colspan="3" class="px-3 py-1.5 text-xs text-right uppercase text-muted">
+                                            Subtotal Shift {{ $group->shift }}
+                                        </td>
+                                        <td class="px-3 py-1.5 font-mono text-sm text-right text-blue-700 dark:text-blue-300">
+                                            {{ number_format($group->subtotalDebit, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-3 py-1.5 font-mono text-sm text-right text-error dark:text-rose-300">
+                                            {{ number_format($group->subtotalKredit, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-3 py-1.5 font-mono text-sm text-right {{ $group->saldoAkhir < 0 ? 'text-red-600' : '' }}">
+                                            {{ number_format($group->saldoAkhir, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-4 py-10 text-center text-muted dark:text-gray-400">
+                                            Tidak ada transaksi pada tanggal ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            @else
+                                {{-- Mode Harian / Bulanan: daftar transaksi datar --}}
+                                @forelse ($this->rows as $i => $row)
+                                    <tr wire:key="hist-{{ $i }}-{{ $row->txn_date }}"
+                                        class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
+                                        <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
+                                            <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
+                                            <div class="text-[10px] text-muted-soft">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
+                                        </td>
+                                        <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
+                                        <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
+                                            <div class="font-mono">{{ $row->lawan_acc_id }}</div>
+                                            @if (!empty($row->lawan_acc_name))
+                                                <div class="text-[10px] truncate">{{ $row->lawan_acc_name }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-2 font-mono text-sm text-right align-top text-blue-700 dark:text-blue-300">
+                                            @if ((float) $row->debit_kita > 0)
+                                                {{ number_format((float) $row->debit_kita, 0, ',', '.') }}
+                                            @else
+                                                <span class="text-gray-300">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
+                                            @if ((float) $row->kredit_kita > 0)
+                                                {{ number_format((float) $row->kredit_kita, 0, ',', '.') }}
+                                            @else
+                                                <span class="text-gray-300">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-2 font-mono text-sm font-semibold text-right align-top {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
+                                            {{ number_format((float) $row->saldo_berjalan, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-4 py-10 text-center text-muted dark:text-gray-400">
+                                            Tidak ada transaksi pada periode ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            @endif
 
                         </tbody>
                         @if ($this->rows->count() > 0)
@@ -476,7 +674,17 @@ new class extends Component {
             </div>
 
             <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex justify-end">
+                <div class="flex justify-end gap-2">
+                    <x-primary-button type="button" wire:click="cetakRekap"
+                        wire:loading.attr="disabled" wire:target="cetakRekap"
+                        @disabled($this->rows->count() === 0)>
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        <span wire:loading.remove wire:target="cetakRekap">Cetak Rekap</span>
+                        <span wire:loading wire:target="cetakRekap">Menyiapkan…</span>
+                    </x-primary-button>
                     <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
                 </div>
             </div>
