@@ -22,6 +22,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
@@ -153,7 +154,7 @@ new class extends Component {
     }
 
     /* Dokter terkait pasien terpilih (untuk dropdown Dokter Pengirim).
-       RJ/UGD: dokter kunjungan header. RI: DPJP ∪ visite ∪ jasa (aktif). */
+       RJ/UGD: dokter kunjungan header. RI: DPJP ∪ visite ∪ jasa ∪ leveling dokter (aktif). */
     #[Computed]
     public function relatedDoctors()
     {
@@ -162,15 +163,24 @@ new class extends Component {
         }
 
         if ($this->source === 'RI') {
-            $dpjp = DB::table('rstxn_rihdrs')->select('dr_id')->where('rihdr_no', $this->selectedRefNo)->whereNotNull('dr_id');
-            $visite = DB::table('rstxn_rivisits')->select('dr_id')->where('rihdr_no', $this->selectedRefNo)->whereNotNull('dr_id');
-            $jasa = DB::table('rstxn_riactdocs')->select('dr_id')->where('rihdr_no', $this->selectedRefNo)->whereNotNull('dr_id');
-            $unionIds = $dpjp->union($visite)->union($jasa);
+            $drIds = collect()
+                ->merge(DB::table('rstxn_rihdrs')->where('rihdr_no', $this->selectedRefNo)->pluck('dr_id'))
+                ->merge(DB::table('rstxn_rivisits')->where('rihdr_no', $this->selectedRefNo)->pluck('dr_id'))
+                ->merge(DB::table('rstxn_riactdocs')->where('rihdr_no', $this->selectedRefNo)->pluck('dr_id'))
+                ->merge($this->levelingDokterIds($this->selectedRefNo))
+                ->filter(fn($id) => filled($id))
+                ->map(fn($id) => (string) $id)
+                ->unique()
+                ->values();
+
+            if ($drIds->isEmpty()) {
+                return collect();
+            }
 
             return DB::table('rsmst_doctors as d')
-                ->joinSub($unionIds, 'u', 'u.dr_id', '=', 'd.dr_id')
-                ->select('d.dr_id', 'd.dr_name')
+                ->whereIn('d.dr_id', $drIds->all())
                 ->where('d.active_status', '1')
+                ->select('d.dr_id', 'd.dr_name')
                 ->distinct()
                 ->orderBy('d.dr_name')
                 ->get();
@@ -185,6 +195,23 @@ new class extends Component {
             ->distinct()
             ->orderBy('d.dr_name')
             ->get();
+    }
+
+    /* dr_id leveling dokter DPJP dari EMR JSON RI (pengkajian awal). CLOB via OracleLob +
+       json_decode PHP — Oracle tak support JSON_VALUE. */
+    private function levelingDokterIds(string $rihdrNo): array
+    {
+        $row = DB::table('rstxn_rihdrs')->select('datadaftarri_json')->where('rihdr_no', $rihdrNo)->first();
+        if (!$row) {
+            return [];
+        }
+        try {
+            $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $rihdrNo, 'datadaftarri_json');
+            $data = $jsonRaw !== '' ? json_decode($jsonRaw, true) : null;
+        } catch (\Throwable) {
+            return [];
+        }
+        return collect($data['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [])->pluck('drId')->all();
     }
 
     private function defaultDoctorId(): ?string
