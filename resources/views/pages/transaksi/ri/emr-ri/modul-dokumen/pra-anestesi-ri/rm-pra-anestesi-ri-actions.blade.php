@@ -687,32 +687,10 @@ new class extends Component {
                                     @endif
                                 </div>
                                 {{-- Dokter Anestesi (KANAN) --}}
-                                <div class="flex flex-col">
-                                    <div class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">Dokter Anestesi</div>
-                                    @if (empty($newForm['ttd']))
-                                        @if (!$isFormLocked)
-                                            <div class="flex items-center justify-center flex-1 p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                                <x-primary-button wire:click.prevent="setTtd" wire:loading.attr="disabled" wire:target="setTtd" class="gap-2">
-                                                    <span wire:loading.remove wire:target="setTtd">TTD Dokter Anestesi</span>
-                                                    <span wire:loading wire:target="setTtd"><x-loading class="w-4 h-4" /> ...</span>
-                                                </x-primary-button>
-                                            </div>
-                                        @else
-                                            <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
-                                        @endif
-                                    @else
-                                        <div class="flex flex-col items-center justify-center flex-1 p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                            <div class="font-semibold text-center text-ink dark:text-gray-200">{{ $newForm['ttd'] }}</div>
-                                            @if (!empty($newForm['ttdCode']))
-                                                <div class="text-sm text-muted mt-0.5">Kode: {{ $newForm['ttdCode'] }}</div>
-                                            @endif
-                                            <div class="mt-1 text-sm text-muted">{{ $newForm['ttdDate'] ?? '-' }}</div>
-                                            @if (!$isFormLocked)
-                                                <x-outline-button type="button" wire:click.prevent="clearTtd" class="mt-2 !px-2 !py-1 text-sm">Hapus TTD</x-outline-button>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </div>
+                                <x-signature.ttd-petugas :framed="false" :ttd="$newForm['ttd']"
+                                    :date="$newForm['ttdDate'] ?? ''" :code="$newForm['ttdCode'] ?? ''"
+                                    :locked="$isFormLocked" sign="setTtd" clear="clearTtd" label="Dokter Anestesi"
+                                    signLabel="TTD Dokter Anestesi" clearLabel="Hapus TTD" />
                             </div>
                         </section>
 

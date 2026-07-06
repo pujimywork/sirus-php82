@@ -694,52 +694,9 @@ new class extends Component {
                         </section>
 
                         {{-- ══ TTD PERAWAT RR ══ --}}
-                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">Tanda Tangan Petugas Recovery
-                                Room</h3>
-                            <div class="max-w-md">
-                                @if (empty($newForm['ttd']))
-                                    @if (!$isFormLocked)
-                                        <div
-                                            class="flex items-center justify-center p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                            <x-primary-button wire:click.prevent="setTtd" wire:loading.attr="disabled"
-                                                wire:target="setTtd" class="gap-2">
-                                                <span wire:loading.remove wire:target="setTtd"
-                                                    class="flex items-center gap-1.5">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                                    </svg>
-                                                    TTD sebagai Petugas RR
-                                                </span>
-                                                <span wire:loading wire:target="setTtd">
-                                                    <x-loading class="w-4 h-4" /> Menyimpan...
-                                                </span>
-                                            </x-primary-button>
-                                        </div>
-                                    @else
-                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum
-                                            ditandatangani.</p>
-                                    @endif
-                                @else
-                                    <div
-                                        class="flex flex-col items-center justify-center p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                        <div class="font-semibold text-center text-ink dark:text-gray-200">
-                                            {{ $newForm['ttd'] }}</div>
-                                        @if (!empty($newForm['ttdCode']))
-                                            <div class="text-sm text-muted mt-0.5">Kode: {{ $newForm['ttdCode'] }}</div>
-                                        @endif
-                                        <div class="mt-1 text-sm text-muted">{{ $newForm['ttdDate'] ?? '-' }}</div>
-                                        @if (!$isFormLocked)
-                                            <x-outline-button type="button" wire:click.prevent="clearTtd"
-                                                class="mt-2 !px-2 !py-1 text-sm">Hapus TTD</x-outline-button>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        </section>
+                        <x-signature.ttd-petugas :ttd="$newForm['ttd']" :date="$newForm['ttdDate'] ?? ''"
+                            :code="$newForm['ttdCode'] ?? ''" :locked="$isFormLocked" sign="setTtd" clear="clearTtd"
+                            title="Tanda Tangan Petugas Recovery Room" label="" signLabel="TTD sebagai Petugas RR" clearLabel="Hapus TTD" />
 
                         {{-- ══ DAFTAR TERSIMPAN ══ --}}
                         @if (count($pascaList) > 0)

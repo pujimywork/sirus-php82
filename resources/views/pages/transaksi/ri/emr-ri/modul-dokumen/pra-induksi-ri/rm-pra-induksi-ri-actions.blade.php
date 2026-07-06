@@ -491,30 +491,9 @@ new class extends Component {
                             </div>
                         </section>
 
-                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">Tanda Tangan Dokter Anestesi</h3>
-                            <div class="max-w-md">
-                                @if (empty($newForm['ttd']))
-                                    @if (!$isFormLocked)
-                                        <div class="flex items-center justify-center p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                            <x-primary-button wire:click.prevent="setTtd" wire:loading.attr="disabled" wire:target="setTtd" class="gap-2">
-                                                <span wire:loading.remove wire:target="setTtd">TTD Dokter Anestesi</span>
-                                                <span wire:loading wire:target="setTtd"><x-loading class="w-4 h-4" /> ...</span>
-                                            </x-primary-button>
-                                        </div>
-                                    @else
-                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
-                                    @endif
-                                @else
-                                    <div class="flex flex-col items-center justify-center p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                        <div class="font-semibold text-center text-ink dark:text-gray-200">{{ $newForm['ttd'] }}</div>
-                                        @if (!empty($newForm['ttdCode'])) <div class="text-sm text-muted mt-0.5">Kode: {{ $newForm['ttdCode'] }}</div> @endif
-                                        <div class="mt-1 text-sm text-muted">{{ $newForm['ttdDate'] ?? '-' }}</div>
-                                        @if (!$isFormLocked) <x-outline-button type="button" wire:click.prevent="clearTtd" class="mt-2 !px-2 !py-1 text-sm">Hapus TTD</x-outline-button> @endif
-                                    </div>
-                                @endif
-                            </div>
-                        </section>
+                        <x-signature.ttd-petugas :ttd="$newForm['ttd']" :date="$newForm['ttdDate'] ?? ''"
+                            :code="$newForm['ttdCode'] ?? ''" :locked="$isFormLocked" sign="setTtd" clear="clearTtd"
+                            title="Tanda Tangan Dokter Anestesi" label="" signLabel="TTD sebagai Dokter Anestesi" clearLabel="Hapus TTD" />
 
                         @if (count($praInduksiList) > 0)
                             <div class="mt-6 overflow-x-auto">
