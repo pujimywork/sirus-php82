@@ -666,33 +666,33 @@ new class extends Component {
                                     </tr>
                                     @foreach ($group->items as $i => $row)
                                         <tr wire:key="shift-{{ $group->shift }}-{{ $i }}-{{ $row->txn_date }}"
-                                            class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
-                                            <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
-                                                <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
+                                            class="{{ $i % 2 ? 'bg-surface-soft/40 dark:bg-gray-800/20' : '' }} hover:bg-surface-soft dark:hover:bg-gray-800/60">
+                                            <td class="px-3 py-2.5 font-mono align-middle whitespace-nowrap">
+                                                <div class="text-sm text-body dark:text-gray-200">{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
                                                 <div class="text-xs font-medium text-muted dark:text-gray-300">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
                                             </td>
-                                            <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
-                                            <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
-                                                <div class="font-mono text-xs font-semibold text-ink dark:text-gray-200">{{ $row->lawan_acc_id }}</div>
+                                            <td class="px-3 py-2.5 text-sm text-body align-middle dark:text-gray-200">{{ $row->txn_name }}</td>
+                                            <td class="px-3 py-2.5 align-middle">
+                                                <div class="font-mono text-sm font-semibold text-ink dark:text-gray-100">{{ $row->lawan_acc_id }}</div>
                                                 @if (!empty($row->lawan_acc_name))
                                                     <div class="text-xs truncate text-muted dark:text-gray-400">{{ $row->lawan_acc_name }}</div>
                                                 @endif
                                             </td>
-                                            <td class="px-3 py-2 font-mono text-sm text-right align-top text-blue-700 dark:text-blue-300">
+                                            <td class="px-3 py-2.5 font-mono text-sm text-right align-middle text-blue-700 dark:text-blue-300">
                                                 @if ((float) $row->debit_kita > 0)
                                                     {{ number_format((float) $row->debit_kita, 0, '.', ',') }}
                                                 @else
                                                     <span class="text-gray-300">—</span>
                                                 @endif
                                             </td>
-                                            <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
+                                            <td class="px-3 py-2.5 font-mono text-sm text-right align-middle text-error dark:text-rose-300">
                                                 @if ((float) $row->kredit_kita > 0)
                                                     {{ number_format((float) $row->kredit_kita, 0, '.', ',') }}
                                                 @else
                                                     <span class="text-gray-300">—</span>
                                                 @endif
                                             </td>
-                                            <td class="px-3 py-2 font-mono text-sm font-semibold text-right align-top {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
+                                            <td class="px-3 py-2.5 font-mono text-sm font-semibold text-right align-middle {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
                                                 {{ number_format((float) $row->saldo_berjalan, 0, '.', ',') }}
                                             </td>
                                         </tr>
@@ -722,33 +722,33 @@ new class extends Component {
                                 {{-- Mode Harian / Bulanan: daftar transaksi datar --}}
                                 @forelse ($this->rows as $i => $row)
                                     <tr wire:key="hist-{{ $i }}-{{ $row->txn_date }}"
-                                        class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
-                                        <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
-                                            <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
+                                        class="{{ $i % 2 ? 'bg-surface-soft/40 dark:bg-gray-800/20' : '' }} hover:bg-surface-soft dark:hover:bg-gray-800/60">
+                                        <td class="px-3 py-2.5 font-mono align-middle whitespace-nowrap">
+                                            <div class="text-sm text-body dark:text-gray-200">{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
                                             <div class="text-xs font-medium text-muted dark:text-gray-300">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
                                         </td>
-                                        <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
-                                        <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
-                                            <div class="font-mono text-xs font-semibold text-ink dark:text-gray-200">{{ $row->lawan_acc_id }}</div>
+                                        <td class="px-3 py-2.5 text-sm text-body align-middle dark:text-gray-200">{{ $row->txn_name }}</td>
+                                        <td class="px-3 py-2.5 align-middle">
+                                            <div class="font-mono text-sm font-semibold text-ink dark:text-gray-100">{{ $row->lawan_acc_id }}</div>
                                             @if (!empty($row->lawan_acc_name))
                                                 <div class="text-xs truncate text-muted dark:text-gray-400">{{ $row->lawan_acc_name }}</div>
                                             @endif
                                         </td>
-                                        <td class="px-3 py-2 font-mono text-sm text-right align-top text-blue-700 dark:text-blue-300">
+                                        <td class="px-3 py-2.5 font-mono text-sm text-right align-middle text-blue-700 dark:text-blue-300">
                                             @if ((float) $row->debit_kita > 0)
                                                 {{ number_format((float) $row->debit_kita, 0, '.', ',') }}
                                             @else
                                                 <span class="text-gray-300">—</span>
                                             @endif
                                         </td>
-                                        <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
+                                        <td class="px-3 py-2.5 font-mono text-sm text-right align-middle text-error dark:text-rose-300">
                                             @if ((float) $row->kredit_kita > 0)
                                                 {{ number_format((float) $row->kredit_kita, 0, '.', ',') }}
                                             @else
                                                 <span class="text-gray-300">—</span>
                                             @endif
                                         </td>
-                                        <td class="px-3 py-2 font-mono text-sm font-semibold text-right align-top {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
+                                        <td class="px-3 py-2.5 font-mono text-sm font-semibold text-right align-middle {{ (float) $row->saldo_berjalan < 0 ? 'text-red-600' : '' }}">
                                             {{ number_format((float) $row->saldo_berjalan, 0, '.', ',') }}
                                         </td>
                                     </tr>
