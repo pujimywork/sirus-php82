@@ -234,6 +234,51 @@ new class extends Component {
     }
 
     /**
+     * Rekap per jenis transaksi (prefix txn_name sebelum '('): jumlah + total nominal.
+     * Urut nominal terbesar. Menerima sekumpulan baris (semua / per shift).
+     */
+    private function rekapJenisDari($rows)
+    {
+        return collect($rows)
+            ->groupBy(function ($r) {
+                $name = trim((string) $r->txn_name);
+                $pos = strpos($name, '(');
+                $jenis = $pos !== false ? trim(substr($name, 0, $pos)) : $name;
+                return $jenis === '' ? '-' : $jenis;
+            })
+            ->map(fn($grup, $jenis) => (object) [
+                'jenis'   => $jenis,
+                'count'   => $grup->count(),
+                'nominal' => (float) $grup->sum(fn($r) => (float) $r->debit_kita + (float) $r->kredit_kita),
+            ])
+            ->sortByDesc('nominal')
+            ->values();
+    }
+
+    /** Rekap jenis seluruh periode terpilih (mode harian/bulanan). */
+    #[Computed]
+    public function rekapJenis()
+    {
+        return $this->rekapJenisDari($this->rows);
+    }
+
+    /** Rekap jenis dipecah per shift (mode 'shift'): tiap shift punya rekap jenisnya sendiri. */
+    #[Computed]
+    public function rekapJenisPerShift(): array
+    {
+        if ($this->mode !== 'shift') {
+            return [];
+        }
+        return collect($this->susunKelompokShift())
+            ->map(fn($kelompok) => (object) [
+                'shift' => $kelompok->shift,
+                'range' => $kelompok->range,
+                'rekap' => $this->rekapJenisDari($kelompok->items),
+            ])
+            ->all();
+    }
+
+    /**
      * Daftar transaksi dalam rentang dgn running saldo.
      */
     #[Computed]
@@ -517,6 +562,55 @@ new class extends Component {
                                 </div>
                             </div>
                         @endif
+                    </div>
+
+                    {{-- Rekap per jenis transaksi — collapsible (default tutup) biar tak ganggu fungsi utama --}}
+                    <div class="lg:max-w-[48%] lg:text-right" x-data="{ openRekap: false }">
+                        <button type="button" x-on:click="openRekap = !openRekap"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg text-muted border-hairline hover:bg-surface-soft dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                            <svg class="w-4 h-4 transition-transform" x-bind:class="openRekap ? 'rotate-180' : ''"
+                                fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                            Rekap per Jenis Transaksi
+                            <span class="px-1.5 rounded bg-surface-soft text-muted-soft dark:bg-gray-900">{{ $this->rekapJenis->count() }}</span>
+                        </button>
+                        <div x-show="openRekap" x-transition class="mt-2 space-y-2">
+                            @if ($mode === 'shift')
+                                {{-- Per shift: tiap shift punya rekap jenisnya sendiri --}}
+                                @forelse ($this->rekapJenisPerShift as $grup)
+                                    <div class="lg:text-right">
+                                        <div class="mb-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                            Shift {{ $grup->shift }}@if ($grup->range) <span class="font-normal text-muted">({{ $grup->range }})</span>@endif
+                                        </div>
+                                        <div class="flex flex-wrap gap-1.5 lg:justify-end">
+                                            @foreach ($grup->rekap as $rekap)
+                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
+                                                    <span class="text-xs font-semibold text-ink dark:text-gray-200">{{ $rekap->jenis }}</span>
+                                                    <span class="px-1.5 text-xs font-medium rounded text-muted bg-canvas dark:bg-gray-900 dark:text-gray-400">{{ $rekap->count }} trx</span>
+                                                    <span class="text-xs font-mono font-semibold text-brand dark:text-brand-lime">Rp {{ number_format($rekap->nominal, 0, '.', ',') }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @empty
+                                    <span class="text-xs text-muted-soft">Tidak ada transaksi.</span>
+                                @endforelse
+                            @else
+                                {{-- Harian/bulanan: rekap jenis se-periode --}}
+                                <div class="flex flex-wrap gap-1.5 lg:justify-end">
+                                    @forelse ($this->rekapJenis as $rekap)
+                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
+                                            <span class="text-xs font-semibold text-ink dark:text-gray-200">{{ $rekap->jenis }}</span>
+                                            <span class="px-1.5 text-xs font-medium rounded text-muted bg-canvas dark:bg-gray-900 dark:text-gray-400">{{ $rekap->count }} trx</span>
+                                            <span class="text-xs font-mono font-semibold text-brand dark:text-brand-lime">Rp {{ number_format($rekap->nominal, 0, '.', ',') }}</span>
+                                        </div>
+                                    @empty
+                                        <span class="text-xs text-muted-soft">Tidak ada transaksi.</span>
+                                    @endforelse
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
