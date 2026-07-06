@@ -48,6 +48,7 @@ jadi method cukup ada di induk.
 | `:locked` | `false` | sembunyikan tombol saat form terkunci (`$isFormLocked`) |
 | `sign` | `ttdSaya` | nama method Livewire stamp TTD |
 | `clear` | `hapusTtd` | nama method Livewire hapus TTD |
+| `:allowClear` | `true` | `false` → sekali TTD tak bisa diubah (tombol Ganti/Hapus disembunyikan); mis. form serah-terima |
 | `:framed` | `true` | `true`=dibungkus border-form (kartu, kolom sempit tengah); `false`=tanpa bingkai, rata kiri, `flex-1` (utk grid-cell) |
 | `title` | `Tanda Tangan` | judul border-form (hanya saat framed) |
 | `label` | `Petugas (Penanda-tangan)` | subtitle kecil; kirim `""` untuk sembunyikan |
@@ -78,10 +79,22 @@ jadi method cukup ada di induk.
     label="Dokter Anestesi" signLabel="TTD Dokter Anestesi" clearLabel="Hapus TTD" />
 ```
 
+## Struktur internal
+Komponen = wrapper tipis; isi diekstrak ke `ttd-petugas-body.blade.php`. Wrapper
+memilih dibungkus `<x-border-form>` (framed) atau tidak, dengan memanggil body
+**utuh** di tiap cabang `@if`. Ini disengaja — lihat gotcha di bawah.
+
 ## Gotcha
+- **JANGAN split satu tag komponen antar `@if`** (`@if($x)<x-border-form>@endif ...isi...
+  @if($x)</x-border-form>@endif`). Saat cabang skip, **seluruh isi hilang** (output kosong)
+  karena buffer `startComponent`/`renderComponent` tak seimbang. Ekstrak isi ke sub-komponen
+  dan bungkus utuh per cabang (pola file ini).
 - **JANGAN tulis `<x-...>` di komentar** file komponen (`@props`/`@php`). Blade tetap
-  mengkompilasinya jadi tag komponen → runtime `Undefined variable $component`
-  (padahal `php -l` & `view:cache` lolos). Sebut tanpa angle-x. Lihat skill `blade-safe-edit`.
-- Verifikasi perubahan komponen dengan **load halaman** (cek HTTP status), bukan cuma lint.
+  mengkompilasinya jadi tag → runtime `Undefined variable $component` (padahal `php -l` &
+  `view:cache` lolos). Sebut tanpa angle-x.
+- **Verifikasi via render, bukan HTTP status.** `curl` bisa dapat 302 (redirect login)
+  sebelum komponen ter-render → bug render tak muncul. Uji tiap kombinasi prop:
+  `php artisan tinker --execute="echo strlen(Blade::render('<x-signature.ttd-petugas :framed=\"false\" ... />'));"`
+  (LEN=0 = bug). Lihat skill `blade-safe-edit`.
 - Untuk render gambar TTD di cetakan, simpan `ttdCode` (myuser_code) dan resolve
   `myuser_ttd_image` di method `cetak()`; lihat `docs/ttd-pattern-pdf-print.md`.

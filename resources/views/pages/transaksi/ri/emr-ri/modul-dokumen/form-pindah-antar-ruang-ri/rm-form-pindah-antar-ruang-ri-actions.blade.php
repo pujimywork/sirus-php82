@@ -494,6 +494,9 @@ new class extends Component {
 <div>
     {{-- ══ SUMMARY CARD (inline di tab) ══ --}}
     @php
+        // Field-lock: begitu KEDUA TTD ada, kunci input (tapi save() tetap jalan — pakai $isFormLocked utk guard save).
+        $bothSigned = !empty($newPindah['petugasPengirim']) && !empty($newPindah['petugasPenerima']);
+        $uiLocked = $isFormLocked || $bothSigned;
         $pindahCount = count($listPindah ?? []);
         $inTransitCount = collect($listPindah ?? [])
             ->filter(fn($pindah) => !empty($pindah['petugasPengirim']) && empty($pindah['petugasPenerima']))
@@ -737,8 +740,8 @@ new class extends Component {
                                     <x-input-label value="Tanggal Pindah (kirim) *" class="mb-1" />
                                     <div class="flex gap-2">
                                         <x-text-input wire:model.live="newPindah.tglPindah" :error="$errors->has('newPindah.tglPindah')"
-                                            placeholder="dd/mm/yyyy hh:ii:ss" :disabled="$isFormLocked" class="flex-1" />
-                                        @if (!$isFormLocked)
+                                            placeholder="dd/mm/yyyy hh:ii:ss" :disabled="$uiLocked" class="flex-1" />
+                                        @if (!$uiLocked)
                                             <x-now-button wire:click="setTglPindahSekarang" />
                                         @endif
                                     </div>
@@ -751,9 +754,9 @@ new class extends Component {
                                     <div class="flex gap-2">
                                         <x-text-input wire:model.live="newPindah.tglTerima" :error="$errors->has('newPindah.tglTerima')"
                                             placeholder="dd/mm/yyyy hh:ii:ss"
-                                            :disabled="$isFormLocked || empty($newPindah['petugasPengirim'])"
+                                            :disabled="$uiLocked || empty($newPindah['petugasPengirim'])"
                                             class="flex-1" />
-                                        @if (!$isFormLocked && !empty($newPindah['petugasPengirim']))
+                                        @if (!$uiLocked && !empty($newPindah['petugasPengirim']))
                                             <x-now-button wire:click="setTglTerimaSekarang" />
                                         @endif
                                     </div>
@@ -777,7 +780,7 @@ new class extends Component {
 
                                 <div>
                                     <x-input-label value="Ke Ruangan / Bed *" class="mb-1" />
-                                    @if (!$isFormLocked)
+                                    @if (!$uiLocked)
                                         <livewire:lov.room.lov-room target="pindahRiKeRuang" label=""
                                             :initialRoomId="$newPindah['keRoomId'] ?? null"
                                             wire:key="lov-room-pindah-ri-{{ $riHdrNo ?? 'init' }}-{{ $editingTglPindah ?? 'new' }}-{{ $renderVersions['modal-form-pindah-ri'] ?? 0 }}" />
@@ -803,7 +806,7 @@ new class extends Component {
                                 <x-input-label value="Alasan Pindah *" class="mb-1" />
                                 <x-textarea wire:model.live="newPindah.alasanPindah" :error="$errors->has('newPindah.alasanPindah')" rows="2"
                                     placeholder="Mis. perubahan kelas, kebutuhan ruang isolasi, permintaan keluarga..."
-                                    :disabled="$isFormLocked" />
+                                    :disabled="$uiLocked" />
                                 <x-input-error :messages="$errors->get('newPindah.alasanPindah')" class="mt-1" />
                             </div>
                         </section>
@@ -825,52 +828,52 @@ new class extends Component {
                                 <div>
                                     <x-input-label value="TD Sistolik" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.sistolik" :error="$errors->has('newPindah.kondisiKirim.sistolik')" type="number"
-                                        placeholder="mmHg" :disabled="$isFormLocked" class="w-full" />
+                                        placeholder="mmHg" :disabled="$uiLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="TD Diastolik" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.diastolik" :error="$errors->has('newPindah.kondisiKirim.diastolik')" type="number"
-                                        placeholder="mmHg" :disabled="$isFormLocked" class="w-full" />
+                                        placeholder="mmHg" :disabled="$uiLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Nadi" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.frekuensiNadi" :error="$errors->has('newPindah.kondisiKirim.frekuensiNadi')"
-                                        type="number" placeholder="x/menit" :disabled="$isFormLocked"
+                                        type="number" placeholder="x/menit" :disabled="$uiLocked"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Nafas (RR)" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.frekuensiNafas" :error="$errors->has('newPindah.kondisiKirim.frekuensiNafas')"
-                                        type="number" placeholder="x/menit" :disabled="$isFormLocked"
+                                        type="number" placeholder="x/menit" :disabled="$uiLocked"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Suhu" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.suhu" :error="$errors->has('newPindah.kondisiKirim.suhu')" type="number"
-                                        step="0.1" placeholder="°C" :disabled="$isFormLocked" class="w-full" />
+                                        step="0.1" placeholder="°C" :disabled="$uiLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="SpO2" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.spo2" :error="$errors->has('newPindah.kondisiKirim.spo2')" type="number"
-                                        placeholder="%" :disabled="$isFormLocked" class="w-full" />
+                                        placeholder="%" :disabled="$uiLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="GCS" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.gcs" :error="$errors->has('newPindah.kondisiKirim.gcs')"
-                                        placeholder="E_M_V_" :disabled="$isFormLocked" class="w-full" />
+                                        placeholder="E_M_V_" :disabled="$uiLocked" class="w-full" />
                                 </div>
                             </div>
 
                             <div>
                                 <x-input-label value="Keadaan Umum (saat dikirim)" class="mb-1" />
                                 <x-textarea wire:model.live="newPindah.kondisiKirim.keadaanPasien" :error="$errors->has('newPindah.kondisiKirim.keadaanPasien')" rows="2"
-                                    placeholder="Mis. sadar, lemah, terpasang infus RL..." :disabled="$isFormLocked" />
+                                    placeholder="Mis. sadar, lemah, terpasang infus RL..." :disabled="$uiLocked" />
                             </div>
                             </div>
                             {{-- ── end Kiri ── --}}
 
                             {{-- ── Kanan: Kondisi Saat Diterima (Penerima) ── --}}
-                            @php $disableTerima = $isFormLocked || empty($newPindah['petugasPengirim']); @endphp
+                            @php $disableTerima = $uiLocked || empty($newPindah['petugasPengirim']); @endphp
                             <div class="space-y-4">
                             <div class="flex items-center justify-between gap-2 flex-wrap">
                                 <h3
@@ -946,109 +949,18 @@ new class extends Component {
 
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 {{-- Pengirim --}}
-                                <div class="flex flex-col">
-                                    <div
-                                        class="mb-2 text-xs font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
-                                        Petugas Pengirim
-                                    </div>
-                                    @if (empty($newPindah['petugasPengirim']))
-                                        @if (!$isFormLocked)
-                                            <div
-                                                class="flex items-center justify-center flex-1 p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                                <x-primary-button wire:click.prevent="setPetugasPengirim"
-                                                    wire:loading.attr="disabled" wire:target="setPetugasPengirim"
-                                                    class="gap-2">
-                                                    <span wire:loading.remove wire:target="setPetugasPengirim"
-                                                        class="flex items-center gap-1.5">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                                        </svg>
-                                                        TTD Pengirim
-                                                    </span>
-                                                    <span wire:loading wire:target="setPetugasPengirim">
-                                                        <x-loading class="w-4 h-4" /> Menyimpan...
-                                                    </span>
-                                                </x-primary-button>
-                                            </div>
-                                        @else
-                                            <p class="py-8 text-sm italic text-center text-muted-soft">Belum
-                                                ditandatangani.</p>
-                                        @endif
-                                    @else
-                                        <div
-                                            class="flex flex-col items-center justify-center flex-1 p-4 border border-emerald-200 bg-emerald-50 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
-                                            <div class="font-semibold text-center text-ink dark:text-gray-200">
-                                                {{ $newPindah['petugasPengirim'] }}
-                                            </div>
-                                            @if (!empty($newPindah['petugasPengirimCode']))
-                                                <div class="text-xs text-muted mt-0.5">
-                                                    Kode: {{ $newPindah['petugasPengirimCode'] }}
-                                                </div>
-                                            @endif
-                                            <div class="mt-1 text-xs text-muted">
-                                                {{ $newPindah['petugasPengirimDate'] ?? '-' }}
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
+                                <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                                    :ttd="$newPindah['petugasPengirim']" :date="$newPindah['petugasPengirimDate'] ?? ''"
+                                    :code="$newPindah['petugasPengirimCode'] ?? ''" :locked="$isFormLocked"
+                                    sign="setPetugasPengirim" label="Petugas Pengirim" signLabel="TTD Pengirim" />
 
                                 {{-- Penerima --}}
-                                <div class="flex flex-col">
-                                    <div
-                                        class="mb-2 text-xs font-semibold tracking-wide text-center {{ empty($newPindah['petugasPengirim']) ? 'text-gray-300' : 'text-muted' }} uppercase dark:text-gray-400">
-                                        Petugas Penerima
-                                    </div>
-                                    @if (empty($newPindah['petugasPenerima']))
-                                        @if (!$isFormLocked && !empty($newPindah['petugasPengirim']))
-                                            <div
-                                                class="flex items-center justify-center flex-1 p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                                <x-primary-button wire:click.prevent="setPetugasPenerima"
-                                                    wire:loading.attr="disabled" wire:target="setPetugasPenerima"
-                                                    class="gap-2">
-                                                    <span wire:loading.remove wire:target="setPetugasPenerima"
-                                                        class="flex items-center gap-1.5">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                                        </svg>
-                                                        TTD Penerima
-                                                    </span>
-                                                    <span wire:loading wire:target="setPetugasPenerima">
-                                                        <x-loading class="w-4 h-4" /> Menyimpan...
-                                                    </span>
-                                                </x-primary-button>
-                                            </div>
-                                        @else
-                                            <p class="py-8 text-sm italic text-center text-muted-soft">
-                                                @if (empty($newPindah['petugasPengirim']))
-                                                    Menunggu TTD Pengirim.
-                                                @else
-                                                    Belum ditandatangani.
-                                                @endif
-                                            </p>
-                                        @endif
-                                    @else
-                                        <div
-                                            class="flex flex-col items-center justify-center flex-1 p-4 border border-emerald-200 bg-emerald-50 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
-                                            <div class="font-semibold text-center text-ink dark:text-gray-200">
-                                                {{ $newPindah['petugasPenerima'] }}
-                                            </div>
-                                            @if (!empty($newPindah['petugasPenerimaCode']))
-                                                <div class="text-xs text-muted mt-0.5">
-                                                    Kode: {{ $newPindah['petugasPenerimaCode'] }}
-                                                </div>
-                                            @endif
-                                            <div class="mt-1 text-xs text-muted">
-                                                {{ $newPindah['petugasPenerimaDate'] ?? '-' }}
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
+                                <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                                    :ttd="$newPindah['petugasPenerima']" :date="$newPindah['petugasPenerimaDate'] ?? ''"
+                                    :code="$newPindah['petugasPenerimaCode'] ?? ''"
+                                    :locked="$isFormLocked || empty($newPindah['petugasPengirim'])"
+                                    sign="setPetugasPenerima" label="Petugas Penerima" signLabel="TTD Penerima"
+                                    emptyText="Menunggu TTD Pengirim." />
                             </div>
                         </section>
 
