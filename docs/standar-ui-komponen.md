@@ -300,6 +300,30 @@ Lihat [tabs-pattern.md](tabs-pattern.md) untuk panduan lengkap `x-tabs` / `x-tab
 
 ---
 
+## 7. Tanda Tangan Petugas (`<x-signature.ttd-petugas>`)
+
+TTD **di layar/form entry** (stamp nama user login + tgl). Jangan tulis blok "TTD Saya" inline lagi. Panduan lengkap: [ttd-petugas-component.md](ttd-petugas-component.md). (Untuk TTD di **cetakan PDF** lihat [ttd-pattern-pdf-print.md](ttd-pattern-pdf-print.md).)
+
+### Ringkasan Cepat
+
+```blade
+{{-- default (framed, subtitle "Petugas (Penanda-tangan)") --}}
+<x-signature.ttd-petugas :ttd="$newForm['ttd']" :date="$newForm['ttdDate'] ?? ''" :locked="$isFormLocked" />
+
+{{-- judul spesifik + simpan kode (utk gambar TTD di cetak), tanpa subtitle --}}
+<x-signature.ttd-petugas :ttd="$newForm['operatorTtd']" :date="$newForm['operatorTtdDate'] ?? ''"
+    :code="$newForm['operatorTtdCode'] ?? ''" :locked="$isFormLocked"
+    sign="setOperatorTtd" clear="clearOperatorTtd"
+    title="Tanda Tangan Operator" label="" signLabel="TTD sebagai Operator" clearLabel="Hapus TTD" />
+
+{{-- tanpa bingkai (rata kiri) utk grid-cell --}}
+<x-signature.ttd-petugas :framed="false" ... />
+```
+
+Induk **wajib** sediakan method `sign`/`clear` (default `ttdSaya`/`hapusTtd`) dengan **guard `$isFormLocked` server-side** + simpan `ttdCode` (myuser_code). **Gotcha:** jangan taruh `<x-...>` di komentar file komponen → runtime `Undefined variable $component`.
+
+---
+
 ## Aturan Umum
 
 1. **Jangan pakai `!important` override** — pilih komponen yang tepat
@@ -309,3 +333,4 @@ Lihat [tabs-pattern.md](tabs-pattern.md) untuk panduan lengkap `x-tabs` / `x-tab
 5. **Satu `<x-primary-button>` per modal** — hanya untuk aksi utama
 6. **Close X selalu `<x-icon-button color="gray">`**
 7. **Body modal selalu `px-4 py-4 bg-gray-50/70`** — jangan variasikan padding
+8. **Jangan tulis blok TTD "TTD Saya" inline** — pakai `<x-signature.ttd-petugas>`

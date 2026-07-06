@@ -15,6 +15,7 @@ Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti po
 | Halaman bertabel full-height (frame, toolbar sticky, pagination, empty state) | `docs/page-frame-pattern.md` |
 | Modal dengan deteksi perubahan (konfirmasi keluar bila dirty) | `docs/dirty-modal-pattern.md` |
 | Cetak PDF + tanda tangan (TTD) | `docs/ttd-pattern-pdf-print.md` |
+| TTD petugas di layar (form entry, stamp nama+tgl user login) | `docs/ttd-petugas-component.md` (komponen `<x-signature.ttd-petugas>`) |
 | Editor rich text | `docs/tinymce-editor-pattern.md` |
 | List/lookup stabil (decouple dari filter) | `docs/stable-lookup-list-pattern.md` |
 | Trait untuk integrasi API eksternal (BPJS/iDRG/Sisrute dll.) | `docs/trait-template-api-eksternal.md` |
@@ -24,6 +25,7 @@ Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti po
 ## Catatan kunci per pola
 - **Page frame / tabel full-height**: yang bikin tabel isi penuh layar = card-level `flex flex-col flex-1 min-h-0` (bukan empty row-nya). Empty state cukup `@forelse`/`@empty` + `<td colspan py-16 text-center>`. JANGAN bikin panel `flex-1` / `@if($this->rows->isEmpty())` sendiri. Acuan: `daftar-rj`. **Gotcha:** wrapper perantara `wire:poll` (`<div ... class="mt-4">`) di atas card WAJIB ikut `flex flex-col flex-1 min-h-0`, kalau tidak card menciut & tabel kosong tampak pendek. **Header tabel list baku:** `text-sm font-semibold tracking-wide text-left text-gray-600 uppercase` (jangan `text-base`/`text-xs`; `font-semibold`, bukan medium/bold).
 - **TTD print**: pola `h-16` + `text-center` + `&nbsp;` fallback. HINDARI `display:flex` / `mx-auto` / `<br>` / bracket yang belum di-rebuild.
+- **TTD petugas di layar**: pakai komponen `<x-signature.ttd-petugas>` (jangan tulis blok TTD-Saya inline lagi). Induk sediakan `ttdSaya()`/`hapusTtd()` (guard `$isFormLocked` server-side + simpan `ttdCode`). `:framed=false` utk grid-cell. **Gotcha:** jangan taruh `<x-...>` di komentar file komponen → runtime `Undefined variable $component` (lolos lint, meledak saat render).
 - **Stable lookup list**: list HANYA depend tanggal; decouple dari filterStatus/filterKlaim.
 - **Trait API eksternal**: ikuti pola `VclaimTrait` — event split (mis. `idrg-state-updated` vs `idrg-section-changed`), suffix per-modul.
 - **Tab bar**: pakai `x-tabs`/`x-tab`, JANGAN tulis ulang `<ul><li><button @class([...])>`. `variant` di `<x-tabs>` diwarisi via `@aware`. Mode server (`:active` + `wire:click`) vs Alpine (`active-expr` + `x-on:click`, untuk `@entangle`). Di dalam `<x-scrollable-tabs>` jangan bungkus lagi dengan `<x-tabs>` (border dobel). Warna baru → tambah di map `$palette` (statis, bukan kelas dinamis).
