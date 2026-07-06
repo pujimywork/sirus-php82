@@ -479,14 +479,6 @@ new class extends Component {
                                         ▶
                                     </x-secondary-button>
                                 </div>
-                                <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
-                                    @if ($periode !== '')
-                                        {{ \Carbon\Carbon::parse("{$periode}-01")->format('d/m/Y') }}
-                                        — {{ \Carbon\Carbon::parse("{$periode}-01")->endOfMonth()->format('d/m/Y') }}
-                                    @else
-                                        <span class="text-error">Format: mm/yyyy (mis. 04/2026)</span>
-                                    @endif
-                                </p>
                             </div>
                         @else
                             {{-- Picker harian --}}
@@ -668,7 +660,7 @@ new class extends Component {
                 <div class="flex justify-end gap-2">
                     <x-primary-button type="button" wire:click="cetakRekap"
                         wire:loading.attr="disabled" wire:target="cetakRekap"
-                        @disabled($this->rows->count() === 0)>
+                        :disabled="$this->rows->count() === 0">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
