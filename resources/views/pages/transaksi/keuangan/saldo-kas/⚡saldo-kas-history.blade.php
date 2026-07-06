@@ -13,10 +13,16 @@ new class extends Component {
     public string $accDesc     = '';
     public string $accDkStatus = 'D';
 
-    /** Format internal: 'YYYY-MM' */
+    /** Mode tampilan: 'bulanan' (satu bulan penuh) | 'harian' (satu tanggal) */
+    public string $mode = 'bulanan';
+
+    /** Format internal: 'YYYY-MM' (mode bulanan) */
     public string $periode = '';
     /** Format input user: 'MM/YYYY' */
     public string $periodeInput = '';
+
+    /** Tanggal untuk mode harian: 'YYYY-MM-DD' */
+    public string $tanggalHarian = '';
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal'];
@@ -24,14 +30,30 @@ new class extends Component {
     #[Computed]
     public function dariTanggal(): string
     {
+        if ($this->mode === 'harian') {
+            return $this->tanggalHarian;
+        }
         return $this->periode === '' ? '' : $this->periode . '-01';
     }
 
     #[Computed]
     public function sampaiTanggal(): string
     {
+        if ($this->mode === 'harian') {
+            return $this->tanggalHarian;
+        }
         if ($this->periode === '') return '';
         return \Carbon\Carbon::parse($this->periode . '-01')->endOfMonth()->toDateString();
+    }
+
+    public function setMode(string $mode): void
+    {
+        if (!in_array($mode, ['bulanan', 'harian'], true)) return;
+        $this->mode = $mode;
+        // Pindah ke harian tanpa tanggal → default ke hari terakhir periode terpilih.
+        if ($mode === 'harian' && $this->tanggalHarian === '' && $this->periode !== '') {
+            $this->tanggalHarian = \Carbon\Carbon::parse($this->periode . '-01')->endOfMonth()->toDateString();
+        }
     }
 
     public function prevMonth(): void
@@ -44,6 +66,18 @@ new class extends Component {
     {
         if ($this->periode === '') return;
         $this->setPeriode(\Carbon\Carbon::parse($this->periode . '-01')->addMonth()->format('Y-m'));
+    }
+
+    public function prevDay(): void
+    {
+        if ($this->tanggalHarian === '') return;
+        $this->setTanggalHarian(\Carbon\Carbon::parse($this->tanggalHarian)->subDay()->toDateString());
+    }
+
+    public function nextDay(): void
+    {
+        if ($this->tanggalHarian === '') return;
+        $this->setTanggalHarian(\Carbon\Carbon::parse($this->tanggalHarian)->addDay()->toDateString());
     }
 
     /**
@@ -61,10 +95,24 @@ new class extends Component {
         $this->periode = "{$tahun}-{$bulan}";
     }
 
+    /** Date input harian berubah → sinkron periode agar konsisten saat balik ke bulanan. */
+    public function updatedTanggalHarian(string $value): void
+    {
+        if ($value !== '') {
+            $this->setPeriode(substr($value, 0, 7));
+        }
+    }
+
     private function setPeriode(string $ym): void
     {
         $this->periode = $ym;
         $this->periodeInput = \Carbon\Carbon::parse($ym . '-01')->format('m/Y');
+    }
+
+    private function setTanggalHarian(string $ymd): void
+    {
+        $this->tanggalHarian = $ymd;
+        $this->setPeriode(substr($ymd, 0, 7));
     }
 
     public function mount(): void
@@ -89,8 +137,10 @@ new class extends Component {
         $this->accDesc     = (string) ($row->acc_name ?? '');
         $this->accDkStatus = (string) ($row->acc_dk_status ?? 'D');
 
-        // Default: bulan dari tanggal terpilih di parent
+        // Default: mode bulanan, bulan dari tanggal terpilih di parent; tanggal harian = tanggal parent
+        $this->mode = 'bulanan';
         $this->setPeriode(substr($tanggal, 0, 7));
+        $this->tanggalHarian = $tanggal;
 
         $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'saldo-kas-history');
@@ -135,7 +185,7 @@ new class extends Component {
     #[Computed]
     public function saldoAwalPeriode(): float
     {
-        if ($this->periode === '') return 0;
+        if ($this->dariTanggal === '') return 0;
         $prev = \Carbon\Carbon::parse($this->dariTanggal)->subDay()->toDateString();
         return $this->hitungSaldoTanggal($prev);
     }
@@ -164,7 +214,7 @@ new class extends Component {
     #[Computed]
     public function rows()
     {
-        if ($this->accId === '' || $this->periode === '') {
+        if ($this->accId === '' || $this->dariTanggal === '' || $this->sampaiTanggal === '') {
             return collect();
         }
 
@@ -211,7 +261,7 @@ new class extends Component {
 
     public function closeModal(): void
     {
-        $this->reset(['accId', 'accDesc', 'accDkStatus', 'periode', 'periodeInput']);
+        $this->reset(['accId', 'accDesc', 'accDkStatus', 'mode', 'periode', 'periodeInput', 'tanggalHarian']);
         $this->dispatch('close-modal', name: 'saldo-kas-history');
         $this->resetVersion();
     }
@@ -221,7 +271,7 @@ new class extends Component {
 <div>
     <x-modal name="saldo-kas-history" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-             wire:key="{{ $this->renderKey('modal', [$accId, $periode]) }}">
+             wire:key="{{ $this->renderKey('modal', [$accId, $mode, $periode, $tanggalHarian]) }}">
 
             <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
@@ -243,30 +293,75 @@ new class extends Component {
 
             <div class="px-4 py-3 bg-canvas border-b border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
-                        <x-input-label for="periodeInput" value="Periode (mm/yyyy)" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
-                        <div class="flex items-stretch gap-1">
-                            <x-secondary-button type="button" wire:click="prevMonth"
-                                class="px-3" title="Bulan sebelumnya">
-                                ◀
-                            </x-secondary-button>
-                            <x-text-input id="periodeInput" type="text"
-                                wire:model.live.debounce.500ms="periodeInput"
-                                placeholder="01/2026" maxlength="7"
-                                class="w-28 text-center font-mono" />
-                            <x-secondary-button type="button" wire:click="nextMonth"
-                                class="px-3" title="Bulan berikutnya">
-                                ▶
-                            </x-secondary-button>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        {{-- Toggle mode: Bulanan / Harian --}}
+                        <div>
+                            <x-input-label value="Tampilan" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
+                            <div class="inline-flex overflow-hidden border rounded-lg border-hairline dark:border-gray-700">
+                                <button type="button" wire:click="setMode('bulanan')"
+                                    class="px-4 py-2 text-sm font-medium transition {{ $mode === 'bulanan' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
+                                    Bulanan
+                                </button>
+                                <button type="button" wire:click="setMode('harian')"
+                                    class="px-4 py-2 text-sm font-medium transition border-l border-hairline dark:border-gray-700 {{ $mode === 'harian' ? 'text-white bg-brand-green' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300' }}">
+                                    Harian
+                                </button>
+                            </div>
                         </div>
-                        <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
-                            @if ($periode !== '')
-                                {{ \Carbon\Carbon::parse("{$periode}-01")->format('d/m/Y') }}
-                                — {{ \Carbon\Carbon::parse("{$periode}-01")->endOfMonth()->format('d/m/Y') }}
-                            @else
-                                <span class="text-error">Format: mm/yyyy (mis. 04/2026)</span>
-                            @endif
-                        </p>
+
+                        @if ($mode === 'bulanan')
+                            {{-- Picker bulan --}}
+                            <div>
+                                <x-input-label for="periodeInput" value="Periode (mm/yyyy)" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
+                                <div class="flex items-stretch gap-1">
+                                    <x-secondary-button type="button" wire:click="prevMonth"
+                                        class="px-3" title="Bulan sebelumnya">
+                                        ◀
+                                    </x-secondary-button>
+                                    <x-text-input id="periodeInput" type="text"
+                                        wire:model.live.debounce.500ms="periodeInput"
+                                        placeholder="01/2026" maxlength="7"
+                                        class="w-28 text-center font-mono" />
+                                    <x-secondary-button type="button" wire:click="nextMonth"
+                                        class="px-3" title="Bulan berikutnya">
+                                        ▶
+                                    </x-secondary-button>
+                                </div>
+                                <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
+                                    @if ($periode !== '')
+                                        {{ \Carbon\Carbon::parse("{$periode}-01")->format('d/m/Y') }}
+                                        — {{ \Carbon\Carbon::parse("{$periode}-01")->endOfMonth()->format('d/m/Y') }}
+                                    @else
+                                        <span class="text-error">Format: mm/yyyy (mis. 04/2026)</span>
+                                    @endif
+                                </p>
+                            </div>
+                        @else
+                            {{-- Picker harian --}}
+                            <div>
+                                <x-input-label for="tanggalHarian" value="Tanggal (dd/mm/yyyy)" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
+                                <div class="flex items-stretch gap-1">
+                                    <x-secondary-button type="button" wire:click="prevDay"
+                                        class="px-3" title="Hari sebelumnya">
+                                        ◀
+                                    </x-secondary-button>
+                                    <x-text-input id="tanggalHarian" type="date"
+                                        wire:model.live="tanggalHarian"
+                                        class="w-40 text-center font-mono" />
+                                    <x-secondary-button type="button" wire:click="nextDay"
+                                        class="px-3" title="Hari berikutnya">
+                                        ▶
+                                    </x-secondary-button>
+                                </div>
+                                <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
+                                    @if ($tanggalHarian !== '')
+                                        {{ \Carbon\Carbon::parse($tanggalHarian)->format('d/m/Y') }}
+                                    @else
+                                        <span class="text-error">Pilih tanggal</span>
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-3 gap-3 text-right">
