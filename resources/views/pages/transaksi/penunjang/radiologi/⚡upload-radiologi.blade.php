@@ -851,7 +851,7 @@ new class extends Component {
                                              Hapus record permanen; lock (pasien pulang) & audit log server-side. --}}
                                         @hasanyrole(['Admin', 'Supervisor Penunjang'])
                                             <div class="pt-3 mt-3 border-t border-hairline dark:border-gray-700">
-                                                <x-confirm-button variant="danger"
+                                                <x-confirm-button variant="danger" :disabled="$isTarifLocked"
                                                     action="batalkanOrder('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }})"
                                                     title="Batalkan Order Radiologi"
                                                     message="Batalkan order radiologi ini? Order akan dihapus permanen."
