@@ -605,8 +605,7 @@ new class extends Component {
                                             <span class="font-mono text-sm text-body dark:text-gray-300 whitespace-nowrap">
                                                 {{ $row->waktu_efektif ?? '-' }}
                                             </span>
-                                            <x-badge variant="alternative">{{ ['RJ' => 'Rawat Jalan', 'UGD' => 'UGD', 'RI' => 'Rawat Inap'][$row->src] ?? $row->src }}</x-badge>
-                                            <x-badge :variant="$statusPasienVariant">{{ $statusPasienLabel }}</x-badge>
+                                            <x-badge :variant="['RJ' => 'info', 'UGD' => 'danger', 'RI' => 'purple'][$row->src] ?? 'alternative'">{{ ['RJ' => 'Rawat Jalan', 'UGD' => 'UGD', 'RI' => 'Rawat Inap'][$row->src] ?? $row->src }}</x-badge>
                                         </div>
                                         <div class="pt-1 text-base font-medium text-body dark:text-gray-300">
                                             {{ $row->reg_no ?? '-' }}
@@ -630,6 +629,9 @@ new class extends Component {
 
                                     {{-- PEMERIKSAAN --}}
                                     <td class="px-6 py-6 align-top space-y-1">
+                                        <div class="mb-1">
+                                            <x-badge :variant="$statusPasienVariant">{{ $statusPasienLabel }}</x-badge>
+                                        </div>
                                         <div class="font-semibold text-brand dark:text-emerald-400">
                                             {{ $row->rad_desc }}
                                         </div>
