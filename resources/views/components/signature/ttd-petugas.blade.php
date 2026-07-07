@@ -67,27 +67,28 @@
                     </div>
                 @endif
 
-                <div class="space-y-3">
-                    {{-- Nama penanda-tangan (readonly, diisi tombol TTD) --}}
+                <div class="space-y-2">
+                    {{-- Nama penanda-tangan: label + input box (readonly) --}}
                     <div>
                         <x-input-label :value="$nameLabel" />
                         <x-text-input value="{{ $signed ? $ttd : '-' }}" class="mt-1" :disabled="true" readonly />
-                        @if (!empty($code))
-                            <p class="mt-0.5 text-xs text-muted">Kode: {{ $code }}</p>
-                        @endif
                     </div>
 
-                    {{-- Waktu/Jam TTD (readonly) --}}
-                    <div>
-                        <x-input-label :value="$dateLabel" />
-                        <x-text-input value="{{ $date ?: '-' }}" class="mt-1" :disabled="true" readonly />
+                    {{-- Kode & Waktu sebagai teks (label muted + nilai di-bold); Kode di atas --}}
+                    <div class="space-y-0.5 text-sm">
+                        @if (!empty($code))
+                            <p><span class="text-muted">Kode:</span>
+                                <span class="font-semibold text-ink dark:text-gray-200">{{ $code }}</span></p>
+                        @endif
+                        <p><span class="text-muted">{{ $dateLabel }}:</span>
+                            <span class="font-semibold text-ink dark:text-gray-200">{{ $date ?: '-' }}</span></p>
                     </div>
 
                     {{-- Tombol stamp / ganti (tersembunyi saat terkunci atau tak berwenang) --}}
                     @unless ($locked || !$canSign)
                         @if (!$signed)
                             <div class="pt-1">
-                                <x-primary-button type="button" wire:click="{{ $sign }}" wire:loading.attr="disabled" wire:target="{{ $sign }}" class="gap-1.5">
+                                <x-primary-button type="button" wire:click="{{ $sign }}" wire:loading.attr="disabled" wire:target="{{ $sign }}" class="justify-center w-full gap-1.5">
                                     <span wire:loading.remove wire:target="{{ $sign }}" class="flex items-center gap-1.5">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -100,7 +101,7 @@
                             </div>
                         @elseif ($allowClear)
                             <div class="pt-1">
-                                <x-secondary-button type="button" wire:click="{{ $clear }}" wire:loading.attr="disabled" wire:target="{{ $clear }}" class="gap-1">
+                                <x-secondary-button type="button" wire:click="{{ $clear }}" wire:loading.attr="disabled" wire:target="{{ $clear }}" class="justify-center w-full gap-1">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
