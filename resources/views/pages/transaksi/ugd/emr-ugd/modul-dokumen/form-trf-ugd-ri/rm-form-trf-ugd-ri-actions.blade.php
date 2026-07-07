@@ -1107,61 +1107,21 @@ new class extends Component {
                     </h3>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        @foreach ([['key' => 'petugasPengirim', 'dateKey' => 'petugasPengirimDate', 'label' => 'Petugas Pengirim', 'method' => 'setPetugasPengirim', 'requirePengirim' => false], ['key' => 'petugasPenerima', 'dateKey' => 'petugasPenerimaDate', 'label' => 'Petugas Penerima', 'method' => 'setPetugasPenerima', 'requirePengirim' => true]] as $petugas)
-                            @php
-                                $nama = $dataDaftarUGD['trfUgd'][$petugas['key']] ?? '';
-                                $tglTtd = $dataDaftarUGD['trfUgd'][$petugas['dateKey']] ?? '';
-                                $waitForPengirim =
-                                    $petugas['requirePengirim'] &&
-                                    empty($dataDaftarUGD['trfUgd']['petugasPengirim'] ?? '');
-                            @endphp
-                            <div class="flex flex-col">
-                                <div
-                                    class="mb-2 text-sm font-semibold tracking-wide text-center {{ $waitForPengirim && empty($nama) ? 'text-gray-300' : 'text-muted' }} uppercase dark:text-gray-400">
-                                    {{ $petugas['label'] }}
-                                </div>
-                                @if (empty($nama))
-                                    @if (!$isFormLocked && !$waitForPengirim)
-                                        <div
-                                            class="flex items-center justify-center flex-1 p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                            <x-primary-button wire:click.prevent="{{ $petugas['method'] }}"
-                                                wire:loading.attr="disabled" wire:target="{{ $petugas['method'] }}"
-                                                class="gap-2">
-                                                <span wire:loading.remove wire:target="{{ $petugas['method'] }}"
-                                                    class="flex items-center gap-1.5">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                                    </svg>
-                                                    TTD {{ $petugas['label'] }}
-                                                </span>
-                                                <span wire:loading wire:target="{{ $petugas['method'] }}">
-                                                    <x-loading class="w-4 h-4" /> Menyimpan...
-                                                </span>
-                                            </x-primary-button>
-                                        </div>
-                                    @else
-                                        <p class="py-8 text-base italic text-center text-muted-soft">
-                                            @if ($waitForPengirim)
-                                                Menunggu TTD Pengirim.
-                                            @else
-                                                Belum ditandatangani.
-                                            @endif
-                                        </p>
-                                    @endif
-                                @else
-                                    <div
-                                        class="flex flex-col items-center justify-center flex-1 p-4 border border-emerald-200 bg-emerald-50 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
-                                        <div class="font-semibold text-center text-ink dark:text-gray-200">
-                                            {{ $nama }}
-                                        </div>
-                                        <div class="mt-1 text-sm text-muted">{{ $tglTtd }}</div>
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
+                        {{-- Pengirim (UGD) --}}
+                        <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                            :ttd="$dataDaftarUGD['trfUgd']['petugasPengirim'] ?? ''"
+                            :date="$dataDaftarUGD['trfUgd']['petugasPengirimDate'] ?? ''"
+                            :code="$dataDaftarUGD['trfUgd']['petugasPengirimCode'] ?? ''" :locked="$isFormLocked"
+                            sign="setPetugasPengirim" label="Petugas Pengirim" signLabel="TTD Petugas Pengirim" />
+
+                        {{-- Penerima (RI) — terkunci sampai Pengirim TTD --}}
+                        <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                            :ttd="$dataDaftarUGD['trfUgd']['petugasPenerima'] ?? ''"
+                            :date="$dataDaftarUGD['trfUgd']['petugasPenerimaDate'] ?? ''"
+                            :code="$dataDaftarUGD['trfUgd']['petugasPenerimaCode'] ?? ''"
+                            :locked="$isFormLocked || empty($dataDaftarUGD['trfUgd']['petugasPengirim'] ?? '')"
+                            sign="setPetugasPenerima" label="Petugas Penerima" signLabel="TTD Petugas Penerima"
+                            emptyText="Menunggu TTD Pengirim." />
                     </div>
                 </section>
 

@@ -674,48 +674,11 @@ new class extends Component {
                                                 <x-badge variant="warning">Menunggu TTD Petugas</x-badge>
                                             </div>
                                         @endif
-                                        @if (empty($consent['petugasPemeriksa']))
-                                            @if (!$isFormLocked)
-                                                <div
-                                                    class="flex items-center justify-center flex-1 p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                                    <x-primary-button wire:click.prevent="setPetugasPemeriksa"
-                                                        wire:loading.attr="disabled"
-                                                        wire:target="setPetugasPemeriksa" class="gap-2">
-                                                        <span wire:loading.remove wire:target="setPetugasPemeriksa"
-                                                            class="flex items-center gap-1.5">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                                viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                                            </svg>
-                                                            TTD sebagai Petugas
-                                                        </span>
-                                                        <span wire:loading wire:target="setPetugasPemeriksa">
-                                                            <x-loading class="w-4 h-4" /> Menyimpan...
-                                                        </span>
-                                                    </x-primary-button>
-                                                </div>
-                                            @else
-                                                <p class="py-8 text-base italic text-center text-muted-soft">Belum
-                                                    ditandatangani.</p>
-                                            @endif
-                                        @else
-                                            <div
-                                                class="flex flex-col items-center justify-center flex-1 p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                                <div class="font-semibold text-ink dark:text-gray-200">
-                                                    {{ $consent['petugasPemeriksa'] }}
-                                                </div>
-                                                @if (!empty($consent['petugasPemeriksaCode']))
-                                                    <div class="text-sm text-muted mt-0.5">
-                                                        Kode: {{ $consent['petugasPemeriksaCode'] }}
-                                                    </div>
-                                                @endif
-                                                <div class="mt-1 text-sm text-muted">
-                                                    {{ $consent['petugasPemeriksaDate'] ?? '-' }}
-                                                </div>
-                                            </div>
-                                        @endif
+                                        <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                                            :ttd="$consent['petugasPemeriksa'] ?? ''"
+                                            :date="$consent['petugasPemeriksaDate'] ?? ''"
+                                            :code="$consent['petugasPemeriksaCode'] ?? ''" :locked="$isFormLocked"
+                                            sign="setPetugasPemeriksa" label="" signLabel="TTD sebagai Petugas" />
                                     </div>
                                 </div>
                             </section>

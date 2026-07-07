@@ -684,26 +684,14 @@ new class extends Component {
     | BAGIAN 6 — TANDA TANGAN DOKTER
     ══════════════════════════════════════ --}}
     <x-border-form title="Bagian 6 — Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
-        <div class="mt-3 flex items-center gap-4">
-            <div class="flex-1">
-                <x-input-label value="Dokter Pengkaji" />
-                <x-text-input
-                    value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] ?? '-' }}"
-                    class="w-full mt-1" :disabled="true" readonly />
-            </div>
-            <div class="flex-1">
-                <x-input-label value="Jam TTD" />
-                <x-text-input
-                    value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? '-' }}"
-                    class="w-full mt-1" :disabled="true" readonly />
-            </div>
-            @if (!$isFormLocked && !$isReadOnlyByRole)
-                @hasanyrole('Dokter|Admin')
-                    <div class="pt-5">
-                        <x-primary-button wire:click="setDokterPengkaji" type="button">TTD Saya</x-primary-button>
-                    </div>
-                @endhasanyrole
-            @endif
+        <div class="mt-3">
+            <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                :ttd="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] ?? ''"
+                :date="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? ''"
+                :code="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkajiCode'] ?? ''"
+                :locked="$isFormLocked || $isReadOnlyByRole"
+                :canSign="auth()->user()?->hasAnyRole(['Dokter', 'Admin'])"
+                sign="setDokterPengkaji" nameLabel="Dokter Pengkaji" dateLabel="Jam TTD" signLabel="TTD Saya" />
         </div>
     </x-border-form>
 

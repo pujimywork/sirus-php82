@@ -1,8 +1,13 @@
 # Komponen TTD di Layar — `<x-signature.ttd-petugas>`
 
-Komponen reusable untuk **tanda tangan petugas di form entry** (bukan cetak): tombol
-"TTD Saya" yang men-stamp nama user login + timestamp, kartu hasil TTD, dan tombol
-Hapus/Ganti. Gaya mengikuti general-consent.
+Komponen reusable untuk **tanda tangan petugas di form entry** (bukan cetak).
+**Model tampilan = gaya EMR**: dua field readonly bersanding — *Petugas* (nama) &
+*Waktu/Jam TTD* — plus tombol "TTD Saya" yang men-stamp nama user login + kode +
+timestamp; setelah TTD tombol jadi *Ganti / Hapus* (bila `allowClear`). Kode tetap
+disimpan (`:code`) untuk stempel cetak.
+
+> Diseragamkan dari pola lama "kartu general-consent" (kotak dashed → kartu) ke
+> gaya EMR (field berlabel). Semua pemakaian lama otomatis ikut gaya baru.
 
 > Ini pola **layar/entry**. Untuk TTD di **cetakan PDF** (gambar `myuser_ttd_image`,
 > underline, dll.) lihat `docs/ttd-pattern-pdf-print.md`.
@@ -46,15 +51,29 @@ jadi method cukup ada di induk.
 | `:date` | `''` | tgl/jam TTD (`$newForm['ttdDate']`) |
 | `:code` | `''` | kode penanda-tangan; kalau diisi tampil "Kode: xxx" |
 | `:locked` | `false` | sembunyikan tombol saat form terkunci (`$isFormLocked`) |
+| `:canSign` | `true` | `false` → tombol TTD/Hapus disembunyikan walau form tak terkunci (mis. role tak berwenang). Field readonly tetap terlihat. Pasangkan dgn cek role: `:canSign="auth()->user()?->hasAnyRole(['Perawat','Admin'])"` |
 | `sign` | `ttdSaya` | nama method Livewire stamp TTD |
 | `clear` | `hapusTtd` | nama method Livewire hapus TTD |
-| `:allowClear` | `true` | `false` → sekali TTD tak bisa diubah (tombol Ganti/Hapus disembunyikan); mis. form serah-terima |
-| `:framed` | `true` | `true`=dibungkus border-form (kartu, kolom sempit tengah); `false`=tanpa bingkai, rata kiri, `flex-1` (utk grid-cell) |
+| `:allowClear` | `true` | `false` → sekali TTD tak bisa diubah (tombol Ganti/Hapus disembunyikan); mis. form serah-terima / pengkajian |
+| `:framed` | `true` | `true`=dibungkus border-form (kartu bertajuk, kolom di tengah); `false`=tanpa bingkai, rata kiri (utk grid-cell) |
 | `title` | `Tanda Tangan` | judul border-form (hanya saat framed) |
-| `label` | `Petugas (Penanda-tangan)` | subtitle kecil; kirim `""` untuk sembunyikan |
+| `label` | `''` (kosong) | judul kecil di atas baris field; kosongkan bila sudah ada judul kolom di luar |
+| `nameLabel` | `Petugas` | label field nama (mis. `Petugas Pengkaji`, `Dokter Pengkaji`) |
+| `dateLabel` | `Waktu TTD` | label field waktu (mis. `Jam Pengkajian`, `Jam TTD`) |
 | `signLabel` | `TTD Saya` | teks tombol stamp |
 | `clearLabel` | `Ganti / Hapus TTD` | teks tombol hapus |
-| `emptyText` | `Belum ditandatangani.` | teks saat terkunci & belum TTD |
+| `emptyText` | `Belum ditandatangani.` | hint saat terkunci & belum TTD (mis. `Menunggu TTD Pengirim.`) |
+
+**Adopsi di EMR-inti (gaya asli komponen):**
+```blade
+<x-signature.ttd-petugas :framed="false" :allowClear="false"
+    :ttd="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] ?? ''"
+    :date="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? ''"
+    :code="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkajiCode'] ?? ''"
+    :locked="$isFormLocked || $isReadOnlyByRole"
+    :canSign="auth()->user()?->hasAnyRole(['Dokter', 'Admin'])"
+    sign="setDokterPengkaji" nameLabel="Dokter Pengkaji" dateLabel="Jam TTD" signLabel="TTD Saya" />
+```
 
 ## Contoh
 
