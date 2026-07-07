@@ -107,8 +107,6 @@ new class extends Component {
     #[Computed]
     public function rows()
     {
-        $sumber = $this->filterSource;
-
         // Kolom identitas pasien yang sama dipakai di 3 query — birth_date jadi string,
         // umur_format dihitung di Oracle via SQL biar ringan & konsisten.
         $pasienCols = [
@@ -124,25 +122,20 @@ new class extends Component {
                 ELSE NULL END as umur_format"),
         ];
 
-        if ($sumber === 'RJ') {
-            $query = DB::table('rstxn_rjrads as r')
-                ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
-                ->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')
-                ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
-        } elseif ($sumber === 'UGD') {
-            $query = DB::table('rstxn_ugdrads as r')
-                ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
-                ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
-                ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
+        // Query dasar per sumber — dipisah ke fungsi masing2 biar eksplisit & mudah diaudit.
+        // $headerDateCol = tgl fallback saat waktu_entry NULL; $dtlCol = PK detail (utk sort).
+        if ($this->filterSource === 'UGD') {
+            $query = $this->baseQueryUGD($pasienCols);
+            $headerDateCol = 'rj_date';
+            $dtlCol = 'rad_dtl';
+        } elseif ($this->filterSource === 'RI') {
+            $query = $this->baseQueryRI($pasienCols);
+            $headerDateCol = 'entry_date';
+            $dtlCol = 'rirad_no';
         } else {
-            // RI
-            $query = DB::table('rstxn_riradiologs as r')
-                ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
-                ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
-                ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.ri_status as hdr_status']));
+            $query = $this->baseQueryRJ($pasienCols);
+            $headerDateCol = 'rj_date';
+            $dtlCol = 'rad_dtl';
         }
 
         // Filter status upload
@@ -168,14 +161,47 @@ new class extends Component {
             });
         }
 
-        // Filter rentang tanggal — bulanan (1 bulan) / harian (1 hari) atas waktu_entry
+        // Filter rentang tanggal — atas waktu_entry, fallback ke tgl header (RJ/UGD: rj_date, RI: entry_date).
+        // Banyak order legacy (Oracle Dev 6i) waktu_entry-nya NULL → dulu tak pernah muncul (BETWEEN buang NULL).
         [$awal, $akhir] = $this->dateRange();
-        $query->whereBetween('r.waktu_entry', [$awal, $akhir]);
+        $query
+            ->addSelect(DB::raw("to_char(NVL(r.waktu_entry, h.$headerDateCol),'dd/mm/yyyy hh24:mi') as waktu_efektif"))
+            ->whereRaw("NVL(r.waktu_entry, h.$headerDateCol) BETWEEN ? AND ?", [$awal, $akhir]);
 
         return $query
-            ->orderByDesc('r.waktu_entry')
-            ->orderByDesc('r.' . ($sumber === 'RI' ? 'rirad_no' : 'rad_dtl'))
+            ->orderByRaw("NVL(r.waktu_entry, h.$headerDateCol) DESC")
+            ->orderByDesc('r.' . $dtlCol)
             ->paginate($this->itemsPerPage);
+    }
+
+    /* Query dasar per sumber — table + join + select. Beda hanya tabel & sebagian kolom;
+       kolom yang di-alias (dtl_no/ref_no/rad_price/hdr_status) diseragamkan supaya
+       template & filter (rows()) tak perlu tahu sumbernya. */
+    private function baseQueryRJ(array $pasienCols)
+    {
+        return DB::table('rstxn_rjrads as r')
+            ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
+            ->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')
+            ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
+            ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
+    }
+
+    private function baseQueryUGD(array $pasienCols)
+    {
+        return DB::table('rstxn_ugdrads as r')
+            ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
+            ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
+            ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
+            ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
+    }
+
+    private function baseQueryRI(array $pasienCols)
+    {
+        return DB::table('rstxn_riradiologs as r')
+            ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
+            ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
+            ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
+            ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.ri_status as hdr_status']));
     }
 
     /* ===============================
@@ -545,6 +571,27 @@ new class extends Component {
                                     $isTarifLocked =
                                         !empty($row->hdr_status) &&
                                         ($row->src === 'RI' ? $row->hdr_status !== 'I' : $row->hdr_status !== 'A');
+
+                                    // Status pasien per sumber — kode 'I' beda arti:
+                                    // RJ 'I'=Transfer UGD, UGD 'I'=Transfer Inap, RI 'I'=Dirawat.
+                                    // Selaras pelayanan-rj / pelayanan-ugd / daftar-ri. Kosong = aktif.
+                                    $statusPasienKode = $row->hdr_status !== null && $row->hdr_status !== '' ? $row->hdr_status : ($row->src === 'RI' ? 'I' : 'A');
+                                    if ($row->src === 'RI') {
+                                        [$statusPasienLabel, $statusPasienVariant] = match ($statusPasienKode) {
+                                            'I' => ['Dirawat', 'brand'],
+                                            'P' => ['Pulang', 'success'],
+                                            'F' => ['Batal', 'danger'],
+                                            default => [$statusPasienKode, 'alternative'],
+                                        };
+                                    } else {
+                                        [$statusPasienLabel, $statusPasienVariant] = match ($statusPasienKode) {
+                                            'A' => ['Antrian', 'alternative'],
+                                            'L' => ['Selesai', 'success'],
+                                            'I' => [$row->src === 'UGD' ? 'Transfer Inap' : 'Transfer UGD', 'brand'],
+                                            'F' => ['Batal', 'danger'],
+                                            default => [$statusPasienKode, 'alternative'],
+                                        };
+                                    }
                                 @endphp
                                 <tr wire:key="rad-row-{{ $row->src }}-{{ $row->dtl_no }}-{{ $row->ref_no }}"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
@@ -556,9 +603,10 @@ new class extends Component {
                                     <td class="px-6 py-6 space-y-1 align-top">
                                         <div class="flex items-center gap-2">
                                             <span class="font-mono text-sm text-body dark:text-gray-300 whitespace-nowrap">
-                                                {{ $row->waktu_entry ? \Carbon\Carbon::parse($row->waktu_entry)->format('d/m/Y H:i') : '-' }}
+                                                {{ $row->waktu_efektif ?? '-' }}
                                             </span>
-                                            <x-badge variant="alternative">{{ ['RJ' => 'Rawat Jalan', 'UGD' => 'Unit Gawat Darurat', 'RI' => 'Rawat Inap'][$row->src] ?? $row->src }}</x-badge>
+                                            <x-badge variant="alternative">{{ ['RJ' => 'Rawat Jalan', 'UGD' => 'UGD', 'RI' => 'Rawat Inap'][$row->src] ?? $row->src }}</x-badge>
+                                            <x-badge :variant="$statusPasienVariant">{{ $statusPasienLabel }}</x-badge>
                                         </div>
                                         <div class="pt-1 text-base font-medium text-body dark:text-gray-300">
                                             {{ $row->reg_no ?? '-' }}
@@ -606,7 +654,7 @@ new class extends Component {
                                                     </span>
                                                     <span
                                                         class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300"
-                                                        title="Pasien sudah pulang — tarif terkunci">
+                                                        title="Status pasien: {{ $statusPasienLabel }} — tarif terkunci (billing pindah)">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
