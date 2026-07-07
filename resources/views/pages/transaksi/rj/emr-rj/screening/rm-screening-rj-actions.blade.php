@@ -206,6 +206,7 @@ new class extends Component {
         $this->validateWithToast();
 
         $this->dataDaftarPoliRJ['screening']['petugasScreening'] = auth()->user()->myuser_name;
+        $this->dataDaftarPoliRJ['screening']['petugasScreeningCode'] = auth()->user()->myuser_code;
         $this->dataDaftarPoliRJ['screening']['tanggalScreening'] = now()->format('d/m/Y H:i:s');
     }
 
@@ -302,6 +303,7 @@ new class extends Component {
             'flagInfeksius' => false,
             'tanggalScreening' => '',
             'petugasScreening' => '',
+            'petugasScreeningCode' => '',
         ];
     }
 
@@ -575,16 +577,13 @@ new class extends Component {
                                     </div>
 
                                     {{-- TTD Petugas --}}
-                                    @if (!empty($dataDaftarPoliRJ['screening']['petugasScreening']))
-                                        <div
-                                            class="px-3 py-2 text-sm border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-                                            <span
-                                                class="font-medium text-green-700 dark:text-green-300">Petugas:</span>
-                                            {{ $dataDaftarPoliRJ['screening']['petugasScreening'] }}
-                                            <span
-                                                class="ml-2 text-green-600">{{ $dataDaftarPoliRJ['screening']['tanggalScreening'] ?? '' }}</span>
-                                        </div>
-                                    @endif
+                                    <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                                        :ttd="$dataDaftarPoliRJ['screening']['petugasScreening'] ?? ''"
+                                        :date="$dataDaftarPoliRJ['screening']['tanggalScreening'] ?? ''"
+                                        :code="$dataDaftarPoliRJ['screening']['petugasScreeningCode'] ?? ''"
+                                        :locked="$isFormLocked"
+                                        :canSign="auth()->user()?->hasAnyRole(['Perawat', 'Dokter', 'Admin'])"
+                                        sign="setPetugasScreening" signLabel="TTD-E Petugas" />
 
                                 </div>
                             </x-border-form>
@@ -601,19 +600,7 @@ new class extends Component {
             {{-- FOOTER --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex justify-between gap-3">
-                    @hasanyrole('Perawat|Dokter|Admin')
-                        @if (!$isFormLocked)
-                            <x-secondary-button type="button" wire:click="setPetugasScreening" class="gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                                TTD-E Petugas
-                            </x-secondary-button>
-                        @endif
-                    @endhasanyrole
-
+                <div class="flex justify-end gap-3">
                     <div class="flex gap-3 ml-auto">
                         <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
                         @if (!$isFormLocked)

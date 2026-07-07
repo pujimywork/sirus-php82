@@ -18,33 +18,13 @@
     <x-border-form :title="__('Dokter Pemeriksa')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="space-y-3">
 
-            <x-text-input id="drPemeriksa" placeholder="Dokter Pemeriksa" :error="$errors->has('dataDaftarPoliRJ.perencanaan.pengkajianMedis.drPemeriksa')" :disabled="true"
-                wire:model="dataDaftarPoliRJ.perencanaan.pengkajianMedis.drPemeriksa" />
+            <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                :ttd="$dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['drPemeriksa'] ?? ''"
+                :date="$dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] ?? ''"
+                :locked="$isFormLocked"
+                sign="setDrPemeriksa" nameLabel="Dokter Pemeriksa" dateLabel="Selesai Pemeriksaan" signLabel="TTD Dokter" />
 
             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.perencanaan.pengkajianMedis.drPemeriksa')" class="mt-1" />
-
-            @if (!$isFormLocked)
-                <x-outline-button type="button" class="justify-center w-full" wire:click.prevent="setDrPemeriksa"
-                    wire:loading.attr="disabled" wire:target="setDrPemeriksa">
-                    <span wire:loading.remove wire:target="setDrPemeriksa" class="inline-flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                        </svg>
-                        TTD Dokter
-                    </span>
-                    <span wire:loading wire:target="setDrPemeriksa" class="inline-flex items-center gap-2">
-                        <x-loading /> Menyimpan...
-                    </span>
-                </x-outline-button>
-            @endif
-
-            <p class="text-sm text-muted dark:text-gray-400">
-                Selesai Pemeriksaan:
-                <span class="font-medium text-body dark:text-gray-200">
-                    {{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] ?? '-' }}
-                </span>
-            </p>
 
         </div>
     </x-border-form>

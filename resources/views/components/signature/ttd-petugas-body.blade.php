@@ -32,9 +32,9 @@
         </div>
     @endif
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="space-y-3">
         {{-- Nama penanda-tangan (readonly, diisi tombol TTD) --}}
-        <div class="flex-1 min-w-[10rem]">
+        <div>
             <x-input-label :value="$nameLabel" />
             <x-text-input value="{{ $signed ? $ttd : '-' }}" class="mt-1" :disabled="true" readonly />
             @if (!empty($code))
@@ -43,7 +43,7 @@
         </div>
 
         {{-- Waktu/Jam TTD (readonly) --}}
-        <div class="flex-1 min-w-[10rem]">
+        <div>
             <x-input-label :value="$dateLabel" />
             <x-text-input value="{{ $date ?: '-' }}" class="mt-1" :disabled="true" readonly />
         </div>
