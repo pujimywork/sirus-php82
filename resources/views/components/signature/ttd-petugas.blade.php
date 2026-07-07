@@ -25,15 +25,15 @@
     'clear' => 'hapusTtd',
 
     // ══ Tata letak ══
-    // true  → dibungkus border-form (komponen bingkai) bertajuk $title, kolom di tengah.
+    // true  → dibungkus kartu bingkai (setara border-form) bertajuk $title, kolom di tengah.
     // false → tanpa bingkai, rata kiri; cocok di grid-cell / kolom serah-terima.
     'framed' => true,
-    // Judul border-form — hanya dipakai saat framed=true.
+    // Judul kartu bingkai — hanya dipakai saat framed=true.
     'title' => 'Tanda Tangan',
     // Judul kecil di atas baris field; kosongkan bila judul kolom sudah ada di luar komponen.
     'label' => '',
 
-    // ══ Teks label field & tombol (gaya EMR: 2 field readonly bersanding) ══
+    // ══ Teks label field & tombol (gaya EMR: 2 field readonly ditumpuk) ══
     // Label field nama (mis. "Petugas Pengkaji", "Dokter Pengkaji").
     'nameLabel' => 'Petugas',
     // Label field waktu (mis. "Jam Pengkajian", "Jam TTD").
@@ -46,20 +46,77 @@
     'emptyText' => 'Belum ditandatangani.',
 ])
 
+@php $signed = !empty($ttd); @endphp
+
 {{-- Komponen TTD reusable — gaya EMR (field Petugas + Waktu/Jam readonly + tombol
-     "TTD Saya" yang men-stamp nama user login + kode + tgl). Isi diekstrak ke
-     sub-komponen ttd-petugas-body supaya wrapper border-form membungkus utuh
-     (JANGAN split tag komponen antar @if — konten hilang saat framed=false). --}}
+     "TTD Saya" yang men-stamp nama user login + kode + tgl). SATU file.
+     Bingkai (framed=true) sengaja pakai <div> biasa (BUKAN tag komponen x-border-form)
+     supaya bisa dibungkus per-@if tanpa memecah tag komponen — jika pakai
+     <x-border-form> yang dibelah antar @if, isinya HILANG saat framed=false.
+     Lihat feedback_blade_split_component_tag. --}}
 @if ($framed)
-    <x-border-form :title="$title">
-        <x-signature.ttd-petugas-body :ttd="$ttd" :date="$date" :code="$code" :locked="$locked"
-            :canSign="$canSign" :sign="$sign" :clear="$clear" :allowClear="$allowClear" :framed="true"
-            :label="$label" :nameLabel="$nameLabel" :dateLabel="$dateLabel" :signLabel="$signLabel"
-            :clearLabel="$clearLabel" :emptyText="$emptyText" />
-    </x-border-form>
-@else
-    <x-signature.ttd-petugas-body :ttd="$ttd" :date="$date" :code="$code" :locked="$locked"
-        :canSign="$canSign" :sign="$sign" :clear="$clear" :allowClear="$allowClear" :framed="false"
-        :label="$label" :nameLabel="$nameLabel" :dateLabel="$dateLabel" :signLabel="$signLabel"
-        :clearLabel="$clearLabel" :emptyText="$emptyText" />
+    <div class="border shadow-sm border-hairline rounded-2xl bg-canvas dark:border-gray-700 dark:bg-gray-900">
+        <div class="p-4">
+            <div class="mb-4 text-center ds-caption-up">{{ $title }}</div>
+@endif
+
+            <div class="{{ $framed ? 'max-w-xl mx-auto' : '' }}">
+                @if ($label)
+                    <div class="mb-2 text-sm font-semibold tracking-wide uppercase text-muted dark:text-gray-400 {{ $framed ? 'text-center' : 'text-left' }}">
+                        {{ $label }}
+                    </div>
+                @endif
+
+                <div class="space-y-3">
+                    {{-- Nama penanda-tangan (readonly, diisi tombol TTD) --}}
+                    <div>
+                        <x-input-label :value="$nameLabel" />
+                        <x-text-input value="{{ $signed ? $ttd : '-' }}" class="mt-1" :disabled="true" readonly />
+                        @if (!empty($code))
+                            <p class="mt-0.5 text-xs text-muted">Kode: {{ $code }}</p>
+                        @endif
+                    </div>
+
+                    {{-- Waktu/Jam TTD (readonly) --}}
+                    <div>
+                        <x-input-label :value="$dateLabel" />
+                        <x-text-input value="{{ $date ?: '-' }}" class="mt-1" :disabled="true" readonly />
+                    </div>
+
+                    {{-- Tombol stamp / ganti (tersembunyi saat terkunci atau tak berwenang) --}}
+                    @unless ($locked || !$canSign)
+                        @if (!$signed)
+                            <div class="pt-1">
+                                <x-primary-button type="button" wire:click="{{ $sign }}" wire:loading.attr="disabled" wire:target="{{ $sign }}" class="gap-1.5">
+                                    <span wire:loading.remove wire:target="{{ $sign }}" class="flex items-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
+                                        </svg>
+                                        {{ $signLabel }}
+                                    </span>
+                                    <span wire:loading wire:target="{{ $sign }}">Menyimpan...</span>
+                                </x-primary-button>
+                            </div>
+                        @elseif ($allowClear)
+                            <div class="pt-1">
+                                <x-secondary-button type="button" wire:click="{{ $clear }}" wire:loading.attr="disabled" wire:target="{{ $clear }}" class="gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    {{ $clearLabel }}
+                                </x-secondary-button>
+                            </div>
+                        @endif
+                    @endunless
+                </div>
+
+                @if ($locked && !$signed && $emptyText)
+                    <p class="mt-2 text-sm italic text-muted-soft">{{ $emptyText }}</p>
+                @endif
+            </div>
+
+@if ($framed)
+        </div>
+    </div>
 @endif

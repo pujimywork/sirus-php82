@@ -99,15 +99,16 @@ jadi method cukup ada di induk.
 ```
 
 ## Struktur internal
-Komponen = wrapper tipis; isi diekstrak ke `ttd-petugas-body.blade.php`. Wrapper
-memilih dibungkus `<x-border-form>` (framed) atau tidak, dengan memanggil body
-**utuh** di tiap cabang `@if`. Ini disengaja — lihat gotcha di bawah.
+**Satu file** `ttd-petugas.blade.php` (tak ada sub-komponen). Bingkai saat `framed=true`
+sengaja pakai `<div>` biasa (bukan `<x-border-form>`), dibuka/tutup per cabang `@if`,
+sehingga isi ditulis **sekali** di tengah. Kelas bingkai menyalin gaya `<x-border-form>`
+(`border-hairline rounded-2xl` + judul `ds-caption-up`).
 
 ## Gotcha
-- **JANGAN split satu tag komponen antar `@if`** (`@if($x)<x-border-form>@endif ...isi...
-  @if($x)</x-border-form>@endif`). Saat cabang skip, **seluruh isi hilang** (output kosong)
-  karena buffer `startComponent`/`renderComponent` tak seimbang. Ekstrak isi ke sub-komponen
-  dan bungkus utuh per cabang (pola file ini).
+- **JANGAN pakai `<x-border-form>` yang tag-nya dibelah antar `@if`** (`@if($x)<x-border-form>@endif
+  ...isi... @if($x)</x-border-form>@endif`). Saat cabang skip, **seluruh isi hilang** (output kosong)
+  karena buffer `startComponent`/`renderComponent` tak seimbang. Itulah kenapa bingkai di sini
+  memakai `<div>` biasa (boleh dibelah antar `@if`), bukan tag komponen.
 - **JANGAN tulis `<x-...>` di komentar** file komponen (`@props`/`@php`). Blade tetap
   mengkompilasinya jadi tag → runtime `Undefined variable $component` (padahal `php -l` &
   `view:cache` lolos). Sebut tanpa angle-x.

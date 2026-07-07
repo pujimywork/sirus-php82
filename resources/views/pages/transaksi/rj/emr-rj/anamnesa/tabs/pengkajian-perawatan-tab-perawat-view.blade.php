@@ -8,7 +8,6 @@
                 :date="$dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? ''"
                 :code="$dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['perawatPenerimaCode'] ?? ''"
                 :locked="$isFormLocked ?? false"
-                :canSign="auth()->user()?->hasAnyRole(['Perawat'])"
                 sign="setPerawatPenerima" nameLabel="Perawat Penerima" dateLabel="Waktu Datang" signLabel="Ttd Perawat" />
             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1" />
         </div>

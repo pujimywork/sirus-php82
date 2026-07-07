@@ -9,7 +9,6 @@
                 :date="$dataDaftarUGD['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? ''"
                 :code="$dataDaftarUGD['anamnesa']['pengkajianPerawatan']['perawatPenerimaCode'] ?? ''"
                 :locked="$isFormLocked ?? false"
-                :canSign="auth()->user()?->hasAnyRole(['Perawat', 'Dokter', 'Admin'])"
                 sign="setPerawatPenerima" nameLabel="Perawat Penerima" dateLabel="Waktu Datang" signLabel="Ttd Perawat" />
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1" />
         </div>

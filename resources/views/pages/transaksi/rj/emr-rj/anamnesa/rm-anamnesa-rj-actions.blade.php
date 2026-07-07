@@ -398,7 +398,7 @@ new class extends Component {
             return;
         }
 
-        if (auth()->user()->hasRole('Perawat')) {
+        if (auth()->user()->hasAnyRole(['Perawat', 'Dokter', 'Admin'])) {
             $this->dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['perawatPenerima'] = auth()->user()->myuser_name;
             $this->dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['perawatPenerimaCode'] = auth()->user()->myuser_code;
 
@@ -410,7 +410,7 @@ new class extends Component {
             // 🔥 INCREMENT: Refresh untuk menampilkan perawat yang sudah di-set
             $this->incrementVersion('modal-anamnesa-rj');
         } else {
-            $this->dispatch('toast', type: 'error', message: 'Hanya user dengan role Perawat yang dapat melakukan TTD-E.');
+            $this->dispatch('toast', type: 'error', message: 'Hanya role Perawat / Dokter / Admin yang dapat melakukan TTD-E.');
         }
     }
 
