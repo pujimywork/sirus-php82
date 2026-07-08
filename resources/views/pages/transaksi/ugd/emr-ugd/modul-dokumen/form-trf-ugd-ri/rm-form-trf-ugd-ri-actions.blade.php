@@ -502,6 +502,23 @@ new class extends Component {
             return;
         }
 
+        // Validasi kelengkapan sebelum TTD Pengirim (save biasa tetap boleh draft/tak lengkap)
+        $trf = $this->dataDaftarUGD['trfUgd'] ?? [];
+        $missing = [];
+        if (empty($trf['pindahKeRuangan'])) $missing[] = 'Pindah ke Ruangan';
+        if (empty($trf['tglPindah'])) $missing[] = 'Tanggal/Jam Pindah';
+        if (empty($trf['alasanPindah'])) $missing[] = 'Alasan Pindah';
+        if (empty($trf['metodePemindahanPasien'])) $missing[] = 'Metode Pemindahan Pasien';
+        if (empty($trf['levelingDokter'] ?? [])) $missing[] = 'Leveling Dokter (min. 1)';
+        // TTV wajib — tiru RJ pemeriksaan: Nadi, Nafas, Suhu (sistolik/diastolik/spo2/gda opsional)
+        if (empty($trf['kondisiSaatDikirim']['frekuensiNadi'] ?? '')) $missing[] = 'Nadi (saat dikirim)';
+        if (empty($trf['kondisiSaatDikirim']['frekuensiNafas'] ?? '')) $missing[] = 'Nafas (saat dikirim)';
+        if (empty($trf['kondisiSaatDikirim']['suhu'] ?? '')) $missing[] = 'Suhu (saat dikirim)';
+        if (!empty($missing)) {
+            $this->dispatch('toast', type: 'error', message: 'Belum bisa TTD Pengirim — lengkapi dulu: ' . implode(', ', $missing) . '.');
+            return;
+        }
+
         $this->dataDaftarUGD['trfUgd']['petugasPengirim'] = auth()->user()->myuser_name ?? '';
         $this->dataDaftarUGD['trfUgd']['petugasPengirimCode'] = auth()->user()->myuser_code ?? '';
         $this->dataDaftarUGD['trfUgd']['petugasPengirimDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
@@ -520,6 +537,18 @@ new class extends Component {
         }
         if (!empty($this->dataDaftarUGD['trfUgd']['petugasPenerima'])) {
             $this->dispatch('toast', type: 'error', message: 'Petugas Penerima sudah diisi sebelumnya.');
+            return;
+        }
+
+        // Validasi kelengkapan sebelum TTD Penerima (sisi ruang penerima)
+        $trf = $this->dataDaftarUGD['trfUgd'] ?? [];
+        $missing = [];
+        // TTV wajib — tiru RJ pemeriksaan: Nadi, Nafas, Suhu
+        if (empty($trf['kondisiSaatDiterima']['frekuensiNadi'] ?? '')) $missing[] = 'Nadi (saat diterima)';
+        if (empty($trf['kondisiSaatDiterima']['frekuensiNafas'] ?? '')) $missing[] = 'Nafas (saat diterima)';
+        if (empty($trf['kondisiSaatDiterima']['suhu'] ?? '')) $missing[] = 'Suhu (saat diterima)';
+        if (!empty($missing)) {
+            $this->dispatch('toast', type: 'error', message: 'Belum bisa TTD Penerima — lengkapi dulu: ' . implode(', ', $missing) . '.');
             return;
         }
 
