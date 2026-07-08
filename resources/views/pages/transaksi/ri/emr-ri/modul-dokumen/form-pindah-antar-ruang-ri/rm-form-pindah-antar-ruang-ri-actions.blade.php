@@ -289,6 +289,18 @@ new class extends Component {
             'newPindah.kondisiKirim.suhu' => 'Suhu (saat dikirim)',
         ]);
 
+        // Validasi logistik (ruang & alasan) SEBELUM set TTD — agar TTD tak "nyangkut" tanpa tersimpan.
+        // (tglPindah di-auto-set di bawah, tak perlu divalidasi di sini)
+        $this->validateWithToast([
+            'newPindah.keRoomId' => 'required',
+            'newPindah.keRoomDesc' => 'required',
+            'newPindah.alasanPindah' => 'required',
+        ], ['required' => ':attribute wajib diisi sebelum TTD Pengirim.'], [
+            'newPindah.keRoomId' => 'Ke Ruangan',
+            'newPindah.keRoomDesc' => 'Ke Ruangan',
+            'newPindah.alasanPindah' => 'Alasan Pindah',
+        ]);
+
         $this->newPindah['petugasPengirim'] = auth()->user()->myuser_name ?? '';
         $this->newPindah['petugasPengirimCode'] = auth()->user()->myuser_code ?? '';
         $this->newPindah['petugasPengirimDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
@@ -296,6 +308,13 @@ new class extends Component {
         // Auto-set tglPindah kalau belum diisi
         if (empty($this->newPindah['tglPindah'])) {
             $this->newPindah['tglPindah'] = $this->newPindah['petugasPengirimDate'];
+        }
+
+        // Auto-simpan entri saat TTD (TANPA reset form → bisa lanjut TTD Penerima).
+        // Lacak entri ini agar TTD Penerima meng-UPDATE, bukan menambah dobel.
+        $this->save(false);
+        if ($this->editingTglPindah === null && !empty($this->newPindah['tglPindah'])) {
+            $this->editingTglPindah = $this->newPindah['tglPindah'];
         }
     }
 
@@ -333,12 +352,18 @@ new class extends Component {
         if (empty($this->newPindah['tglTerima'])) {
             $this->newPindah['tglTerima'] = $this->newPindah['petugasPenerimaDate'];
         }
+
+        // Auto-simpan (UPDATE entri) saat TTD Penerima — entri lengkap → persist + reset form.
+        if ($this->editingTglPindah === null && !empty($this->newPindah['tglPindah'])) {
+            $this->editingTglPindah = $this->newPindah['tglPindah'];
+        }
+        $this->save();
     }
 
     /* ===============================
      | SAVE — tambah baru / update existing
      =============================== */
-    public function save(): void
+    public function save(bool $resetAfter = true): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
@@ -400,11 +425,15 @@ new class extends Component {
             $msg = $isFinal ? 'Form Pindah berhasil diselesaikan (kedua TTD lengkap).' : 'Form Pindah disimpan — menunggu TTD Penerima.';
             $this->dispatch('toast', type: 'success', message: $msg);
 
-            $this->editingTglPindah = null;
-            $this->resetNewPindah();
-            $this->newPindah['dariRoomId'] = $this->dataDaftarRi['roomId'] ?? '';
-            $this->newPindah['dariRoomDesc'] = $this->dataDaftarRi['roomDesc'] ?? '';
-            $this->newPindah['dariBedNo'] = $this->dataDaftarRi['bedNo'] ?? '';
+            // Reset form untuk entri berikutnya — hanya via tombol Simpan manual.
+            // Saat auto-save dari TTD Pengirim, $resetAfter=false agar form tetap (bisa lanjut Penerima).
+            if ($resetAfter) {
+                $this->editingTglPindah = null;
+                $this->resetNewPindah();
+                $this->newPindah['dariRoomId'] = $this->dataDaftarRi['roomId'] ?? '';
+                $this->newPindah['dariRoomDesc'] = $this->dataDaftarRi['roomDesc'] ?? '';
+                $this->newPindah['dariBedNo'] = $this->dataDaftarRi['bedNo'] ?? '';
+            }
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
