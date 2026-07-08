@@ -40,6 +40,7 @@ new class extends Component {
             'frekuensiNadi' => '',
             'suhu' => '',
             'spo2' => '',
+            'gda' => '',
             'gcs' => '',
             'keadaanPasien' => '',
         ],
@@ -50,6 +51,7 @@ new class extends Component {
             'frekuensiNadi' => '',
             'suhu' => '',
             'spo2' => '',
+            'gda' => '',
             'gcs' => '',
             'keadaanPasien' => '',
         ],
@@ -457,6 +459,7 @@ new class extends Component {
                 'frekuensiNadi' => '',
                 'suhu' => '',
                 'spo2' => '',
+                'gda' => '',
                 'gcs' => '',
                 'keadaanPasien' => '',
             ],
@@ -467,6 +470,7 @@ new class extends Component {
                 'frekuensiNadi' => '',
                 'suhu' => '',
                 'spo2' => '',
+                'gda' => '',
                 'gcs' => '',
                 'keadaanPasien' => '',
             ],
@@ -858,6 +862,11 @@ new class extends Component {
                                         placeholder="%" :disabled="$uiLocked" class="w-full" />
                                 </div>
                                 <div>
+                                    <x-input-label value="GDA" class="mb-1" />
+                                    <x-text-input wire:model.live="newPindah.kondisiKirim.gda" :error="$errors->has('newPindah.kondisiKirim.gda')" type="number"
+                                        placeholder="mg/dL" :disabled="$uiLocked" class="w-full" />
+                                </div>
+                                <div>
                                     <x-input-label value="GCS" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.gcs" :error="$errors->has('newPindah.kondisiKirim.gcs')"
                                         placeholder="E_M_V_" :disabled="$uiLocked" class="w-full" />
@@ -921,6 +930,11 @@ new class extends Component {
                                     <x-input-label value="SpO2" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiTerima.spo2" :error="$errors->has('newPindah.kondisiTerima.spo2')" type="number"
                                         placeholder="%" :disabled="$disableTerima" class="w-full" />
+                                </div>
+                                <div>
+                                    <x-input-label value="GDA" class="mb-1" />
+                                    <x-text-input wire:model.live="newPindah.kondisiTerima.gda" :error="$errors->has('newPindah.kondisiTerima.gda')" type="number"
+                                        placeholder="mg/dL" :disabled="$disableTerima" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="GCS" class="mb-1" />

@@ -1062,7 +1062,7 @@ new class extends Component {
                 @php $disableTerima = $isFormLocked || empty($dataDaftarUGD['trfUgd']['petugasPengirim'] ?? ''); @endphp
 
                 {{-- ══ KONDISI TTV ══ --}}
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     @foreach ([['key' => 'kondisiSaatDikirim', 'label' => 'Kondisi Saat Dikirim (TTV)', 'disabled' => $isFormLocked, 'hint' => 'Diisi Petugas Pengirim'], ['key' => 'kondisiSaatDiterima', 'label' => 'Kondisi Saat Diterima (TTV)', 'disabled' => $disableTerima, 'hint' => $disableTerima && !$isFormLocked ? 'Menunggu TTD Pengirim' : 'Diisi Petugas Penerima']] as $sec)
                         <div
                             class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
@@ -1070,8 +1070,8 @@ new class extends Component {
                                 {{ $sec['label'] }}</h3>
                             <p class="mb-3 text-sm italic text-muted dark:text-gray-400">{{ $sec['hint'] }}</p>
                             <div class="space-y-3 text-base">
-                                {{-- Grid ringkas ala objektif EMR UGD: label di atas, input penuh, 2 kolom --}}
-                                <div class="grid grid-cols-2 gap-2">
+                                {{-- Grid TTV: 2 kolom (mobile) → 4 kolom (desktop), samakan dengan RI pindah-ruang --}}
+                                <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
                                     @foreach ([['field' => 'sistolik', 'label' => 'Sistolik', 'unit' => 'mmHg', 'ph' => 'Sys'], ['field' => 'diastolik', 'label' => 'Diastolik', 'unit' => 'mmHg', 'ph' => 'Dia'], ['field' => 'frekuensiNadi', 'label' => 'Nadi', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'frekuensiNafas', 'label' => 'Nafas', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'suhu', 'label' => 'Suhu', 'unit' => '°C', 'ph' => '°C'], ['field' => 'spo2', 'label' => 'SpO₂', 'unit' => '%', 'ph' => '%'], ['field' => 'gda', 'label' => 'GDA', 'unit' => 'mg/dL', 'ph' => 'mg/dL'], ['field' => 'gcs', 'label' => 'GCS', 'unit' => '', 'ph' => 'E V M']] as $ttv)
                                         <div>
                                             <x-input-label value="{{ $ttv['label'] }}{{ $ttv['unit'] ? ' (' . $ttv['unit'] . ')' : '' }}"

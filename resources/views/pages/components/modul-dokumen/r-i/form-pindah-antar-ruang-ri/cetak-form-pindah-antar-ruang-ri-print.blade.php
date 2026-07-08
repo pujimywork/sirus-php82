@@ -100,6 +100,10 @@
                                     <td>: {{ $dataKirim['spo2'] ?? '-' }} %</td>
                                 </tr>
                                 <tr>
+                                    <td>GDA</td>
+                                    <td>: {{ $dataKirim['gda'] ?? '-' }} mg/dL</td>
+                                </tr>
+                                <tr>
                                     <td>GCS</td>
                                     <td>: {{ $dataKirim['gcs'] ?? '-' }}</td>
                                 </tr>
@@ -135,6 +139,10 @@
                                 <tr>
                                     <td>SpO2</td>
                                     <td>: {{ $dataTerima['spo2'] ?? '-' }} %</td>
+                                </tr>
+                                <tr>
+                                    <td>GDA</td>
+                                    <td>: {{ $dataTerima['gda'] ?? '-' }} mg/dL</td>
                                 </tr>
                                 <tr>
                                     <td>GCS</td>
