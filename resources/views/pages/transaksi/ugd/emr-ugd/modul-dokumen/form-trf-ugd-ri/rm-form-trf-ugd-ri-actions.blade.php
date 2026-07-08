@@ -139,6 +139,23 @@ new class extends Component {
             && !empty($this->dataDaftarUGD['trfUgd']['petugasPenerima']);
     }
 
+    /** Buka modal form transfer (dari kartu ringkasan di tab). */
+    public function openModal(): void
+    {
+        if (empty($this->rjNo)) {
+            return;
+        }
+        $this->resetValidation();
+        $this->dispatch('open-modal', name: "rm-form-trf-ugd-ri-{$this->rjNo}");
+    }
+
+    /** Tutup modal form transfer. */
+    public function closeModal(): void
+    {
+        $this->resetValidation();
+        $this->dispatch('close-modal', name: "rm-form-trf-ugd-ri-{$this->rjNo}");
+    }
+
     /* ===============================
      | VALIDATION
      =============================== */
@@ -606,7 +623,78 @@ new class extends Component {
 ?>
 
 <div>
-    <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-trf-ugd-ri', [$rjNo ?? 'new']) }}">
+    {{-- ══ RINGKASAN + TOMBOL BUKA (tampilan tab, pola General Consent) ══ --}}
+    @php
+        $trf = $dataDaftarUGD['trfUgd'] ?? [];
+        $trfKirim = !empty($trf['petugasPengirim']);
+        $trfTerima = !empty($trf['petugasPenerima']);
+    @endphp
+    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex-1 space-y-3">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">Form Transfer UGD &rarr; RI</h3>
+                    @if ($trfKirim && $trfTerima)
+                        <x-badge variant="success">Selesai</x-badge>
+                    @elseif ($trfKirim)
+                        <x-badge variant="warning">Menunggu TTD Penerima</x-badge>
+                    @else
+                        <x-badge variant="warning">Belum diisi</x-badge>
+                    @endif
+                </div>
+                <p class="text-base text-muted dark:text-gray-400">
+                    Serah-terima pasien UGD ke ruang rawat inap — dua tahap (TTD Pengirim lalu Penerima).
+                </p>
+                @if ($trfKirim)
+                    <dl class="grid grid-cols-1 gap-2 text-base sm:grid-cols-3 text-muted dark:text-gray-300">
+                        <div>
+                            <dt class="text-sm uppercase text-muted-soft">Tujuan Ruang</dt>
+                            <dd class="font-medium">{{ $trf['pindahKeRuangan'] ?: '-' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm uppercase text-muted-soft">TTD Pengirim</dt>
+                            <dd class="font-medium">{{ $trf['petugasPengirim'] ?: '-' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm uppercase text-muted-soft">TTD Penerima</dt>
+                            <dd class="font-medium">{{ $trf['petugasPenerima'] ?: '-' }}</dd>
+                        </div>
+                    </dl>
+                @endif
+            </div>
+            <div class="flex shrink-0">
+                <x-primary-button type="button" wire:click="openModal" wire:loading.attr="disabled"
+                    wire:target="openModal" :disabled="!$rjNo" class="gap-2">
+                    <span wire:loading.remove wire:target="openModal" class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                        {{ $trfKirim ? 'Buka / Lanjutkan Form Transfer' : 'Isi Form Transfer' }}
+                    </span>
+                    <span wire:loading wire:target="openModal" class="flex items-center gap-1.5">
+                        <x-loading class="w-4 h-4" /> Memuat...
+                    </span>
+                </x-primary-button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══ MODAL FORM ══ --}}
+    <x-modal name="rm-form-trf-ugd-ri-{{ $rjNo ?? 'init' }}" size="full" height="full" focusable>
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal-trf-ugd-ri', [$rjNo ?? 'new']) }}">
+            {{-- HEADER MODAL --}}
+            <div class="flex items-center justify-between gap-4 px-6 py-4 border-b border-hairline bg-surface-soft dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Form Transfer UGD &rarr; RI</h2>
+                <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <span class="sr-only">Close</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </x-icon-button>
+            </div>
         <div
             class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
@@ -1127,6 +1215,9 @@ new class extends Component {
 
                 {{-- ══ TOMBOL SIMPAN & CETAK ══ --}}
                 <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                    <x-secondary-button type="button" wire:click="closeModal" class="min-w-[120px] justify-center">
+                        Tutup
+                    </x-secondary-button>
                     <x-secondary-button wire:click.prevent="cetakTrfPasienUgd" wire:loading.attr="disabled"
                         wire:target="cetakTrfPasienUgd" class="gap-2 min-w-[160px] justify-center">
                         <span wire:loading.remove wire:target="cetakTrfPasienUgd">
@@ -1167,7 +1258,8 @@ new class extends Component {
             @endif
 
         </div>
-    </div>
+            </div>
+    </x-modal>
 
     {{-- Cetak component — dengerin event cetak-form-trf-ugd-ri.open --}}
     <livewire:pages::components.modul-dokumen.u-g-d.form-trf-ugd-ri.cetak-form-trf-ugd-ri

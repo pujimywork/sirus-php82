@@ -238,6 +238,23 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: 'Data petugas berhasil ditambahkan.');
     }
 
+    /** Buka modal form penjaminan (dari kartu ringkasan di tab). */
+    public function openModal(): void
+    {
+        if (empty($this->rjNo)) {
+            return;
+        }
+        $this->resetValidation();
+        $this->dispatch('open-modal', name: "rm-form-penjaminan-{$this->rjNo}");
+    }
+
+    /** Tutup modal form penjaminan. */
+    public function closeModal(): void
+    {
+        $this->resetValidation();
+        $this->dispatch('close-modal', name: "rm-form-penjaminan-{$this->rjNo}");
+    }
+
     /* ===============================
      | SAVE NEW FORM
      =============================== */
@@ -404,7 +421,54 @@ new class extends Component {
 ?>
 
 <div>
-    <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-form-penjaminan', [$rjNo ?? 'new']) }}">
+    {{-- RINGKASAN + TOMBOL (pola General Consent) --}}
+    @php $penjaminanCount = count($listForm ?? []); @endphp
+    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex-1 space-y-2">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">Form Penjaminan &amp; Orientasi Kamar</h3>
+                    @if ($penjaminanCount > 0)
+                        <x-badge variant="success">{{ $penjaminanCount }} tersimpan</x-badge>
+                    @endif
+                </div>
+                <p class="text-base text-muted dark:text-gray-400">
+                    Pernyataan kepemilikan kartu penjaminan biaya &amp; orientasi kamar pasien UGD.
+                </p>
+            </div>
+            <div class="flex shrink-0">
+                <x-primary-button type="button" wire:click="openModal" wire:loading.attr="disabled"
+                    wire:target="openModal" :disabled="!$rjNo" class="gap-2">
+                    <span wire:loading.remove wire:target="openModal" class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                        Buka Form Penjaminan
+                    </span>
+                    <span wire:loading wire:target="openModal" class="flex items-center gap-1.5">
+                        <x-loading class="w-4 h-4" /> Memuat...
+                    </span>
+                </x-primary-button>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL FORM --}}
+    <x-modal name="rm-form-penjaminan-{{ $rjNo ?? 'init' }}" size="full" height="full" focusable>
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal-form-penjaminan', [$rjNo ?? 'new']) }}">
+            {{-- HEADER MODAL --}}
+            <div class="flex items-center justify-between gap-4 px-6 py-4 border-b border-hairline bg-surface-soft dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Form Penjaminan &amp; Orientasi Kamar</h2>
+                <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <span class="sr-only">Close</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </x-icon-button>
+            </div>
 
         @if ($isFormLocked)
             <div
@@ -615,6 +679,9 @@ new class extends Component {
                         Mencetak...</span>
                 </x-secondary-button>
 
+                <x-secondary-button type="button" wire:click="closeModal" class="min-w-[110px] justify-center">
+                    Tutup
+                </x-secondary-button>
                 <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled" wire:target="save"
                     class="gap-2 min-w-[120px] justify-center">
                     <span wire:loading.remove wire:target="save">Simpan Form Penjaminan</span>
@@ -715,6 +782,7 @@ new class extends Component {
         @endif
 
     </div>
+    </x-modal>
 
     {{-- Cetak component --}}
     <livewire:pages::components.modul-dokumen.u-g-d.form-penjaminan.cetak-form-penjaminan

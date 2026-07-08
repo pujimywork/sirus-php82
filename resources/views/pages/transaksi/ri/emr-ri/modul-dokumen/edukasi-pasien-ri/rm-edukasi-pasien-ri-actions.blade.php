@@ -58,6 +58,19 @@ new class extends Component {
         }
     }
 
+    public function openModal(): void
+    {
+        if (!$this->riHdrNo || $this->disabled) {
+            return;
+        }
+        $this->dispatch('open-modal', name: "rm-edukasi-pasien-ri-{$this->riHdrNo}");
+    }
+
+    public function closeModal(): void
+    {
+        $this->dispatch('close-modal', name: "rm-edukasi-pasien-ri-{$this->riHdrNo}");
+    }
+
     public function setTglEdukasi(): void
     {
         $this->formEntryEdukasi['tglEdukasi'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
@@ -215,7 +228,56 @@ new class extends Component {
 };
 ?>
 
-<div class="space-y-4" wire:key="{{ $this->renderKey('modal-edukasi-ri', [$riHdrNo ?? 'new']) }}">
+<div>
+    {{-- RINGKASAN + TOMBOL (pola General Consent) --}}
+    @php $eduCount = count($dataDaftarRi['edukasiPasien'] ?? []); @endphp
+    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex-1 space-y-2">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">Edukasi Pasien</h3>
+                    @if ($eduCount > 0)
+                        <x-badge variant="success">{{ $eduCount }} entri</x-badge>
+                    @endif
+                </div>
+                <p class="text-base text-muted dark:text-gray-400">
+                    Pemberian informasi &amp; edukasi kepada pasien/keluarga selama perawatan.
+                </p>
+            </div>
+            <div class="flex shrink-0">
+                <x-primary-button type="button" wire:click="openModal" wire:loading.attr="disabled"
+                    wire:target="openModal" :disabled="!$riHdrNo" class="gap-2">
+                    <span wire:loading.remove wire:target="openModal" class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                        Buka Edukasi Pasien
+                    </span>
+                    <span wire:loading wire:target="openModal" class="flex items-center gap-1.5">
+                        <x-loading class="w-4 h-4" /> Memuat...
+                    </span>
+                </x-primary-button>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL FORM --}}
+    <x-modal name="rm-edukasi-pasien-ri-{{ $riHdrNo ?? 'init' }}" size="full" height="full" focusable>
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]">
+            {{-- HEADER MODAL --}}
+            <div class="flex items-center justify-between gap-4 px-6 py-4 border-b border-hairline bg-surface-soft dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Edukasi Pasien</h2>
+                <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <span class="sr-only">Close</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </x-icon-button>
+            </div>
+            <div class="p-4 sm:p-6 space-y-4" wire:key="{{ $this->renderKey('modal-edukasi-ri', [$riHdrNo ?? 'new']) }}">
 
     @if ($isFormLocked)
         <div
@@ -303,7 +365,8 @@ new class extends Component {
                         :disabled="$isFormLocked" />
                 </div>
 
-                <div class="flex justify-end">
+                <div class="flex justify-end gap-2">
+                    <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
                     <x-primary-button wire:click="addEdukasiPasien" type="button">+ Simpan Edukasi</x-primary-button>
                 </div>
             </div>
@@ -400,4 +463,7 @@ new class extends Component {
         </div>
     </x-border-form>
 
+            </div>
+        </div>
+    </x-modal>
 </div>
