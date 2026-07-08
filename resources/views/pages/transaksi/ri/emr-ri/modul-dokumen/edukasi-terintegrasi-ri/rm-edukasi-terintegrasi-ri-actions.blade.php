@@ -546,7 +546,7 @@ new class extends Component {
                 <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
                     wire:key="edu-ter-ri-display-pasien-{{ $riHdrNo ?? 'init' }}" />
             </div>
-            <div class="p-4 sm:p-6 space-y-4"
+            <div class="flex-1 p-4 sm:p-6 space-y-4"
                 wire:key="{{ $this->renderKey('modal-edukasi-terintegrasi-ri', [$riHdrNo ?? 'new']) }}">
 
     @if ($isFormLocked)
@@ -876,18 +876,6 @@ new class extends Component {
                     </div>
                 </div>
 
-                {{-- ─── ACTION FOOTER ─── --}}
-                <div class="flex justify-end gap-2 pt-2">
-                    <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
-                    <x-secondary-button wire:click="resetFormEdukasi" type="button" :disabled="$isFormLocked">
-                        Reset
-                    </x-secondary-button>
-                    <x-primary-button wire:click="addEdukasiTerintegrasi" type="button"
-                        wire:loading.attr="disabled" :disabled="$isFormLocked">
-                        <span wire:loading.remove wire:target="addEdukasiTerintegrasi">+ Simpan Edukasi</span>
-                        <span wire:loading wire:target="addEdukasiTerintegrasi">Menyimpan...</span>
-                    </x-primary-button>
-                </div>
             </div>
         </x-border-form>
     @endif
@@ -982,6 +970,18 @@ new class extends Component {
         </div>
     </x-border-form>
 
+            </div>{{-- /konten flex-1 --}}
+
+            {{-- ══ FOOTER STICKY (anak langsung modal-body → selalu terlihat) ══ --}}
+            <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex justify-end gap-2">
+                    <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
+                    <x-secondary-button wire:click="resetFormEdukasi" type="button" :disabled="$isFormLocked">Reset</x-secondary-button>
+                    <x-primary-button wire:click="addEdukasiTerintegrasi" type="button" wire:loading.attr="disabled" :disabled="$isFormLocked">
+                        <span wire:loading.remove wire:target="addEdukasiTerintegrasi">+ Simpan Edukasi</span>
+                        <span wire:loading wire:target="addEdukasiTerintegrasi">Menyimpan...</span>
+                    </x-primary-button>
+                </div>
             </div>
         </div>
     </x-modal>

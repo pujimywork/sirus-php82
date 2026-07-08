@@ -283,7 +283,7 @@ new class extends Component {
                 <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
                     wire:key="edu-pasien-ri-display-pasien-{{ $riHdrNo ?? 'init' }}" />
             </div>
-            <div class="p-4 sm:p-6 space-y-4" wire:key="{{ $this->renderKey('modal-edukasi-ri', [$riHdrNo ?? 'new']) }}">
+            <div class="flex-1 p-4 sm:p-6 space-y-4" wire:key="{{ $this->renderKey('modal-edukasi-ri', [$riHdrNo ?? 'new']) }}">
 
     @if ($isFormLocked)
         <div
@@ -371,10 +371,6 @@ new class extends Component {
                         :disabled="$isFormLocked" />
                 </div>
 
-                <div class="flex justify-end gap-2">
-                    <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
-                    <x-primary-button wire:click="addEdukasiPasien" type="button">+ Simpan Edukasi</x-primary-button>
-                </div>
             </div>
         </x-border-form>
     @endif
@@ -469,6 +465,16 @@ new class extends Component {
         </div>
     </x-border-form>
 
+            </div>{{-- /konten flex-1 --}}
+
+            {{-- ══ FOOTER STICKY (anak langsung modal-body → selalu terlihat) ══ --}}
+            <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex justify-end gap-2">
+                    <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
+                    @if (!$isFormLocked)
+                        <x-primary-button wire:click="addEdukasiPasien" type="button">+ Simpan Edukasi</x-primary-button>
+                    @endif
+                </div>
             </div>
         </div>
     </x-modal>
