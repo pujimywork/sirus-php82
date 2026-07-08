@@ -696,6 +696,9 @@ new class extends Component {
                 </x-icon-button>
             </div>
 
+            {{-- KONTEN (flex-1 → dorong footer sticky ke bawah, pola emr-ugd) --}}
+            <div class="flex-1">
+
             {{-- Display Pasien (selaras General Consent) --}}
             <div class="px-4 pt-4">
                 <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
@@ -1219,40 +1222,6 @@ new class extends Component {
                     </div>
                 </section>
 
-                {{-- ══ TOMBOL SIMPAN & CETAK ══ --}}
-                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <x-secondary-button type="button" wire:click="closeModal" class="min-w-[120px] justify-center">
-                        Tutup
-                    </x-secondary-button>
-                    <x-secondary-button wire:click.prevent="cetakTrfPasienUgd" wire:loading.attr="disabled"
-                        wire:target="cetakTrfPasienUgd" class="gap-2 min-w-[160px] justify-center">
-                        <span wire:loading.remove wire:target="cetakTrfPasienUgd">
-                            <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M6 9V4h12v5m-2 4h2a2 2 0 002-2v-1a2 2 0 00-2-2H6a2 2 0 00-2 2v1a2 2 0 002 2h2m8 0v5H8v-5h8z" />
-                            </svg>
-                            Cetak Form Transfer
-                        </span>
-                        <span wire:loading wire:target="cetakTrfPasienUgd"><x-loading class="w-4 h-4" />
-                            Mencetak...</span>
-                    </x-secondary-button>
-
-                    @if (!$isFormLocked)
-                        <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled" wire:target="save"
-                            class="gap-2 min-w-[160px] justify-center">
-                            <span wire:loading.remove wire:target="save">
-                                <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                                </svg>
-                                Simpan Form Transfer
-                            </span>
-                            <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
-                        </x-primary-button>
-                    @endif
-                </div>
             @else
                 <div class="flex flex-col items-center justify-center py-16 text-gray-300 dark:text-gray-600">
                     <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1263,8 +1232,30 @@ new class extends Component {
                 </div>
             @endif
 
-        </div>
-            </div>
+        </div>{{-- /card --}}
+            </div>{{-- /konten flex-1 --}}
+
+            {{-- ══ FOOTER STICKY (anak langsung modal-body → selalu terlihat) ══ --}}
+            @if (isset($dataDaftarUGD['trfUgd']))
+                <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                        <x-secondary-button type="button" wire:click="closeModal" class="min-w-[120px] justify-center">Tutup</x-secondary-button>
+                        <x-secondary-button wire:click.prevent="cetakTrfPasienUgd" wire:loading.attr="disabled"
+                            wire:target="cetakTrfPasienUgd" class="gap-2 min-w-[160px] justify-center">
+                            <span wire:loading.remove wire:target="cetakTrfPasienUgd">Cetak Form Transfer</span>
+                            <span wire:loading wire:target="cetakTrfPasienUgd"><x-loading class="w-4 h-4" /> Mencetak...</span>
+                        </x-secondary-button>
+                        @if (!$isFormLocked)
+                            <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled" wire:target="save"
+                                class="gap-2 min-w-[160px] justify-center">
+                                <span wire:loading.remove wire:target="save">Simpan Form Transfer</span>
+                                <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
+                            </x-primary-button>
+                        @endif
+                    </div>
+                </div>
+            @endif
+            </div>{{-- /body modal --}}
     </x-modal>
 
     {{-- Cetak component — dengerin event cetak-form-trf-ugd-ri.open --}}

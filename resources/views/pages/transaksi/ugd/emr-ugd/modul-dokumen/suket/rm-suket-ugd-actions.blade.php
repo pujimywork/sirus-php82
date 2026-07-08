@@ -267,6 +267,9 @@ new class extends Component {
                 </x-icon-button>
             </div>
 
+            {{-- KONTEN (flex-1 → dorong footer sticky ke bawah, pola emr-ugd) --}}
+            <div class="flex-1">
+
             {{-- Display Pasien (selaras General Consent) --}}
             <div class="px-4 pt-4">
                 <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
@@ -331,34 +334,33 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- FOOTER — tombol Cetak per-surat ada di dalam tab masing-masing --}}
-                    @if (!$isFormLocked)
-                        <div
-                            class="sticky bottom-0 z-10 px-4 py-3 mt-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700 rounded-b-2xl">
-                            <div class="flex flex-wrap items-center justify-end gap-3">
-                                <x-secondary-button type="button" wire:click="closeModal" class="min-w-[120px] justify-center">
-                                    Tutup
-                                </x-secondary-button>
-                                <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled"
-                                    wire:target="save" class="gap-2 min-w-[200px] justify-center">
-                                    <span wire:loading.remove wire:target="save">
-                                        <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                                        </svg>
-                                        Simpan Surat Keterangan
-                                    </span>
-                                    <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
-                                </x-primary-button>
-                            </div>
-                        </div>
-                    @endif
-
                 @endif
 
             </div>
         </div>
+            </div>{{-- /konten flex-1 --}}
+
+            {{-- ══ FOOTER STICKY (anak langsung modal-body → selalu terlihat) ══ --}}
+            @if (!$isFormLocked)
+                <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <x-secondary-button type="button" wire:click="closeModal" class="min-w-[120px] justify-center">
+                            Tutup
+                        </x-secondary-button>
+                        <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled"
+                            wire:target="save" class="gap-2 min-w-[200px] justify-center">
+                            <span wire:loading.remove wire:target="save">
+                                <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
+                                </svg>
+                                Simpan Surat Keterangan
+                            </span>
+                            <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
+                        </x-primary-button>
+                    </div>
+                </div>
+            @endif
     </div>
     </x-modal>
 
