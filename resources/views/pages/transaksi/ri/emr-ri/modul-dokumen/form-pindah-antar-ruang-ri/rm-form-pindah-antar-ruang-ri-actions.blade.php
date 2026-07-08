@@ -278,16 +278,16 @@ new class extends Component {
             return;
         }
 
-        // Validasi TTV area KIRIM sebelum TTD (tiru RJ: Nadi, Nafas, Suhu; sistolik/diastolik/spo2 opsional)
-        $k = $this->newPindah['kondisiKirim'] ?? [];
-        $missing = [];
-        if (empty($k['frekuensiNadi'] ?? '')) $missing[] = 'Nadi (saat dikirim)';
-        if (empty($k['frekuensiNafas'] ?? '')) $missing[] = 'Nafas (saat dikirim)';
-        if (empty($k['suhu'] ?? '')) $missing[] = 'Suhu (saat dikirim)';
-        if (!empty($missing)) {
-            $this->dispatch('toast', type: 'error', message: 'Belum bisa TTD Pengirim — lengkapi dulu: ' . implode(', ', $missing) . '.');
-            return;
-        }
+        // Validasi TTV area KIRIM sebelum TTD (rules; tiru RJ: Nadi, Nafas, Suhu — sistolik/diastolik/spo2 opsional)
+        $this->validateWithToast([
+            'newPindah.kondisiKirim.frekuensiNadi' => 'required',
+            'newPindah.kondisiKirim.frekuensiNafas' => 'required',
+            'newPindah.kondisiKirim.suhu' => 'required',
+        ], ['required' => ':attribute wajib diisi sebelum TTD Pengirim.'], [
+            'newPindah.kondisiKirim.frekuensiNadi' => 'Nadi (saat dikirim)',
+            'newPindah.kondisiKirim.frekuensiNafas' => 'Nafas (saat dikirim)',
+            'newPindah.kondisiKirim.suhu' => 'Suhu (saat dikirim)',
+        ]);
 
         $this->newPindah['petugasPengirim'] = auth()->user()->myuser_name ?? '';
         $this->newPindah['petugasPengirimCode'] = auth()->user()->myuser_code ?? '';
@@ -314,16 +314,16 @@ new class extends Component {
             return;
         }
 
-        // Validasi TTV area TERIMA sebelum TTD (tiru RJ: Nadi, Nafas, Suhu)
-        $t = $this->newPindah['kondisiTerima'] ?? [];
-        $missing = [];
-        if (empty($t['frekuensiNadi'] ?? '')) $missing[] = 'Nadi (saat diterima)';
-        if (empty($t['frekuensiNafas'] ?? '')) $missing[] = 'Nafas (saat diterima)';
-        if (empty($t['suhu'] ?? '')) $missing[] = 'Suhu (saat diterima)';
-        if (!empty($missing)) {
-            $this->dispatch('toast', type: 'error', message: 'Belum bisa TTD Penerima — lengkapi dulu: ' . implode(', ', $missing) . '.');
-            return;
-        }
+        // Validasi TTV area TERIMA sebelum TTD (rules; tiru RJ: Nadi, Nafas, Suhu)
+        $this->validateWithToast([
+            'newPindah.kondisiTerima.frekuensiNadi' => 'required',
+            'newPindah.kondisiTerima.frekuensiNafas' => 'required',
+            'newPindah.kondisiTerima.suhu' => 'required',
+        ], ['required' => ':attribute wajib diisi sebelum TTD Penerima.'], [
+            'newPindah.kondisiTerima.frekuensiNadi' => 'Nadi (saat diterima)',
+            'newPindah.kondisiTerima.frekuensiNafas' => 'Nafas (saat diterima)',
+            'newPindah.kondisiTerima.suhu' => 'Suhu (saat diterima)',
+        ]);
 
         $this->newPindah['petugasPenerima'] = auth()->user()->myuser_name ?? '';
         $this->newPindah['petugasPenerimaCode'] = auth()->user()->myuser_code ?? '';

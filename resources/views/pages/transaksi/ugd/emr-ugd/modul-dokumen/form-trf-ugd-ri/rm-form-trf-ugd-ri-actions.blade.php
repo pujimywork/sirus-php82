@@ -8,9 +8,10 @@ use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
-    use EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait;
+    use EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
@@ -502,22 +503,31 @@ new class extends Component {
             return;
         }
 
-        // Validasi kelengkapan sebelum TTD Pengirim (save biasa tetap boleh draft/tak lengkap)
-        $trf = $this->dataDaftarUGD['trfUgd'] ?? [];
-        $missing = [];
-        if (empty($trf['pindahKeRuangan'])) $missing[] = 'Pindah ke Ruangan';
-        if (empty($trf['tglPindah'])) $missing[] = 'Tanggal/Jam Pindah';
-        if (empty($trf['alasanPindah'])) $missing[] = 'Alasan Pindah';
-        if (empty($trf['metodePemindahanPasien'])) $missing[] = 'Metode Pemindahan Pasien';
-        if (empty($trf['levelingDokter'] ?? [])) $missing[] = 'Leveling Dokter (min. 1)';
-        // TTV wajib — tiru RJ pemeriksaan: Nadi, Nafas, Suhu (sistolik/diastolik/spo2/gda opsional)
-        if (empty($trf['kondisiSaatDikirim']['frekuensiNadi'] ?? '')) $missing[] = 'Nadi (saat dikirim)';
-        if (empty($trf['kondisiSaatDikirim']['frekuensiNafas'] ?? '')) $missing[] = 'Nafas (saat dikirim)';
-        if (empty($trf['kondisiSaatDikirim']['suhu'] ?? '')) $missing[] = 'Suhu (saat dikirim)';
-        if (!empty($missing)) {
-            $this->dispatch('toast', type: 'error', message: 'Belum bisa TTD Pengirim — lengkapi dulu: ' . implode(', ', $missing) . '.');
-            return;
-        }
+        // Validasi kelengkapan area KIRIM sebelum TTD (rules; save biasa tetap draft/boleh tak lengkap)
+        // TTV wajib meniru RJ pemeriksaan: Nadi, Nafas, Suhu (sistolik/diastolik/spo2/gda opsional).
+        $this->validateWithToast([
+            'dataDaftarUGD.trfUgd.pindahKeRuangan' => 'required',
+            'dataDaftarUGD.trfUgd.tglPindah' => 'required',
+            'dataDaftarUGD.trfUgd.alasanPindah' => 'required',
+            'dataDaftarUGD.trfUgd.metodePemindahanPasien' => 'required',
+            'dataDaftarUGD.trfUgd.levelingDokter' => 'required|array|min:1',
+            'dataDaftarUGD.trfUgd.kondisiSaatDikirim.frekuensiNadi' => 'required',
+            'dataDaftarUGD.trfUgd.kondisiSaatDikirim.frekuensiNafas' => 'required',
+            'dataDaftarUGD.trfUgd.kondisiSaatDikirim.suhu' => 'required',
+        ], [
+            'required' => ':attribute wajib diisi sebelum TTD Pengirim.',
+            'array' => ':attribute wajib diisi sebelum TTD Pengirim.',
+            'min' => ':attribute wajib diisi (min. 1) sebelum TTD Pengirim.',
+        ], [
+            'dataDaftarUGD.trfUgd.pindahKeRuangan' => 'Pindah ke Ruangan',
+            'dataDaftarUGD.trfUgd.tglPindah' => 'Tanggal/Jam Pindah',
+            'dataDaftarUGD.trfUgd.alasanPindah' => 'Alasan Pindah',
+            'dataDaftarUGD.trfUgd.metodePemindahanPasien' => 'Metode Pemindahan Pasien',
+            'dataDaftarUGD.trfUgd.levelingDokter' => 'Leveling Dokter',
+            'dataDaftarUGD.trfUgd.kondisiSaatDikirim.frekuensiNadi' => 'Nadi (saat dikirim)',
+            'dataDaftarUGD.trfUgd.kondisiSaatDikirim.frekuensiNafas' => 'Nafas (saat dikirim)',
+            'dataDaftarUGD.trfUgd.kondisiSaatDikirim.suhu' => 'Suhu (saat dikirim)',
+        ]);
 
         $this->dataDaftarUGD['trfUgd']['petugasPengirim'] = auth()->user()->myuser_name ?? '';
         $this->dataDaftarUGD['trfUgd']['petugasPengirimCode'] = auth()->user()->myuser_code ?? '';
@@ -540,17 +550,16 @@ new class extends Component {
             return;
         }
 
-        // Validasi kelengkapan sebelum TTD Penerima (sisi ruang penerima)
-        $trf = $this->dataDaftarUGD['trfUgd'] ?? [];
-        $missing = [];
-        // TTV wajib — tiru RJ pemeriksaan: Nadi, Nafas, Suhu
-        if (empty($trf['kondisiSaatDiterima']['frekuensiNadi'] ?? '')) $missing[] = 'Nadi (saat diterima)';
-        if (empty($trf['kondisiSaatDiterima']['frekuensiNafas'] ?? '')) $missing[] = 'Nafas (saat diterima)';
-        if (empty($trf['kondisiSaatDiterima']['suhu'] ?? '')) $missing[] = 'Suhu (saat diterima)';
-        if (!empty($missing)) {
-            $this->dispatch('toast', type: 'error', message: 'Belum bisa TTD Penerima — lengkapi dulu: ' . implode(', ', $missing) . '.');
-            return;
-        }
+        // Validasi TTV area TERIMA sebelum TTD (rules; tiru RJ: Nadi, Nafas, Suhu)
+        $this->validateWithToast([
+            'dataDaftarUGD.trfUgd.kondisiSaatDiterima.frekuensiNadi' => 'required',
+            'dataDaftarUGD.trfUgd.kondisiSaatDiterima.frekuensiNafas' => 'required',
+            'dataDaftarUGD.trfUgd.kondisiSaatDiterima.suhu' => 'required',
+        ], ['required' => ':attribute wajib diisi sebelum TTD Penerima.'], [
+            'dataDaftarUGD.trfUgd.kondisiSaatDiterima.frekuensiNadi' => 'Nadi (saat diterima)',
+            'dataDaftarUGD.trfUgd.kondisiSaatDiterima.frekuensiNafas' => 'Nafas (saat diterima)',
+            'dataDaftarUGD.trfUgd.kondisiSaatDiterima.suhu' => 'Suhu (saat diterima)',
+        ]);
 
         $this->dataDaftarUGD['trfUgd']['petugasPenerima'] = auth()->user()->myuser_name ?? '';
         $this->dataDaftarUGD['trfUgd']['petugasPenerimaCode'] = auth()->user()->myuser_code ?? '';
@@ -1116,6 +1125,7 @@ new class extends Component {
                                                 class="!text-sm whitespace-nowrap" />
                                             <x-text-input
                                                 wire:model="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.{{ $ttv['field'] }}"
+                                                :error="$errors->has('dataDaftarUGD.trfUgd.' . $sec['key'] . '.' . $ttv['field'])"
                                                 placeholder="{{ $ttv['ph'] }}" class="w-full mt-1 text-base text-center"
                                                 :disabled="$sec['disabled']" />
                                         </div>
