@@ -470,6 +470,9 @@ new class extends Component {
                 </x-icon-button>
             </div>
 
+            {{-- KONTEN (flex-1 → dorong footer sticky ke bawah, pola emr-ugd) --}}
+            <div class="flex-1">
+
             {{-- Display Pasien (selaras General Consent) --}}
             <div class="px-4 pt-4">
                 <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
@@ -668,47 +671,6 @@ new class extends Component {
 
         </div>
 
-        {{-- FOOTER ACTIONS --}}
-        <div class="flex items-center justify-end gap-3 mt-4">
-            @if (!$isFormLocked)
-                <x-secondary-button wire:click="cetak('')" wire:loading.attr="disabled" wire:target="cetak"
-                    class="gap-2">
-                    <span wire:loading.remove wire:target="cetak" class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                        </svg>
-                        Cetak
-                    </span>
-                    <span wire:loading wire:target="cetak" class="flex items-center gap-1"><x-loading />
-                        Mencetak...</span>
-                </x-secondary-button>
-
-                <x-secondary-button type="button" wire:click="closeModal" class="min-w-[110px] justify-center">
-                    Tutup
-                </x-secondary-button>
-                <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled" wire:target="save"
-                    class="gap-2 min-w-[120px] justify-center">
-                    <span wire:loading.remove wire:target="save">Simpan Form Penjaminan</span>
-                    <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
-                </x-primary-button>
-            @else
-                <x-secondary-button wire:click="cetak('')" wire:loading.attr="disabled" wire:target="cetak"
-                    class="gap-2">
-                    <span wire:loading.remove wire:target="cetak" class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                        </svg>
-                        Cetak
-                    </span>
-                    <span wire:loading wire:target="cetak" class="flex items-center gap-1"><x-loading />
-                        Mencetak...</span>
-                </x-secondary-button>
-            @endif
-        </div>
 
         {{-- DAFTAR FORM TERSIMPAN --}}
         @if (count($listForm) > 0)
@@ -786,7 +748,25 @@ new class extends Component {
                 </table>
             </div>
         @endif
+            </div>{{-- /konten flex-1 --}}
 
+            {{-- ══ FOOTER STICKY (anak langsung modal-body → selalu terlihat) ══ --}}
+            <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex items-center justify-end gap-3">
+                    <x-secondary-button wire:click="cetak('')" wire:loading.attr="disabled" wire:target="cetak" class="gap-2">
+                        <span wire:loading.remove wire:target="cetak">Cetak</span>
+                        <span wire:loading wire:target="cetak"><x-loading class="w-4 h-4" /> Mencetak...</span>
+                    </x-secondary-button>
+                    <x-secondary-button type="button" wire:click="closeModal" class="min-w-[110px] justify-center">Tutup</x-secondary-button>
+                    @if (!$isFormLocked)
+                        <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled" wire:target="save"
+                            class="gap-2 min-w-[120px] justify-center">
+                            <span wire:loading.remove wire:target="save">Simpan Form Penjaminan</span>
+                            <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
+                        </x-primary-button>
+                    @endif
+                </div>
+            </div>
     </div>
     </x-modal>
 
