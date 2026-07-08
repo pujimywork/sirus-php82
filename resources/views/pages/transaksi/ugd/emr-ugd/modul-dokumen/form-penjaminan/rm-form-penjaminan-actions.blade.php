@@ -470,6 +470,12 @@ new class extends Component {
                 </x-icon-button>
             </div>
 
+            {{-- Display Pasien (selaras General Consent) --}}
+            <div class="px-4 pt-4">
+                <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
+                    wire:key="penj-ugd-display-pasien-{{ $rjNo ?? 'init' }}" />
+            </div>
+
         @if ($isFormLocked)
             <div
                 class="flex items-center gap-2 px-4 py-2.5 mb-4 text-base font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">

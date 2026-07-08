@@ -266,6 +266,12 @@ new class extends Component {
                     </svg>
                 </x-icon-button>
             </div>
+
+            {{-- Display Pasien (selaras General Consent) --}}
+            <div class="px-4 pt-4">
+                <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
+                    wire:key="suket-ugd-display-pasien-{{ $rjNo ?? 'init' }}" />
+            </div>
         <div class="w-full mx-auto">
             <div
                 class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">

@@ -277,6 +277,12 @@ new class extends Component {
                     </svg>
                 </x-icon-button>
             </div>
+
+            {{-- Display Pasien (selaras General Consent) --}}
+            <div class="px-4 pt-4">
+                <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                    wire:key="edu-pasien-ri-display-pasien-{{ $riHdrNo ?? 'init' }}" />
+            </div>
             <div class="p-4 sm:p-6 space-y-4" wire:key="{{ $this->renderKey('modal-edukasi-ri', [$riHdrNo ?? 'new']) }}">
 
     @if ($isFormLocked)

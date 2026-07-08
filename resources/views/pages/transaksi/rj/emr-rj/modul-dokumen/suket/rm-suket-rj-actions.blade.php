@@ -292,6 +292,12 @@ new class extends Component {
                 </x-icon-button>
             </div>
 
+            {{-- Display Pasien (selaras General Consent) --}}
+            <div class="px-4 pt-4">
+                <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
+                    wire:key="suket-rj-display-pasien-{{ $rjNo ?? 'init' }}" />
+            </div>
+
         {{-- BODY --}}
         <div class="w-full mx-auto">
             <div
