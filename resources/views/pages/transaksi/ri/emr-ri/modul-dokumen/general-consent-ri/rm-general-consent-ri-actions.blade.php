@@ -58,7 +58,9 @@ new class extends Component {
             if ($data) {
                 $this->dataDaftarRi = $data;
                 $this->regNo = $data['regNo'] ?? null;
-                $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
+                // Terkunci bila EMR terkunci, dinonaktifkan, ATAU sudah di-TTD petugas (final).
+                $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled
+                    || !empty($data['generalConsentPasienRI']['petugasPemeriksa'] ?? '');
             }
         }
     }
@@ -101,7 +103,8 @@ new class extends Component {
         $loaded = $consent['pihakInfoMedis'] ?? [];
         $this->pihakInfoMedis = !empty($loaded) ? $loaded : [['nama' => '', 'hubungan' => '', 'noHp' => '']];
 
-        $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled;
+        $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled
+            || !empty($consent['petugasPemeriksa'] ?? '');
         $this->incrementVersion('modal-general-consent-ri');
 
         $this->dispatch('open-modal', name: "rm-general-consent-ri-{$this->riHdrNo}");
@@ -224,10 +227,40 @@ new class extends Component {
             return;
         }
 
+        // TTD petugas = finalize: wajib lengkap. Draft (tombol Simpan) boleh belum lengkap.
+        $this->validateWithToast();
+
+        $cleanPihak = collect($this->pihakInfoMedis)
+            ->filter(fn($pihak) => !empty(trim($pihak['nama'] ?? '')) || !empty(trim($pihak['hubungan'] ?? '')) || !empty(trim($pihak['noHp'] ?? '')))
+            ->values()
+            ->toArray();
+        $this->dataDaftarRi['generalConsentPasienRI']['pihakInfoMedis'] = $cleanPihak;
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksa'] = auth()->user()->myuser_name ?? '';
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksaCode'] = auth()->user()->myuser_code ?? '';
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksaDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
-        $this->dispatch('toast', type: 'success', message: 'Tanda tangan petugas pemberi penjelasan berhasil ditambahkan.');
+
+        try {
+            DB::transaction(function () {
+                $this->lockRIRow($this->riHdrNo);
+
+                $fresh = $this->findDataRI($this->riHdrNo) ?: [];
+                // Simpan seluruh isian form (in-memory) sekaligus stempel TTD petugas → kunci.
+                $fresh['generalConsentPasienRI'] = array_replace($fresh['generalConsentPasienRI'] ?? $this->defaultConsent(), (array) ($this->dataDaftarRi['generalConsentPasienRI'] ?? []));
+
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'TTD Petugas + kunci General Consent — TTD pasien ' . ($fresh['generalConsentPasienRI']['signatureDate'] ?? '-'), 'MR');
+            });
+
+            $this->isFormLocked = true;
+            $this->incrementVersion('modal-general-consent-ri');
+            $this->dispatch('toast', type: 'success', message: 'General Consent tervalidasi, tersimpan, dan terkunci.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
     }
 
     public function save(): void
@@ -237,12 +270,7 @@ new class extends Component {
             return;
         }
 
-        if (empty($this->signature)) {
-            $this->dispatch('toast', type: 'error', message: 'Tanda tangan pasien/wali belum diisi.');
-            return;
-        }
-
-        $this->validateWithToast();
+        // Draft: boleh simpan sebagian (nyicil). Validasi lengkap + kunci dilakukan saat TTD Petugas.
 
         $cleanPihak = collect($this->pihakInfoMedis)
             ->filter(fn($pihak) => !empty(trim($pihak['nama'] ?? '')) || !empty(trim($pihak['hubungan'] ?? '')) || !empty(trim($pihak['noHp'] ?? '')))

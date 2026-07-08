@@ -57,7 +57,9 @@ new class extends Component {
             $data = $this->findDataUGD($this->rjNo);
             if ($data) {
                 $this->dataDaftarUGD = $data;
-                $this->isFormLocked = $this->checkEmrUGDStatus($this->rjNo) || $disabled;
+                // Terkunci bila EMR terkunci, dinonaktifkan, ATAU sudah di-TTD petugas (final).
+                $this->isFormLocked = $this->checkEmrUGDStatus($this->rjNo) || $disabled
+                    || !empty($data['generalConsentPasienUGD']['petugasPemeriksa'] ?? '');
             }
         }
     }
@@ -99,7 +101,8 @@ new class extends Component {
         $loaded = $consent['pihakInfoMedis'] ?? [];
         $this->pihakInfoMedis = !empty($loaded) ? $loaded : [['nama' => '', 'hubungan' => '', 'noHp' => '']];
 
-        $this->isFormLocked = $this->checkEmrUGDStatus($this->rjNo) || $this->disabled;
+        $this->isFormLocked = $this->checkEmrUGDStatus($this->rjNo) || $this->disabled
+            || !empty($consent['petugasPemeriksa'] ?? '');
         $this->incrementVersion('modal-general-consent-ugd');
 
         $this->dispatch('open-modal', name: "rm-general-consent-ugd-{$this->rjNo}");
@@ -237,6 +240,21 @@ new class extends Component {
             return;
         }
 
+        // TTD petugas = finalize: wajib lengkap. Draft (tombol Simpan) boleh belum lengkap.
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->dispatch('toast', type: 'error', message: 'Lengkapi data & TTD pasien/wali sebelum menandatangani sebagai petugas.');
+            throw $e;
+        }
+
+        // Sync pihakInfoMedis terbaru, buang baris kosong.
+        $cleanPihak = collect($this->pihakInfoMedis)
+            ->filter(fn($pihak) => !empty(trim($pihak['nama'] ?? '')) || !empty(trim($pihak['hubungan'] ?? '')) || !empty(trim($pihak['noHp'] ?? '')))
+            ->values()
+            ->toArray();
+        $this->dataDaftarUGD['generalConsentPasienUGD']['pihakInfoMedis'] = $cleanPihak;
+
         try {
             DB::transaction(function () {
                 $this->lockUGDRow($this->rjNo);
@@ -246,7 +264,11 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
 
-                $data['generalConsentPasienUGD'] ??= $this->getDefaultGeneralConsent();
+                // Simpan seluruh isian form (in-memory) sekaligus stempel TTD petugas → kunci.
+                $data['generalConsentPasienUGD'] = array_replace(
+                    $data['generalConsentPasienUGD'] ?? $this->getDefaultGeneralConsent(),
+                    $this->dataDaftarUGD['generalConsentPasienUGD'] ?? []
+                );
                 $data['generalConsentPasienUGD']['petugasPemeriksa'] = auth()->user()->myuser_name ?? '';
                 $data['generalConsentPasienUGD']['petugasPemeriksaCode'] = auth()->user()->myuser_code ?? '';
                 $data['generalConsentPasienUGD']['petugasPemeriksaDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
@@ -254,11 +276,13 @@ new class extends Component {
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
 
-                $this->appendAdminLogUGD((int) $this->rjNo, 'Set TTD Petugas Pemberi Penjelasan General Consent UGD — ' . ($data['generalConsentPasienUGD']['petugasPemeriksaDate'] ?? '-'), 'MR');
+                $this->appendAdminLogUGD((int) $this->rjNo, 'TTD Petugas + kunci General Consent UGD — ' . ($data['generalConsentPasienUGD']['petugasPemeriksaDate'] ?? '-'), 'MR');
             });
 
+            $this->isFormLocked = true;
             $this->incrementVersion('modal-general-consent-ugd');
-            $this->dispatch('toast', type: 'success', message: 'Tanda tangan petugas pemberi penjelasan berhasil disimpan.');
+            $this->dispatch('toast', type: 'success', message: 'General Consent tervalidasi, tersimpan, dan terkunci.');
+            $this->dispatch('refresh-modul-dokumen-ugd-data', rjNo: $this->rjNo);
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -276,12 +300,7 @@ new class extends Component {
             return;
         }
 
-        if (empty($this->signature)) {
-            $this->dispatch('toast', type: 'error', message: 'Tanda tangan pasien/wali belum diisi.');
-            return;
-        }
-
-        $this->validate();
+        // Draft: boleh simpan sebagian (nyicil). Validasi lengkap + kunci dilakukan saat TTD Petugas.
 
         // Sync pihakInfoMedis terbaru sebelum simpan, buang baris kosong.
         $cleanPihak = collect($this->pihakInfoMedis)

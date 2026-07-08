@@ -58,7 +58,9 @@ new class extends Component {
             $data = $this->findDataRJ($this->rjNo);
             if ($data) {
                 $this->dataDaftarPoliRJ = $data;
-                $this->isFormLocked = $this->checkEmrRJStatus($this->rjNo) || $disabled;
+                // Terkunci bila EMR terkunci, dinonaktifkan, ATAU sudah di-TTD petugas (final).
+                $this->isFormLocked = $this->checkEmrRJStatus($this->rjNo) || $disabled
+                    || !empty($data['generalConsentPasienRJ']['petugasPemeriksa'] ?? '');
             }
         }
     }
@@ -100,7 +102,8 @@ new class extends Component {
         $loaded = $consent['pihakInfoMedis'] ?? [];
         $this->pihakInfoMedis = !empty($loaded) ? $loaded : [['nama' => '', 'hubungan' => '', 'noHp' => '']];
 
-        $this->isFormLocked = $this->checkEmrRJStatus($this->rjNo) || $this->disabled;
+        $this->isFormLocked = $this->checkEmrRJStatus($this->rjNo) || $this->disabled
+            || !empty($consent['petugasPemeriksa'] ?? '');
         $this->incrementVersion('modal-general-consent-rj');
 
         $this->dispatch('open-modal', name: "rm-general-consent-rj-{$this->rjNo}");
@@ -241,6 +244,14 @@ new class extends Component {
             return;
         }
 
+        // TTD petugas = finalize: wajib lengkap. Draft (tombol Simpan) boleh belum lengkap.
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->dispatch('toast', type: 'error', message: 'Lengkapi data & TTD pasien/wali sebelum menandatangani sebagai petugas.');
+            throw $e;
+        }
+
         try {
             DB::transaction(function () {
                 $this->lockRJRow($this->rjNo);
@@ -250,18 +261,24 @@ new class extends Component {
                     throw new \RuntimeException('Data RJ tidak ditemukan.');
                 }
 
-                $data['generalConsentPasienRJ'] ??= $this->getDefaultGeneralConsent();
+                // Simpan seluruh isian form (in-memory) sekaligus stempel TTD petugas → kunci.
+                $data['generalConsentPasienRJ'] = array_replace(
+                    $data['generalConsentPasienRJ'] ?? $this->getDefaultGeneralConsent(),
+                    $this->dataDaftarPoliRJ['generalConsentPasienRJ'] ?? []
+                );
                 $data['generalConsentPasienRJ']['petugasPemeriksa'] = auth()->user()->myuser_name ?? '';
                 $data['generalConsentPasienRJ']['petugasPemeriksaCode'] = auth()->user()->myuser_code ?? '';
                 $data['generalConsentPasienRJ']['petugasPemeriksaDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
 
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
-                $this->appendAdminLogRJ((int) $this->rjNo, 'TTD Petugas Pemberi Penjelasan General Consent — TTD pasien ' . ($data['generalConsentPasienRJ']['signatureDate'] ?? '-'), 'MR');
+                $this->appendAdminLogRJ((int) $this->rjNo, 'TTD Petugas + kunci General Consent — TTD pasien ' . ($data['generalConsentPasienRJ']['signatureDate'] ?? '-'), 'MR');
             });
 
+            $this->isFormLocked = true;
             $this->incrementVersion('modal-general-consent-rj');
-            $this->dispatch('toast', type: 'success', message: 'Tanda tangan petugas pemberi penjelasan berhasil disimpan.');
+            $this->dispatch('toast', type: 'success', message: 'General Consent tervalidasi, tersimpan, dan terkunci.');
+            $this->dispatch('refresh-modul-dokumen-rj-data', rjNo: $this->rjNo);
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -280,12 +297,7 @@ new class extends Component {
             return;
         }
 
-        if (empty($this->signature)) {
-            $this->dispatch('toast', type: 'error', message: 'Tanda tangan pasien/wali belum diisi.');
-            return;
-        }
-
-        $this->validate();
+        // Draft: boleh simpan sebagian (nyicil). Validasi lengkap + kunci dilakukan saat TTD Petugas.
 
         try {
             DB::transaction(function () {
