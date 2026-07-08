@@ -5,7 +5,6 @@
     'wireKey',                                                 // wire:key untuk container
     'saveEvents' => [],                                        // array nama event child yang akan di-broadcast saat 'Tutup dan Simpan' (pattern eresep-RJ: hindari $wire.save() collide dgn $wire.closeModal())
     'wrapperClass' => 'flex flex-col min-h-[calc(100vh-8rem)]', // override class wrapper bila perlu (mis. min-h-0)
-    'autoTrack' => true,                                        // true: lacak dirty dari SEMUA input di dalam wrapper (root x-on:input/change). false: konsumen memanggil setDirty() manual pada elemen tertentu (mis. modal multi-tab yg cuma sebagian tab yg mau dijaga)
 ])
 
 {{-- CONTAINER UTAMA — dirty tracking pure-Alpine (no server dispatch) --}}
@@ -75,7 +74,8 @@
             $wire.closeModal();
         },
     }"
-    @if ($autoTrack) x-on:input="setDirty()" x-on:change="setDirty()" @endif
+    x-on:input="setDirty()"
+    x-on:change="setDirty()"
     x-init="
         openedAt = Date.now();
         window.addEventListener('{{ $event }}', () => { dirty = false; openedAt = Date.now(); });

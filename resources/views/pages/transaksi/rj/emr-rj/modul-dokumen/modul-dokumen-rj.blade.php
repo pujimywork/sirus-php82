@@ -89,13 +89,8 @@ new class extends Component {
 
 <div>
     <x-modal name="modul-dokumen-rj" size="full" height="full" focusable>
-        {{-- CONTAINER UTAMA — dibungkus dirty-guard: peringatan bila ada isian belum disimpan saat modal ditutup --}}
-        <x-dirty-modal-content
-            name="modul-dokumen-rj"
-            event="refresh-modul-dokumen-rj-data"
-            label="Modul Dokumen Rawat Jalan"
-            :wireKey="$this->renderKey('modal', [$rjNo ?? 'new'])"
-            :save-events="['save-rm-suket-rj', 'save-rm-general-consent-rj', 'save-rm-inform-consent-rj', 'save-rm-penundaan-pelayanan-rj']">
+        {{-- CONTAINER UTAMA --}}
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="px-6 py-5 border-b border-hairline bg-surface-soft dark:border-gray-700">
@@ -111,7 +106,7 @@ new class extends Component {
                         @endif
                     </div>
 
-                    <x-icon-button color="gray" type="button" x-on:click="tryClose()" class="shrink-0">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -230,12 +225,12 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
-                    <x-secondary-button x-on:click="tryClose()">
+                    <x-secondary-button wire:click="closeModal">
                         Tutup
                     </x-secondary-button>
                 </div>
             </div>
 
-        </x-dirty-modal-content>
+        </div>
     </x-modal>
 </div>

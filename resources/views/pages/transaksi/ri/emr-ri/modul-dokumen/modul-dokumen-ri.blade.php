@@ -66,15 +66,8 @@ new class extends Component {
 
 <div>
     <x-modal name="modul-dokumen-ri" size="full" height="full" focusable>
-        {{-- CONTAINER UTAMA — dibungkus dirty-guard (autoTrack=false): dirty hanya dilacak dari panel consent & penundaan
-             (setDirty() dipasang manual per-panel) agar tab lain — edukasi/bedah/VK/pindah ruang — tidak memicu peringatan palsu --}}
-        <x-dirty-modal-content
-            name="modul-dokumen-ri"
-            event="modul-dokumen-ri.saved"
-            label="Consent / Penundaan Rawat Inap"
-            :wireKey="$this->renderKey('modal-modul-dokumen-ri', [$riHdrNo ?? 'new'])"
-            :auto-track="false"
-            :save-events="['save-rm-general-consent-ri', 'save-rm-inform-consent-ri', 'save-rm-penundaan-pelayanan-ri']">
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
+            wire:key="{{ $this->renderKey('modal-modul-dokumen-ri', [$riHdrNo ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="px-6 py-5 border-b border-hairline bg-surface-soft dark:border-gray-700">
@@ -89,7 +82,7 @@ new class extends Component {
                             </div>
                         @endif
                     </div>
-                    <x-icon-button color="gray" type="button" x-on:click="tryClose()" class="shrink-0">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <span class="sr-only">Close</span>
                         <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -199,16 +192,14 @@ new class extends Component {
                 </div>
 
                 {{-- TAB: INFORM CONSENT --}}
-                <div x-show="activeTab === 'informConsent'" x-transition.opacity.duration.200ms style="display:none"
-                    x-on:input="setDirty()" x-on:change="setDirty()">
+                <div x-show="activeTab === 'informConsent'" x-transition.opacity.duration.200ms style="display:none">
                     <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.inform-consent-ri.rm-inform-consent-ri-actions
                         :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
                         wire:key="inform-consent-ri-{{ $riHdrNo ?? 'init' }}" />
                 </div>
 
                 {{-- TAB: GENERAL CONSENT --}}
-                <div x-show="activeTab === 'generalConsent'" x-transition.opacity.duration.200ms
-                    x-on:input="setDirty()" x-on:change="setDirty()">
+                <div x-show="activeTab === 'generalConsent'" x-transition.opacity.duration.200ms>
                     <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.general-consent-ri.rm-general-consent-ri-actions
                         :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
                         wire:key="general-consent-ri-{{ $riHdrNo ?? 'init' }}" />
@@ -216,7 +207,7 @@ new class extends Component {
 
                 {{-- TAB: PENUNDAAN PELAYANAN --}}
                 <div x-show="activeTab === 'penundaanPelayanan'" x-transition.opacity.duration.200ms
-                    style="display:none" x-on:input="setDirty()" x-on:change="setDirty()">
+                    style="display:none">
                     <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.penundaan-pelayanan-ri.rm-penundaan-pelayanan-ri-actions
                         :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
                         wire:key="penundaan-pelayanan-ri-{{ $riHdrNo ?? 'init' }}" />
@@ -269,14 +260,14 @@ new class extends Component {
 
             </div>{{-- end body --}}
 
-            {{-- FOOTER (dirty-guard) --}}
+            {{-- FOOTER --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
-                    <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
+                    <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
                 </div>
             </div>
 
-        </x-dirty-modal-content>
+        </div>
     </x-modal>
 </div>
