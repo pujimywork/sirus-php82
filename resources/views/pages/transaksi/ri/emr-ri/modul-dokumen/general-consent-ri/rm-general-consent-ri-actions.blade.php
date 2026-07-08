@@ -9,7 +9,6 @@ use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -231,7 +230,6 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: 'Tanda tangan petugas pemberi penjelasan berhasil ditambahkan.');
     }
 
-    #[On('save-rm-general-consent-ri')]
     public function save(): void
     {
         if ($this->isFormLocked) {
@@ -268,8 +266,6 @@ new class extends Component {
 
             $this->incrementVersion('modal-general-consent-ri');
             $this->dispatch('toast', type: 'success', message: 'General Consent berhasil disimpan.');
-            // Reset dirty-guard modal Modul Dokumen RI (event yang sama dgn wrapper x-dirty-modal-content di modul-dokumen-ri).
-            $this->dispatch('modul-dokumen-ri.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
@@ -423,14 +419,8 @@ new class extends Component {
 
     {{-- ══ MODAL FORM ══ --}}
     <x-modal name="rm-general-consent-ri-{{ $riHdrNo ?? 'init' }}" size="full" height="full" focusable>
-        {{-- dirty-guard: peringatan bila isian General Consent belum disimpan saat modal ditutup --}}
-        <x-dirty-modal-content
-            name="rm-general-consent-ri-{{ $riHdrNo ?? 'init' }}"
-            event="modul-dokumen-ri.saved"
-            label="General Consent"
-            wireKey="dirty-general-consent-ri-{{ $riHdrNo ?? 'init' }}"
-            wrapperClass="flex flex-col min-h-0"
-            :saveEvents="['save-rm-general-consent-ri']">
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
+            wire:key="{{ $this->renderKey('modal-general-consent-ri', [$riHdrNo ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
@@ -468,7 +458,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20"
                             fill="currentColor">
@@ -699,7 +689,7 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-end gap-3">
-                    <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
+                    <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
 
                     @if ($riHdrNo)
                         <x-secondary-button wire:click="cetak" wire:loading.attr="disabled" wire:target="cetak"
@@ -728,6 +718,6 @@ new class extends Component {
                 </div>
             </div>
 
-        </x-dirty-modal-content>
+        </div>
     </x-modal>
 </div>

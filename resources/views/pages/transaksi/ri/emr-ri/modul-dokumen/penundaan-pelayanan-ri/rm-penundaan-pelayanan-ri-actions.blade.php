@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -223,7 +222,6 @@ new class extends Component {
     /* ===============================
      | SIMPAN ENTRI BARU
      =============================== */
-    #[On('save-rm-penundaan-pelayanan-ri')]
     public function addEntry(): void
     {
         if ($this->isFormLocked) {
@@ -276,8 +274,6 @@ new class extends Component {
 
             $this->incrementVersion('modal-penundaan-pelayanan-ri');
             $this->dispatch('toast', type: 'success', message: 'Formulir penundaan pelayanan berhasil disimpan.');
-            // Reset dirty-guard modal Modul Dokumen RI (event yang sama dgn wrapper x-dirty-modal-content di modul-dokumen-ri).
-            $this->dispatch('modul-dokumen-ri.saved');
 
             $this->resetNewForm();
             $this->newForm['namaPenanda'] = $this->dataDaftarRi['regName'] ?? '';

@@ -228,8 +228,6 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: $message);
         // Reset dirty state di EMR RJ parent (<x-dirty-modal-content>).
         $this->dispatch('refresh-after-rj.saved');
-        // Reset dirty-guard modal Modul Dokumen RJ (event yang sama dgn wrapper x-dirty-modal-content di modul-dokumen-rj).
-        $this->dispatch('refresh-modul-dokumen-rj-data', rjNo: $this->rjNo);
     }
 
     protected function resetForm(): void

@@ -431,14 +431,8 @@ new class extends Component {
 
     {{-- ══ MODAL FORM ══ --}}
     <x-modal name="rm-general-consent-rj-{{ $rjNo ?? 'init' }}" size="full" height="full" focusable>
-        {{-- dirty-guard: peringatan bila isian General Consent belum disimpan saat modal ditutup --}}
-        <x-dirty-modal-content
-            name="rm-general-consent-rj-{{ $rjNo ?? 'init' }}"
-            event="refresh-modul-dokumen-rj-data"
-            label="General Consent"
-            wireKey="dirty-general-consent-rj-{{ $rjNo ?? 'init' }}"
-            wrapperClass="flex flex-col min-h-0"
-            :saveEvents="['save-rm-general-consent-rj']">
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
+            wire:key="{{ $this->renderKey('modal-general-consent-rj', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
@@ -476,7 +470,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20"
                             fill="currentColor">
@@ -711,7 +705,7 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-end gap-3">
-                    <x-secondary-button x-on:click="tryClose()">
+                    <x-secondary-button wire:click="closeModal">
                         Tutup
                     </x-secondary-button>
 
@@ -740,7 +734,7 @@ new class extends Component {
                 </div>
             </div>
 
-        </x-dirty-modal-content>
+        </div>
     </x-modal>
 
     {{-- Cetak component --}}
