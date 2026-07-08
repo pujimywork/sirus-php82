@@ -826,7 +826,7 @@ new class extends Component {
                             class="p-4 mb-4 rounded-xl bg-surface-soft dark:bg-gray-800/40 border border-hairline dark:border-gray-700">
                             <div class="grid grid-cols-12 gap-3 items-end">
 
-                                <div class="col-span-12 md:col-span-5">
+                                <div class="col-span-12 md:col-span-4">
                                     @if (empty($levelingDokter['drId']))
                                         <livewire:lov.dokter.lov-dokter target="dokter-trf-ugd-ri" label="Pilih Dokter"
                                             wire:key="lov-dokter-trf-ugd-ri-{{ $rjNo }}-{{ $renderVersions['modal-trf-ugd-ri'] ?? 0 }}" />
@@ -846,7 +846,7 @@ new class extends Component {
                                     @endif
                                 </div>
 
-                                <div class="col-span-12 md:col-span-3">
+                                <div class="col-span-12 md:col-span-2">
                                     <x-input-label value="Poli" class="mb-1" />
                                     <x-text-input wire:model="levelingDokter.poliDesc" :error="$errors->has('levelingDokter.poliDesc')" disabled
                                         class="w-full text-base" />
@@ -854,9 +854,9 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('levelingDokter.poliDesc')" class="mt-1" />
                                 </div>
 
-                                <div class="col-span-12 md:col-span-2">
+                                <div class="col-span-12 md:col-span-4">
                                     <x-input-label value="Level Dokter *" class="mb-1" />
-                                    <div class="grid grid-cols-2 gap-2 mt-1">
+                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                                         @foreach ($levelDokterOptions as $opt)
                                             <x-radio-button :label="$opt['label']" :value="$opt['value']"
                                                 name="levelingDokter.levelDokter"
