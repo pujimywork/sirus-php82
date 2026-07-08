@@ -82,7 +82,13 @@ new class extends Component {
 
 <div>
     <x-modal name="modul-dokumen-ugd" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'new']) }}">
+        {{-- CONTAINER UTAMA — dibungkus dirty-guard: peringatan bila ada isian belum disimpan saat modal ditutup --}}
+        <x-dirty-modal-content
+            name="modul-dokumen-ugd"
+            event="refresh-modul-dokumen-ugd-data"
+            label="Modul Dokumen UGD"
+            :wireKey="$this->renderKey('modal', [$rjNo ?? 'new'])"
+            :save-events="['save-rm-suket-ugd', 'save-rm-form-trf-ugd-ri', 'save-rm-general-consent-ugd', 'save-rm-inform-consent-ugd', 'save-rm-form-penjaminan', 'save-rm-penundaan-pelayanan-ugd']">
 
             {{-- HEADER --}}
             <div class="px-6 py-5 border-b border-hairline bg-surface-soft dark:border-gray-700">
@@ -97,7 +103,7 @@ new class extends Component {
                             </div>
                         @endif
                     </div>
-                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()" class="shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -253,7 +259,7 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
-                    <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
+                    <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
                     {{-- @if (!$isFormLocked)
                         <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
                             wire:loading.attr="disabled">
@@ -271,6 +277,6 @@ new class extends Component {
                 </div>
             </div>
 
-        </div>
+        </x-dirty-modal-content>
     </x-modal>
 </div>

@@ -301,6 +301,7 @@ new class extends Component {
     /* ===============================
      | SAVE
      =============================== */
+    #[On('save-rm-inform-consent-ugd')]
     public function addConsent(): void
     {
         if ($this->isFormLocked) {

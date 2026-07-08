@@ -197,6 +197,8 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: $message);
         // Reset dirty state di EMR UGD parent (<x-dirty-modal-content>).
         $this->dispatch('refresh-after-ugd.saved');
+        // Reset dirty-guard modal Modul Dokumen UGD (event yang sama dgn wrapper x-dirty-modal-content di modul-dokumen-ugd).
+        $this->dispatch('refresh-modul-dokumen-ugd-data', rjNo: $this->rjNo);
     }
 
     protected function resetForm(): void

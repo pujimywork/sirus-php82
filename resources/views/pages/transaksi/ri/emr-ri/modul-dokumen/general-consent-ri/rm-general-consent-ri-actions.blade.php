@@ -9,6 +9,7 @@ use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -230,6 +231,7 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: 'Tanda tangan petugas pemberi penjelasan berhasil ditambahkan.');
     }
 
+    #[On('save-rm-general-consent-ri')]
     public function save(): void
     {
         if ($this->isFormLocked) {
@@ -266,6 +268,8 @@ new class extends Component {
 
             $this->incrementVersion('modal-general-consent-ri');
             $this->dispatch('toast', type: 'success', message: 'General Consent berhasil disimpan.');
+            // Reset dirty-guard modal Modul Dokumen RI (event yang sama dgn wrapper x-dirty-modal-content di modul-dokumen-ri).
+            $this->dispatch('modul-dokumen-ri.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {

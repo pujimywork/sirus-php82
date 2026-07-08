@@ -9,6 +9,7 @@ use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -323,6 +324,7 @@ new class extends Component {
         $this->newConsent['petugasPemeriksaDate'] = '';
     }
 
+    #[On('save-rm-inform-consent-ri')]
     public function addConsent(): void
     {
         if ($this->isFormLocked) {
@@ -395,6 +397,8 @@ new class extends Component {
 
             $this->incrementVersion('modal-inform-consent-ri');
             $this->dispatch('toast', type: 'success', message: 'Inform Consent berhasil disimpan.');
+            // Reset dirty-guard modal Modul Dokumen RI (event yang sama dgn wrapper x-dirty-modal-content di modul-dokumen-ri).
+            $this->dispatch('modul-dokumen-ri.saved');
 
             $this->resetNewConsent();
             $this->newConsent['wali'] = $this->dataDaftarRi['regName'] ?? '';

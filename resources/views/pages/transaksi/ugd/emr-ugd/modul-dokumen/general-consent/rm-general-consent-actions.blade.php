@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait;
@@ -269,6 +270,7 @@ new class extends Component {
     /* ===============================
      | SAVE
      =============================== */
+    #[On('save-rm-general-consent-ugd')]
     public function save(): void
     {
         if ($this->isFormLocked) {

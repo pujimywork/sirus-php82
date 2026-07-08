@@ -222,6 +222,8 @@ new class extends Component {
 
             $this->incrementVersion('modal-trf-ugd-ri');
             $this->dispatch('toast', type: 'success', message: 'Data Transfer UGD berhasil disimpan.');
+            // Reset dirty-guard modal Modul Dokumen UGD (event yang sama dgn wrapper x-dirty-modal-content di modul-dokumen-ugd).
+            $this->dispatch('refresh-modul-dokumen-ugd-data', rjNo: $this->rjNo);
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
