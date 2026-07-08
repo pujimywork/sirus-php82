@@ -1,5 +1,9 @@
 <?php
 // resources/views/pages/transaksi/ri/emr-ri/modul-dokumen/laporan-anestesi-ri/rm-laporan-anestesi-ri-actions.blade.php
+// Laporan Anestesi — PAB 6 / RM 53. Multi-entri append-only:
+// Draft (nyicil) + Lanjut Isi + TTD-Kunci (finalize) + Lihat (read-only) + tabel expandable.
+// Disimpan ke datadaftarri_json key 'laporanAnestesiRI'. Kunci entri stabil = createdAt.
+// TTD ahli anestesiologi (setTtd) = FINALIZE/kunci; field kunci = 'ttd' (nama myuser_name).
 
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
@@ -22,6 +26,9 @@ new class extends Component {
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-laporan-anestesi-ri'];
+
+    /** Key penyimpanan di datadaftarri_json */
+    private string $jsonKey = 'laporanAnestesiRI';
 
     // ── Laporan Anestesi — PAB 6 / RM 53 ──
     public array $newForm = [
@@ -70,10 +77,19 @@ new class extends Component {
 
     public array $laporanAnList = [];
 
+    // Kunci entri yang sedang diedit (createdAt = kunci stabil). null = membuat entri baru.
+    public ?string $editingKey = null;
+
+    // true = entri terkunci ditampilkan di form read-only (lihat saja).
+    public bool $viewOnly = false;
+
     public array $asaOptions = ['ASA I', 'ASA II', 'ASA III', 'ASA IV', 'ASA V', 'ASA I-E', 'ASA II-E', 'ASA III-E', 'ASA IV-E', 'ASA V-E'];
     public array $jalanNafasOptions = ['Paten', 'Obstruksi'];
     public array $pernafasanOptions = ['Spontan', 'Kontrol', 'Assisted'];
 
+    /* ===============================
+     | MOUNT
+     =============================== */
     public function mount(?string $riHdrNo = null, bool $disabled = false): void
     {
         $this->riHdrNo = $riHdrNo ?: null;
@@ -85,19 +101,25 @@ new class extends Component {
             if ($data) {
                 $this->dataDaftarRi = $data;
                 $this->regNo = $data['regNo'] ?? null;
-                $this->laporanAnList = $data['laporanAnestesiRI'] ?? [];
+                $this->laporanAnList = $data[$this->jsonKey] ?? [];
                 $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
             }
         }
     }
 
+    /* ===============================
+     | OPEN / CLOSE MODAL
+     =============================== */
     public function openModal(): void
     {
         if (!$this->riHdrNo || $this->disabled) {
             return;
         }
         $this->resetNewForm();
+        $this->editingKey = null;
+        $this->viewOnly = false;
         $this->resetValidation();
+
         $data = $this->findDataRI($this->riHdrNo);
         if (!$data) {
             $this->dispatch('toast', type: 'error', message: 'Data RI tidak ditemukan.');
@@ -105,10 +127,10 @@ new class extends Component {
         }
         $this->dataDaftarRi = $data;
         $this->regNo = $data['regNo'] ?? null;
-        if (!isset($this->dataDaftarRi['laporanAnestesiRI']) || !is_array($this->dataDaftarRi['laporanAnestesiRI'])) {
-            $this->dataDaftarRi['laporanAnestesiRI'] = [];
+        if (!isset($this->dataDaftarRi[$this->jsonKey]) || !is_array($this->dataDaftarRi[$this->jsonKey])) {
+            $this->dataDaftarRi[$this->jsonKey] = [];
         }
-        $this->laporanAnList = $this->dataDaftarRi['laporanAnestesiRI'];
+        $this->laporanAnList = $this->dataDaftarRi[$this->jsonKey];
         $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled;
         $this->incrementVersion('modal-laporan-anestesi-ri');
         $this->dispatch('open-modal', name: "rm-laporan-anestesi-ri-{$this->riHdrNo}");
@@ -152,33 +174,149 @@ new class extends Component {
         ];
     }
 
+    /* ===============================
+     | SET TANGGAL/JAM SEKARANG
+     =============================== */
     public function setTanggalSekarang(): void
     {
-        if ($this->isFormLocked) {
+        if ($this->isFormLocked || $this->viewOnly) {
             return;
         }
         $this->newForm['tanggal'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
     }
 
+    /* ===============================
+     | HELPER — status & bentuk entri
+     =============================== */
+    // Entri FINAL/terkunci bila flag finalized true; entri lama (tanpa flag) yang sudah
+    // ada TTD (nama ahli anestesiologi) dianggap final (kompatibilitas data lama).
+    public function entryIsFinal(array $e): bool
+    {
+        return array_key_exists('finalized', $e) ? (bool) $e['finalized'] : !empty($e['ttd']);
+    }
+
+    // Susun array entri dari state form. $key = createdAt (kunci stabil); $finalized = status kunci.
+    private function buildEntry(string $key, bool $finalized): array
+    {
+        $entry = [];
+        foreach ($this->newForm as $k => $v) {
+            $entry[$k] = $v;
+        }
+        $entry['createdAt'] = $key;
+        $entry['finalized'] = $finalized;
+        return $entry;
+    }
+
+    // Cek: minimal salah satu isian inti terisi (untuk draft).
+    private function adaIsiInti(): bool
+    {
+        return collect(['jenisPembedahan', 'jenisAnestesi', 'teknikAnestesi', 'diagnosaPascaBedah'])
+            ->contains(fn($k) => filled($this->newForm[$k] ?? null));
+    }
+
+    // Simpan entri (add/update by createdAt) dengan status $finalized. Dipakai draft & kunci.
+    private function persistEntry(string $key, bool $finalized, string $logVerb): void
+    {
+        $entry = $this->buildEntry($key, $finalized);
+
+        DB::transaction(function () use ($entry, $key, $logVerb) {
+            $this->lockRIRow($this->riHdrNo);
+
+            $fresh = $this->findDataRI($this->riHdrNo) ?: [];
+            if (empty($fresh)) {
+                throw new \RuntimeException('Data RI tidak ditemukan, simpan dibatalkan.');
+            }
+            if (!isset($fresh[$this->jsonKey]) || !is_array($fresh[$this->jsonKey])) {
+                $fresh[$this->jsonKey] = [];
+            }
+
+            $list = $fresh[$this->jsonKey];
+            $idx = collect($list)->search(fn($it) => ($it['createdAt'] ?? '') === $key);
+            if ($idx === false) {
+                $list[] = $entry;
+            } else {
+                if ($this->entryIsFinal($list[$idx])) {
+                    throw new \RuntimeException('Entri sudah terkunci, tidak dapat diubah.');
+                }
+                $list[$idx] = $entry;
+            }
+            $fresh[$this->jsonKey] = array_values($list);
+
+            $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+            $this->dataDaftarRi = $fresh;
+            $this->laporanAnList = $fresh[$this->jsonKey];
+
+            $this->appendAdminLogRI((int) $this->riHdrNo, $logVerb . ' Laporan Anestesi — ' . ($entry['jenisAnestesi'] ?: '-') . ' (' . $key . ')', 'MR');
+        });
+    }
+
+    /* ===============================
+     | SIMPAN DRAFT (nyicil, tanpa wajib TTD)
+     =============================== */
+    public function saveDraft(): void
+    {
+        if ($this->isFormLocked || $this->viewOnly) {
+            $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
+            return;
+        }
+        if (!$this->adaIsiInti()) {
+            $this->dispatch('toast', type: 'error', message: 'Isi minimal salah satu: Jenis Pembedahan, Jenis Anestesi, Teknik Anestesi, atau Diagnosa Pasca Bedah.');
+            return;
+        }
+
+        $key = $this->editingKey ?: Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+
+        try {
+            $this->persistEntry($key, false, 'Simpan draft');
+            $this->editingKey = $key; // lanjut edit entri yang sama, tidak buat duplikat
+            $this->incrementVersion('modal-laporan-anestesi-ri');
+            $this->dispatch('toast', type: 'success', message: 'Draft tersimpan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan draft: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | TTD PETUGAS = FINALIZE (kunci entri)
+     | Stempel nama ahli anestesiologi (user login) + tgl/jam → kunci entri.
+     =============================== */
     public function setTtd(): void
     {
-        if ($this->isFormLocked) {
+        if ($this->isFormLocked || $this->viewOnly) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only.');
             return;
         }
-        if (!empty($this->newForm['ttd'])) {
-            $this->dispatch('toast', type: 'warning', message: 'Tanda tangan sudah ada.');
-            return;
-        }
+
+        // Validasi penuh sebelum kunci (ValidationException bubble → Livewire render $errors + toast).
+        $this->validateWithToast();
+
+        // Stempel TTD ahli anestesiologi = user login.
         $this->newForm['ttd'] = auth()->user()->myuser_name ?? '';
         $this->newForm['ttdCode'] = auth()->user()->myuser_code ?? '';
         $this->newForm['ttdDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
-        $this->dispatch('toast', type: 'success', message: 'Tanda tangan ahli anestesiologi ditambahkan.');
+
+        $key = $this->editingKey ?: Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+
+        try {
+            $this->persistEntry($key, true, 'Kunci (TTD)');
+            $this->resetNewForm();
+            $this->editingKey = null;
+            $this->viewOnly = false;
+            $this->incrementVersion('modal-laporan-anestesi-ri');
+            $this->dispatch('toast', type: 'success', message: 'Laporan anestesi ditandatangani & terkunci.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal mengunci: ' . $e->getMessage());
+        }
     }
 
+    /** Batalkan TTD pada form (saat draft/edit, sebelum finalize benar-benar tersimpan). */
     public function clearTtd(): void
     {
-        if ($this->isFormLocked) {
+        if ($this->isFormLocked || $this->viewOnly) {
             return;
         }
         $this->newForm['ttd'] = '';
@@ -186,44 +324,85 @@ new class extends Component {
         $this->newForm['ttdDate'] = '';
     }
 
-    public function addEntry(): void
+    /* ===============================
+     | EDIT / LIHAT / BATAL entri
+     =============================== */
+    // Muat 1 entri ke form atas (dipakai edit draft & lihat entri terkunci).
+    private function hydrateFormFromEntry(array $entry, string $key): void
+    {
+        foreach ($this->newForm as $k => $v) {
+            $this->newForm[$k] = $entry[$k] ?? (is_array($v) ? [] : '');
+        }
+        $this->editingKey = $key;
+        $this->resetValidation();
+        $this->incrementVersion('modal-laporan-anestesi-ri');
+    }
+
+    public function editEntry(string $key): void
     {
         if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
+            $this->dispatch('toast', type: 'error', message: 'Form read-only.');
             return;
         }
-        if (empty($this->newForm['ttd'])) {
-            $this->dispatch('toast', type: 'error', message: 'Tanda tangan ahli anestesiologi belum diisi.');
+        $entry = collect($this->laporanAnList)->firstWhere('createdAt', $key);
+        if (!$entry) {
+            $this->dispatch('toast', type: 'error', message: 'Entri tidak ditemukan.');
             return;
         }
-        $this->validateWithToast();
-        $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
-        $entry = $this->newForm;
-        $entry['createdAt'] = $now;
+        if ($this->entryIsFinal($entry)) {
+            $this->dispatch('toast', type: 'warning', message: 'Entri sudah terkunci, tidak dapat diedit.');
+            return;
+        }
 
-        try {
-            DB::transaction(function () use ($entry) {
-                $this->lockRIRow($this->riHdrNo);
-                $fresh = $this->findDataRI($this->riHdrNo) ?: [];
-                if (!isset($fresh['laporanAnestesiRI']) || !is_array($fresh['laporanAnestesiRI'])) {
-                    $fresh['laporanAnestesiRI'] = [];
-                }
-                $fresh['laporanAnestesiRI'][] = $entry;
-                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
-                $this->dataDaftarRi = $fresh;
-                $this->laporanAnList = $fresh['laporanAnestesiRI'];
-                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Laporan Anestesi — ' . ($entry['jenisAnestesi'] ?? '-') . ' — ' . ($entry['createdAt'] ?? '-'), 'MR');
-            });
-            $this->incrementVersion('modal-laporan-anestesi-ri');
-            $this->dispatch('toast', type: 'success', message: 'Laporan anestesi berhasil disimpan.');
-            $this->resetNewForm();
-        } catch (\RuntimeException $e) {
-            $this->dispatch('toast', type: 'error', message: $e->getMessage());
-        } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        $this->viewOnly = false;
+        $this->hydrateFormFromEntry($entry, $key);
+        $this->dispatch('toast', type: 'info', message: 'Draft dimuat untuk dilanjutkan.');
+    }
+
+    // Lihat entri terkunci: muat ke form atas dalam mode read-only.
+    public function viewEntry(string $key): void
+    {
+        $entry = collect($this->laporanAnList)->firstWhere('createdAt', $key);
+        if (!$entry) {
+            $this->dispatch('toast', type: 'error', message: 'Entri tidak ditemukan.');
+            return;
+        }
+
+        $this->viewOnly = true;
+        $this->hydrateFormFromEntry($entry, $key);
+        $this->dispatch('toast', type: 'info', message: 'Menampilkan entri terkunci (hanya lihat).');
+    }
+
+    public function cancelEdit(): void
+    {
+        $this->resetNewForm();
+        $this->editingKey = null;
+        $this->viewOnly = false;
+        $this->resetValidation();
+        $this->incrementVersion('modal-laporan-anestesi-ri');
+    }
+
+    private function resetNewForm(): void
+    {
+        foreach ($this->newForm as $k => $v) {
+            $this->newForm[$k] = is_array($v) ? [] : '';
         }
     }
 
+    protected function resetForm(): void
+    {
+        $this->resetVersion();
+        $this->isFormLocked = false;
+        $this->dataDaftarRi = [];
+        $this->laporanAnList = [];
+        $this->resetNewForm();
+        $this->editingKey = null;
+        $this->viewOnly = false;
+    }
+
+    /* ===============================
+     | CETAK (per-entri)
+     =============================== */
     public function cetak(string $createdAt)
     {
         $entry = collect($this->laporanAnList)->firstWhere('createdAt', $createdAt);
@@ -263,6 +442,9 @@ new class extends Component {
         }
     }
 
+    /* ===============================
+     | HAPUS entri (final atau draft)
+     =============================== */
     public function hapus(string $createdAt): void
     {
         if ($this->isFormLocked) {
@@ -273,15 +455,20 @@ new class extends Component {
             DB::transaction(function () use ($createdAt) {
                 $this->lockRIRow($this->riHdrNo);
                 $fresh = $this->findDataRI($this->riHdrNo) ?: [];
-                if (!isset($fresh['laporanAnestesiRI'])) {
-                    throw new \RuntimeException('Data tidak ditemukan.');
-                }
-                $fresh['laporanAnestesiRI'] = collect($fresh['laporanAnestesiRI'])->reject(fn($item) => ($item['createdAt'] ?? '') === $createdAt)->values()->toArray();
+                $fresh[$this->jsonKey] = collect($fresh[$this->jsonKey] ?? [])
+                    ->reject(fn($item) => ($item['createdAt'] ?? '') === $createdAt)
+                    ->values()
+                    ->toArray();
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
-                $this->laporanAnList = $fresh['laporanAnestesiRI'];
+                $this->laporanAnList = $fresh[$this->jsonKey];
                 $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Laporan Anestesi — ' . $createdAt, 'MR');
             });
+
+            if ($this->editingKey === $createdAt) {
+                $this->cancelEdit();
+            }
+
             $this->incrementVersion('modal-laporan-anestesi-ri');
             $this->dispatch('toast', type: 'success', message: 'Laporan anestesi berhasil dihapus.');
         } catch (\RuntimeException $e) {
@@ -289,20 +476,6 @@ new class extends Component {
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus: ' . $e->getMessage());
         }
-    }
-
-    private function resetNewForm(): void
-    {
-        $this->newForm = [
-            'tanggal' => '', 'diagnosaPraBedah' => '', 'diagnosaPascaBedah' => '', 'jenisPembedahan' => '',
-            'jenisAnestesi' => '', 'lamaOperasi' => '', 'lamaAnestesi' => '',
-            'tb' => '', 'bb' => '', 'golDarah' => '', 'tensi' => '', 'nadi' => '', 'suhu' => '', 'hb' => '',
-            'jalanNafas' => '', 'teknikAnestesi' => '', 'teknikKhusus' => '', 'pernafasan' => '', 'posisi' => '',
-            'infus' => '', 'penyulitSelamaPembedahan' => '', 'saraf' => '', 'sirkulasi' => '', 'perfusi' => '',
-            'gastrointestinal' => '', 'ginjal' => '', 'metabolik' => '', 'hati' => '', 'medikasiPraBedah' => '',
-            'masalahAnestesi' => '', 'masalahBedah' => '', 'asa' => '', 'keadaanAkhirPembedahan' => '',
-            'penyulitPascaBedah' => '', 'ttd' => '', 'ttdCode' => '', 'ttdDate' => '',
-        ];
     }
 };
 ?>
@@ -320,18 +493,8 @@ new class extends Component {
                 </div>
                 <p class="text-base text-muted dark:text-gray-400">
                     Laporan pelaksanaan anestesi (PAB 6 / RM 53): teknik anestesi, monitoring sistem organ selama
-                    pembedahan, masalah & keadaan akhir, ditandatangani ahli anestesiologi.
+                    pembedahan, masalah &amp; keadaan akhir, ditandatangani ahli anestesiologi.
                 </p>
-                @if ($laCount > 0)
-                    <ul class="space-y-1 text-base text-muted dark:text-gray-300 list-disc pl-5">
-                        @foreach (array_slice($laporanAnList, 0, 3) as $la)
-                            <li><span class="font-medium">{{ \Illuminate\Support\Str::limit($la['jenisAnestesi'] ?? '-', 40) }}</span>
-                                @if (!empty($la['tanggal'])) <span class="text-sm text-muted-soft">— {{ $la['tanggal'] }}</span> @endif
-                            </li>
-                        @endforeach
-                        @if ($laCount > 3) <li class="text-sm italic text-muted-soft">+{{ $laCount - 3 }} lainnya…</li> @endif
-                    </ul>
-                @endif
             </div>
             <div class="flex shrink-0">
                 <x-primary-button type="button" wire:click="openModal" wire:loading.attr="disabled" wire:target="openModal" :disabled="$disabled || !$riHdrNo" class="gap-2">
@@ -343,12 +506,45 @@ new class extends Component {
                 </x-primary-button>
             </div>
         </div>
+
+        @if ($laCount > 0)
+            <div class="mt-4 overflow-x-auto">
+                <table class="min-w-full text-sm border border-hairline rounded-lg dark:border-gray-700">
+                    <thead class="bg-surface-soft dark:bg-gray-800">
+                        <tr class="text-left text-muted dark:text-gray-300">
+                            <th class="px-3 py-2 border-b">Tanggal</th>
+                            <th class="px-3 py-2 border-b">Jenis Anestesi</th>
+                            <th class="px-3 py-2 border-b">Petugas (TTD)</th>
+                            <th class="px-3 py-2 text-center border-b">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (array_reverse($laporanAnList) as $e)
+                            <tr class="border-b border-hairline dark:border-gray-700">
+                                <td class="px-3 py-2 font-medium text-ink dark:text-gray-200">{{ $e['tanggal'] ?: ($e['createdAt'] ?? '-') }}</td>
+                                <td class="px-3 py-2 text-muted dark:text-gray-400">{{ $e['jenisAnestesi'] ? Str::limit($e['jenisAnestesi'], 40) : '-' }}</td>
+                                <td class="px-3 py-2 text-muted dark:text-gray-400">
+                                    @if (!empty($e['ttd'])){{ $e['ttd'] }}@else<x-badge variant="danger">Belum TTD</x-badge>@endif
+                                </td>
+                                <td class="px-3 py-2 text-center">
+                                    @if ($this->entryIsFinal($e))
+                                        <x-badge variant="info">Terkunci</x-badge>
+                                    @else
+                                        <x-badge variant="warning">Draft</x-badge>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 
     <x-modal name="rm-laporan-anestesi-ri-{{ $riHdrNo ?? 'init' }}" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal-laporan-anestesi-ri', [$riHdrNo ?? 'new']) }}">
 
-            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div class="relative flex items-start justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-3">
@@ -357,7 +553,7 @@ new class extends Component {
                             </div>
                             <div>
                                 <h2 class="font-semibold text-2xl text-ink dark:text-gray-100">Laporan Anestesi</h2>
-                                <p class="mt-0.5 text-base text-muted dark:text-gray-400">PAB 6 / RM 53 — ahli anestesiologi</p>
+                                <p class="mt-0.5 text-base text-muted dark:text-gray-400">PAB 6 / RM 53 — ahli anestesiologi. Tiap entri = 1 laporan; kunci lewat TTD.</p>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2 mt-3">
@@ -373,184 +569,457 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
                     <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo" wire:key="la-ri-display-pasien-{{ $riHdrNo ?? 'init' }}" />
 
+                    @php $formRO = $isFormLocked || $viewOnly; @endphp
+
+                    @if ($isFormLocked)
+                        <div class="flex items-center gap-2 px-4 py-2.5 text-base font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            Mode tampilan saja (read-only) — pasien sudah pulang / EMR terkunci.
+                        </div>
+                    @endif
+
+                    @if ($viewOnly)
+                        <div class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-lg dark:bg-sky-900/20 dark:border-sky-600 dark:text-sky-300">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Menampilkan entri terkunci <strong>{{ $editingKey }}</strong> (hanya lihat) — klik <strong>Selesai Melihat</strong> untuk kembali ke form entri baru.
+                        </div>
+                    @elseif ($editingKey && !$isFormLocked)
+                        <div class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-brand-green bg-brand-lime/10 border border-brand-lime/40 rounded-lg dark:text-brand-lime dark:bg-brand-lime/5">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Sedang melanjutkan entri <strong>{{ $editingKey }}</strong> — <strong>Simpan Perubahan</strong> menyimpan ke entri ini; klik <strong>Entri Baru</strong> untuk menambah laporan lain.
+                        </div>
+                    @endif
+
                     <div class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
-                        @if ($isFormLocked)
-                            <div class="flex items-center gap-2 px-4 py-2.5 text-base font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                                EMR terkunci — data tidak dapat diubah.
-                            </div>
-                        @endif
+                        {{-- ── FORM ENTRI (1 laporan) ── --}}
+                        <fieldset @disabled($formRO) class="space-y-6">
 
-                        <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                                <x-input-label value="Tanggal / Jam *" class="mb-1" />
-                                <div class="flex items-center gap-2">
-                                    <x-text-input wire:model.live="newForm.tanggal" placeholder="dd/mm/yyyy HH:mm:ss" :error="$errors->has('newForm.tanggal')" :disabled="$isFormLocked" class="w-full" />
-                                    @if (!$isFormLocked) <x-now-button wire:click="setTanggalSekarang" /> @endif
-                                </div>
-                                <x-input-error :messages="$errors->get('newForm.tanggal')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-input-label value="Jenis Pembedahan *" class="mb-1" />
-                                <x-text-input wire:model.live="newForm.jenisPembedahan" :error="$errors->has('newForm.jenisPembedahan')" :disabled="$isFormLocked" class="w-full" />
-                                <x-input-error :messages="$errors->get('newForm.jenisPembedahan')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-input-label value="Diagnosa Pra Bedah" class="mb-1" />
-                                <x-textarea wire:model.live="newForm.diagnosaPraBedah" :error="$errors->has('newForm.diagnosaPraBedah')" rows="2" :disabled="$isFormLocked" class="w-full" />
-                            </div>
-                            <div>
-                                <x-input-label value="Diagnosa Pasca Bedah *" class="mb-1" />
-                                <x-textarea wire:model.live="newForm.diagnosaPascaBedah" :error="$errors->has('newForm.diagnosaPascaBedah')" rows="2" :disabled="$isFormLocked" class="w-full" />
-                                <x-input-error :messages="$errors->get('newForm.diagnosaPascaBedah')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-input-label value="Jenis Anestesi *" class="mb-1" />
-                                <x-text-input wire:model.live="newForm.jenisAnestesi" :error="$errors->has('newForm.jenisAnestesi')" placeholder="cth: SAB / GA / Sedasi" :disabled="$isFormLocked" class="w-full" />
-                                <x-input-error :messages="$errors->get('newForm.jenisAnestesi')" class="mt-1" />
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><x-input-label value="Lama Operasi" class="mb-1" /><x-text-input wire:model.live="newForm.lamaOperasi" :error="$errors->has('newForm.lamaOperasi')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Lama Anestesi" class="mb-1" /><x-text-input wire:model.live="newForm.lamaAnestesi" :error="$errors->has('newForm.lamaAnestesi')" :disabled="$isFormLocked" class="w-full" /></div>
-                            </div>
-                        </section>
-
-                        <section class="pt-6 border-t border-hairline dark:border-gray-700">
-                            <h3 class="mb-3 text-base font-semibold text-ink dark:text-gray-200">Keadaan Pra Bedah</h3>
-                            <div class="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-7">
-                                <div><x-input-label value="TB" class="mb-1" /><x-text-input wire:model.live="newForm.tb" :error="$errors->has('newForm.tb')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="BB" class="mb-1" /><x-text-input wire:model.live="newForm.bb" :error="$errors->has('newForm.bb')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Gol. Darah" class="mb-1" /><x-text-input wire:model.live="newForm.golDarah" :error="$errors->has('newForm.golDarah')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Tensi" class="mb-1" /><x-text-input wire:model.live="newForm.tensi" :error="$errors->has('newForm.tensi')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Nadi" class="mb-1" /><x-text-input wire:model.live="newForm.nadi" :error="$errors->has('newForm.nadi')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Suhu" class="mb-1" /><x-text-input wire:model.live="newForm.suhu" :error="$errors->has('newForm.suhu')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Hb" class="mb-1" /><x-text-input wire:model.live="newForm.hb" :error="$errors->has('newForm.hb')" :disabled="$isFormLocked" class="w-full" /></div>
-                            </div>
-                        </section>
-
-                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">Teknik Anestesi</h3>
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <x-input-label value="Jalan Nafas" class="mb-1" />
-                                    <x-select-input wire:model.live="newForm.jalanNafas" :error="$errors->has('newForm.jalanNafas')" :disabled="$isFormLocked" class="w-full">
-                                        <option value="">— pilih —</option>
-                                        @foreach ($jalanNafasOptions as $opt) <option value="{{ $opt }}">{{ $opt }}</option> @endforeach
-                                    </x-select-input>
+                                    <x-input-label value="Tanggal / Jam *" class="mb-1" />
+                                    <div class="flex items-center gap-2">
+                                        <x-text-input wire:model.live="newForm.tanggal" placeholder="dd/mm/yyyy HH:mm:ss" :error="$errors->has('newForm.tanggal')" class="w-full" />
+                                        @if (!$formRO) <x-now-button wire:click="setTanggalSekarang" /> @endif
+                                    </div>
+                                    <x-input-error :messages="$errors->get('newForm.tanggal')" class="mt-1" />
                                 </div>
                                 <div>
-                                    <x-input-label value="Pernafasan" class="mb-1" />
-                                    <x-select-input wire:model.live="newForm.pernafasan" :error="$errors->has('newForm.pernafasan')" :disabled="$isFormLocked" class="w-full">
-                                        <option value="">— pilih —</option>
-                                        @foreach ($pernafasanOptions as $opt) <option value="{{ $opt }}">{{ $opt }}</option> @endforeach
-                                    </x-select-input>
+                                    <x-input-label value="Jenis Pembedahan *" class="mb-1" />
+                                    <x-text-input wire:model.live="newForm.jenisPembedahan" :error="$errors->has('newForm.jenisPembedahan')" class="w-full" />
+                                    <x-input-error :messages="$errors->get('newForm.jenisPembedahan')" class="mt-1" />
                                 </div>
-                                <div><x-input-label value="Posisi" class="mb-1" /><x-text-input wire:model.live="newForm.posisi" :error="$errors->has('newForm.posisi')" :disabled="$isFormLocked" class="w-full" /></div>
-                            </div>
-                            <div>
-                                <x-input-label value="Teknik Anestesi *" class="mb-1" />
-                                <x-textarea wire:model.live="newForm.teknikAnestesi" :error="$errors->has('newForm.teknikAnestesi')" rows="3" :disabled="$isFormLocked" class="w-full" />
-                                <x-input-error :messages="$errors->get('newForm.teknikAnestesi')" class="mt-1" />
-                            </div>
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                                <div><x-input-label value="Teknik Khusus" class="mb-1" /><x-text-input wire:model.live="newForm.teknikKhusus" :error="$errors->has('newForm.teknikKhusus')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Infus" class="mb-1" /><x-text-input wire:model.live="newForm.infus" :error="$errors->has('newForm.infus')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Penyulit Selama Pembedahan" class="mb-1" /><x-text-input wire:model.live="newForm.penyulitSelamaPembedahan" :error="$errors->has('newForm.penyulitSelamaPembedahan')" :disabled="$isFormLocked" class="w-full" /></div>
-                            </div>
-                        </section>
-
-                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">Monitoring Sistem Organ</h3>
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                <div><x-input-label value="Saraf (GCS)" class="mb-1" /><x-text-input wire:model.live="newForm.saraf" :error="$errors->has('newForm.saraf')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Sirkulasi" class="mb-1" /><x-text-input wire:model.live="newForm.sirkulasi" :error="$errors->has('newForm.sirkulasi')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Perfusi" class="mb-1" /><x-text-input wire:model.live="newForm.perfusi" :error="$errors->has('newForm.perfusi')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Gastrointestinal" class="mb-1" /><x-text-input wire:model.live="newForm.gastrointestinal" :error="$errors->has('newForm.gastrointestinal')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Ginjal" class="mb-1" /><x-text-input wire:model.live="newForm.ginjal" :error="$errors->has('newForm.ginjal')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Metabolik" class="mb-1" /><x-text-input wire:model.live="newForm.metabolik" :error="$errors->has('newForm.metabolik')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Hati" class="mb-1" /><x-text-input wire:model.live="newForm.hati" :error="$errors->has('newForm.hati')" :disabled="$isFormLocked" class="w-full" /></div>
-                            </div>
-                        </section>
-
-                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div><x-input-label value="Medikasi Pra Bedah" class="mb-1" /><x-text-input wire:model.live="newForm.medikasiPraBedah" :error="$errors->has('newForm.medikasiPraBedah')" :disabled="$isFormLocked" class="w-full" /></div>
                                 <div>
-                                    <x-input-label value="ASA *" class="mb-1" />
-                                    <x-select-input wire:model.live="newForm.asa" :error="$errors->has('newForm.asa')" :disabled="$isFormLocked" class="w-full">
-                                        <option value="">— pilih —</option>
-                                        @foreach ($asaOptions as $opt) <option value="{{ $opt }}">{{ $opt }}</option> @endforeach
-                                    </x-select-input>
-                                    <x-input-error :messages="$errors->get('newForm.asa')" class="mt-1" />
+                                    <x-input-label value="Diagnosa Pra Bedah" class="mb-1" />
+                                    <x-textarea wire:model.live="newForm.diagnosaPraBedah" :error="$errors->has('newForm.diagnosaPraBedah')" rows="2" class="w-full" />
                                 </div>
-                                <div><x-input-label value="Masalah Anestesi" class="mb-1" /><x-text-input wire:model.live="newForm.masalahAnestesi" :error="$errors->has('newForm.masalahAnestesi')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Masalah Bedah" class="mb-1" /><x-text-input wire:model.live="newForm.masalahBedah" :error="$errors->has('newForm.masalahBedah')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Keadaan Akhir Pembedahan" class="mb-1" /><x-text-input wire:model.live="newForm.keadaanAkhirPembedahan" :error="$errors->has('newForm.keadaanAkhirPembedahan')" :disabled="$isFormLocked" class="w-full" /></div>
-                                <div><x-input-label value="Penyulit Pasca Bedah" class="mb-1" /><x-text-input wire:model.live="newForm.penyulitPascaBedah" :error="$errors->has('newForm.penyulitPascaBedah')" :disabled="$isFormLocked" class="w-full" /></div>
-                            </div>
-                        </section>
+                                <div>
+                                    <x-input-label value="Diagnosa Pasca Bedah *" class="mb-1" />
+                                    <x-textarea wire:model.live="newForm.diagnosaPascaBedah" :error="$errors->has('newForm.diagnosaPascaBedah')" rows="2" class="w-full" />
+                                    <x-input-error :messages="$errors->get('newForm.diagnosaPascaBedah')" class="mt-1" />
+                                </div>
+                                <div>
+                                    <x-input-label value="Jenis Anestesi *" class="mb-1" />
+                                    <x-text-input wire:model.live="newForm.jenisAnestesi" :error="$errors->has('newForm.jenisAnestesi')" placeholder="cth: SAB / GA / Sedasi" class="w-full" />
+                                    <x-input-error :messages="$errors->get('newForm.jenisAnestesi')" class="mt-1" />
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><x-input-label value="Lama Operasi" class="mb-1" /><x-text-input wire:model.live="newForm.lamaOperasi" :error="$errors->has('newForm.lamaOperasi')" class="w-full" /></div>
+                                    <div><x-input-label value="Lama Anestesi" class="mb-1" /><x-text-input wire:model.live="newForm.lamaAnestesi" :error="$errors->has('newForm.lamaAnestesi')" class="w-full" /></div>
+                                </div>
+                            </section>
 
-                        <x-signature.ttd-petugas :ttd="$newForm['ttd']" :date="$newForm['ttdDate'] ?? ''"
-                            :code="$newForm['ttdCode'] ?? ''" :locked="$isFormLocked" sign="setTtd" clear="clearTtd"
-                            title="Tanda Tangan Ahli Anestesiologi" label="" signLabel="TTD sebagai Ahli Anestesiologi" clearLabel="Hapus TTD" />
+                            <section class="pt-6 border-t border-hairline dark:border-gray-700">
+                                <h3 class="mb-3 text-base font-semibold text-ink dark:text-gray-200">Keadaan Pra Bedah</h3>
+                                <div class="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-7">
+                                    <div><x-input-label value="TB" class="mb-1" /><x-text-input wire:model.live="newForm.tb" :error="$errors->has('newForm.tb')" class="w-full" /></div>
+                                    <div><x-input-label value="BB" class="mb-1" /><x-text-input wire:model.live="newForm.bb" :error="$errors->has('newForm.bb')" class="w-full" /></div>
+                                    <div><x-input-label value="Gol. Darah" class="mb-1" /><x-text-input wire:model.live="newForm.golDarah" :error="$errors->has('newForm.golDarah')" class="w-full" /></div>
+                                    <div><x-input-label value="Tensi" class="mb-1" /><x-text-input wire:model.live="newForm.tensi" :error="$errors->has('newForm.tensi')" class="w-full" /></div>
+                                    <div><x-input-label value="Nadi" class="mb-1" /><x-text-input wire:model.live="newForm.nadi" :error="$errors->has('newForm.nadi')" class="w-full" /></div>
+                                    <div><x-input-label value="Suhu" class="mb-1" /><x-text-input wire:model.live="newForm.suhu" :error="$errors->has('newForm.suhu')" class="w-full" /></div>
+                                    <div><x-input-label value="Hb" class="mb-1" /><x-text-input wire:model.live="newForm.hb" :error="$errors->has('newForm.hb')" class="w-full" /></div>
+                                </div>
+                            </section>
 
-                        @if (count($laporanAnList) > 0)
-                            <div class="mt-6 overflow-x-auto">
-                                <h3 class="text-base font-semibold text-body dark:text-gray-300 pb-2 border-b border-hairline-soft dark:border-gray-800 mb-3">Daftar Laporan Tersimpan</h3>
-                                <table class="min-w-full text-base border border-hairline rounded-lg dark:border-gray-700">
-                                    <thead class="bg-surface-soft dark:bg-gray-800">
-                                        <tr class="text-left text-muted dark:text-gray-300">
-                                            <th class="px-4 py-2 border-b">Tanggal</th>
-                                            <th class="px-4 py-2 border-b">Jenis Anestesi</th>
-                                            <th class="px-4 py-2 border-b">ASA</th>
-                                            <th class="px-4 py-2 border-b text-center">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($laporanAnList as $la)
-                                            <tr class="border-b border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-800">
-                                                <td class="px-4 py-2 text-muted dark:text-gray-400">{{ $la['tanggal'] ?? '-' }}</td>
-                                                <td class="px-4 py-2 font-medium text-ink dark:text-gray-200">{{ $la['jenisAnestesi'] ? Str::limit($la['jenisAnestesi'], 40) : '-' }}</td>
-                                                <td class="px-4 py-2 text-muted dark:text-gray-400">{{ $la['asa'] ?? '-' }}</td>
-                                                <td class="px-4 py-2 text-center space-x-2 whitespace-nowrap">
-                                                    <x-secondary-button wire:click="cetak('{{ $la['createdAt'] }}')" wire:loading.attr="disabled" wire:target="cetak('{{ $la['createdAt'] }}')" class="text-sm py-1 px-2">
-                                                        <span wire:loading.remove wire:target="cetak('{{ $la['createdAt'] }}')" class="flex items-center gap-1">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                                            Cetak
-                                                        </span>
-                                                        <span wire:loading wire:target="cetak('{{ $la['createdAt'] }}')" class="flex items-center gap-1"><x-loading /> ...</span>
-                                                    </x-secondary-button>
-                                                    @if (!$isFormLocked)
-                                                        <x-outline-button type="button" wire:click.prevent="hapus('{{ $la['createdAt'] }}')" wire:confirm="Yakin hapus laporan ini?" wire:loading.attr="disabled" class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300 !px-2 !py-1" title="Hapus">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                        </x-outline-button>
-                                                    @endif
-                                                </td>
+                            <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                                <h3 class="text-base font-semibold text-ink dark:text-gray-200">Teknik Anestesi</h3>
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                    <div>
+                                        <x-input-label value="Jalan Nafas" class="mb-1" />
+                                        <x-select-input wire:model.live="newForm.jalanNafas" :error="$errors->has('newForm.jalanNafas')" class="w-full">
+                                            <option value="">— pilih —</option>
+                                            @foreach ($jalanNafasOptions as $opt) <option value="{{ $opt }}">{{ $opt }}</option> @endforeach
+                                        </x-select-input>
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Pernafasan" class="mb-1" />
+                                        <x-select-input wire:model.live="newForm.pernafasan" :error="$errors->has('newForm.pernafasan')" class="w-full">
+                                            <option value="">— pilih —</option>
+                                            @foreach ($pernafasanOptions as $opt) <option value="{{ $opt }}">{{ $opt }}</option> @endforeach
+                                        </x-select-input>
+                                    </div>
+                                    <div><x-input-label value="Posisi" class="mb-1" /><x-text-input wire:model.live="newForm.posisi" :error="$errors->has('newForm.posisi')" class="w-full" /></div>
+                                </div>
+                                <div>
+                                    <x-input-label value="Teknik Anestesi *" class="mb-1" />
+                                    <x-textarea wire:model.live="newForm.teknikAnestesi" :error="$errors->has('newForm.teknikAnestesi')" rows="3" class="w-full" />
+                                    <x-input-error :messages="$errors->get('newForm.teknikAnestesi')" class="mt-1" />
+                                </div>
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                    <div><x-input-label value="Teknik Khusus" class="mb-1" /><x-text-input wire:model.live="newForm.teknikKhusus" :error="$errors->has('newForm.teknikKhusus')" class="w-full" /></div>
+                                    <div><x-input-label value="Infus" class="mb-1" /><x-text-input wire:model.live="newForm.infus" :error="$errors->has('newForm.infus')" class="w-full" /></div>
+                                    <div><x-input-label value="Penyulit Selama Pembedahan" class="mb-1" /><x-text-input wire:model.live="newForm.penyulitSelamaPembedahan" :error="$errors->has('newForm.penyulitSelamaPembedahan')" class="w-full" /></div>
+                                </div>
+                            </section>
+
+                            <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                                <h3 class="text-base font-semibold text-ink dark:text-gray-200">Monitoring Sistem Organ</h3>
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    <div><x-input-label value="Saraf (GCS)" class="mb-1" /><x-text-input wire:model.live="newForm.saraf" :error="$errors->has('newForm.saraf')" class="w-full" /></div>
+                                    <div><x-input-label value="Sirkulasi" class="mb-1" /><x-text-input wire:model.live="newForm.sirkulasi" :error="$errors->has('newForm.sirkulasi')" class="w-full" /></div>
+                                    <div><x-input-label value="Perfusi" class="mb-1" /><x-text-input wire:model.live="newForm.perfusi" :error="$errors->has('newForm.perfusi')" class="w-full" /></div>
+                                    <div><x-input-label value="Gastrointestinal" class="mb-1" /><x-text-input wire:model.live="newForm.gastrointestinal" :error="$errors->has('newForm.gastrointestinal')" class="w-full" /></div>
+                                    <div><x-input-label value="Ginjal" class="mb-1" /><x-text-input wire:model.live="newForm.ginjal" :error="$errors->has('newForm.ginjal')" class="w-full" /></div>
+                                    <div><x-input-label value="Metabolik" class="mb-1" /><x-text-input wire:model.live="newForm.metabolik" :error="$errors->has('newForm.metabolik')" class="w-full" /></div>
+                                    <div><x-input-label value="Hati" class="mb-1" /><x-text-input wire:model.live="newForm.hati" :error="$errors->has('newForm.hati')" class="w-full" /></div>
+                                </div>
+                            </section>
+
+                            <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div><x-input-label value="Medikasi Pra Bedah" class="mb-1" /><x-text-input wire:model.live="newForm.medikasiPraBedah" :error="$errors->has('newForm.medikasiPraBedah')" class="w-full" /></div>
+                                    <div>
+                                        <x-input-label value="ASA *" class="mb-1" />
+                                        <x-select-input wire:model.live="newForm.asa" :error="$errors->has('newForm.asa')" class="w-full">
+                                            <option value="">— pilih —</option>
+                                            @foreach ($asaOptions as $opt) <option value="{{ $opt }}">{{ $opt }}</option> @endforeach
+                                        </x-select-input>
+                                        <x-input-error :messages="$errors->get('newForm.asa')" class="mt-1" />
+                                    </div>
+                                    <div><x-input-label value="Masalah Anestesi" class="mb-1" /><x-text-input wire:model.live="newForm.masalahAnestesi" :error="$errors->has('newForm.masalahAnestesi')" class="w-full" /></div>
+                                    <div><x-input-label value="Masalah Bedah" class="mb-1" /><x-text-input wire:model.live="newForm.masalahBedah" :error="$errors->has('newForm.masalahBedah')" class="w-full" /></div>
+                                    <div><x-input-label value="Keadaan Akhir Pembedahan" class="mb-1" /><x-text-input wire:model.live="newForm.keadaanAkhirPembedahan" :error="$errors->has('newForm.keadaanAkhirPembedahan')" class="w-full" /></div>
+                                    <div><x-input-label value="Penyulit Pasca Bedah" class="mb-1" /><x-text-input wire:model.live="newForm.penyulitPascaBedah" :error="$errors->has('newForm.penyulitPascaBedah')" class="w-full" /></div>
+                                </div>
+                            </section>
+
+                            {{-- ══ TTD AHLI ANESTESIOLOGI & KUNCI ══ --}}
+                            <x-signature.ttd-petugas :ttd="$newForm['ttd']" :date="$newForm['ttdDate'] ?? ''"
+                                :code="$newForm['ttdCode'] ?? ''" :locked="$formRO" sign="setTtd" clear="clearTtd"
+                                title="Tanda Tangan Ahli Anestesiologi"
+                                nameLabel="Ahli Anestesiologi" dateLabel="Waktu TTD"
+                                signLabel="TTD Petugas &amp; Kunci" clearLabel="Batal TTD" />
+                            @if (!$formRO)
+                                <p class="-mt-2 text-xs text-center text-muted">Menandatangani = mengunci laporan anestesi ini.</p>
+                            @endif
+                        </fieldset>
+
+                        {{-- ── DAFTAR LAPORAN TERSIMPAN (expandable) ── --}}
+                        <div class="pt-6 border-t border-hairline dark:border-gray-700">
+                            <h3 class="mb-3 text-base font-semibold text-ink dark:text-gray-200">Daftar Laporan Tersimpan</h3>
+                            @if (count($laporanAnList ?? []))
+                                <p class="mb-3 text-xs italic text-muted-soft">Klik baris untuk lihat detail lengkap.</p>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-sm border border-hairline rounded-lg dark:border-gray-700">
+                                        <thead class="bg-surface-soft dark:bg-gray-800">
+                                            <tr class="text-left text-sm font-semibold tracking-wide uppercase text-muted dark:text-gray-300">
+                                                <th class="w-8 px-2 py-3 border-b"></th>
+                                                <th class="px-4 py-3 border-b">Tanggal</th>
+                                                <th class="px-4 py-3 border-b">Jenis Anestesi</th>
+                                                <th class="px-4 py-3 border-b">Petugas (TTD)</th>
+                                                <th class="px-4 py-3 text-center border-b">Status</th>
+                                                <th class="px-4 py-3 text-center border-b">Aksi</th>
                                             </tr>
+                                        </thead>
+                                        @foreach (array_reverse($laporanAnList) as $entry)
+                                            @php
+                                                $isFinal = $this->entryIsFinal($entry);
+                                                $rowKey = $entry['createdAt'] ?? '';
+                                            @endphp
+                                            <tbody x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }" class="border-b border-hairline dark:border-gray-700">
+                                                <tr @click="open = !open"
+                                                    class="cursor-pointer hover:bg-surface-soft dark:hover:bg-gray-800 {{ $editingKey && $editingKey === $rowKey ? 'bg-brand-lime/10 dark:bg-brand-lime/5' : '' }}">
+                                                    <td class="px-2 py-3 text-center align-middle">
+                                                        <svg class="w-4 h-4 mx-auto transition-transform text-muted" :class="{ 'rotate-90': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                        </svg>
+                                                    </td>
+                                                    <td class="px-4 py-3 font-semibold align-middle text-ink dark:text-gray-100">
+                                                        {{ $entry['tanggal'] ?: ($rowKey ?: '-') }}
+                                                    </td>
+                                                    <td class="px-4 py-3 align-middle text-muted dark:text-gray-300">
+                                                        {{ $entry['jenisAnestesi'] ? Str::limit($entry['jenisAnestesi'], 40) : '-' }}
+                                                    </td>
+                                                    <td class="px-4 py-3 align-middle text-muted dark:text-gray-300">
+                                                        @if (!empty($entry['ttd']))
+                                                            <span class="font-medium text-ink dark:text-gray-200">{{ $entry['ttd'] }}</span>
+                                                        @else
+                                                            <x-badge variant="danger">Belum TTD</x-badge>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center align-middle">
+                                                        @if ($isFinal)
+                                                            <x-badge variant="info">Terkunci</x-badge>
+                                                        @else
+                                                            <x-badge variant="warning">Draft</x-badge>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center align-middle" @click.stop>
+                                                        <div class="flex items-center justify-center gap-2">
+                                                            @if (!$isFinal && !$isFormLocked)
+                                                                <x-primary-button type="button" wire:click="editEntry('{{ $rowKey }}')" wire:loading.attr="disabled" wire:target="editEntry('{{ $rowKey }}')" class="gap-1.5" title="Lanjutkan mengisi entri ini">
+                                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                    </svg>
+                                                                    Lanjut Isi
+                                                                </x-primary-button>
+                                                            @endif
+                                                            @if ($isFinal)
+                                                                <x-secondary-button type="button" wire:click="viewEntry('{{ $rowKey }}')" wire:loading.attr="disabled" wire:target="viewEntry('{{ $rowKey }}')" class="gap-1.5" title="Lihat detail (read-only) di form atas">
+                                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                    </svg>
+                                                                    Lihat
+                                                                </x-secondary-button>
+                                                            @endif
+                                                            <x-secondary-button type="button" wire:click="cetak('{{ $rowKey }}')" wire:loading.attr="disabled" wire:target="cetak('{{ $rowKey }}')" class="gap-1.5" title="Cetak laporan ini">
+                                                                <span wire:loading.remove wire:target="cetak('{{ $rowKey }}')" class="flex items-center gap-1.5">
+                                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                                                    Cetak
+                                                                </span>
+                                                                <span wire:loading wire:target="cetak('{{ $rowKey }}')" class="flex items-center gap-1"><x-loading class="w-4 h-4" /> ...</span>
+                                                            </x-secondary-button>
+                                                            @if (!$isFormLocked)
+                                                                <x-outline-button type="button" wire:click.prevent="hapus('{{ $rowKey }}')" wire:confirm="Yakin hapus laporan ini?"
+                                                                    wire:loading.attr="disabled"
+                                                                    class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                                                    title="Hapus">
+                                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                </x-outline-button>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                {{-- DETAIL (expand) --}}
+                                                <tr x-show="open" x-cloak>
+                                                    <td colspan="6" class="px-4 py-4 bg-surface-soft/60 dark:bg-gray-950/30">
+                                                        <dl class="grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-2">
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Tanggal / Jam</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['tanggal'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Jenis Pembedahan</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['jenisPembedahan'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div class="md:col-span-2">
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Diagnosa Pra Bedah</dt>
+                                                                <dd class="mt-0.5 whitespace-pre-line text-ink dark:text-gray-200">{{ $entry['diagnosaPraBedah'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div class="md:col-span-2">
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Diagnosa Pasca Bedah</dt>
+                                                                <dd class="mt-0.5 whitespace-pre-line text-ink dark:text-gray-200">{{ $entry['diagnosaPascaBedah'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Jenis Anestesi</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['jenisAnestesi'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Lama Operasi / Anestesi</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['lamaOperasi'] ?: '-' }} / {{ $entry['lamaAnestesi'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">TB / BB</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['tb'] ?: '-' }} / {{ $entry['bb'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Gol. Darah</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['golDarah'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Tensi / Nadi</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['tensi'] ?: '-' }} / {{ $entry['nadi'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Suhu / Hb</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['suhu'] ?: '-' }} / {{ $entry['hb'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Jalan Nafas</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['jalanNafas'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Pernafasan</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['pernafasan'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Posisi</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['posisi'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div class="md:col-span-2">
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Teknik Anestesi</dt>
+                                                                <dd class="mt-0.5 whitespace-pre-line text-ink dark:text-gray-200">{{ $entry['teknikAnestesi'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Teknik Khusus</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['teknikKhusus'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Infus</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['infus'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Penyulit Selama Pembedahan</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['penyulitSelamaPembedahan'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Saraf (GCS)</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['saraf'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Sirkulasi</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['sirkulasi'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Perfusi</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['perfusi'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Gastrointestinal</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['gastrointestinal'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Ginjal</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['ginjal'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Metabolik</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['metabolik'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Hati</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['hati'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Medikasi Pra Bedah</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['medikasiPraBedah'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">ASA</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['asa'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Masalah Anestesi</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['masalahAnestesi'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Masalah Bedah</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['masalahBedah'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Keadaan Akhir Pembedahan</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['keadaanAkhirPembedahan'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Penyulit Pasca Bedah</dt>
+                                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $entry['penyulitPascaBedah'] ?: '-' }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Petugas (TTD)</dt>
+                                                                <dd class="mt-0.5">
+                                                                    @if (!empty($entry['ttd']))
+                                                                        <span class="text-ink dark:text-gray-200">{{ $entry['ttd'] }}</span>
+                                                                        <span class="text-sm text-muted-soft">— {{ $entry['ttdDate'] ?? '-' }}</span>
+                                                                    @else
+                                                                        <x-badge variant="danger">Belum TTD</x-badge>
+                                                                    @endif
+                                                                </dd>
+                                                            </div>
+                                                        </dl>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
                                         @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
+                                    </table>
+                                </div>
+                            @else
+                                <p class="text-sm text-muted dark:text-gray-400">Belum ada laporan tersimpan.</p>
+                            @endif
+                        </div>
 
                     </div>
                 </div>
             </div>
 
-            <div class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex flex-wrap items-center justify-end gap-3">
-                    <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
-                    @if ($riHdrNo && !$isFormLocked)
-                        <x-primary-button wire:click.prevent="addEntry" wire:loading.attr="disabled" wire:target="addEntry" class="gap-2 min-w-[180px] justify-center">
-                            <span wire:loading.remove wire:target="addEntry">Simpan Laporan</span>
-                            <span wire:loading wire:target="addEntry"><x-loading class="w-4 h-4" /> Menyimpan...</span>
-                        </x-primary-button>
+            <div class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700 shrink-0">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    @if ($viewOnly)
+                        <p class="flex items-center gap-1.5 text-sm text-sky-600 dark:text-sky-400">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>Mode lihat — entri terkunci, tidak dapat diubah.</span>
+                        </p>
+                    @elseif (!$isFormLocked)
+                        <p class="flex items-center gap-1.5 text-sm text-muted dark:text-gray-400">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Simpan draft dulu, lalu <strong>kunci</strong> lewat tombol <strong>TTD Petugas &amp; Kunci</strong>.</span>
+                        </p>
+                    @else
+                        <span></span>
                     @endif
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
+
+                        @if ($viewOnly)
+                            <x-primary-button wire:click.prevent="cancelEdit" wire:target="cancelEdit"
+                                wire:loading.attr="disabled" class="gap-1.5 min-w-[160px] justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                Selesai Melihat
+                            </x-primary-button>
+                        @elseif (!$isFormLocked)
+                            @if ($editingKey)
+                                <x-outline-button wire:click.prevent="cancelEdit" wire:target="cancelEdit"
+                                    wire:loading.attr="disabled" class="gap-1.5"
+                                    title="Kosongkan form untuk menambah laporan lain — entri yang sudah tersimpan tidak berubah">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Entri Baru
+                                </x-outline-button>
+                            @endif
+                            <x-primary-button wire:click.prevent="saveDraft" wire:loading.attr="disabled"
+                                wire:target="saveDraft" class="gap-2 min-w-[160px] justify-center">
+                                <span wire:loading.remove wire:target="saveDraft" class="flex items-center gap-1.5">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-8H7v8M7 3v5h8M5 3h11l4 4v12a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                                    </svg>
+                                    {{ $editingKey ? 'Simpan Perubahan' : 'Simpan Draft' }}
+                                </span>
+                                <span wire:loading wire:target="saveDraft"><x-loading class="w-4 h-4" /> Menyimpan...</span>
+                            </x-primary-button>
+                        @endif
+                    </div>
                 </div>
             </div>
 
