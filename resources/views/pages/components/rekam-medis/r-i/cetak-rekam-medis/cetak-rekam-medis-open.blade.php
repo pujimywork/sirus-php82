@@ -490,6 +490,9 @@ new class extends Component {
 
                     <livewire:pages::components.rekam-medis.r-i.dokumen-view.penundaan-pelayanan-view-ri :riHdrNo="(string) $riHdrNo"
                         :entries="$ri['penundaanPelayananRI'] ?? []" wire:key="rm-view-penundaan-pelayanan-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.permintaan-kerohanian-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['permintaanKerohanianRI'] ?? []" wire:key="rm-view-permintaan-kerohanian-{{ $riHdrNo }}" />
                 </div>
 
                 {{-- ════ TAB: HASIL PENUNJANG (lab / radiologi / upload — view-only) ════ --}}
