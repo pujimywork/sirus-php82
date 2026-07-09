@@ -78,45 +78,12 @@
         </tr>
     </table>
 
-    {{-- ── PERNYATAAN ── --}}
-    <div class="text-[11px] leading-relaxed mb-2">
+    {{-- ── PERNYATAAN ── (data pasien TIDAK diulang di body — cukup header identitas standar di atas) --}}
+    <div class="text-[11px] leading-relaxed mb-3">
         <p>Dengan ini menyatakan permintaan pendampingan pelayanan kerohanian Agama/Kepercayaan
-            <strong>{{ $agamaText }}</strong> kepada Rumah Sakit Islam Madinah terhadap pasien di bawah ini:</p>
+            <strong>{{ $agamaText }}</strong> kepada Rumah Sakit Islam Madinah terhadap pasien tersebut
+            sebagaimana identitas tercantum di atas.</p>
     </div>
-
-    {{-- ── DATA PASIEN ── --}}
-    @php
-        $id = $data['identitas'] ?? [];
-        $alamatPasien = trim(
-            ($id['alamat'] ?? '-') .
-                (!empty($id['rt']) ? ' RT ' . $id['rt'] : '') .
-                (!empty($id['rw']) ? '/RW ' . $id['rw'] : '') .
-                (!empty($id['desaName']) ? ', ' . $id['desaName'] : '') .
-                (!empty($id['kecamatanName']) ? ', ' . $id['kecamatanName'] : ''),
-        );
-    @endphp
-    <table class="w-full text-[10px] border-collapse mb-3">
-        <tr>
-            <td class="px-1 py-0.5 w-1/3">Nama</td>
-            <td class="px-1 py-0.5 w-2">:</td>
-            <td class="px-1 py-0.5">{{ $data['regName'] ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="px-1 py-0.5">Nomor Rekam Medis</td>
-            <td class="px-1 py-0.5">:</td>
-            <td class="px-1 py-0.5">{{ $data['regNo'] ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="px-1 py-0.5">Umur</td>
-            <td class="px-1 py-0.5">:</td>
-            <td class="px-1 py-0.5">{{ ($data['thn'] ?? '') ?: '-' }}</td>
-        </tr>
-        <tr>
-            <td class="px-1 py-0.5 align-top">Alamat</td>
-            <td class="px-1 py-0.5 align-top">:</td>
-            <td class="px-1 py-0.5">{{ $alamatPasien ?: '-' }}</td>
-        </tr>
-    </table>
 
     {{-- ── PENUTUP ── --}}
     <div class="text-[11px] leading-relaxed mb-4">
