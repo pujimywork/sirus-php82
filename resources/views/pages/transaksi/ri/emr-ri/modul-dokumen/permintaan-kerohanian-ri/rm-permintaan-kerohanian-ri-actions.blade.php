@@ -727,6 +727,10 @@ new class extends Component {
                         {{-- ══ AGAMA / KEPERCAYAAN ══ --}}
                         <section class="pt-6 space-y-3 border-t border-hairline dark:border-gray-700">
                             <x-input-label value="Agama / Kepercayaan yang Diminta *" class="mb-1" />
+                            <p class="mb-2 text-sm text-muted dark:text-gray-400">
+                                Agama/kepercayaan yang dimohonkan untuk pendampingan pelayanan kerohanian pasien selama
+                                rawat inap. Petugas Bimbingan Rohani akan menyesuaikan sesuai pilihan ini.
+                            </p>
                             <x-select-input wire:model.live="newForm.agama" :error="$errors->has('newForm.agama')"
                                 :disabled="$formRO" class="w-full max-w-xs">
                                 <option value="">— Pilih Agama / Kepercayaan —</option>
