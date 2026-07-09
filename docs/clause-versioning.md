@@ -108,7 +108,41 @@ meski `CURRENT` sudah naik ke `v2` kelak.
 - **Jangan simpan bagian dinamis** (nama, RS, SETUJU/TIDAK) di registry — hanya teks klausul statis + placeholder.
 - **Verifikasi form==print**: strip tags + normalisasi nomor list/`:` lalu banding string (nomor `<li>` dari CSS di layar vs `1.` literal di PDF itu artefak format, bukan beda teks).
 
-## Perluasan
+## Contoh lain yang sudah pakai pola ini
 
-Klausul lain (ketentuan BPJS, selisih biaya, inform consent) belum di-versioning — ikut pola yang sama
-bila diperlukan: registry class + stempel `*Version` di record + render versi tersimpan.
+- **General Consent** (RJ/UGD/RI) → `App\Support\GeneralConsentClause` (context: rj/ugd/ri).
+- **Form Penjaminan UGD** — ketentuan BPJS & selisih biaya → `App\Support\PenjaminanClause`
+  (section: `bpjs`, `selisih`; komponen `x-consent.ketentuan-bpjs` & `x-consent.ketentuan-selisih-biaya`;
+  record stempel `clauseVersion`; cetak `:version="$form['clauseVersion'] ?? 'v1'"`).
+
+Inform consent & klausul legal lain belum — ikut pola sama bila diperlukan.
+
+## Versioning vs SNAPSHOT — pilih yang tepat
+
+Dua pendekatan untuk "record lama tetap sesuai saat TTD":
+
+| | **Versioning** (registry per-versi) | **Snapshot** (salin nilai ke record) |
+|---|---|---|
+| Untuk | **Teks klausul** (jarang berubah, berulang di banyak record) | **Data yang sering berubah** & spesifik per record (mis. tarif/fasilitas kamar) |
+| Simpan di record | `clauseVersion` (mis. 'v1') | nilai aktual (mis. `nama`+`tarifLabel`+`fasilitas`) |
+| Ubah data | tambah versi baru di class | otomatis (record lama sudah menyimpan salinannya) |
+| Contoh | GeneralConsentClause, PenjaminanClause | **Kelas kamar** (orientasi kamar Form Penjaminan) |
+
+### Snapshot — contoh kelas kamar (Form Penjaminan UGD)
+
+Master kelas kamar = `App\Support\KelasKamar` (tarif bisa berubah tiap tahun → versioning tak praktis).
+Solusi: **salin `nama`+`tarifLabel`+`fasilitas` ke entri saat build/simpan** (`buildEntry()`):
+
+```php
+$kelasInfo = KelasKamar::find($this->newForm['kelasKamar'] ?? '');
+'kelasKamarSnapshot' => $kelasInfo
+    ? ['nama'=>..., 'tarifLabel'=>..., 'fasilitas'=>...] : null,
+```
+
+Cetak **prefer snapshot**, fallback master utk record legacy:
+
+```php
+$kelasInfo = ($form['kelasKamarSnapshot'] ?? null) ?: KelasKamar::find($kelasKey);
+```
+
+Aturan: **snapshot utk data (tarif/harga/fasilitas), versioning utk teks klausul.**

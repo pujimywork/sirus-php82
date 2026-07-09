@@ -1,24 +1,16 @@
 @props([
     // 'screen' = tampilan form (Tailwind); 'print' = PDF
     'mode' => 'print',
+    // Versi klausul; null = versi berlaku saat ini (PenjaminanClause::CURRENT).
+    // Record lama teruskan clauseVersion tersimpan agar cetak = redaksi saat TTD.
+    'version' => null,
 ])
 
+@use('App\Support\PenjaminanClause')
+
 @php
-    // ── SUMBER TUNGGAL: ketentuan selisih biaya naik kelas (JKN/Permenkes) ──
-    $rows = [
-        [
-            'jenis' => 'Hak rawat kelas 2 naik ke kelas 1',
-            'ketentuan' => 'Selisih tarif INA-CBG pada kelas rawat inap kelas 1 dengan tarif INA-CBG pada kelas rawat inap kelas 2.',
-        ],
-        [
-            'jenis' => 'Hak rawat kelas 1 naik ke kelas di atas kelas 1',
-            'ketentuan' => 'Selisih tarif INA-CBG kelas 1 dengan tarif kelas di atas kelas 1, paling banyak sebesar 75% dari tarif INA-CBG kelas 1.',
-        ],
-        [
-            'jenis' => 'Hak rawat kelas 2 naik ke kelas di atas kelas 1',
-            'ketentuan' => 'Selisih tarif INA-CBG antara kelas 2 dengan kelas 1, ditambah paling banyak sebesar 75% dari tarif INA-CBG kelas 1.',
-        ],
-    ];
+    // ── Ketentuan selisih biaya naik kelas per-versi (SUMBER TUNGGAL: App\Support\PenjaminanClause) ──
+    $rows = PenjaminanClause::get('selisih', $version)['rows'] ?? [];
 @endphp
 
 @if ($mode === 'print')

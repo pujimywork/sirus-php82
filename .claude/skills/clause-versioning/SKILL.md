@@ -34,9 +34,15 @@ Detail lengkap: **`docs/clause-versioning.md`**. Ringkas di bawah.
 2. `const CURRENT = 'v2'`.
 3. Selesai — record baru stempel v2; record lama tetap render v1.
 
-## Perluasan ke klausul lain
+## Versioning vs SNAPSHOT — jangan salah pilih
 
-Ketentuan BPJS / selisih biaya / inform consent belum di-versioning. Bila perlu, ikut pola sama:
-registry class + stempel `*Version` di record + render versi tersimpan (fallback versi tertua).
+- **Versioning** (registry per-versi) → untuk **TEKS KLAUSUL** (jarang berubah): `GeneralConsentClause`, `PenjaminanClause`. Record simpan `clauseVersion`.
+- **Snapshot** (salin nilai ke record) → untuk **DATA yang sering berubah & spesifik per record**, mis. **tarif/fasilitas kelas kamar**. Simpan salinan nilai (`nama`+`tarifLabel`+`fasilitas`) di entri saat `buildEntry()`; cetak prefer snapshot, fallback master (`KelasKamar::find`) utk legacy. Versioning tak praktis utk harga yang berubah tiap tahun.
+
+## Yang sudah pakai pola ini
+
+- `App\Support\GeneralConsentClause` — general consent RJ/UGD/RI (versioning).
+- `App\Support\PenjaminanClause` — ketentuan BPJS & selisih biaya Form Penjaminan (versioning, section `bpjs`/`selisih`).
+- Kelas kamar (orientasi Form Penjaminan) — **snapshot** (`kelasKamarSnapshot` di entri).
 
 Lihat juga: `docs/clause-versioning.md`, skill `blade-safe-edit`.

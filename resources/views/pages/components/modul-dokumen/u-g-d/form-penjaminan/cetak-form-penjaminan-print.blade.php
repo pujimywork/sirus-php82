@@ -41,10 +41,9 @@
         $jenisPenjaminLabel = $jenisPenjaminMap[$jenisPenjaminKey] ?? $jenisPenjaminKey;
         $asuransiLain = $form['asuransiLain'] ?? '';
         // ── Fasilitas kamar ──
-        // Master kelas kamar — SUMBER TUNGGAL di App\Support\KelasKamar (sinkron dgn form/LOV).
-        $kelasKamarOptions = \App\Support\KelasKamar::all();
+        // Kelas kamar: prefer SNAPSHOT record (redaksi/tarif saat TTD); fallback master KelasKamar (legacy).
         $kelasKey = $form['kelasKamar'] ?? '';
-        $kelasInfo = $kelasKamarOptions[$kelasKey] ?? null;
+        $kelasInfo = ($form['kelasKamarSnapshot'] ?? null) ?: \App\Support\KelasKamar::find($kelasKey);
         $kelasLabel = $kelasInfo['nama'] ?? $kelasKey ?: '-';
         $kelasTarif = $kelasInfo['tarifLabel'] ?? '-';
         $fasilitas = $kelasInfo['fasilitas'] ?? [];
@@ -123,12 +122,12 @@
             </tr>
             <tr>
                 <td colspan="2" class="border border-black px-2 py-1.5">
-                    <x-consent.ketentuan-bpjs mode="print" />
+                    <x-consent.ketentuan-bpjs mode="print" :version="$form['clauseVersion'] ?? 'v1'" />
                 </td>
             </tr>
             <tr>
                 <td colspan="2" class="border border-black px-2 py-1.5">
-                    <x-consent.ketentuan-selisih-biaya mode="print" />
+                    <x-consent.ketentuan-selisih-biaya mode="print" :version="$form['clauseVersion'] ?? 'v1'" />
                 </td>
             </tr>
         @endif

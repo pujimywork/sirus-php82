@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Support\KelasKamar;
+use App\Support\PenjaminanClause;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait;
@@ -230,11 +231,18 @@ new class extends Component {
     {
         $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
 
+        // Snapshot kelas kamar (nama/tarif/fasilitas) SAAT INI — agar cetak ulang tetap sesuai
+        // yang disetujui pasien walau master tarif/fasilitas (KelasKamar) berubah kemudian.
+        $kelasInfo = KelasKamar::find($this->newForm['kelasKamar'] ?? '');
+
         return array_merge($this->newForm, [
             'signaturePembuat' => $this->signature,
             'signaturePembuatDate' => $key,
             'signatureSaksiKeluarga' => $this->signatureSaksi,
             'signatureSaksiKeluargaDate' => $this->signatureSaksi ? $now : '',
+            'kelasKamarSnapshot' => $kelasInfo
+                ? ['nama' => $kelasInfo['nama'] ?? '', 'tarifLabel' => $kelasInfo['tarifLabel'] ?? '', 'fasilitas' => $kelasInfo['fasilitas'] ?? []]
+                : null,
             'finalized' => $finalized,
         ]);
     }
@@ -372,6 +380,7 @@ new class extends Component {
             'namaPetugas' => $entry['namaPetugas'] ?? '',
             'kodePetugas' => $entry['kodePetugas'] ?? '',
             'petugasDate' => $entry['petugasDate'] ?? '',
+            'clauseVersion' => $entry['clauseVersion'] ?? PenjaminanClause::CURRENT,
         ];
         $this->signature = $entry['signaturePembuat'] ?? '';
         $this->signatureSaksi = $entry['signatureSaksiKeluarga'] ?? '';
@@ -525,6 +534,8 @@ new class extends Component {
             'namaPetugas' => '',
             'kodePetugas' => '',
             'petugasDate' => '',
+            // Versi klausul (ketentuan BPJS & selisih biaya) saat record dibuat — stempel utk cetak ulang
+            'clauseVersion' => PenjaminanClause::CURRENT,
         ];
     }
 
@@ -792,8 +803,8 @@ new class extends Component {
                 @endif
 
                 @if (($newForm['jenisPenjamin'] ?? '') === 'BPJS_KESEHATAN')
-                    <x-consent.ketentuan-bpjs mode="screen" />
-                    <x-consent.ketentuan-selisih-biaya mode="screen" />
+                    <x-consent.ketentuan-bpjs mode="screen" :version="$newForm['clauseVersion'] ?? null" />
+                    <x-consent.ketentuan-selisih-biaya mode="screen" :version="$newForm['clauseVersion'] ?? null" />
                     <div>
                         <x-toggle wire:model.live="newForm.bpjsKlausulDisetujui" trueValue="1" falseValue="0"
                             label="Saya menyetujui ketentuan penjaminan BPJS Kesehatan sesuai dengan peraturan yang berlaku."

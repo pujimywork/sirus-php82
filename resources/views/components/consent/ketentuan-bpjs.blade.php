@@ -1,28 +1,18 @@
 @props([
     // 'screen' = tampilan form (Tailwind); 'print' = PDF
     'mode' => 'print',
+    // Versi klausul; null = versi berlaku saat ini (PenjaminanClause::CURRENT).
+    // Record lama teruskan clauseVersion tersimpan agar cetak = redaksi saat TTD.
+    'version' => null,
 ])
 
+@use('App\Support\PenjaminanClause')
+
 @php
-    // ── SUMBER TUNGGAL teks ketentuan BPJS (dipakai form & cetak) ──
-    $intro =
-        'BPJS Kesehatan hanya menjamin pelayanan kesehatan peserta JKN yang sesuai dengan ketentuan yang berlaku. Pelayanan yang tidak sesuai tidak menjadi tanggungan BPJS Kesehatan, antara lain:';
-    // Poin bernomor; item bertipe array = punya sub-poin (a/b).
-    $points = [
-        'Pelayanan di luar ketentuan/prosedur yang diatur dalam Program JKN.',
-        [
-            'text' => 'Pelayanan yang tidak sesuai ketentuan:',
-            'sub' => [
-                'a. Rawat jalan/rawat inap atas permintaan sendiri (APS).',
-                'b. Penolakan/tidak mematuhi rencana terapi yang direkomendasikan (pulang APS) dan menerima segala konsekuensi atas keputusan pribadinya.',
-            ],
-        ],
-        'Pelayanan di luar lingkup penjaminan dalam Perjanjian Kerja Sama.',
-        'Pelayanan homecare di rumah (tidak dijamin dalam PKS FKRTL).',
-        'Kecelakaan lalu lintas tidak sesuai ketentuan (tidak urus LP/damai, intoksikasi miras).',
-        'Pelayanan atas instruksi dari fasilitas kesehatan yang tidak bekerja sama dengan BPJS Kesehatan.',
-        'Apabila peserta memilih pelayanan di luar ketentuan di atas, biaya menjadi tanggungan pribadi/keluarga.',
-    ];
+    // ── Teks ketentuan BPJS per-versi (SUMBER TUNGGAL: App\Support\PenjaminanClause) ──
+    $clause = PenjaminanClause::get('bpjs', $version);
+    $intro = $clause['intro'] ?? '';
+    $points = $clause['points'] ?? [];
 @endphp
 
 @if ($mode === 'print')
