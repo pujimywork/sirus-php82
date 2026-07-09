@@ -260,6 +260,10 @@ new class extends Component {
                                     class="text-body dark:text-gray-300">{{ $txn['anamnesa']['screeningBatuk'] ?? '-' }}</span>
                             </p>
                             {{-- PENILAIAN — tampilkan SEMUA record asesmen (array) + waktu --}}
+                            @php $statusMedikVal = $txn['anamnesa']['pengkajianPerawatan']['statusMedik']['statusMedik'] ?? ''; @endphp
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Status Medik :</span><span
+                                    class="text-body dark:text-gray-300">{{ $statusMedikVal !== '' ? $statusMedikVal : '-' }}</span>
+                            </p>
                             @php $nyeriRec = collect($txn['penilaian']['nyeri'] ?? [])->filter(fn($x) => filled(data_get($x, 'nyeri.nyeriMetode.nyeriMetode'))); @endphp
                                                             <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Skala Nyeri :</span>

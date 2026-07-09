@@ -115,6 +115,8 @@
             <td class="border border-black px-1.5 py-0.5 align-top">
                 <span class="font-bold">Keluhan Utama :</span> {!! nl2br(e($txn['anamnesa']['keluhanUtama']['keluhanUtama'] ?? '-')) !!}<br>
                 <span class="font-bold">Screening Batuk :</span> {{ $txn['anamnesa']['screeningBatuk'] ?? '-' }}<br>
+                <span class="font-bold">Status Medik :</span>
+                {{ ($txn['anamnesa']['pengkajianPerawatan']['statusMedik']['statusMedik'] ?? '') !== '' ? $txn['anamnesa']['pengkajianPerawatan']['statusMedik']['statusMedik'] : '-' }}<br>
                 <span class="font-bold">Skala Nyeri :</span>
                 Metode : {{ $lastNyeri['nyeri']['nyeriMetode']['nyeriMetode'] ?? '-' }} /
                 Skor : {{ $lastNyeri['nyeri']['nyeriMetode']['nyeriMetodeScore'] ?? '-' }} /

@@ -70,6 +70,14 @@ new class extends Component {
             $this->dataDaftarUGD['anamnesa'] = $this->getDefaultAnamnesa();
         }
 
+        // Pastikan struktur Status Medik ada — record lama (pra-fitur) tak punya key ini
+        // sehingga opsi radio tak muncul bila hanya mengandalkan merge di rendering().
+        if (!isset($this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['statusMedik']['statusMedikOptions'])) {
+            $defStatusMedik = $this->getDefaultAnamnesa()['pengkajianPerawatan']['statusMedik'];
+            $defStatusMedik['statusMedik'] = $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['statusMedik']['statusMedik'] ?? '';
+            $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['statusMedik'] = $defStatusMedik;
+        }
+
         // Sync property lokal
         $this->tingkatKegawatan = $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['tingkatKegawatan'] ?? '';
         $this->caraMasukIgd = $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['caraMasukIgd'] ?? '';
@@ -334,6 +342,16 @@ new class extends Component {
                 'perawatPenerima' => '',
                 'perawatPenerimaCode' => '',
                 'jamDatang' => '',
+                // Status Medik — model array mengikuti sistem lama (nested statusMedik + options)
+                'statusMedik' => [
+                    'statusMedik' => '',
+                    'statusMedikOptions' => [
+                        ['statusMedik' => 'Emergency Trauma'],
+                        ['statusMedik' => 'Emergency Non Trauma'],
+                        ['statusMedik' => 'Non Emergency Trauma'],
+                        ['statusMedik' => 'Non Emergency Non Trauma'],
+                    ],
+                ],
                 'caraMasukIgd' => '',
                 'caraMasukIgdDesc' => '',
                 'caraMasukIgdOption' => [['caraMasukIgd' => 'Sendiri'], ['caraMasukIgd' => 'Rujuk'], ['caraMasukIgd' => 'Kasus Polisi']],

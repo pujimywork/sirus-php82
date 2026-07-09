@@ -42,6 +42,18 @@
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.tingkatKegawatan')" class="mt-1" />
         </div>
 
+        {{-- Status Medik --}}
+        <div>
+            <x-input-label value="Status Medik" />
+            <div class="grid grid-cols-1 gap-2 mt-1 sm:grid-cols-2">
+                @foreach ($dataDaftarUGD['anamnesa']['pengkajianPerawatan']['statusMedik']['statusMedikOptions'] ?? [] as $opt)
+                    <x-radio-button :label="$opt['statusMedik']" :value="$opt['statusMedik']" name="statusMedikUGD"
+                        wire:model.live="dataDaftarUGD.anamnesa.pengkajianPerawatan.statusMedik.statusMedik" :disabled="$isFormLocked" />
+                @endforeach
+            </div>
+            <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.statusMedik.statusMedik')" class="mt-1" />
+        </div>
+
         {{-- Cara Masuk IGD --}}
         <div>
             <x-input-label value="Cara Masuk IGD" :required="true" />

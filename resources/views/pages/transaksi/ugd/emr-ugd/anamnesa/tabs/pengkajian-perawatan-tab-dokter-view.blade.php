@@ -53,6 +53,14 @@
             </span>
         </div>
 
+        {{-- Status Medik --}}
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-hairline dark:border-gray-700">
+            <span class="text-sm font-medium text-muted dark:text-gray-400">Status Medik</span>
+            <span class="col-span-2 text-base text-ink dark:text-gray-200">
+                {{ ($dataDaftarUGD['anamnesa']['pengkajianPerawatan']['statusMedik']['statusMedik'] ?? '') !== '' ? $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['statusMedik']['statusMedik'] : '-' }}
+            </span>
+        </div>
+
         {{-- Cara Masuk IGD --}}
         <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-hairline dark:border-gray-700">
             <span class="text-sm font-medium text-muted dark:text-gray-400">Cara Masuk IGD</span>
