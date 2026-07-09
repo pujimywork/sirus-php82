@@ -276,6 +276,9 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
 
+                // Pertahankan field yang sudah diketik user tapi belum di-Simpan (samakan perilaku dengan save())
+                $data['trfUgd'] = array_replace($data['trfUgd'] ?? [], $this->dataDaftarUGD['trfUgd'] ?? []);
+
                 $data['trfUgd']['levelingDokter'][] = [
                     'drId' => $this->levelingDokter['drId'],
                     'drName' => $this->levelingDokter['drName'],
@@ -323,6 +326,9 @@ new class extends Component {
                 if (empty($data)) {
                     throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
+
+                // Pertahankan field yang sudah diketik user tapi belum di-Simpan (samakan perilaku dengan save())
+                $data['trfUgd'] = array_replace($data['trfUgd'] ?? [], $this->dataDaftarUGD['trfUgd'] ?? []);
 
                 $deletedDok = collect($data['trfUgd']['levelingDokter'] ?? [])
                     ->firstWhere('tglEntry', $tglEntry);
@@ -373,6 +379,9 @@ new class extends Component {
                 if (empty($data)) {
                     throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
+
+                // Pertahankan field yang sudah diketik user tapi belum di-Simpan (samakan perilaku dengan save())
+                $data['trfUgd'] = array_replace($data['trfUgd'] ?? [], $this->dataDaftarUGD['trfUgd'] ?? []);
 
                 $list = &$data['trfUgd']['levelingDokter'];
                 foreach ($list as &$item) {
@@ -426,6 +435,9 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
 
+                // Pertahankan field yang sudah diketik user tapi belum di-Simpan (samakan perilaku dengan save())
+                $data['trfUgd'] = array_replace($data['trfUgd'] ?? [], $this->dataDaftarUGD['trfUgd'] ?? []);
+
                 $data['trfUgd']['alatYangTerpasang'][] = [
                     'jenis' => trim($this->alat['jenis']),
                     'lokasi' => trim($this->alat['lokasi']),
@@ -466,6 +478,9 @@ new class extends Component {
                 if (empty($data)) {
                     throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
+
+                // Pertahankan field yang sudah diketik user tapi belum di-Simpan (samakan perilaku dengan save())
+                $data['trfUgd'] = array_replace($data['trfUgd'] ?? [], $this->dataDaftarUGD['trfUgd'] ?? []);
 
                 $deletedAlat = $data['trfUgd']['alatYangTerpasang'][$index]['jenis'] ?? '-';
 
@@ -821,17 +836,17 @@ new class extends Component {
                         <div class="space-y-3">
                             <div>
                                 <x-input-label value="Keluhan Utama" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.keluhanUtama" :error="$errors->has('dataDaftarUGD.trfUgd.keluhanUtama')" rows="3"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.keluhanUtama" :error="$errors->has('dataDaftarUGD.trfUgd.keluhanUtama')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Temuan Signifikan" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.temuanSignifikan" :error="$errors->has('dataDaftarUGD.trfUgd.temuanSignifikan')" rows="3"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.temuanSignifikan" :error="$errors->has('dataDaftarUGD.trfUgd.temuanSignifikan')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Alergi" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.alergi" :error="$errors->has('dataDaftarUGD.trfUgd.alergi')" rows="2" :disabled="$isFormLocked" />
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.alergi" :error="$errors->has('dataDaftarUGD.trfUgd.alergi')" rows="2" :disabled="$isFormLocked" />
                             </div>
                         </div>
                     </div>
@@ -843,12 +858,12 @@ new class extends Component {
                         <div class="space-y-3">
                             <div>
                                 <x-input-label value="Diagnosis (Free Text)" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.diagnosisFreeText" :error="$errors->has('dataDaftarUGD.trfUgd.diagnosisFreeText')" rows="3"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.diagnosisFreeText" :error="$errors->has('dataDaftarUGD.trfUgd.diagnosisFreeText')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Terapi UGD" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.terapiUgd" :error="$errors->has('dataDaftarUGD.trfUgd.terapiUgd')" rows="3"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.terapiUgd" :error="$errors->has('dataDaftarUGD.trfUgd.terapiUgd')" rows="3"
                                     placeholder="Tuliskan terapi UGD..." :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -859,137 +874,122 @@ new class extends Component {
                 <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700">
                     <h3 class="mb-3 text-base font-semibold text-body dark:text-gray-300">Leveling Dokter</h3>
 
+                    {{-- Tabel Leveling Dokter --}}
+                    @php $levelingList = $dataDaftarUGD['trfUgd']['levelingDokter'] ?? []; @endphp
+
+                    @if (count($levelingList) > 0)
+                        <div class="mt-3 overflow-x-auto">
+                            <table
+                                class="w-full text-sm border border-hairline dark:border-gray-700 rounded-lg overflow-hidden">
+                                <thead class="bg-surface-soft dark:bg-gray-800 text-muted dark:text-gray-400 uppercase">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left">Dokter</th>
+                                        <th class="px-3 py-2 text-left">Poli</th>
+                                        <th class="px-3 py-2 text-left">Level</th>
+                                        <th class="px-3 py-2 text-left">Tgl Entry</th>
+                                        @if (!$isFormLocked)
+                                            <th class="px-3 py-2 text-center">Aksi</th>
+                                        @endif
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
+                                    @foreach ($levelingList as $dok)
+                                        <tr class="bg-canvas dark:bg-gray-900 hover:bg-surface-soft dark:hover:bg-gray-800/50">
+                                            <td class="px-3 py-2 font-medium text-ink dark:text-gray-100">
+                                                {{ $dok['drName'] ?? '-' }}</td>
+                                            <td class="px-3 py-2 text-muted dark:text-gray-400">{{ $dok['poliDesc'] ?? '-' }}
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                @if (($dok['levelDokter'] ?? '') === 'Utama')
+                                                    <span
+                                                        class="px-2 py-0.5 rounded-full bg-brand/10 text-brand font-semibold text-sm">Utama</span>
+                                                @else
+                                                    <span
+                                                        class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-semibold text-sm">Rawat
+                                                        Gabung</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-3 py-2 font-mono text-muted">{{ $dok['tglEntry'] ?? '-' }}</td>
+                                            @if (!$isFormLocked)
+                                                <td class="px-3 py-2 text-center">
+                                                    <div class="flex items-center justify-center gap-1">
+                                                        @if (($dok['levelDokter'] ?? '') !== 'Utama')
+                                                            <x-ghost-button type="button" class="!text-sm !py-0.5 !px-2"
+                                                                wire:click="setLevelDokter('{{ $dok['tglEntry'] }}', 'Utama')">
+                                                                Utama
+                                                            </x-ghost-button>
+                                                        @endif
+                                                        @if (($dok['levelDokter'] ?? '') !== 'RawatGabung')
+                                                            <x-ghost-button type="button" class="!text-sm !py-0.5 !px-2"
+                                                                wire:click="setLevelDokter('{{ $dok['tglEntry'] }}', 'RawatGabung')">
+                                                                RG
+                                                            </x-ghost-button>
+                                                        @endif
+                                                        <x-danger-button type="button" class="!text-sm !py-0.5 !px-2"
+                                                            wire:click="removeLevelingDokter('{{ $dok['tglEntry'] }}')"
+                                                            wire:confirm="Hapus dokter ini dari daftar?">
+                                                            Hapus
+                                                        </x-danger-button>
+                                                    </div>
+                                                </td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p class="mt-3 text-sm text-muted-soft italic">Belum ada dokter dalam daftar leveling.</p>
+                    @endif
+
+                    {{-- Form Tambah Leveling Dokter --}}
                     @if (!$isFormLocked)
                         <div
-                            class="p-4 mb-4 rounded-xl bg-surface-soft dark:bg-gray-800/40 border border-hairline dark:border-gray-700">
-                            <div class="grid grid-cols-12 gap-3 items-end">
+                            class="mt-4 p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-canvas dark:bg-gray-800/50">
+                            <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-3 uppercase tracking-wide">
+                                Tambah Dokter</p>
+                            <div class="grid grid-cols-5 gap-3 items-end">
 
-                                <div class="col-span-12 md:col-span-4">
-                                    @if (empty($levelingDokter['drId']))
-                                        <livewire:lov.dokter.lov-dokter target="dokter-trf-ugd-ri" label="Pilih Dokter"
-                                            wire:key="lov-dokter-trf-ugd-ri-{{ $rjNo }}-{{ $renderVersions['modal-trf-ugd-ri'] ?? 0 }}" />
-                                    @else
-                                        <x-input-label value="Nama Dokter" class="mb-1" />
-                                        <div class="flex items-center gap-2">
-                                            <x-text-input wire:model="levelingDokter.drName" :error="$errors->has('levelingDokter.drName')" disabled
-                                                class="grow text-base" />
-                                            <x-secondary-button type="button"
-                                                wire:click="$set('levelingDokter.drId', '')"
-                                                class="text-sm whitespace-nowrap shrink-0">
-                                                Ganti
-                                            </x-secondary-button>
-                                        </div>
-                                        <x-input-error :messages="$errors->get('levelingDokter.drId')" class="mt-1" />
-                                        <x-input-error :messages="$errors->get('levelingDokter.drName')" class="mt-1" />
+                                {{-- LOV Dokter --}}
+                                <div class="col-span-2">
+                                    <livewire:lov.dokter.lov-dokter target="dokter-trf-ugd-ri" label="Cari Dokter"
+                                        placeholder="Ketik nama/kode dokter..." :initialDrId="$levelingDokter['drId'] ?? null"
+                                        wire:key="lov-dokter-trf-ugd-ri-{{ $rjNo }}-{{ $renderVersions['modal-trf-ugd-ri'] ?? 0 }}" />
+                                    <x-input-error :messages="$errors->get('levelingDokter.drId')" class="mt-1" />
+
+                                    @if (!empty($levelingDokter['drName']))
+                                        <p class="mt-1 text-sm text-muted dark:text-gray-400">
+                                            Poli: <span
+                                                class="font-medium text-body dark:text-gray-300">{{ $levelingDokter['poliDesc'] ?? '-' }}</span>
+                                        </p>
                                     @endif
                                 </div>
 
-                                <div class="col-span-12 md:col-span-2">
-                                    <x-input-label value="Poli" class="mb-1" />
-                                    <x-text-input wire:model="levelingDokter.poliDesc" :error="$errors->has('levelingDokter.poliDesc')" disabled
-                                        class="w-full text-base" />
-                                    <x-input-error :messages="$errors->get('levelingDokter.poliId')" class="mt-1" />
-                                    <x-input-error :messages="$errors->get('levelingDokter.poliDesc')" class="mt-1" />
-                                </div>
-
-                                <div class="col-span-12 md:col-span-4">
-                                    <x-input-label value="Level Dokter *" class="mb-1" />
-                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                                {{-- Level Dokter --}}
+                                <div class="col-span-2">
+                                    <x-input-label value="Level Dokter" />
+                                    <x-select-input wire:model.live="levelDokterSelected" class="w-full mt-1">
                                         @foreach ($levelDokterOptions as $opt)
-                                            <x-radio-button :label="$opt['label']" :value="$opt['value']"
-                                                name="levelingDokter.levelDokter"
-                                                wire:model.live="levelDokterSelected" />
+                                            <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
                                         @endforeach
-                                    </div>
+                                    </x-select-input>
                                     <x-input-error :messages="$errors->get('levelingDokter.levelDokter')" class="mt-1" />
-                                    <x-input-error :messages="$errors->get('levelingDokter.tglEntry')" class="mt-1" />
                                 </div>
 
-                                <div class="col-span-12 md:col-span-2 flex gap-2">
-                                    <x-primary-button wire:click.prevent="addLevelingDokter"
+                                {{-- Tombol Tambah --}}
+                                <div class="col-span-1">
+                                    <x-primary-button type="button" wire:click="addLevelingDokter"
                                         wire:loading.attr="disabled" wire:target="addLevelingDokter"
-                                        class="flex-1 justify-center gap-1">
+                                        :disabled="empty($levelingDokter['drId'])" class="w-full justify-center gap-1">
                                         <span wire:loading.remove wire:target="addLevelingDokter">Tambah</span>
                                         <span wire:loading wire:target="addLevelingDokter"><x-loading
                                                 class="w-4 h-4" /></span>
                                     </x-primary-button>
-                                    <x-secondary-button wire:click.prevent="resetLevelingDokter" type="button"
-                                        class="!p-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </x-secondary-button>
                                 </div>
+
                             </div>
                         </div>
                     @endif
-
-                    @php $levelingList = $dataDaftarUGD['trfUgd']['levelingDokter'] ?? []; @endphp
-                    <div class="overflow-hidden border border-hairline rounded-xl dark:border-gray-700">
-                        <table class="w-full text-base text-left">
-                            <thead
-                                class="text-sm font-semibold text-muted uppercase bg-surface-soft dark:bg-gray-800/50 dark:text-gray-400">
-                                <tr>
-                                    <th class="px-4 py-3">Nama Dokter</th>
-                                    <th class="px-4 py-3">Poli</th>
-                                    <th class="px-4 py-3">Tgl Entry</th>
-                                    <th class="px-4 py-3 text-center">Level</th>
-                                    @if (!$isFormLocked)
-                                        <th class="px-4 py-3 text-center">Aksi</th>
-                                    @endif
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
-                                @forelse ($levelingList as $dok)
-                                    <tr class="hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
-                                        <td class="px-4 py-3 font-medium text-ink dark:text-gray-200">
-                                            {{ $dok['drName'] ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-muted dark:text-gray-400">
-                                            {{ $dok['poliDesc'] ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-sm text-muted">{{ $dok['tglEntry'] ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-center">
-                                            <x-badge
-                                                variant="{{ ($dok['levelDokter'] ?? '') === 'Utama' ? 'success' : 'info' }}">
-                                                {{ $dok['levelDokter'] ?? '-' }}
-                                            </x-badge>
-                                        </td>
-                                        @if (!$isFormLocked)
-                                            <td class="px-4 py-3 text-center">
-                                                <div class="flex items-center justify-center gap-1">
-                                                    <x-secondary-button type="button"
-                                                        wire:click="setLevelDokter('{{ $dok['tglEntry'] }}', 'Utama')"
-                                                        class="px-2 py-1 text-sm">Utama</x-secondary-button>
-                                                    <x-secondary-button type="button"
-                                                        wire:click="setLevelDokter('{{ $dok['tglEntry'] }}', 'RawatGabung')"
-                                                        class="px-2 py-1 text-sm">RawatGabung</x-secondary-button>
-                                                    <x-outline-button type="button"
-                                                        wire:click="removeLevelingDokter('{{ $dok['tglEntry'] }}')"
-                                                        wire:confirm="Hapus dokter ini?"
-                                                        wire:loading.attr="disabled"
-                                                        class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
-                                                        title="Hapus">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    </x-outline-button>
-                                                </div>
-                                            </td>
-                                        @endif
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ $isFormLocked ? 4 : 5 }}"
-                                            class="px-4 py-8 text-base text-center text-muted-soft">Belum ada leveling
-                                            dokter</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
 
                 {{-- ══ DATA PEMINDAHAN ══ --}}
@@ -1028,7 +1028,7 @@ new class extends Component {
                             <div>
                                 <x-input-label value="Tanggal / Jam Pindah" class="mb-1" />
                                 <div class="flex items-center gap-2">
-                                    <x-text-input wire:model="dataDaftarUGD.trfUgd.tglPindah" :error="$errors->has('dataDaftarUGD.trfUgd.tglPindah')"
+                                    <x-text-input wire:model.blur="dataDaftarUGD.trfUgd.tglPindah" :error="$errors->has('dataDaftarUGD.trfUgd.tglPindah')"
                                         placeholder="dd/mm/yyyy hh:mm:ss" class="grow" :disabled="$isFormLocked" />
                                     @if (!$isFormLocked)
                                         <x-now-button wire:click="setTglPindah" />
@@ -1037,12 +1037,12 @@ new class extends Component {
                             </div>
                             <div>
                                 <x-input-label value="Alasan Pindah" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.alasanPindah" :error="$errors->has('dataDaftarUGD.trfUgd.alasanPindah')" rows="2"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.alasanPindah" :error="$errors->has('dataDaftarUGD.trfUgd.alasanPindah')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Metode Pemindahan" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.metodePemindahanPasien" :error="$errors->has('dataDaftarUGD.trfUgd.metodePemindahanPasien')" rows="2"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.metodePemindahanPasien" :error="$errors->has('dataDaftarUGD.trfUgd.metodePemindahanPasien')" rows="2"
                                     placeholder="Brankar / Kursi roda / Jalan sendiri..." :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -1093,12 +1093,12 @@ new class extends Component {
                             </div>
                             <div>
                                 <x-input-label value="Fasilitas yang Dibutuhkan" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.fasilitas" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitas')" rows="2"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.fasilitas" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitas')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Fasilitas Pendukung" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.fasilitasPendukung" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitasPendukung')" rows="2"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.fasilitasPendukung" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitasPendukung')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -1124,7 +1124,7 @@ new class extends Component {
                                             <x-input-label value="{{ $ttv['label'] }}{{ $ttv['unit'] ? ' (' . $ttv['unit'] . ')' : '' }}"
                                                 class="!text-sm whitespace-nowrap" />
                                             <x-text-input
-                                                wire:model="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.{{ $ttv['field'] }}"
+                                                wire:model.blur="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.{{ $ttv['field'] }}"
                                                 :error="$errors->has('dataDaftarUGD.trfUgd.' . $sec['key'] . '.' . $ttv['field'])"
                                                 placeholder="{{ $ttv['ph'] }}" class="w-full mt-1 text-base text-center"
                                                 :disabled="$sec['disabled']" />
@@ -1133,7 +1133,7 @@ new class extends Component {
                                 </div>
                                 <div>
                                     <x-input-label value="Keadaan Umum" class="mb-1 !text-sm" />
-                                    <x-textarea wire:model="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.keadaanPasien"
+                                    <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.keadaanPasien"
                                         rows="2" :disabled="$sec['disabled']" />
                                 </div>
                             </div>
@@ -1149,13 +1149,13 @@ new class extends Component {
                         @foreach ([['field' => 'observasi', 'label' => 'Observasi'], ['field' => 'pembatasanCairan', 'label' => 'Pembatasan Cairan'], ['field' => 'balanceCairan', 'label' => 'Balance Cairan'], ['field' => 'diet', 'label' => 'Diet']] as $rp)
                             <div>
                                 <x-input-label value="{{ $rp['label'] }}" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.rencanaPerawatan.{{ $rp['field'] }}"
+                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.rencanaPerawatan.{{ $rp['field'] }}"
                                     rows="2" :disabled="$disableTerima" />
                             </div>
                         @endforeach
                         <div class="md:col-span-2">
                             <x-input-label value="Lain-lain" class="mb-1" />
-                            <x-textarea wire:model="dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain" :error="$errors->has('dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain')" rows="2"
+                            <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain" :error="$errors->has('dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain')" rows="2"
                                 :disabled="$disableTerima" />
                         </div>
                     </div>
@@ -1170,22 +1170,22 @@ new class extends Component {
                         <div class="grid grid-cols-2 gap-3 mb-3 md:grid-cols-4">
                             <div>
                                 <x-input-label value="Jenis Alat *" class="mb-1" />
-                                <x-text-input wire:model="alat.jenis" :error="$errors->has('alat.jenis')" placeholder="IV Line / Kateter..."
+                                <x-text-input wire:model.blur="alat.jenis" :error="$errors->has('alat.jenis')" placeholder="IV Line / Kateter..."
                                     class="w-full" />
                                 <x-input-error :messages="$errors->get('alat.jenis')" class="mt-1" />
                             </div>
                             <div>
                                 <x-input-label value="Lokasi" class="mb-1" />
-                                <x-text-input wire:model="alat.lokasi" :error="$errors->has('alat.lokasi')" placeholder="Tangan kanan, NGT..."
+                                <x-text-input wire:model.blur="alat.lokasi" :error="$errors->has('alat.lokasi')" placeholder="Tangan kanan, NGT..."
                                     class="w-full" />
                             </div>
                             <div>
                                 <x-input-label value="Ukuran" class="mb-1" />
-                                <x-text-input wire:model="alat.ukuran" :error="$errors->has('alat.ukuran')" placeholder="20G / 10Fr..." class="w-full" />
+                                <x-text-input wire:model.blur="alat.ukuran" :error="$errors->has('alat.ukuran')" placeholder="20G / 10Fr..." class="w-full" />
                             </div>
                             <div>
                                 <x-input-label value="Keterangan" class="mb-1" />
-                                <x-text-input wire:model="alat.keterangan" :error="$errors->has('alat.keterangan')" placeholder="Terpasang baik..."
+                                <x-text-input wire:model.blur="alat.keterangan" :error="$errors->has('alat.keterangan')" placeholder="Terpasang baik..."
                                     class="w-full" />
                             </div>
                         </div>
