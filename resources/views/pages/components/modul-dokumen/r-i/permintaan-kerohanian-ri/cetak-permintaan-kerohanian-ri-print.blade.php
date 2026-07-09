@@ -1,5 +1,7 @@
 {{-- resources/views/pages/components/modul-dokumen/r-i/permintaan-kerohanian-ri/cetak-permintaan-kerohanian-ri-print.blade.php --}}
 
+@use('App\Support\KerohanianClause')
+
 <x-pdf.layout-a4-with-out-background title="FORMULIR PERMINTAAN PELAYANAN KEROHANIAWAN">
 
     {{-- Identitas pasien TIDAK di header — ditampilkan di body ("terhadap pasien di bawah ini") --}}
@@ -23,17 +25,20 @@
         ];
         $hubunganText = $hubunganMap[$form['hubunganPasien'] ?? ''] ?? '-';
         $agamaText = ($form['agama'] ?? '') ?: '-';
+
+        // Teks klausa per-versi (SUMBER TUNGGAL: App\Support\KerohanianClause; fallback v1 utk record legacy)
+        $clause = KerohanianClause::get($form['clauseVersion'] ?? 'v1');
     @endphp
 
     {{-- ── SALAM PEMBUKA ── --}}
     <div class="text-[11px] leading-relaxed mb-3">
-        <p class="font-bold">Yth. Petugas Bimbingan Rohani RS Islam Madinah</p>
-        <p>Mohon diberikan Bimbingan Rohani sebagai Pasien Rawat Inap.</p>
+        <p class="font-bold">{{ $clause['salamTitle'] }}</p>
+        <p>{{ $clause['salamBody'] }}</p>
     </div>
 
     {{-- ── DATA PEMOHON ── --}}
     <div class="text-[11px] leading-relaxed mb-2">
-        <p class="mb-1">Yang bertanda tangan di bawah ini:</p>
+        <p class="mb-1">{{ $clause['pemohonIntro'] }}</p>
     </div>
     <table class="w-full text-[10px] border-collapse mb-3">
         <tr>
@@ -60,8 +65,8 @@
 
     {{-- ── PERNYATAAN ── --}}
     <div class="text-[11px] leading-relaxed mb-2">
-        <p>Dengan ini menyatakan permintaan pendampingan pelayanan kerohanian Agama/Kepercayaan
-            <strong>{{ $agamaText }}</strong> kepada Rumah Sakit Islam Madinah terhadap pasien di bawah ini:</p>
+        <p>{{ $clause['statementPre'] }}
+            <strong>{{ $agamaText }}</strong> {{ $clause['statementPost'] }}</p>
     </div>
 
     {{-- ── DATA PASIEN (blok identitas STANDAR — satu-satunya, di body) ── --}}
@@ -88,7 +93,7 @@
 
     {{-- ── PENUTUP ── --}}
     <div class="text-[11px] leading-relaxed mb-4">
-        <p>Demikian surat permohonan permintaan pelayanan kerohaniawan ini saya buat sebagaimana mestinya.</p>
+        <p>{{ $clause['penutup'] }}</p>
     </div>
 
     {{-- ── TANDA TANGAN ── --}}

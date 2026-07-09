@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\KerohanianClause;
 
 new class extends Component {
     use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -33,6 +34,7 @@ new class extends Component {
         'petugas' => '',
         'petugasCode' => '',
         'petugasDate' => '',
+        'clauseVersion' => KerohanianClause::CURRENT,
     ];
 
     public string $signature = ''; // TTD pemohon untuk entri baru
@@ -242,6 +244,7 @@ new class extends Component {
             'petugas' => $this->newForm['petugas'] ?? '',
             'petugasCode' => $this->newForm['petugasCode'] ?? '',
             'petugasDate' => $this->newForm['petugasDate'] ?? '',
+            'clauseVersion' => $this->newForm['clauseVersion'] ?? KerohanianClause::CURRENT,
             'finalized' => $finalized,
         ];
     }
@@ -325,6 +328,7 @@ new class extends Component {
             'petugas' => $entry['petugas'] ?? '',
             'petugasCode' => $entry['petugasCode'] ?? '',
             'petugasDate' => $entry['petugasDate'] ?? '',
+            'clauseVersion' => $entry['clauseVersion'] ?? KerohanianClause::CURRENT,
         ];
         $this->signature = $entry['signature'] ?? '';
         $this->editingKey = $key;
@@ -484,6 +488,7 @@ new class extends Component {
             'petugas' => '',
             'petugasCode' => '',
             'petugasDate' => '',
+            'clauseVersion' => KerohanianClause::CURRENT,
         ];
     }
 
