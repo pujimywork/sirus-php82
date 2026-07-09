@@ -61,67 +61,7 @@
         {{-- ── ISI PERSETUJUAN ── --}}
         <tr>
             <td colspan="4" class="border border-black px-2 py-2 text-[10px] leading-relaxed">
-                <p>
-                    Saya yang bertanda tangan di bawah ini, <strong>{{ strtoupper($consent['wali'] ?? '-') }}</strong>
-                    (sebagai <strong>{{ $hubunganText }}</strong> pasien), menyatakan bahwa saya telah mendapat
-                    penjelasan yang cukup mengenai tujuan, prosedur, risiko, dan manfaat dari pelayanan medis yang
-                    akan diberikan selama rawat inap di <strong>{{ $rsName }}</strong>, dengan bahasa yang saya
-                    pahami.
-                </p>
-                <br>
-                <p>
-                    Dengan ini saya menyatakan <strong class="{{ $agreementClass }}">{{ $agreementText }}</strong>
-                    untuk menerima pelayanan kesehatan, pemeriksaan, dan tindakan yang diperlukan sesuai dengan
-                    standar pelayanan medis yang berlaku di rumah sakit ini selama menjalani rawat inap.
-                </p>
-                <br>
-                <p>
-                    Saya memahami bahwa:
-                </p>
-                <p style="padding-left: 12px;">
-                    1. Saya berhak mendapat informasi yang jelas mengenai kondisi kesehatan, diagnosis, prosedur,
-                    risiko, dan alternatif tindakan.<br>
-                    2. Saya berhak menolak/menghentikan tindakan, termasuk pelayanan resusitasi dan terapi penunjang
-                    kehidupan, setelah mendapat penjelasan.<br>
-                    3. Saya berhak meminta konsultasi dokter lain (<em>second opinion</em>) bila diperlukan.<br>
-                    4. Saya berhak didampingi keluarga, terutama dalam keadaan kritis.<br>
-                    5. Rumah sakit menjaga kerahasiaan informasi medis saya sesuai ketentuan yang berlaku.<br>
-                    6. Saya bertanggung jawab atas biaya pelayanan rawat inap sesuai ketentuan rumah sakit, termasuk
-                    biaya kamar dan tindakan yang dilakukan.<br>
-                    7. Untuk tindakan invasif, pembedahan, anestesi, transfusi darah, dan tindakan berisiko tinggi
-                    akan diminta <em>persetujuan tindakan (informed consent)</em> tersendiri.<br>
-                    8. Rumah sakit tidak bertanggung jawab atas kehilangan atau kerusakan barang berharga yang saya
-                    bawa sendiri.
-                </p>
-                <br>
-                <p>
-                    <strong>Pihak yang Diberi Akses Informasi Medis:</strong>
-                </p>
-                @php $pihakList = collect($consent['pihakInfoMedis'] ?? [])->filter(fn($pihak) => !empty(trim($pihak['nama'] ?? ''))); @endphp
-                @if ($pihakList->count() > 0)
-                    <table class="w-full mt-1 text-[9px] border-collapse">
-                        <thead>
-                            <tr>
-                                <th class="border border-black px-1 py-0.5 w-6">No</th>
-                                <th class="border border-black px-1 py-0.5">Nama</th>
-                                <th class="border border-black px-1 py-0.5">Hubungan</th>
-                                <th class="border border-black px-1 py-0.5">No. HP</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($pihakList as $index => $pihak)
-                                <tr>
-                                    <td class="border border-black px-1 py-0.5 text-center">{{ $index + 1 }}</td>
-                                    <td class="border border-black px-1 py-0.5">{{ $pihak['nama'] ?? '-' }}</td>
-                                    <td class="border border-black px-1 py-0.5">{{ $pihak['hubungan'] ?? '-' }}</td>
-                                    <td class="border border-black px-1 py-0.5">{{ $pihak['noHp'] ?? '-' }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <p style="padding-left:12px;"><em>Belum ada pihak yang ditunjuk.</em></p>
-                @endif
+                <x-consent.general-consent-ri mode="print" :consent="$consent" :rsName="$rsName" />
             </td>
         </tr>
 

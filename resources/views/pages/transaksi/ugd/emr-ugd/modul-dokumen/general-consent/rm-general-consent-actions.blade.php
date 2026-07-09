@@ -511,8 +511,8 @@ new class extends Component {
 
                     {{-- Isi Persetujuan (partial reusable) — entry pihak akses dirender via slot,
                          langsung di bawah paragraf izin akses info medis --}}
-                    <x-consent.general-consent-body context="ugd" :showReleaseInfo="true"
-                        :pihakInfoList="$pihakInfoMedis">
+                    <x-consent.general-consent-ugd mode="screen"
+                        :consent="['wali' => $wali, 'waliHubungan' => $waliHubungan, 'agreement' => $agreement, 'pihakInfoMedis' => $pihakInfoMedis]">
 
                         {{-- Tabel entry bergaris tipis — selaras tabel di cetakan (No/Nama/Hubungan/No. HP) --}}
                         <div class="overflow-hidden border border-hairline rounded-lg dark:border-gray-700">
@@ -575,7 +575,7 @@ new class extends Component {
                                 </x-primary-button>
                             </div>
                         @endif
-                    </x-consent.general-consent-body>
+                    </x-consent.general-consent-ugd>
 
                     <div
                         class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
