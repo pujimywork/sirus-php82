@@ -53,7 +53,8 @@
         {{-- ── ISI PERSETUJUAN ── --}}
         <tr>
             <td colspan="4" class="border border-black px-2 py-2 text-[10px] leading-relaxed">
-                <x-consent.general-consent-rj mode="print" :consent="$consent" :rsName="$rsName" />
+                <x-consent.general-consent-rj mode="print" :consent="$consent" :rsName="$rsName"
+                    :version="$consent['clauseVersion'] ?? 'v1'" />
             </td>
         </tr>
 

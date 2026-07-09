@@ -5,7 +5,12 @@
     'consent' => [],
     // Nama RS (dipakai print; screen fallback "rumah sakit ini")
     'rsName' => '',
+    // Versi klausul; null = versi berlaku saat ini (GeneralConsentClause::CURRENT).
+    // Record lama teruskan clauseVersion tersimpan agar cetak = redaksi saat TTD.
+    'version' => null,
 ])
+
+@use('App\Support\GeneralConsentClause')
 
 @php
     $hubunganMap = [
@@ -25,31 +30,18 @@
     $agreementText = $setuju ? 'SETUJU' : 'TIDAK SETUJU';
     $namaRs = trim($rsName) !== '' ? $rsName : 'rumah sakit ini';
 
-    // ─────────────────────────────────────────────────────────────
-    // SUMBER TUNGGAL TEKS — dipakai mode screen & print (redaksi identik).
-    // Acuan: cetak (dokumen bertanda tangan). Konteks: RAWAT INAP.
-    // ─────────────────────────────────────────────────────────────
-    $introHtml =
-        'Saya yang bertanda tangan di bawah ini, <strong>' .
-        e($wali) .
-        '</strong> (sebagai <strong>' .
-        e($hubunganText) .
-        '</strong> pasien), menyatakan bahwa saya telah mendapat penjelasan yang cukup mengenai tujuan, prosedur, risiko, dan manfaat dari pelayanan medis yang akan diberikan selama rawat inap di <strong>' .
-        e($namaRs) .
-        '</strong>, dengan bahasa yang saya pahami.';
-    $agreePre = 'Dengan ini saya menyatakan ';
-    $agreePost =
-        ' untuk menerima pelayanan kesehatan, pemeriksaan, dan tindakan yang diperlukan sesuai dengan standar pelayanan medis yang berlaku di rumah sakit ini selama menjalani rawat inap.';
-    $points = [
-        'Saya berhak mendapat informasi yang jelas mengenai kondisi kesehatan, diagnosis, prosedur, risiko, dan alternatif tindakan.',
-        'Saya berhak menolak/menghentikan tindakan, termasuk pelayanan resusitasi dan terapi penunjang kehidupan, setelah mendapat penjelasan.',
-        'Saya berhak meminta konsultasi dokter lain (<em>second opinion</em>) bila diperlukan.',
-        'Saya berhak didampingi keluarga, terutama dalam keadaan kritis.',
-        'Rumah sakit menjaga kerahasiaan informasi medis saya sesuai ketentuan yang berlaku.',
-        'Saya bertanggung jawab atas biaya pelayanan rawat inap sesuai ketentuan rumah sakit, termasuk biaya kamar dan tindakan yang dilakukan.',
-        'Untuk tindakan invasif, pembedahan, anestesi, transfusi darah, dan tindakan berisiko tinggi akan diminta <em>persetujuan tindakan (informed consent)</em> tersendiri.',
-        'Rumah sakit tidak bertanggung jawab atas kehilangan atau kerusakan barang berharga yang saya bawa sendiri.',
-    ];
+    // ── Teks klausul per-versi (SUMBER TUNGGAL: App\Support\GeneralConsentClause) ──
+    $clause = GeneralConsentClause::get('ri', $version);
+    $introHtml = strtr($clause['introTemplate'] ?? '', [
+        '%WALI%' => e($wali),
+        '%HUB%' => e($hubunganText),
+        '%RS%' => e($namaRs),
+    ]);
+    $agreePre = $clause['agreePre'] ?? '';
+    $agreePost = $clause['agreePost'] ?? '';
+    $points = $clause['points'] ?? [];
+    $subtitle = $clause['subtitle'] ?? 'Pelayanan Rawat Inap';
+
     $pihakList = collect($consent['pihakInfoMedis'] ?? [])->filter(fn($p) => !empty(trim($p['nama'] ?? '')));
 @endphp
 
@@ -101,7 +93,7 @@
             <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">
                 Formulir Persetujuan Umum (General Consent)
             </h3>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pelayanan Rawat Inap</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $subtitle }}</p>
         </div>
 
         <p class="text-sm leading-relaxed text-justify text-gray-700 dark:text-gray-300">{!! $introHtml !!}</p>

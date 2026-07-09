@@ -364,6 +364,8 @@ new class extends Component {
             'petugasPemeriksa' => '',
             'petugasPemeriksaCode' => '',
             'petugasPemeriksaDate' => '',
+            // Versi klausul yang berlaku saat record dibuat (stempel; utk cetak ulang sesuai redaksi saat TTD)
+            'clauseVersion' => \App\Support\GeneralConsentClause::CURRENT,
         ];
     }
 
@@ -509,7 +511,8 @@ new class extends Component {
                     {{-- Isi Persetujuan (partial reusable) — entry pihak akses dirender via slot,
                          langsung di bawah paragraf izin akses info medis --}}
                     <x-consent.general-consent-ri mode="screen"
-                        :consent="['wali' => $wali, 'waliHubungan' => $waliHubungan, 'agreement' => $agreement, 'pihakInfoMedis' => $pihakInfoMedis]">
+                        :consent="['wali' => $wali, 'waliHubungan' => $waliHubungan, 'agreement' => $agreement, 'pihakInfoMedis' => $pihakInfoMedis]"
+                        :version="$dataDaftarRi['generalConsentPasienRI']['clauseVersion'] ?? null">
 
                         {{-- Tabel entry bergaris tipis — selaras tabel di cetakan (No/Nama/Hubungan/No. HP) --}}
                         <div class="overflow-hidden border border-hairline rounded-lg dark:border-gray-700">
