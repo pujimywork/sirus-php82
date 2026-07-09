@@ -7,6 +7,7 @@ use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 new class extends Component {
     use EmrRJTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -251,7 +252,7 @@ new class extends Component {
                     'dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.jamDatang' => 'Waktu Datang',
                 ],
             );
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena data pemeriksaan belum lengkap.');
             throw $e;
         }
@@ -272,7 +273,7 @@ new class extends Component {
         // Validasi data pemeriksaan sudah lengkap sebelum masuk lock
         try {
             $this->validateBeforeDrPemeriksa();
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             // Pesan sudah di-dispatch di dalam validateBeforeDrPemeriksa()
             return;
         }

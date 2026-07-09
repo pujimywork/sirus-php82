@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
+use Illuminate\Validation\ValidationException;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -185,7 +186,7 @@ new class extends Component {
         // Validasi kelengkapan data sebelum TTD
         try {
             $this->validateBeforeDrPemeriksa();
-        } catch (\Illuminate\Validation\ValidationException) {
+        } catch (ValidationException) {
             // Pesan error sudah di-dispatch di validateBeforeDrPemeriksa()
             return;
         }
@@ -336,7 +337,7 @@ new class extends Component {
                     'dataDaftarUGD.anamnesa.pengkajianPerawatan.jamDatang' => 'Waktu Datang',
                 ],
             );
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena data pemeriksaan belum lengkap.');
             throw $e;
         }

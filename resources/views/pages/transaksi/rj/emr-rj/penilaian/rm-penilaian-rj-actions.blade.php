@@ -6,6 +6,7 @@ use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 new class extends Component {
     use EmrRJTrait, WithRenderVersioningTrait;
@@ -269,7 +270,7 @@ new class extends Component {
                     'formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore.required_if' => 'Skor nyeri wajib diisi jika ada nyeri.',
                 ],
             );
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data nyeri yang diisi.');
             return;
         }
@@ -423,7 +424,7 @@ new class extends Component {
                     'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetodeScore.required_if' => 'Skor wajib diisi jika ada risiko jatuh.',
                 ],
             );
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data risiko jatuh yang diisi.');
             return;
         }
@@ -539,7 +540,7 @@ new class extends Component {
                     'formEntryDekubitus.dekubitus.dekubitus.in' => 'Status dekubitus hanya boleh "Ya" atau "Tidak".',
                 ],
             );
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data yang diisi.');
             return;
         }
@@ -664,7 +665,7 @@ new class extends Component {
                     'formEntryGizi.gizi.tinggiBadan.required' => 'Tinggi badan wajib diisi.',
                 ],
             );
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data gizi yang diisi.');
             return;
         }

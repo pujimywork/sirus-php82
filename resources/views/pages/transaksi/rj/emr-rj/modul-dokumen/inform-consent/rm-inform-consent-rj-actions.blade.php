@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use Illuminate\Validation\ValidationException;
 
 new class extends Component {
     use EmrRJTrait, WithRenderVersioningTrait;
@@ -231,7 +232,7 @@ new class extends Component {
         // di-highlight MERAH — jangan short-circuit sebelum validate().
         try {
             $this->validate();
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: 'Lengkapi seluruh kolom wajib sebelum TTD petugas.');
             throw $e;
         }

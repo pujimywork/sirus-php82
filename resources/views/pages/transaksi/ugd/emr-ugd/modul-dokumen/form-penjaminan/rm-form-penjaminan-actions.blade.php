@@ -9,6 +9,7 @@ use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Support\KelasKamar;
 use App\Support\PenjaminanClause;
+use Illuminate\Validation\ValidationException;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait;
@@ -333,7 +334,7 @@ new class extends Component {
 
         try {
             $this->validate();
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: 'Lengkapi seluruh kolom wajib sebelum TTD petugas.');
             throw $e;
         }

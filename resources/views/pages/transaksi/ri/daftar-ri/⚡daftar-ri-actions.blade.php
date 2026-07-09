@@ -13,6 +13,7 @@ use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\BPJS\VclaimTrait;
 use App\Support\OracleLob;
+use Illuminate\Validation\ValidationException;
 
 new class extends Component {
     // CATATAN: VclaimTrait tidak di-use di sini — static call VclaimTrait::method()
@@ -144,7 +145,7 @@ new class extends Component {
 
         try {
             $this->validateDataRI();
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $firstError = collect($e->errors())->flatten()->first() ?? 'Data belum lengkap/valid.';
             $this->dispatch('toast', type: 'error', message: $firstError);
             throw $e;

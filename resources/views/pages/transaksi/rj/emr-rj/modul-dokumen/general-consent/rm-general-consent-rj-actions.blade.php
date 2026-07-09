@@ -9,6 +9,7 @@ use App\Support\GeneralConsentClause;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use Illuminate\Validation\ValidationException;
 
 new class extends Component {
     use EmrRJTrait, MasterPasienTrait, WithRenderVersioningTrait;
@@ -256,7 +257,7 @@ new class extends Component {
         // TTD petugas = finalize: wajib lengkap. Draft (tombol Simpan) boleh belum lengkap.
         try {
             $this->validate();
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: 'Lengkapi data & TTD pasien/wali sebelum menandatangani sebagai petugas.');
             throw $e;
         }
