@@ -400,7 +400,7 @@ new class extends Component {
                         <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr
                                 class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
-                                <th class="px-4 py-3">Pasien</th>
+                                <th class="px-4 py-3">Antrian &amp; Pasien</th>
                                 <th class="px-4 py-3">Dokter</th>
                                 <th class="px-4 py-3">Status Layanan</th>
                                 <th class="px-4 py-3">Waktu Apotek</th>
@@ -415,27 +415,54 @@ new class extends Component {
                                     class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-surface-soft dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                     {{ $row->no_antrian_apotek > 0 ? 'border-l-4 border-l-emerald-500' : '' }}">
 
-                                    {{-- PASIEN --}}
-                                    <td class="px-6 py-6 space-y-3 align-top">
-                                        <div class="space-y-1">
-                                            <div class="text-base font-medium text-body dark:text-gray-300">
-                                                {{ $row->reg_no ?? '-' }}
+                                    {{-- ANTRIAN & PASIEN — tile nomor antrian apotek (pola sama dgn RJ/RI;
+                                         sebelumnya UGD tidak menampilkan nomor sama sekali padahal sudah dihitung) --}}
+                                    <td class="px-4 py-4 align-top">
+                                        <div class="flex items-start gap-3">
+                                            {{-- Nomor antrian apotek --}}
+                                            <div
+                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl
+                                                {{ $row->no_antrian_apotek > 0
+                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                                    : 'bg-surface-soft text-muted-soft dark:bg-gray-700' }}">
+                                                <span class="text-2xl font-bold leading-none">
+                                                    {{ $row->no_antrian_apotek ?: '-' }}
+                                                </span>
+                                                <span class="text-[9px] font-medium mt-0.5 text-center leading-tight">
+                                                    {{ $row->no_antrian_apotek > 0 ? 'apotek' : 'belum' }}
+                                                </span>
                                             </div>
-                                            <div class="text-lg font-semibold text-brand dark:text-white">
-                                                {{ $row->reg_name ?? '-' }} /
-                                                ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                            </div>
-                                            <div class="text-sm text-body dark:text-gray-400">
-                                                {{ $row->birth_date ?? '-' }}
-                                                @if (!empty($row->umur_format))
-                                                    <span class="text-muted">({{ $row->umur_format }})</span>
+
+                                            <div class="space-y-1 min-w-0">
+                                                <div class="text-base font-medium text-body dark:text-gray-300">
+                                                    {{ $row->reg_no ?? '-' }}
+                                                </div>
+                                                <div class="text-lg font-semibold text-brand dark:text-white">
+                                                    {{ $row->reg_name ?? '-' }} /
+                                                    ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
+                                                </div>
+                                                <div class="text-sm text-body dark:text-gray-400">
+                                                    {{ $row->birth_date ?? '-' }}
+                                                    @if (!empty($row->umur_format))
+                                                        <span class="text-muted">({{ $row->umur_format }})</span>
+                                                    @endif
+                                                </div>
+                                                @if (!empty($row->address))
+                                                    <div class="text-sm text-muted dark:text-gray-400">
+                                                        {{ $row->address }}
+                                                    </div>
+                                                @endif
+                                                {{-- Jenis resep badge --}}
+                                                @if ($row->no_antrian_apotek > 0)
+                                                    <span
+                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium
+                                                        {{ $row->jenis_resep === 'racikan'
+                                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                                                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                                        {{ ucfirst($row->jenis_resep) }}
+                                                    </span>
                                                 @endif
                                             </div>
-                                            @if (!empty($row->address))
-                                                <div class="text-sm text-muted dark:text-gray-400">
-                                                    {{ $row->address }}
-                                                </div>
-                                            @endif
                                         </div>
                                     </td>
 

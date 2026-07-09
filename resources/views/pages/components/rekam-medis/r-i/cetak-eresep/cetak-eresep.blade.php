@@ -82,7 +82,9 @@ new class extends Component {
             'telaahResep' => $apotek['telaahResep'] ?? [],
             'telaahObat' => $apotek['telaahObat'] ?? [],
             'poliDesc' => trim(($hdr->room_name ?? '') . ($hdr->bangsal_name ? ' (' . $hdr->bangsal_name . ')' : '')) ?: '-',
-            'sep' => ['noSep' => $dataRI['vnoSep'] ?? '-'],
+            // findDataRI menaruh No SEP (kolom rstxn_rihdrs.vno_sep) di sep.noSep —
+            // dulu salah baca key top-level 'vnoSep' (tidak ada) → cetak selalu '-'.
+            'sep' => ['noSep' => ($dataRI['sep']['noSep'] ?? '') ?: '-'],
             'statusResep' => [],
             'statusPRB' => [],
             'perencanaan' => [],
