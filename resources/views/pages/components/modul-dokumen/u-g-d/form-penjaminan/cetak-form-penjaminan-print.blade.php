@@ -1,5 +1,7 @@
 {{-- resources/views/pages/components/modul-dokumen/u-g-d/form-penjaminan/cetak-form-penjaminan-print.blade.php --}}
 
+@use('App\Support\KelasKamar')
+
 <x-pdf.layout-a4-with-out-background title="FORM PERNYATAAN KEPEMILIKAN KARTU PENJAMINAN BIAYA DAN ORIENTASI KAMAR">
 
     {{-- ── IDENTITAS PASIEN ── --}}
@@ -43,7 +45,7 @@
         // ── Fasilitas kamar ──
         // Kelas kamar: prefer SNAPSHOT record (redaksi/tarif saat TTD); fallback master KelasKamar (legacy).
         $kelasKey = $form['kelasKamar'] ?? '';
-        $kelasInfo = ($form['kelasKamarSnapshot'] ?? null) ?: \App\Support\KelasKamar::find($kelasKey);
+        $kelasInfo = ($form['kelasKamarSnapshot'] ?? null) ?: KelasKamar::find($kelasKey);
         $kelasLabel = $kelasInfo['nama'] ?? $kelasKey ?: '-';
         $kelasTarif = $kelasInfo['tarifLabel'] ?? '-';
         $fasilitas = $kelasInfo['fasilitas'] ?? [];

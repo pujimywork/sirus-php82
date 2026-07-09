@@ -9,6 +9,7 @@ use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\GeneralConsentClause;
 
 new class extends Component {
     use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -365,7 +366,7 @@ new class extends Component {
             'petugasPemeriksaCode' => '',
             'petugasPemeriksaDate' => '',
             // Versi klausul yang berlaku saat record dibuat (stempel; utk cetak ulang sesuai redaksi saat TTD)
-            'clauseVersion' => \App\Support\GeneralConsentClause::CURRENT,
+            'clauseVersion' => GeneralConsentClause::CURRENT,
         ];
     }
 

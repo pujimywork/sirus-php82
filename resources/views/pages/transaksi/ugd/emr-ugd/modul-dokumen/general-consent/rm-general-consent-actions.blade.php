@@ -4,6 +4,7 @@
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\GeneralConsentClause;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
@@ -368,7 +369,7 @@ new class extends Component {
             'petugasPemeriksaCode' => '',
             'petugasPemeriksaDate' => '',
             // Versi klausul yang berlaku saat record dibuat (stempel; utk cetak ulang sesuai redaksi saat TTD)
-            'clauseVersion' => \App\Support\GeneralConsentClause::CURRENT,
+            'clauseVersion' => GeneralConsentClause::CURRENT,
         ];
     }
 

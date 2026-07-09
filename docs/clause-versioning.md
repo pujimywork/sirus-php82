@@ -69,10 +69,10 @@ class GeneralConsentClause
 
 ### 3. Form — stempel `clauseVersion`
 
-Di `defaultConsent()`/`getDefaultGeneralConsent()`:
+Di `defaultConsent()`/`getDefaultGeneralConsent()` (import `use App\Support\GeneralConsentClause;` di atas file Volt — bukan FQN inline):
 
 ```php
-'clauseVersion' => \App\Support\GeneralConsentClause::CURRENT,
+'clauseVersion' => GeneralConsentClause::CURRENT,
 ```
 
 Ikut tersimpan saat `save()` (merge default→record). Record lama yang sudah punya `clauseVersion`
