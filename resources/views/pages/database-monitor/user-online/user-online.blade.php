@@ -161,8 +161,8 @@ new class extends Component {
             </div>
 
             {{-- Cara Pakai (collapsible) --}}
-            <details class="mt-3 bg-surface-soft border border-hairline rounded-lg dark:bg-gray-800/50 dark:border-gray-700 group">
-                <summary class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-body cursor-pointer select-none dark:text-gray-200">
+            <details class="mt-3 overflow-hidden bg-blue-50 border border-blue-200 rounded-2xl dark:bg-blue-900/20 dark:border-blue-700 group">
+                <summary class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-900 cursor-pointer select-none dark:text-blue-200">
                     <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />

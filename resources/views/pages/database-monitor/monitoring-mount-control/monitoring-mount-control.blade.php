@@ -766,17 +766,17 @@ new class extends Component {
             {{-- ================================================================ --}}
             {{-- VISUAL: ARSITEKTUR MOUNTING (compact, vertikal — fit kolom 1/3)   --}}
             {{-- ================================================================ --}}
-            <div class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 border border-hairline dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
-                <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 bg-canvas/60 dark:bg-gray-900/40 backdrop-blur">
-                    <h3 class="text-base font-bold text-ink dark:text-gray-100">
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl shadow-sm overflow-hidden">
+                <div class="px-4 py-3 border-b border-blue-200 dark:border-blue-700 bg-blue-100/50 dark:bg-blue-900/30 backdrop-blur">
+                    <h3 class="text-base font-bold text-blue-900 dark:text-blue-200">
                         Konsep Mounting File Server
                     </h3>
-                    <p class="text-[11px] text-muted dark:text-gray-400">
+                    <p class="text-[11px] text-blue-700 dark:text-blue-300">
                         Alur Upload → Sync external → Mount read.
                     </p>
                 </div>
 
-                <div class="p-4 space-y-3">
+                <div class="p-4 space-y-3 bg-canvas dark:bg-gray-900">
 
                     {{-- 3 STEP — selalu vertikal, compact --}}
                     {{-- Step 1: Laravel Upload --}}

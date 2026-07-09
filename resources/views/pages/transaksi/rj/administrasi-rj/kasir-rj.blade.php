@@ -832,12 +832,12 @@ new class extends Component {
         @else
             {{-- Panduan penggunaan --}}
             @if ($txnStatus === null || $txnStatus === 'A')
-                <div class="flex items-start gap-2 px-3 py-2 mb-3 text-xs text-muted bg-surface-soft border border-hairline rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+                <div class="flex items-start gap-2 px-3 py-2 mb-3 text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-200">
                     <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                        <p class="font-semibold text-body dark:text-gray-300">Panduan Kasir RJ:</p>
+                        <p class="font-semibold text-blue-900 dark:text-blue-100">Panduan Kasir RJ:</p>
                         <ul class="mt-1 space-y-0.5 list-disc list-inside">
                             <li><strong>Post Transaksi</strong> — Pilih Akun Kas, isi nominal bayar, lalu klik "Post Transaksi". Bisa cicilan (bayar sebagian) atau lunas (bayar penuh).</li>
                             <li><strong>Transfer ke UGD</strong> — Jika pasien RJ perlu dilanjutkan ke UGD, klik "Transfer ke UGD". Seluruh biaya RJ akan dipindahkan ke UGD dan status RJ menjadi Transfer UGD.</li>

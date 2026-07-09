@@ -793,7 +793,7 @@ new class extends Component {
 
                     <div x-show="showBulk" x-transition.opacity x-cloak class="border-t border-hairline-soft dark:border-gray-800 max-h-[55vh] overflow-auto">
                         {{-- Panduan 3-step --}}
-                        <div class="px-5 py-3 border-b border-blue-100 dark:border-blue-900/40 bg-canvas dark:bg-gray-900">
+                        <div class="px-5 py-3 border-b border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20">
                             <div class="flex items-start gap-0 flex-wrap">
                                 <div class="flex items-center gap-2 pr-4">
                                     <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">1</div>
@@ -1222,18 +1222,18 @@ new class extends Component {
 
                     <div x-show="showBulk" x-transition.opacity x-cloak class="border-t border-hairline-soft dark:border-gray-800 max-h-[55vh] overflow-auto">
                         {{-- Panduan 3-step --}}
-                        <div class="px-5 py-3 border-b border-green-100 dark:border-green-900/40 bg-canvas dark:bg-gray-900">
+                        <div class="px-5 py-3 border-b border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20">
                             <div class="flex items-start gap-0 flex-wrap">
                                 <div class="flex items-center gap-2 pr-4">
-                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">1</div>
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">1</div>
                                     <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Tarik referensi</strong> tipe TT dari Kemenkes</div>
                                 </div>
                                 <div class="flex items-center gap-2 pr-4">
-                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">2</div>
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">2</div>
                                     <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Mapping</strong> tiap kelas RS ke tipe TT SIRS</div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">3</div>
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">3</div>
                                     <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Klik Daftarkan</strong> — proses semua kamar aktif</div>
                                 </div>
                             </div>

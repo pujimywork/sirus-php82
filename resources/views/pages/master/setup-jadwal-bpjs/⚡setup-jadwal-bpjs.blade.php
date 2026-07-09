@@ -460,9 +460,9 @@ new class extends Component {
             </div>
 
             {{-- Panduan singkat --}}
-            <div x-data="{ open: false }" class="px-6 py-2 bg-brand-green/5 dark:bg-brand-lime/10 border-b border-brand-green/20 dark:border-brand-lime/20 shrink-0">
+            <div x-data="{ open: false }" class="px-6 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-700 shrink-0">
                 <button type="button" x-on:click="open = !open"
-                    class="flex items-center gap-1.5 text-xs font-medium text-brand-green dark:text-brand-lime hover:underline">
+                    class="flex items-center gap-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:underline">
                     <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                     </svg>
@@ -472,7 +472,7 @@ new class extends Component {
                     </svg>
                 </button>
 
-                <div x-show="open" x-transition class="mt-2 pb-1 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs text-brand-green dark:text-brand-lime/80">
+                <div x-show="open" x-transition class="mt-2 pb-1 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs text-blue-800 dark:text-blue-200/90">
                     <div class="flex gap-2">
                         <span class="mt-0.5 shrink-0">1.</span>
                         <span>Ketik nama poli di kolom pencarian (min. 3 huruf), lalu pilih poli dari daftar yang muncul.</span>

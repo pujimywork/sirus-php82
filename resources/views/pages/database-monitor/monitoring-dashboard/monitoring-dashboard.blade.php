@@ -527,8 +527,8 @@ SQL
                 </div>
 
                 {{-- ── Panel: Cara Pakai (per-tab) ── --}}
-                <details class="mt-3 group bg-surface-soft dark:bg-gray-800/50 rounded-lg border border-hairline dark:border-gray-700">
-                    <summary class="cursor-pointer select-none px-4 py-2 text-xs font-semibold text-body dark:text-gray-200 flex items-center gap-2">
+                <details class="mt-3 group overflow-hidden bg-blue-50 border border-blue-200 rounded-2xl dark:bg-blue-900/20 dark:border-blue-700">
+                    <summary class="cursor-pointer select-none px-4 py-2 text-xs font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
                         <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         Cara Pakai
                         @if ($tab === 'locks')        <span class="text-rose-600 dark:text-rose-300">— Locks: identifikasi & matikan sesi yang saling blok</span>

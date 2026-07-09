@@ -154,9 +154,9 @@ new class extends Component {
             <div class="flex-1 px-6 py-6 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="w-full space-y-6">
                     {{-- Cara Pakai — Alur iDRG / INACBG (collapsible, native <details>) --}}
-                    <details class="bg-canvas border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30 group">
+                    <details class="overflow-hidden bg-blue-50 border border-blue-200 rounded-2xl dark:bg-blue-900/20 dark:border-blue-700 group">
                         <summary class="flex items-center gap-3 px-5 py-3 cursor-pointer select-none">
-                            <svg class="w-4 h-4 transition-transform text-brand dark:text-brand-lime shrink-0 group-open:rotate-90"
+                            <svg class="w-4 h-4 transition-transform text-blue-700 dark:text-blue-300 shrink-0 group-open:rotate-90"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
@@ -168,13 +168,13 @@ new class extends Component {
                         <div class="px-5 pt-1 pb-4 space-y-4 border-t border-hairline-soft dark:border-gray-800">
                             @foreach ($guide as $g)
                                 <div>
-                                    <h4 class="pt-3 mb-2 text-sm font-bold tracking-wider uppercase text-brand dark:text-brand-lime">
+                                    <h4 class="pt-3 mb-2 text-sm font-bold tracking-wider uppercase text-blue-700 dark:text-blue-300">
                                         {{ $g['title'] }}
                                     </h4>
                                     <div class="space-y-2">
                                         @foreach ($g['items'] as $item)
                                             <div class="flex items-start gap-3 p-3 border border-hairline-soft rounded-lg bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
-                                                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-brand/10 text-brand text-sm font-bold shrink-0 dark:bg-brand-lime/15 dark:text-brand-lime">
+                                                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold shrink-0 dark:bg-blue-900/40 dark:text-blue-300">
                                                     {{ $item['n'] }}
                                                 </div>
                                                 <div class="text-sm text-body dark:text-gray-300">

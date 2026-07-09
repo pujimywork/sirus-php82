@@ -985,7 +985,7 @@ new class extends Component {
 
                         {{-- Alur RI --}}
                         <div
-                            class="p-3 text-xs bg-blue-50 border border-blue-200 rounded-xl dark:bg-blue-900/20 dark:border-blue-800 text-blue-700 dark:text-blue-300 space-y-1">
+                            class="p-3 text-xs bg-blue-50 border border-blue-200 rounded-2xl dark:bg-blue-900/20 dark:border-blue-700 text-blue-700 dark:text-blue-300 space-y-1">
                             <p class="font-semibold">Alur SEP Rawat Inap:</p>
                             <div class="flex items-center gap-1">
                                 <span
