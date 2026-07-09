@@ -255,6 +255,10 @@ new class extends Component {
             ->values()
             ->toArray();
         $this->dataDaftarUGD['generalConsentPasienUGD']['pihakInfoMedis'] = $cleanPihak;
+        // Sync field prop top-level (pre-fill wali/hubungan/agreement tak ter-updated bila user tak mengedit)
+        $this->dataDaftarUGD['generalConsentPasienUGD']['wali'] = $this->wali;
+        $this->dataDaftarUGD['generalConsentPasienUGD']['waliHubungan'] = $this->waliHubungan;
+        $this->dataDaftarUGD['generalConsentPasienUGD']['agreement'] = $this->agreement;
 
         try {
             DB::transaction(function () {
@@ -309,6 +313,10 @@ new class extends Component {
             ->values()
             ->toArray();
         $this->dataDaftarUGD['generalConsentPasienUGD']['pihakInfoMedis'] = $cleanPihak;
+        // Sync field prop top-level (pre-fill wali/hubungan/agreement tak ter-updated bila user tak mengedit)
+        $this->dataDaftarUGD['generalConsentPasienUGD']['wali'] = $this->wali;
+        $this->dataDaftarUGD['generalConsentPasienUGD']['waliHubungan'] = $this->waliHubungan;
+        $this->dataDaftarUGD['generalConsentPasienUGD']['agreement'] = $this->agreement;
 
         try {
             DB::transaction(function () {

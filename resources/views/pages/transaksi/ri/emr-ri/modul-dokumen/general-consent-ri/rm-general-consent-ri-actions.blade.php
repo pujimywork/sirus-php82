@@ -236,6 +236,10 @@ new class extends Component {
             ->values()
             ->toArray();
         $this->dataDaftarRi['generalConsentPasienRI']['pihakInfoMedis'] = $cleanPihak;
+        // Sync field prop top-level (pre-fill wali/hubungan/agreement tak ter-updated bila user tak mengedit)
+        $this->dataDaftarRi['generalConsentPasienRI']['wali'] = $this->wali;
+        $this->dataDaftarRi['generalConsentPasienRI']['waliHubungan'] = $this->waliHubungan;
+        $this->dataDaftarRi['generalConsentPasienRI']['agreement'] = $this->agreement;
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksa'] = auth()->user()->myuser_name ?? '';
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksaCode'] = auth()->user()->myuser_code ?? '';
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksaDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
@@ -278,6 +282,10 @@ new class extends Component {
             ->values()
             ->toArray();
         $this->dataDaftarRi['generalConsentPasienRI']['pihakInfoMedis'] = $cleanPihak;
+        // Sync field prop top-level (pre-fill wali/hubungan/agreement tak ter-updated bila user tak mengedit)
+        $this->dataDaftarRi['generalConsentPasienRI']['wali'] = $this->wali;
+        $this->dataDaftarRi['generalConsentPasienRI']['waliHubungan'] = $this->waliHubungan;
+        $this->dataDaftarRi['generalConsentPasienRI']['agreement'] = $this->agreement;
 
         try {
             DB::transaction(function () {

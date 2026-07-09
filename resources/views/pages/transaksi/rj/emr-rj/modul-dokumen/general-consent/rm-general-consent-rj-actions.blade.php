@@ -253,6 +253,11 @@ new class extends Component {
             throw $e;
         }
 
+        // Sync field prop top-level (pre-fill wali/hubungan/agreement tak ter-updated bila user tak mengedit)
+        $this->dataDaftarPoliRJ['generalConsentPasienRJ']['wali'] = $this->wali;
+        $this->dataDaftarPoliRJ['generalConsentPasienRJ']['waliHubungan'] = $this->waliHubungan;
+        $this->dataDaftarPoliRJ['generalConsentPasienRJ']['agreement'] = $this->agreement;
+
         try {
             DB::transaction(function () {
                 $this->lockRJRow($this->rjNo);
@@ -299,6 +304,11 @@ new class extends Component {
         }
 
         // Draft: boleh simpan sebagian (nyicil). Validasi lengkap + kunci dilakukan saat TTD Petugas.
+
+        // Sync field prop top-level (pre-fill wali/hubungan/agreement tak ter-updated bila user tak mengedit)
+        $this->dataDaftarPoliRJ['generalConsentPasienRJ']['wali'] = $this->wali;
+        $this->dataDaftarPoliRJ['generalConsentPasienRJ']['waliHubungan'] = $this->waliHubungan;
+        $this->dataDaftarPoliRJ['generalConsentPasienRJ']['agreement'] = $this->agreement;
 
         try {
             DB::transaction(function () {
