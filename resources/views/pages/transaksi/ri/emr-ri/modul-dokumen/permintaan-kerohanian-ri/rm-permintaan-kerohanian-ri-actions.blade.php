@@ -748,9 +748,14 @@ new class extends Component {
 
                         {{-- ══ CATATAN ══ --}}
                         <div
-                            class="px-4 py-3 text-sm border rounded-xl bg-surface-soft border-hairline text-muted dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
-                            Permohonan pendampingan pelayanan kerohanian akan diteruskan kepada Petugas Bimbingan Rohani
-                            sesuai agama/kepercayaan pasien.
+                            class="flex items-start gap-2 px-4 py-3 text-sm border rounded-2xl bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200">
+                            <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Permohonan pendampingan pelayanan kerohanian akan diteruskan kepada Petugas Bimbingan
+                                Rohani sesuai agama/kepercayaan pasien.</span>
                         </div>
 
                         {{-- ══ TANDA TANGAN ══ --}}
