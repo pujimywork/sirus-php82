@@ -37,6 +37,7 @@ new class extends Component {
 
     // Pasien terpilih
     public string $patientSearch = '';
+    public ?string $filterBangsal = null; // filter bangsal — hanya untuk source RI
     public ?int $selectedRefNo = null;
     public array $selectedPatient = []; // reg_no, reg_name, sex, birth_date, umur_format, address
 
@@ -67,7 +68,7 @@ new class extends Component {
 
     private function resetState(): void
     {
-        $this->reset(['patientSearch', 'selectedRefNo', 'selectedPatient', 'drId', 'klinisDesc', 'searchItem', 'selectedItems']);
+        $this->reset(['patientSearch', 'filterBangsal', 'selectedRefNo', 'selectedPatient', 'drId', 'klinisDesc', 'searchItem', 'selectedItems']);
         $this->resetValidation();
         $this->resetPage();
     }
@@ -79,7 +80,7 @@ new class extends Component {
         }
         $this->source = $source;
         // Pasien & keranjang tergantung sumber → reset saat berganti.
-        $this->reset(['patientSearch', 'selectedRefNo', 'selectedPatient', 'drId', 'klinisDesc', 'searchItem', 'selectedItems']);
+        $this->reset(['patientSearch', 'filterBangsal', 'selectedRefNo', 'selectedPatient', 'drId', 'klinisDesc', 'searchItem', 'selectedItems']);
         $this->resetValidation();
         $this->resetPage();
         unset($this->activePatients);
@@ -109,21 +110,46 @@ new class extends Component {
         if ($this->source === 'RJ') {
             $query = DB::table('rstxn_rjhdrs as h')
                 ->join('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
+                ->leftJoin('rsmst_polis as po', 'po.poli_id', '=', 'h.poli_id')
+                ->leftJoin('rsmst_doctors as dr', 'dr.dr_id', '=', 'h.dr_id')
+                ->leftJoin('rsmst_klaimtypes as kt', 'kt.klaim_id', '=', 'h.klaim_id')
                 ->whereRaw("NVL(h.rj_status,'A') = 'A'")
                 ->whereRaw('TRUNC(h.rj_date) = TRUNC(sysdate)')
-                ->select(array_merge(['h.rj_no as ref_no'], $pasienCols));
+                ->select(array_merge([
+                    'h.rj_no as ref_no', 'po.poli_desc', 'dr.dr_name as dokter_name', 'kt.klaim_desc', 'h.no_antrian',
+                    DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as masuk_date"),
+                ], $pasienCols));
         } elseif ($this->source === 'UGD') {
             $query = DB::table('rstxn_ugdhdrs as h')
                 ->join('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
+                ->leftJoin('rsmst_doctors as dr', 'dr.dr_id', '=', 'h.dr_id')
+                ->leftJoin('rsmst_klaimtypes as kt', 'kt.klaim_id', '=', 'h.klaim_id')
+                ->leftJoin('rsmst_entrytypes as et', 'et.entry_id', '=', 'h.entry_id')
                 ->whereRaw("NVL(h.rj_status,'A') = 'A'")
                 ->whereRaw('TRUNC(h.rj_date) = TRUNC(sysdate)')
-                ->select(array_merge(['h.rj_no as ref_no'], $pasienCols));
+                ->select(array_merge([
+                    'h.rj_no as ref_no', 'dr.dr_name as dokter_name', 'kt.klaim_desc', 'et.entry_desc', 'h.no_antrian',
+                    DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as masuk_date"),
+                ], $pasienCols));
         } else {
             // RI — aktif = ri_status 'I' (tanpa filter tanggal)
             $query = DB::table('rstxn_rihdrs as h')
                 ->join('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
+                ->leftJoin('rsmst_rooms as rm', 'rm.room_id', '=', 'h.room_id')
+                ->leftJoin('rsmst_bangsals as bg', 'bg.bangsal_id', '=', 'rm.bangsal_id')
+                ->leftJoin('rsmst_doctors as dr', 'dr.dr_id', '=', 'h.dr_id')
+                ->leftJoin('rsmst_klaimtypes as kt', 'kt.klaim_id', '=', 'h.klaim_id')
                 ->whereRaw("NVL(h.ri_status,'I') = 'I'")
-                ->select(array_merge(['h.rihdr_no as ref_no'], $pasienCols));
+                ->select(array_merge([
+                    'h.rihdr_no as ref_no', 'bg.bangsal_name', 'rm.room_name', 'h.bed_no',
+                    'dr.dr_name as penerima_name', 'kt.klaim_desc',
+                    DB::raw("to_char(h.entry_date,'dd/mm/yyyy hh24:mi:ss') as masuk_date"),
+                ], $pasienCols));
+
+            // Filter bangsal (hanya RI)
+            if (filled($this->filterBangsal)) {
+                $query->where('rm.bangsal_id', $this->filterBangsal);
+            }
         }
 
         if ($keyword !== '') {
@@ -133,12 +159,39 @@ new class extends Component {
             });
         }
 
-        return $query->orderBy('p.reg_name')->limit(30)->get();
+        $results = $query->orderBy('p.reg_name')->limit(30)->get();
+
+        // RI: enrich tiap baris dgn daftar DPJP (leveling dokter) — batch 1 query JSON, decode PHP.
+        if ($this->source === 'RI' && $results->isNotEmpty()) {
+            $rawMap = DB::table('rstxn_rihdrs')
+                ->whereIn('rihdr_no', $results->pluck('ref_no')->all())
+                ->get(['rihdr_no', 'datadaftarri_json'])
+                ->keyBy('rihdr_no');
+            foreach ($results as $r) {
+                $r->leveling_dokter_list = $this->levelingListFromRaw($rawMap[$r->ref_no]->datadaftarri_json ?? null, (int) $r->ref_no);
+            }
+        }
+
+        return $results;
+    }
+
+    /* Opsi bangsal (hanya bangsal dgn pasien RI aktif) — pola daftar-ri. */
+    #[Computed]
+    public function bangsalOptions()
+    {
+        return DB::table('rsview_rihdrs')
+            ->select('bangsal_id', DB::raw('MAX(bangsal_name) as bangsal_name'))
+            ->where(DB::raw("NVL(ri_status,'I')"), 'I')
+            ->whereNotNull('bangsal_id')
+            ->groupBy('bangsal_id')
+            ->orderBy('bangsal_name')
+            ->get();
     }
 
     public function selectPatient(int $refNo, array $patient): void
     {
         $this->selectedRefNo = $refNo;
+        // leveling_dokter_list (DPJP) sudah dibawa dari baris (identity) — tak perlu baca ulang.
         $this->selectedPatient = $patient;
 
         // Default dokter pengirim = dokter kunjungan (RJ/UGD) / DPJP (RI) — tinggal ganti kalau perlu.
@@ -212,6 +265,23 @@ new class extends Component {
             return [];
         }
         return collect($data['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [])->pluck('drId')->all();
+    }
+
+    /* Daftar DPJP RI (leveling dokter: drName + levelDokter) dari raw JSON CLOB — mirip kartu Daftar RI.
+       Dipakai batch di activePatients (raw dari 1 query). */
+    private function levelingListFromRaw($raw, int $rihdrNo): array
+    {
+        try {
+            $jsonRaw = OracleLob::read($raw, 'rstxn_rihdrs', 'rihdr_no', $rihdrNo, 'datadaftarri_json');
+            $data = $jsonRaw !== '' ? json_decode($jsonRaw, true) : null;
+        } catch (\Throwable) {
+            return [];
+        }
+        return collect($data['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [])
+            ->filter(fn($ld) => filled($ld['drName'] ?? null))
+            ->map(fn($ld) => ['drName' => $ld['drName'] ?? '', 'levelDokter' => $ld['levelDokter'] ?? ''])
+            ->values()
+            ->all();
     }
 
     private function defaultDoctorId(): ?string
@@ -467,78 +537,105 @@ new class extends Component {
                             $selSex = ($selectedPatient['sex'] ?? null) === 'L' ? 'Laki-Laki' : (($selectedPatient['sex'] ?? null) === 'P' ? 'Perempuan' : '-');
                         @endphp
                         <div class="flex items-start justify-between gap-3 px-4 py-3 border rounded-xl border-brand-green/30 bg-brand-green/5 dark:border-brand-lime/30 dark:bg-brand-lime/5">
-                            <div class="space-y-0 leading-tight">
-                                <div class="text-base font-medium text-body dark:text-gray-300">
-                                    {{ $selectedPatient['reg_no'] ?? '-' }}
-                                </div>
-                                <div class="text-lg font-semibold text-brand dark:text-white">
-                                    {{ $selectedPatient['reg_name'] ?? '-' }} / ({{ $selSex }})
-                                </div>
-                                <div class="text-sm text-body dark:text-gray-400">
-                                    {{ $selectedPatient['birth_date'] ?? '-' }}
-                                    @if (!empty($selectedPatient['umur_format']))
-                                        <span class="text-muted">({{ $selectedPatient['umur_format'] }})</span>
+                            <div class="grid flex-1 gap-4 leading-tight sm:grid-cols-2">
+                                {{-- Kiri: identitas --}}
+                                <div>
+                                    <div class="text-base font-medium text-body dark:text-gray-300">{{ $selectedPatient['reg_no'] ?? '-' }}</div>
+                                    <div class="text-lg font-semibold text-brand dark:text-white">{{ $selectedPatient['reg_name'] ?? '-' }} / ({{ $selSex }})</div>
+                                    <div class="text-sm text-body dark:text-gray-400">
+                                        {{ $selectedPatient['birth_date'] ?? '-' }}@if (!empty($selectedPatient['umur_format'])) <span class="text-muted">({{ $selectedPatient['umur_format'] }})</span>@endif
+                                    </div>
+                                    @if (!empty($selectedPatient['address']))
+                                        <div class="text-sm text-muted dark:text-gray-400">{{ $selectedPatient['address'] }}</div>
                                     @endif
                                 </div>
-                                @if (!empty($selectedPatient['address']))
-                                    <div class="text-sm text-muted dark:text-gray-400">{{ $selectedPatient['address'] }}</div>
-                                @endif
+                                {{-- Kanan: detail per-sumber (RI/RJ/UGD) --}}
+                                <div class="pt-2 border-t sm:pt-0 sm:border-t-0 sm:border-l border-brand-green/20 dark:border-brand-lime/20 sm:pl-4">
+                                    @include('pages.transaksi.penunjang._patient-detail', ['p' => $selectedPatient, 'source' => $source])
+                                </div>
                             </div>
                             <x-secondary-button type="button" wire:click="changePatient" class="px-3 py-1 text-xs shrink-0">
                                 Ganti
                             </x-secondary-button>
                         </div>
                     @else
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
+                        {{-- Search + Filter bangsal (kanan-kiri) --}}
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <div class="relative flex-1">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <x-text-input wire:model.live.debounce.300ms="patientSearch" class="block w-full pl-10"
+                                    placeholder="Cari No RM / Nama pasien aktif..." />
                             </div>
-                            <x-text-input wire:model.live.debounce.300ms="patientSearch" class="block w-full pl-10"
-                                placeholder="Cari No RM / Nama pasien aktif..." />
+                            @if ($source === 'RI')
+                                <x-select-input wire:model.live="filterBangsal" class="text-sm sm:w-56">
+                                    <option value="">Semua Bangsal</option>
+                                    @foreach ($this->bangsalOptions as $bangsal)
+                                        <option value="{{ $bangsal->bangsal_id }}">{{ $bangsal->bangsal_name }}</option>
+                                    @endforeach
+                                </x-select-input>
+                            @endif
                         </div>
 
-                        <div class="mt-2 overflow-y-auto border divide-y border-hairline rounded-xl divide-hairline-soft dark:border-gray-700 dark:divide-gray-800 max-h-56">
-                            @forelse ($this->activePatients as $pasien)
-                                @php
-                                    $sexLabel = $pasien->sex === 'L' ? 'Laki-Laki' : ($pasien->sex === 'P' ? 'Perempuan' : '-');
-                                    $identity = [
-                                        'reg_no' => $pasien->reg_no,
-                                        'reg_name' => $pasien->reg_name,
-                                        'sex' => $pasien->sex,
-                                        'birth_date' => $pasien->birth_date,
-                                        'umur_format' => $pasien->umur_format,
-                                        'address' => $pasien->address,
-                                    ];
-                                @endphp
-                                <button type="button" wire:key="ap-{{ $source }}-{{ $pasien->ref_no }}"
-                                    wire:click="selectPatient({{ $pasien->ref_no }}, @js($identity))"
-                                    class="flex flex-col w-full px-4 py-3 space-y-0 leading-tight text-left transition hover:bg-surface-soft dark:hover:bg-gray-800/60">
-                                    <span class="text-base font-medium text-body dark:text-gray-300">{{ $pasien->reg_no }}</span>
-                                    <span class="text-lg font-semibold text-brand dark:text-white">
-                                        {{ $pasien->reg_name }} / ({{ $sexLabel }})
-                                    </span>
-                                    <span class="text-sm text-body dark:text-gray-400">
-                                        {{ $pasien->birth_date ?? '-' }}
-                                        @if (!empty($pasien->umur_format))
-                                            <span class="text-muted">({{ $pasien->umur_format }})</span>
-                                        @endif
-                                    </span>
-                                    @if (!empty($pasien->address))
-                                        <span class="text-sm text-muted dark:text-gray-400">{{ $pasien->address }}</span>
-                                    @endif
-                                </button>
-                            @empty
-                                <div class="px-4 py-6 text-sm text-center text-muted-soft dark:text-gray-600">
-                                    Tidak ada pasien aktif
-                                    @if (trim($patientSearch) !== '')
-                                        cocok dengan "{{ $patientSearch }}"
-                                    @endif
-                                    .
-                                </div>
-                            @endforelse
+                        {{-- Tabel pasien — gaya Daftar RI (kolom Identitas | Kamar & Dokter) --}}
+                        <div class="mt-2 overflow-y-auto border border-hairline rounded-xl dark:border-gray-700 max-h-72">
+                            <table class="w-full text-sm">
+                                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
+                                    @forelse ($this->activePatients as $pasien)
+                                        @php
+                                            $sexLabel = $pasien->sex === 'L' ? 'Laki-Laki' : ($pasien->sex === 'P' ? 'Perempuan' : '-');
+                                            $identity = [
+                                                'reg_no' => $pasien->reg_no,
+                                                'reg_name' => $pasien->reg_name,
+                                                'sex' => $pasien->sex,
+                                                'birth_date' => $pasien->birth_date,
+                                                'umur_format' => $pasien->umur_format,
+                                                'address' => $pasien->address,
+                                                'bangsal_name' => $pasien->bangsal_name ?? null,
+                                                'room_name' => $pasien->room_name ?? null,
+                                                'bed_no' => $pasien->bed_no ?? null,
+                                                'penerima_name' => $pasien->penerima_name ?? null,
+                                                'leveling_dokter_list' => $pasien->leveling_dokter_list ?? [],
+                                                'poli_desc' => $pasien->poli_desc ?? null,
+                                                'dokter_name' => $pasien->dokter_name ?? null,
+                                                'entry_desc' => $pasien->entry_desc ?? null,
+                                                'no_antrian' => $pasien->no_antrian ?? null,
+                                                'klaim_desc' => $pasien->klaim_desc ?? null,
+                                                'masuk_date' => $pasien->masuk_date ?? null,
+                                            ];
+                                        @endphp
+                                        <tr wire:key="ap-{{ $source }}-{{ $pasien->ref_no }}"
+                                            wire:click="selectPatient({{ $pasien->ref_no }}, @js($identity))"
+                                            class="transition cursor-pointer hover:bg-surface-soft dark:hover:bg-gray-800/60">
+                                            {{-- Identitas --}}
+                                            <td class="px-4 py-3 leading-tight align-top">
+                                                <div class="text-base font-medium text-body dark:text-gray-300">{{ $pasien->reg_no }}</div>
+                                                <div class="text-lg font-semibold text-brand dark:text-white">{{ $pasien->reg_name }} / ({{ $sexLabel }})</div>
+                                                <div class="text-sm text-body dark:text-gray-400">
+                                                    {{ $pasien->birth_date ?? '-' }}@if (!empty($pasien->umur_format)) <span class="text-muted">({{ $pasien->umur_format }})</span>@endif
+                                                </div>
+                                                @if (!empty($pasien->address))
+                                                    <div class="text-sm text-muted dark:text-gray-400">{{ $pasien->address }}</div>
+                                                @endif
+                                            </td>
+                                            {{-- Detail per-sumber (RI: kamar/DPJP; RJ: poli/dokter; UGD: dokter/cara masuk) --}}
+                                            <td class="px-4 py-3 leading-tight align-top whitespace-nowrap">
+                                                @include('pages.transaksi.penunjang._patient-detail', ['p' => $identity, 'source' => $source])
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="2" class="px-4 py-6 text-sm text-center text-muted-soft dark:text-gray-600">
+                                                Tidak ada pasien aktif @if (trim($patientSearch) !== '') cocok dengan "{{ $patientSearch }}" @endif.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     @endif
                 </div>

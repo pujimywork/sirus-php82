@@ -28,7 +28,7 @@ new class extends Component {
      */
 
     public string $searchKeyword = '';
-    public string $filterSource = 'RJ';
+    public string $filterSource = 'ALL'; // default Semua (union RJ+UGD+RI), sama seperti list Laborat
     public string $filterUpload = ''; // '' (semua) | 'belum_foto' | 'belum_pdf' | 'belum' (any) | 'lengkap'
     public string $filterMode = 'harian'; // 'bulanan' | 'harian' — default harian (pelayanan)
     public string $filterBulan = ''; // mm/yyyy (mode bulanan)
@@ -74,7 +74,7 @@ new class extends Component {
     public function resetFilters(): void
     {
         $this->reset(['searchKeyword']);
-        $this->filterSource = 'RJ';
+        $this->filterSource = 'ALL';
         $this->filterUpload = '';
         $this->filterMode = 'harian';
         $this->filterBulan = Carbon::now()->format('m/Y');
@@ -122,6 +122,20 @@ new class extends Component {
                 ELSE NULL END as umur_format"),
         ];
 
+        // SEMUA sumber → union RJ+UGD+RI (setiap subquery difilter + ditambah waktu_sort utk urut gabungan)
+        if ($this->filterSource === 'ALL') {
+            $rj = $this->applyRadFilters($this->baseQueryRJ($pasienCols), 'rj_date');
+            $ugd = $this->applyRadFilters($this->baseQueryUGD($pasienCols), 'rj_date');
+            $ri = $this->applyRadFilters($this->baseQueryRI($pasienCols), 'entry_date');
+
+            $union = $rj->unionAll($ugd)->unionAll($ri);
+
+            return DB::query()->fromSub($union, 't')
+                ->orderByDesc('t.waktu_sort')
+                ->orderByDesc('t.dtl_no')
+                ->paginate($this->itemsPerPage);
+        }
+
         // Query dasar per sumber — dipisah ke fungsi masing2 biar eksplisit & mudah diaudit.
         // $headerDateCol = tgl fallback saat waktu_entry NULL; $dtlCol = PK detail (utk sort).
         if ($this->filterSource === 'UGD') {
@@ -138,7 +152,18 @@ new class extends Component {
             $dtlCol = 'rad_dtl';
         }
 
-        // Filter status upload
+        $this->applyRadFilters($query, $headerDateCol);
+
+        return $query
+            ->orderByRaw("NVL(r.waktu_entry, h.$headerDateCol) DESC")
+            ->orderByDesc('r.' . $dtlCol)
+            ->paginate($this->itemsPerPage);
+    }
+
+    /* Terapkan filter (upload/keyword/tanggal) + tambah kolom waktu_efektif & waktu_sort.
+       Dipakai single-source & tiap subquery UNION (source=ALL). $headerDateCol = fallback tgl header. */
+    private function applyRadFilters($query, string $headerDateCol)
+    {
         if ($this->filterUpload === 'belum_foto') {
             $query->whereNull('r.rad_upload_pdf_foto');
         } elseif ($this->filterUpload === 'belum_pdf') {
@@ -161,17 +186,15 @@ new class extends Component {
             });
         }
 
-        // Filter rentang tanggal — atas waktu_entry, fallback ke tgl header (RJ/UGD: rj_date, RI: entry_date).
+        // Rentang tanggal — atas waktu_entry, fallback ke tgl header (RJ/UGD: rj_date, RI: entry_date).
         // Banyak order legacy (Oracle Dev 6i) waktu_entry-nya NULL → dulu tak pernah muncul (BETWEEN buang NULL).
         [$awal, $akhir] = $this->dateRange();
         $query
             ->addSelect(DB::raw("to_char(NVL(r.waktu_entry, h.$headerDateCol),'dd/mm/yyyy hh24:mi') as waktu_efektif"))
+            ->addSelect(DB::raw("to_char(NVL(r.waktu_entry, h.$headerDateCol),'yyyymmddhh24mi') as waktu_sort"))
             ->whereRaw("NVL(r.waktu_entry, h.$headerDateCol) BETWEEN ? AND ?", [$awal, $akhir]);
 
-        return $query
-            ->orderByRaw("NVL(r.waktu_entry, h.$headerDateCol) DESC")
-            ->orderByDesc('r.' . $dtlCol)
-            ->paginate($this->itemsPerPage);
+        return $query;
     }
 
     /* Query dasar per sumber — table + join + select. Beda hanya tabel & sebagian kolom;
@@ -482,6 +505,7 @@ new class extends Component {
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Sumber" />
                         <x-select-input wire:model.live="filterSource" class="w-full mt-1 sm:w-44">
+                            <option value="ALL">Semua Sumber</option>
                             <option value="RJ">Rawat Jalan</option>
                             <option value="UGD">Unit Gawat Darurat</option>
                             <option value="RI">Rawat Inap</option>
@@ -504,7 +528,7 @@ new class extends Component {
                     <div class="flex items-center gap-2 ml-auto">
                         {{-- Tambah pemeriksaan radiologi utk pasien aktif hari ini (sumber aktif) --}}
                         <x-primary-button type="button"
-                            wire:click="$dispatch('radiologi.tambah.open', { source: '{{ $filterSource }}' })"
+                            wire:click="$dispatch('radiologi.tambah.open', { source: '{{ $filterSource === 'ALL' ? 'RJ' : $filterSource }}' })"
                             class="gap-1.5 whitespace-nowrap">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
