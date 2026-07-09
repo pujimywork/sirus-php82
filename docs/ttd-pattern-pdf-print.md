@@ -304,3 +304,17 @@ Untuk TTD area, **selalu pakai `h-16` (native)** — bukan `h-[64px]`. `h-16` = 
 - Contoh single TTD: `resources/views/pages/components/modul-dokumen/u-g-d/suket-sakit/cetak-suket-sakit-ugd-print.blade.php`
 - Contoh 3-kolom TTD: `resources/views/pages/components/modul-dokumen/u-g-d/inform-consent/cetak-inform-consent-print.blade.php`
 - Contoh compact BPJS: `resources/views/pages/components/modul-dokumen/b-p-j-s/cetak-sep/cetak-sep-print.blade.php`
+
+## 11. Urutan kolom TTD standar (dokumen multi-tanda-tangan)
+
+Untuk dokumen consent dengan >1 penandatangan, **urutan kolom TTD di CETAK wajib SAMA dengan urutan blok di FORM (layar)**, dan **seragam antar modul RJ/UGD/RI**.
+
+- **Inform Consent (3 kolom):** `Pasien / Wali → Saksi → Pemberi Informasi (PPA/Dokter)`.
+  Form (semua modul) sudah pakai urutan ini; cetak RJ/UGD/RI diseragamkan ke sini
+  (sebelumnya cetak keliru `Pasien → PPA → Saksi`).
+- **General Consent (2 kolom):** `Pasien / Wali → Petugas Pemberi Penjelasan`.
+
+Saat menambah/mengubah kolom TTD: **cek urutan blok di FORM dulu, lalu samakan di CETAK.**
+JANGAN percaya komentar `{{-- TTD 3 kolom: ... --}}` — verifikasi label `<p class="font-bold">`
+tiap kolom (komentar bisa tak sinkron dgn isi; kasus nyata: komentar RJ tertulis
+`Saksi | Pemberi Informasi` padahal kolomnya `Pemberi Informasi | Saksi`).
