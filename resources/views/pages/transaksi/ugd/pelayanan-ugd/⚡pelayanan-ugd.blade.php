@@ -818,6 +818,44 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
+                                                            {{-- Transfer ke RI — aktif HANYA saat status Antrian (rj_status='A'), selain itu disabled --}}
+                                                            @hasanyrole('Admin|Tu|Perawat')
+                                                                @if ($row->rj_status === 'A')
+                                                                    <x-dropdown-link href="#"
+                                                                        wire:click.prevent="$dispatch('open-transfer-ri-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M3 12h13m0 0l-4-4m4 4l-4 4m9-9v10a2 2 0 01-2 2h-3" />
+                                                                            </svg>
+                                                                            <span>Transfer ke RI<br>
+                                                                                <span class="font-semibold">Rawat Inap</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @else
+                                                                    <div title="Hanya bisa saat status Antrian"
+                                                                        class="px-3 py-2 text-sm rounded-lg opacity-50 cursor-not-allowed bg-surface-soft dark:bg-gray-800">
+                                                                        <div class="flex items-start gap-2 text-muted-soft">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M3 12h13m0 0l-4-4m4 4l-4 4m9-9v10a2 2 0 01-2 2h-3" />
+                                                                            </svg>
+                                                                            <span>Transfer ke RI<br>
+                                                                                <span class="font-semibold">Rawat Inap</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            @endhasanyrole
+
                                                         </div>
 
                                                     </div>
@@ -855,6 +893,7 @@ new class extends Component {
             {{-- Child components — pelayanan-only: EMR + Modul Dokumen + Administrasi + Cetak Etiket --}}
             <livewire:pages::transaksi.ugd.emr-ugd.erm-ugd wire:key="emr-ugd-actions" />
             <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
+            <livewire:pages::transaksi.ugd.administrasi-ugd.transfer-ri-ugd-actions wire:key="transfer-ri-ugd-actions" />
             <livewire:pages::transaksi.ugd.pelayanan-ugd.cek-peserta-bpjs-ugd-actions wire:key="cek-peserta-bpjs-ugd-actions" />
             <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.modul-dokumen-ugd wire:key="modul-dokumen-ugd" />
             <livewire:pages::transaksi.ugd.emr-ugd.log-aktivitas.log-aktivitas-ugd wire:key="log-aktivitas-ugd" />

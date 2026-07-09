@@ -554,6 +554,22 @@ new class extends Component {
                                                     </x-secondary-button>
                                                 @endhasanyrole
 
+                                                {{-- Transfer ke RI — aktif HANYA saat status Antrian (rj_status='A'), selain itu disabled --}}
+                                                @hasanyrole('Admin|Tu|Manager Umum|Supervisor Tu')
+                                                    <x-secondary-button type="button"
+                                                        :disabled="$row->rj_status !== 'A'"
+                                                        wire:click="$dispatch('open-transfer-ri-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                        title="{{ $row->rj_status === 'A' ? 'Transfer pasien ke Rawat Inap' : 'Hanya bisa saat status Antrian' }}"
+                                                        class="text-xs whitespace-nowrap justify-center !bg-teal-600 !text-white !border-teal-700 hover:!bg-teal-700 dark:!bg-teal-600 dark:!text-white dark:!border-teal-700 dark:hover:!bg-teal-700">
+                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M3 12h13m0 0l-4-4m4 4l-4 4m9-9v10a2 2 0 01-2 2h-3" />
+                                                        </svg>
+                                                        Transfer ke RI
+                                                    </x-secondary-button>
+                                                @endhasanyrole
+
                                             </div>
                                         @endif
                                     </td>
@@ -589,6 +605,7 @@ new class extends Component {
 
         <livewire:pages::transaksi.ugd.emr-ugd.log-aktivitas.log-aktivitas-ugd wire:key="log-aktivitas-ugd" />
         <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
+        <livewire:pages::transaksi.ugd.administrasi-ugd.transfer-ri-ugd-actions wire:key="transfer-ri-ugd-actions" />
 
     </div>
 </div>

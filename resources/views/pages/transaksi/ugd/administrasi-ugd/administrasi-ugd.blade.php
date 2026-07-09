@@ -405,7 +405,12 @@ new class extends Component {
 
         // Single dispatcher ke siblings (jasa-medis/jasa-dokter/jasa-karyawan/lab/radiologi/obat/lain-lain/transfer)
         // — re-check status & sync lock state. Cegah cross-talk antar sibling.
-        $this->dispatch('ugd.administrasi-selesai', rjNo: $this->rjNo);
+        // Guard: hanya broadcast bila rjNo ada. Tanpa ini, event 'administrasi-ugd.updated'
+        // dari luar modal (mis. Transfer ke RI di pelayanan) mengirim rjNo=null → child
+        // onAdministrasiSelesai(int $rjNo) TypeError.
+        if ($this->rjNo) {
+            $this->dispatch('ugd.administrasi-selesai', rjNo: (int) $this->rjNo);
+        }
 
         // Refresh data (3 child yg butuh re-fetch listing setelah update)
         $this->dispatch('administrasi-obat-ugd.updated');
