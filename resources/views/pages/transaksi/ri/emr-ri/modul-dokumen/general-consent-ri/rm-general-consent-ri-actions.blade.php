@@ -126,6 +126,14 @@ new class extends Component {
             'wali' => 'required|string|max:200',
             'waliHubungan' => 'required|string|max:50',
             'agreement' => 'required|in:1',
+            // Pihak yang Diberi Akses Info Medis: wajib minimal 1 entri ber-Nama
+            'pihakInfoMedis' => [
+                function ($attribute, $value, $fail) {
+                    if (!collect($value)->contains(fn($p) => filled(trim($p['nama'] ?? '')))) {
+                        $fail('Minimal 1 pihak yang diberi akses informasi medis wajib diisi (isi Nama).');
+                    }
+                },
+            ],
         ];
     }
 
@@ -574,6 +582,8 @@ new class extends Component {
                             @endforeach
                             </div>
                         </div>
+
+                        <x-input-error :messages="$errors->get('pihakInfoMedis')" class="mt-1" />
 
                         @if (!$isFormLocked)
                             <div class="flex justify-end">
