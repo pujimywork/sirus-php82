@@ -1282,13 +1282,26 @@ new class extends Component {
                         <x-secondary-button type="button" wire:click="closeModal" class="min-w-[120px] justify-center">Tutup</x-secondary-button>
                         <x-secondary-button wire:click.prevent="cetakTrfPasienUgd" wire:loading.attr="disabled"
                             wire:target="cetakTrfPasienUgd" class="gap-2 min-w-[160px] justify-center">
-                            <span wire:loading.remove wire:target="cetakTrfPasienUgd">Cetak Form Transfer</span>
+                            <span wire:loading.remove wire:target="cetakTrfPasienUgd" class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                Cetak Form Transfer
+                            </span>
                             <span wire:loading wire:target="cetakTrfPasienUgd"><x-loading class="w-4 h-4" /> Mencetak...</span>
                         </x-secondary-button>
                         @if (!$isFormLocked)
                             <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled" wire:target="save"
                                 class="gap-2 min-w-[160px] justify-center">
-                                <span wire:loading.remove wire:target="save">Simpan Form Transfer</span>
+                                <span wire:loading.remove wire:target="save" class="flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Simpan Form Transfer
+                                </span>
                                 <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
                             </x-primary-button>
                         @endif
