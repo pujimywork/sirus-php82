@@ -836,17 +836,17 @@ new class extends Component {
                         <div class="space-y-3">
                             <div>
                                 <x-input-label value="Keluhan Utama" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.keluhanUtama" :error="$errors->has('dataDaftarUGD.trfUgd.keluhanUtama')" rows="3"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.keluhanUtama" :error="$errors->has('dataDaftarUGD.trfUgd.keluhanUtama')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Temuan Signifikan" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.temuanSignifikan" :error="$errors->has('dataDaftarUGD.trfUgd.temuanSignifikan')" rows="3"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.temuanSignifikan" :error="$errors->has('dataDaftarUGD.trfUgd.temuanSignifikan')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Alergi" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.alergi" :error="$errors->has('dataDaftarUGD.trfUgd.alergi')" rows="2" :disabled="$isFormLocked" />
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.alergi" :error="$errors->has('dataDaftarUGD.trfUgd.alergi')" rows="2" :disabled="$isFormLocked" />
                             </div>
                         </div>
                     </div>
@@ -858,12 +858,12 @@ new class extends Component {
                         <div class="space-y-3">
                             <div>
                                 <x-input-label value="Diagnosis (Free Text)" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.diagnosisFreeText" :error="$errors->has('dataDaftarUGD.trfUgd.diagnosisFreeText')" rows="3"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.diagnosisFreeText" :error="$errors->has('dataDaftarUGD.trfUgd.diagnosisFreeText')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Terapi UGD" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.terapiUgd" :error="$errors->has('dataDaftarUGD.trfUgd.terapiUgd')" rows="3"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.terapiUgd" :error="$errors->has('dataDaftarUGD.trfUgd.terapiUgd')" rows="3"
                                     placeholder="Tuliskan terapi UGD..." :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -1028,7 +1028,7 @@ new class extends Component {
                             <div>
                                 <x-input-label value="Tanggal / Jam Pindah" class="mb-1" />
                                 <div class="flex items-center gap-2">
-                                    <x-text-input wire:model.blur="dataDaftarUGD.trfUgd.tglPindah" :error="$errors->has('dataDaftarUGD.trfUgd.tglPindah')"
+                                    <x-text-input wire:model.live="dataDaftarUGD.trfUgd.tglPindah" :error="$errors->has('dataDaftarUGD.trfUgd.tglPindah')"
                                         placeholder="dd/mm/yyyy hh:mm:ss" class="grow" :disabled="$isFormLocked" />
                                     @if (!$isFormLocked)
                                         <x-now-button wire:click="setTglPindah" />
@@ -1037,12 +1037,12 @@ new class extends Component {
                             </div>
                             <div>
                                 <x-input-label value="Alasan Pindah" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.alasanPindah" :error="$errors->has('dataDaftarUGD.trfUgd.alasanPindah')" rows="2"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.alasanPindah" :error="$errors->has('dataDaftarUGD.trfUgd.alasanPindah')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Metode Pemindahan" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.metodePemindahanPasien" :error="$errors->has('dataDaftarUGD.trfUgd.metodePemindahanPasien')" rows="2"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.metodePemindahanPasien" :error="$errors->has('dataDaftarUGD.trfUgd.metodePemindahanPasien')" rows="2"
                                     placeholder="Brankar / Kursi roda / Jalan sendiri..." :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -1093,12 +1093,12 @@ new class extends Component {
                             </div>
                             <div>
                                 <x-input-label value="Fasilitas yang Dibutuhkan" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.fasilitas" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitas')" rows="2"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.fasilitas" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitas')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Fasilitas Pendukung" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.fasilitasPendukung" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitasPendukung')" rows="2"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.fasilitasPendukung" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitasPendukung')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -1123,6 +1123,7 @@ new class extends Component {
                                         <div>
                                             <x-input-label value="{{ $ttv['label'] }}{{ $ttv['unit'] ? ' (' . $ttv['unit'] . ')' : '' }}"
                                                 class="!text-sm whitespace-nowrap" />
+                                            {{-- TTV numerik: .blur (bukan .live) untuk hindari digit hilang saat ketik cepat --}}
                                             <x-text-input
                                                 wire:model.blur="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.{{ $ttv['field'] }}"
                                                 :error="$errors->has('dataDaftarUGD.trfUgd.' . $sec['key'] . '.' . $ttv['field'])"
@@ -1133,7 +1134,7 @@ new class extends Component {
                                 </div>
                                 <div>
                                     <x-input-label value="Keadaan Umum" class="mb-1 !text-sm" />
-                                    <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.keadaanPasien"
+                                    <x-textarea wire:model.live="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.keadaanPasien"
                                         rows="2" :disabled="$sec['disabled']" />
                                 </div>
                             </div>
@@ -1149,13 +1150,13 @@ new class extends Component {
                         @foreach ([['field' => 'observasi', 'label' => 'Observasi'], ['field' => 'pembatasanCairan', 'label' => 'Pembatasan Cairan'], ['field' => 'balanceCairan', 'label' => 'Balance Cairan'], ['field' => 'diet', 'label' => 'Diet']] as $rp)
                             <div>
                                 <x-input-label value="{{ $rp['label'] }}" class="mb-1" />
-                                <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.rencanaPerawatan.{{ $rp['field'] }}"
+                                <x-textarea wire:model.live="dataDaftarUGD.trfUgd.rencanaPerawatan.{{ $rp['field'] }}"
                                     rows="2" :disabled="$disableTerima" />
                             </div>
                         @endforeach
                         <div class="md:col-span-2">
                             <x-input-label value="Lain-lain" class="mb-1" />
-                            <x-textarea wire:model.blur="dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain" :error="$errors->has('dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain')" rows="2"
+                            <x-textarea wire:model.live="dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain" :error="$errors->has('dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain')" rows="2"
                                 :disabled="$disableTerima" />
                         </div>
                     </div>
@@ -1170,22 +1171,22 @@ new class extends Component {
                         <div class="grid grid-cols-2 gap-3 mb-3 md:grid-cols-4">
                             <div>
                                 <x-input-label value="Jenis Alat *" class="mb-1" />
-                                <x-text-input wire:model.blur="alat.jenis" :error="$errors->has('alat.jenis')" placeholder="IV Line / Kateter..."
+                                <x-text-input wire:model.live="alat.jenis" :error="$errors->has('alat.jenis')" placeholder="IV Line / Kateter..."
                                     class="w-full" />
                                 <x-input-error :messages="$errors->get('alat.jenis')" class="mt-1" />
                             </div>
                             <div>
                                 <x-input-label value="Lokasi" class="mb-1" />
-                                <x-text-input wire:model.blur="alat.lokasi" :error="$errors->has('alat.lokasi')" placeholder="Tangan kanan, NGT..."
+                                <x-text-input wire:model.live="alat.lokasi" :error="$errors->has('alat.lokasi')" placeholder="Tangan kanan, NGT..."
                                     class="w-full" />
                             </div>
                             <div>
                                 <x-input-label value="Ukuran" class="mb-1" />
-                                <x-text-input wire:model.blur="alat.ukuran" :error="$errors->has('alat.ukuran')" placeholder="20G / 10Fr..." class="w-full" />
+                                <x-text-input wire:model.live="alat.ukuran" :error="$errors->has('alat.ukuran')" placeholder="20G / 10Fr..." class="w-full" />
                             </div>
                             <div>
                                 <x-input-label value="Keterangan" class="mb-1" />
-                                <x-text-input wire:model.blur="alat.keterangan" :error="$errors->has('alat.keterangan')" placeholder="Terpasang baik..."
+                                <x-text-input wire:model.live="alat.keterangan" :error="$errors->has('alat.keterangan')" placeholder="Terpasang baik..."
                                     class="w-full" />
                             </div>
                         </div>
