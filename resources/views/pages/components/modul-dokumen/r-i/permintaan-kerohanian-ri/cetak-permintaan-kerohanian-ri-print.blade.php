@@ -2,27 +2,7 @@
 
 <x-pdf.layout-a4-with-out-background title="FORMULIR PERMINTAAN PELAYANAN KEROHANIAWAN">
 
-    {{-- ── IDENTITAS PASIEN ── --}}
-    <x-slot name="patientData">
-        @php
-            $id = $data['identitas'] ?? [];
-            $alamatPasien = trim(
-                ($id['alamat'] ?? '-') .
-                    (!empty($id['rt']) ? ' RT ' . $id['rt'] : '') .
-                    (!empty($id['rw']) ? '/RW ' . $id['rw'] : '') .
-                    (!empty($id['desaName']) ? ', ' . $id['desaName'] : '') .
-                    (!empty($id['kecamatanName']) ? ', ' . $id['kecamatanName'] : ''),
-            );
-        @endphp
-        <x-pdf.identitas-pasien
-            :rm="$data['regNo'] ?? null"
-            :nama="$data['regName'] ?? null"
-            :jenisKelamin="$data['jenisKelamin']['jenisKelaminDesc'] ?? null"
-            :tempatLahir="$data['tempatLahir'] ?? null"
-            :tglLahir="$data['tglLahir'] ?? null"
-            :umur="$data['thn'] ?? null"
-            :alamat="$alamatPasien" />
-    </x-slot>
+    {{-- Identitas pasien TIDAK di header — ditampilkan di body ("terhadap pasien di bawah ini") --}}
 
     @php
         $form = $data['form'] ?? [];
@@ -78,11 +58,32 @@
         </tr>
     </table>
 
-    {{-- ── PERNYATAAN ── (data pasien TIDAK diulang di body — cukup header identitas standar di atas) --}}
-    <div class="text-[11px] leading-relaxed mb-3">
+    {{-- ── PERNYATAAN ── --}}
+    <div class="text-[11px] leading-relaxed mb-2">
         <p>Dengan ini menyatakan permintaan pendampingan pelayanan kerohanian Agama/Kepercayaan
-            <strong>{{ $agamaText }}</strong> kepada Rumah Sakit Islam Madinah terhadap pasien tersebut
-            sebagaimana identitas tercantum di atas.</p>
+            <strong>{{ $agamaText }}</strong> kepada Rumah Sakit Islam Madinah terhadap pasien di bawah ini:</p>
+    </div>
+
+    {{-- ── DATA PASIEN (blok identitas STANDAR — satu-satunya, di body) ── --}}
+    @php
+        $id = $data['identitas'] ?? [];
+        $alamatPasien = trim(
+            ($id['alamat'] ?? '-') .
+                (!empty($id['rt']) ? ' RT ' . $id['rt'] : '') .
+                (!empty($id['rw']) ? '/RW ' . $id['rw'] : '') .
+                (!empty($id['desaName']) ? ', ' . $id['desaName'] : '') .
+                (!empty($id['kecamatanName']) ? ', ' . $id['kecamatanName'] : ''),
+        );
+    @endphp
+    <div class="mb-3">
+        <x-pdf.identitas-pasien
+            :rm="$data['regNo'] ?? null"
+            :nama="$data['regName'] ?? null"
+            :jenisKelamin="$data['jenisKelamin']['jenisKelaminDesc'] ?? null"
+            :tempatLahir="$data['tempatLahir'] ?? null"
+            :tglLahir="$data['tglLahir'] ?? null"
+            :umur="$data['thn'] ?? null"
+            :alamat="$alamatPasien" />
     </div>
 
     {{-- ── PENUTUP ── --}}
