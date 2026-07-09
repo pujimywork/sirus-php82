@@ -259,12 +259,9 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Form read-only.');
             return;
         }
-        if (empty($this->signature)) {
-            $this->dispatch('toast', type: 'error', message: 'TTD pasien/wali wajib diisi sebelum TTD petugas.');
-            return;
-        }
-
-        // validateWithToast() sudah menampilkan toast + melempar ValidationException bila gagal.
+        // Semua kolom wajib (termasuk TTD pasien/wali) divalidasi di sini agar field kosong
+        // di-highlight MERAH — jangan short-circuit sebelum validate().
+        // validateWithToast() menampilkan toast + melempar ValidationException bila gagal.
         $this->validateWithToast();
 
         // Stempel TTD petugas (pemberi informasi) = user login.
