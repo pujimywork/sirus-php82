@@ -682,7 +682,7 @@ new class extends Component {
                         wire:key="form-pindah-ri-display-pasien-{{ $riHdrNo ?? 'init' }}" />
 
                     {{-- ══ PANDUAN PENGISIAN (collapsible) ══ --}}
-                    <div x-data="{ open: true }"
+                    <div x-data="{ open: false }"
                         class="overflow-hidden border rounded-2xl bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700">
                         <button type="button" @click="open = !open"
                             class="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-100 dark:text-blue-200 dark:hover:bg-blue-900/30">

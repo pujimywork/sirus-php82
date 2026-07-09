@@ -469,7 +469,7 @@ new class extends Component {
     {{-- ============================================================
     | PANDUAN PENGISIAN
     ============================================================= --}}
-    <div class="p-3 border rounded-xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800"
+    <div class="p-3 border rounded-2xl border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700"
         x-data="{ showGuide: false }">
         <button type="button" @click="showGuide = !showGuide"
             class="flex items-center justify-between w-full text-left">
@@ -479,7 +479,7 @@ new class extends Component {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span class="text-sm font-semibold text-blue-800 dark:text-blue-300">Panduan Pengisian Asuhan
+                <span class="text-sm font-semibold text-blue-900 dark:text-blue-200">Panduan Pengisian Asuhan
                     Keperawatan</span>
             </div>
             <svg class="w-4 h-4 transition-transform text-blue-600 dark:text-blue-400"

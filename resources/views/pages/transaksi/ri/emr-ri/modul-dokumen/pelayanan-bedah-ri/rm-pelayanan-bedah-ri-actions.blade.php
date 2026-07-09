@@ -38,17 +38,17 @@ new class extends Component {
 <div x-data="{ subTab: 'pengkajianPreOp', showGuide: false, info: @js($infoMap) }">
 
     {{-- ══ PANDUAN PENGISIAN (collapsible) ══ --}}
-    <div class="mb-4 border border-brand-200 rounded-xl bg-brand-50/60 dark:bg-brand-900/10 dark:border-brand-800">
+    <div class="mb-4 overflow-hidden border border-blue-200 rounded-2xl bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700">
         <button type="button" x-on:click="showGuide = !showGuide"
-            class="flex items-center justify-between w-full px-4 py-2.5 text-left">
-            <span class="flex items-center gap-2 text-base font-semibold text-brand-700 dark:text-brand-300">
+            class="flex items-center justify-between w-full px-4 py-2.5 text-left transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/30">
+            <span class="flex items-center gap-2 text-base font-semibold text-blue-900 dark:text-blue-200">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Panduan Pengisian — Alur & Cara Isi
             </span>
-            <svg class="w-4 h-4 text-brand-600 transition-transform" :class="showGuide && 'rotate-180'" fill="none"
+            <svg class="w-4 h-4 text-blue-600 transition-transform" :class="showGuide && 'rotate-180'" fill="none"
                 stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
@@ -62,7 +62,7 @@ new class extends Component {
                     @foreach ($subForms as $sf)
                         <li>
                             <button type="button" x-on:click="subTab = '{{ $sf['key'] }}'; showGuide = false"
-                                class="font-medium text-brand-700 underline-offset-2 hover:underline dark:text-brand-300">{{ $sf['label'] }}</button>
+                                class="font-medium text-blue-700 underline-offset-2 hover:underline dark:text-blue-300">{{ $sf['label'] }}</button>
                             <span class="text-muted dark:text-gray-400"> — {{ $sf['pengisi'] }} · <em>{{ $sf['fase'] }}</em>: {{ $sf['ket'] }}</span>
                         </li>
                     @endforeach
@@ -70,7 +70,7 @@ new class extends Component {
             </div>
 
             {{-- Cara isi umum --}}
-            <div class="pt-2 border-t border-brand-200/60 dark:border-brand-800/60">
+            <div class="pt-2 border-t border-blue-200/60 dark:border-blue-700/60">
                 <p class="mb-1.5 text-sm font-semibold text-ink dark:text-gray-200">Cara isi tiap form:</p>
                 <ul class="space-y-1 text-sm text-body dark:text-gray-300 list-disc pl-5">
                     <li>Klik <b>Buka Formulir</b> pada form yang dipilih.</li>

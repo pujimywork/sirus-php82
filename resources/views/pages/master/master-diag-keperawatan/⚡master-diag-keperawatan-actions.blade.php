@@ -436,25 +436,25 @@ new class extends Component {
                     {{-- ========================================
                          PANDUAN PENGISIAN
                     ========================================= --}}
-                    <div class="p-4 border rounded-2xl border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700" x-data="{ showGuide: false }">
+                    <div class="p-4 border rounded-2xl border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700" x-data="{ showGuide: false }">
                         <button type="button" @click="showGuide = !showGuide" class="flex items-center justify-between w-full text-left">
                             <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span class="text-sm font-semibold text-amber-800 dark:text-amber-300">Panduan Pengisian Data Diagnosis Keperawatan</span>
+                                <span class="text-sm font-semibold text-blue-900 dark:text-blue-200">Panduan Pengisian Data Diagnosis Keperawatan</span>
                             </div>
-                            <svg class="w-4 h-4 transition-transform text-amber-600 dark:text-amber-400" :class="showGuide ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 transition-transform text-blue-600 dark:text-blue-400" :class="showGuide ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
 
-                        <div x-show="showGuide" x-transition class="mt-3 space-y-3 text-sm text-amber-900 dark:text-amber-200">
+                        <div x-show="showGuide" x-transition class="mt-3 space-y-3 text-sm text-blue-900 dark:text-blue-200">
                             <div class="space-y-2">
                                 <p class="font-semibold">Aturan Umum:</p>
                                 <ul class="ml-4 space-y-1 list-disc">
-                                    <li><strong>Kode Diagnosis</strong> menggunakan format <code class="px-1 py-0.5 rounded bg-amber-200/60 dark:bg-amber-800/40">D.0001</code>, <code class="px-1 py-0.5 rounded bg-amber-200/60 dark:bg-amber-800/40">D.0002</code>, dst. Kode tidak bisa diubah setelah disimpan.</li>
+                                    <li><strong>Kode Diagnosis</strong> menggunakan format <code class="px-1 py-0.5 rounded bg-blue-200/60 dark:bg-blue-800/40">D.0001</code>, <code class="px-1 py-0.5 rounded bg-blue-200/60 dark:bg-blue-800/40">D.0002</code>, dst. Kode tidak bisa diubah setelah disimpan.</li>
                                     <li><strong>Semua field textarea</strong> (penyebab, gejala, kriteria, tindakan) diisi <strong>satu item per baris</strong>. Tekan Enter untuk baris baru.</li>
                                     <li>Jangan menambahkan nomor urut, bullet, atau tanda strip di awal baris &mdash; sistem akan mengelolanya otomatis.</li>
                                     <li>Baris kosong akan diabaikan secara otomatis saat disimpan.</li>
@@ -465,12 +465,12 @@ new class extends Component {
                                 <p class="font-semibold">Panduan Per Section:</p>
                                 <ul class="ml-4 space-y-1 list-disc">
                                     <li><strong>SDKI</strong> &mdash; Isi sesuai buku SDKI (Standar Diagnosis Keperawatan Indonesia). Kategori, subkategori, dan definisi wajib diisi. Penyebab, gejala, dan kondisi klinis opsional sesuai referensi.</li>
-                                    <li><strong>SLKI</strong> &mdash; Kode luaran format <code class="px-1 py-0.5 rounded bg-amber-200/60 dark:bg-amber-800/40">L.xxxxx</code>. Satu diagnosis bisa memiliki lebih dari satu luaran. Kriteria hasil diisi per baris.</li>
-                                    <li><strong>SIKI</strong> &mdash; Kode intervensi format <code class="px-1 py-0.5 rounded bg-amber-200/60 dark:bg-amber-800/40">I.xxxxx</code>. Tindakan dibagi 4 kategori: Observasi, Terapeutik, Edukasi, Kolaborasi &mdash; isi sesuai kebutuhan, tidak harus semua terisi.</li>
+                                    <li><strong>SLKI</strong> &mdash; Kode luaran format <code class="px-1 py-0.5 rounded bg-blue-200/60 dark:bg-blue-800/40">L.xxxxx</code>. Satu diagnosis bisa memiliki lebih dari satu luaran. Kriteria hasil diisi per baris.</li>
+                                    <li><strong>SIKI</strong> &mdash; Kode intervensi format <code class="px-1 py-0.5 rounded bg-blue-200/60 dark:bg-blue-800/40">I.xxxxx</code>. Tindakan dibagi 4 kategori: Observasi, Terapeutik, Edukasi, Kolaborasi &mdash; isi sesuai kebutuhan, tidak harus semua terisi.</li>
                                 </ul>
                             </div>
 
-                            <div class="p-3 space-y-1 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                            <div class="p-3 space-y-1 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                                 <p class="font-semibold">Peringatan saat Edit:</p>
                                 <ul class="ml-4 space-y-1 list-disc">
                                     <li>Jangan menghapus SLKI/SIKI yang sudah dipakai di asuhan keperawatan pasien &mdash; data referensi akan hilang.</li>
