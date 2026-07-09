@@ -24,7 +24,7 @@ Detail lengkap: **`docs/clause-versioning.md`**. Ringkas di bawah.
 - **Cetak fallback `?? 'v1'` (versi tertua), BUKAN `?? null`.** `null` → `CURRENT`. Record legacy (pra-versioning) tak punya stempel → harus render versi tertua, bukan yang terbaru. Contoh: `:version="$consent['clauseVersion'] ?? 'v1'"`.
 - **Form/layar boleh `?? null`** (→ CURRENT) untuk entri baru; teruskan versi tersimpan bila ada.
 - **Menambah versi baru = TAMBAH key `'v2'`, JANGAN ubah `'v1'`**, lalu naikkan `CURRENT`. Versi lama = arsip legal, tak boleh diedit.
-- **`@use` di komponen Blade**, bukan `use` di `@php` (tak sah karena @php dikompilasi di dalam method render). Laravel ≥10.4 punya `@use`.
+- **Jangan FQN inline `\App\Support\...`.** Di **komponen Blade** pakai `@use('App\Support\X')` (bukan `use` di `@php` — tak sah, @php dikompilasi di dalam method render; Laravel ≥10.4 punya `@use`). Di **file Volt (form)** pakai `use App\Support\X;` biasa di blok `<?php>` atas.
 - **Bagian dinamis** (nama wali, RS, pilihan SETUJU/TIDAK) TIDAK disimpan di registry — diinterpolasi komponen via placeholder `%WALI%/%HUB%/%RS%` + `strtr`/`e()`.
 - **Teks form & cetak WAJIB dari satu sumber (class)** — jangan hardcode ulang di file cetak. Verifikasi identik: strip tags + normalisasi (buang nomor list & `:`) lalu banding string (nomor `<li>` CSS layar vs `1.` literal PDF = artefak format, bukan beda teks).
 
