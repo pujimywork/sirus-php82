@@ -31,6 +31,14 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/standarisasi-ui', 'pages::standarisasi-ui.standarisasi-ui')
         ->name('standarisasi-ui');
 
+    // Tutorial standarisasi koding modul master (docs/standar-master-module.md versi web)
+    Route::livewire('/standarisasi-ui/koding-master', 'pages::standarisasi-ui.koding-master.koding-master')
+        ->name('standarisasi-ui.koding-master');
+
+    // Tutorial standarisasi koding modul transaksi (RJ/UGD/RI: pendaftaran-pelayanan-kasir + EMR/dokumen/administrasi)
+    Route::livewire('/standarisasi-ui/koding-transaksi', 'pages::standarisasi-ui.koding-transaksi.koding-transaksi')
+        ->name('standarisasi-ui.koding-transaksi');
+
     Route::livewire('/master/poli', 'pages::master.master-poli.master-poli')
         ->name('master.poli');
 

@@ -9,6 +9,7 @@ Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti po
 
 | Kebutuhan | Baca file |
 |---|---|
+| **Modul master baru / CRUD list+form** (struktur file, event, `ds-table`, `x-action-*`, ORA-02292) | `docs/standar-master-module.md` (acuan kanonik: `master-agama`) |
 | Standar tombol (varian, ukuran, warna, ikon) | `docs/standar-komponen-tombol.md` |
 | Tab bar (`x-tabs`/`x-tab` — varian, mode server/Alpine, warna modul) | `docs/tabs-pattern.md` |
 | Standar UI komponen umum | `docs/standar-ui-komponen.md` |

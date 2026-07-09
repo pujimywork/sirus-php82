@@ -119,6 +119,10 @@ new class extends Component {
                             <a href="#warna" class="ds-btn ds-btn-primary">Lihat token warna</a>
                             <a href="#komponen" class="ds-btn ds-btn-secondary">Komponen</a>
                             <a href="#v2" class="ds-btn ds-btn-secondary">Standar v2</a>
+                            <a href="{{ route('standarisasi-ui.koding-master') }}" wire:navigate
+                                class="ds-btn ds-btn-secondary">Tutorial Koding Master →</a>
+                            <a href="{{ route('standarisasi-ui.koding-transaksi') }}" wire:navigate
+                                class="ds-btn ds-btn-secondary">Tutorial Koding Transaksi →</a>
                         </div>
                     </div>
 
