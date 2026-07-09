@@ -65,7 +65,7 @@
         <tr>
             <td colspan="2" class="border border-black px-2 py-1.5">
                 <p class="font-bold mb-1">PELAYANAN YANG DITUNDA / TERLAMBAT</p>
-                <p class="leading-relaxed">{{ $form['jenis'] ?: '-' }}</p>
+                <p class="leading-relaxed">{{ ($form['jenis'] ?? '') ?: '-' }}</p>
             </td>
         </tr>
 
@@ -80,14 +80,14 @@
         {{-- ── JADWAL ULANG ── --}}
         <tr>
             <td class="border border-black px-2 py-1.5 w-1/3"><strong>Jadwal Ulang</strong></td>
-            <td class="border border-black px-2 py-1.5">{{ $form['jadwalUlang'] ?: '-' }}</td>
+            <td class="border border-black px-2 py-1.5">{{ ($form['jadwalUlang'] ?? '') ?: '-' }}</td>
         </tr>
 
         {{-- ── ALTERNATIF ── --}}
         <tr>
             <td colspan="2" class="border border-black px-2 py-1.5">
                 <p class="font-bold mb-1">Alternatif yang Ditawarkan (sesuai kebutuhan klinis)</p>
-                <p class="leading-relaxed">{{ $form['alternatif'] ?: '-' }}</p>
+                <p class="leading-relaxed">{{ ($form['alternatif'] ?? '') ?: '-' }}</p>
             </td>
         </tr>
 

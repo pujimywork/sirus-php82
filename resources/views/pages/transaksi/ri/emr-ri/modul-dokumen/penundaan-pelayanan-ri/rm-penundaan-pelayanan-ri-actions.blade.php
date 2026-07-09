@@ -916,6 +916,13 @@ new class extends Component {
                                     </thead>
                                     @foreach (array_reverse($penundaanList) as $entry)
                                         @php
+                                            // Normalisasi entri lama agar semua key ada (cegah "Undefined array key")
+                                            $entry = array_replace([
+                                                'tglPemberitahuan' => '', 'jenis' => '', 'alasan' => '', 'jadwalUlang' => '',
+                                                'alternatif' => '', 'respon' => '', 'namaPenanda' => '', 'hubunganPasien' => '',
+                                                'pemberiInfo' => '', 'pemberiInfoCode' => '', 'pemberiInfoDate' => '',
+                                                'signature' => '', 'signatureDate' => '',
+                                            ], $entry);
                                             $isFinal = $this->entryIsFinal($entry);
                                             $rowKey = $entry['signatureDate'] ?? '';
                                             $hubLabel = collect($hubunganPasienOptions)->firstWhere('value', $entry['hubunganPasien'] ?? '')['label'] ?? ($entry['hubunganPasien'] ?? '');
