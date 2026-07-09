@@ -41,67 +41,12 @@
         $jenisPenjaminLabel = $jenisPenjaminMap[$jenisPenjaminKey] ?? $jenisPenjaminKey;
         $asuransiLain = $form['asuransiLain'] ?? '';
         // ── Fasilitas kamar ──
-        $kelasKamarOptions = [
-            'VIP' => [
-                'label' => 'VIP',
-                'tarif' => 'Rp 700.000 / hari',
-                'fasilitas' => [
-                    '1 tempat tidur pasien',
-                    'AC',
-                    'Kamar mandi di dalam',
-                    'Sofa bed penunggu',
-                    'Kulkas',
-                    'Televisi LED',
-                    'Almari',
-                    'Overbed table',
-                    'Dispenser air minum',
-                    'Makan siang 1 penunggu',
-                ],
-            ],
-            'KELAS_I' => [
-                'label' => 'Kelas I',
-                'tarif' => 'Rp 275.000 / hari',
-                'fasilitas' => [
-                    '1 tempat tidur pasien',
-                    'Kamar mandi di dalam',
-                    'Sofa bed penunggu',
-                    'Kulkas',
-                    'Televisi LED',
-                    'Almari',
-                    'Kipas angin',
-                    'Makan siang 1 penunggu',
-                ],
-            ],
-            'KELAS_II' => [
-                'label' => 'Kelas II',
-                'tarif' => 'Rp 175.000 / hari',
-                'fasilitas' => [
-                    '2 tempat tidur pasien',
-                    'Kamar mandi di dalam',
-                    'Kursi penunggu',
-                    'Televisi',
-                    'Almari',
-                    'Kipas angin',
-                    'Makan siang 1 penunggu',
-                ],
-            ],
-            'KELAS_III' => [
-                'label' => 'Kelas III',
-                'tarif' => 'Rp 175.000 / hari',
-                'fasilitas' => [
-                    '4 tempat tidur pasien',
-                    'Kamar mandi di dalam',
-                    'Televisi di luar ruangan',
-                    'Kursi',
-                    'Almari',
-                    'Kipas angin',
-                ],
-            ],
-        ];
+        // Master kelas kamar — SUMBER TUNGGAL di App\Support\KelasKamar (sinkron dgn form/LOV).
+        $kelasKamarOptions = \App\Support\KelasKamar::all();
         $kelasKey = $form['kelasKamar'] ?? '';
         $kelasInfo = $kelasKamarOptions[$kelasKey] ?? null;
-        $kelasLabel = $kelasInfo['label'] ?? $kelasKey ?: '-';
-        $kelasTarif = $kelasInfo['tarif'] ?? '-';
+        $kelasLabel = $kelasInfo['nama'] ?? $kelasKey ?: '-';
+        $kelasTarif = $kelasInfo['tarifLabel'] ?? '-';
         $fasilitas = $kelasInfo['fasilitas'] ?? [];
         $fasChunks = array_chunk($fasilitas, ceil(count($fasilitas) / 2));
 

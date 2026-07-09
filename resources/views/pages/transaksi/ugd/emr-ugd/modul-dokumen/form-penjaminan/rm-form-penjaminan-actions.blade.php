@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Support\KelasKamar;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait;
@@ -45,32 +46,9 @@ new class extends Component {
 
     public array $jenisPenjaminOptions = [['id' => 'BPJS_KESEHATAN', 'desc' => 'BPJS Kesehatan'], ['id' => 'BPJS_KETENAGAKERJAAN', 'desc' => 'BPJS Ketenagakerjaan'], ['id' => 'ASABRI_TASPEN', 'desc' => 'ASABRI / TASPEN'], ['id' => 'JASA_RAHARJA', 'desc' => 'Jasa Raharja'], ['id' => 'ASURANSI_LAIN', 'desc' => 'Asuransi Lain'], ['id' => 'TANPA_KARTU', 'desc' => 'Tidak memiliki Kartu Penjaminan']];
 
-    public array $kelasKamarOptions = [
-        'VIP' => [
-            'nama' => 'VIP',
-            'tarif' => 700000,
-            'tarifLabel' => 'Rp 700.000 / hari',
-            'fasilitas' => ['1 tempat tidur pasien', 'AC', 'Kamar mandi di dalam', 'Sofa bed penunggu', 'Kulkas', 'Televisi LED', 'Almari', 'Overbed table', 'Dispenser air minum', 'Makan siang 1 penunggu'],
-        ],
-        'KELAS_I' => [
-            'nama' => 'Kelas I',
-            'tarif' => 275000,
-            'tarifLabel' => 'Rp 275.000 / hari',
-            'fasilitas' => ['1 tempat tidur pasien', 'Kamar mandi di dalam', 'Sofa bed penunggu', 'Kulkas', 'Televisi LED', 'Almari', 'Kipas angin', 'Makan siang 1 penunggu'],
-        ],
-        'KELAS_II' => [
-            'nama' => 'Kelas II',
-            'tarif' => 175000,
-            'tarifLabel' => 'Rp 175.000 / hari',
-            'fasilitas' => ['2 tempat tidur pasien', 'Kamar mandi di dalam', 'Kursi penunggu', 'Televisi', 'Almari', 'Kipas angin', 'Makan siang 1 penunggu'],
-        ],
-        'KELAS_III' => [
-            'nama' => 'Kelas III',
-            'tarif' => 175000,
-            'tarifLabel' => 'Rp 175.000 / hari',
-            'fasilitas' => ['4 tempat tidur pasien', 'Kamar mandi di dalam', 'Televisi di luar ruangan', 'Kursi', 'Almari', 'Kipas angin'],
-        ],
-    ];
+    // Master kelas kamar — SUMBER TUNGGAL di App\Support\KelasKamar (dipakai LOV, form & cetak).
+    // Diisi di mount() untuk kotak fasilitas & label entri; pemilihan via LOV kelas kamar.
+    public array $kelasKamarOptions = [];
 
     public array $hubunganOptions = ['Pasien Sendiri', 'Suami', 'Istri', 'Orang Tua', 'Anak', 'Saudara', 'Lainnya'];
     public array $listForm = [];
@@ -81,6 +59,14 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas(['modal-form-penjaminan']);
+        $this->kelasKamarOptions = KelasKamar::all();
+    }
+
+    // Kelas kamar dipilih via LOV → set key ke newForm (payload null saat dikosongkan)
+    #[On('lov.selected.kelas-kamar-penjaminan-ugd')]
+    public function onKelasKamarSelected(string $target, ?array $payload): void
+    {
+        $this->newForm['kelasKamar'] = $payload['kelas'] ?? '';
     }
 
     /* ===============================
@@ -763,14 +749,10 @@ new class extends Component {
                     </div>
 
                     <div>
-                        <x-input-label value="Pilih Kelas Kamar *" class="mb-1" />
-                        <x-select-input wire:model.live="newForm.kelasKamar" :error="$errors->has('newForm.kelasKamar')" :disabled="$formRO">
-                            <option value="">Pilih</option>
-                            @foreach ($kelasKamarOptions as $key => $opt)
-                                <option value="{{ $key }}">{{ $opt['nama'] }} — {{ $opt['tarifLabel'] }}
-                                </option>
-                            @endforeach
-                        </x-select-input>
+                        <livewire:lov.kelas-kamar.lov-kelas-kamar target="kelas-kamar-penjaminan-ugd"
+                            label="Pilih Kelas Kamar *" placeholder="Ketik / pilih kelas kamar..."
+                            :initialKelas="$newForm['kelasKamar'] ?? null" :disabled="$formRO"
+                            wire:key="lov-kelas-kamar-{{ $editingKey ?? 'new' }}-{{ $renderVersions['modal-form-penjaminan'] ?? 0 }}" />
                         <x-input-error :messages="$errors->get('newForm.kelasKamar')" class="mt-1" />
                     </div>
                 </div>
