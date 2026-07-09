@@ -726,6 +726,13 @@ new class extends Component {
                         <x-input-error :messages="$errors->get('newForm.hubunganDenganPasien')" class="mt-1" />
                     </div>
 
+                    <div>
+                        <x-input-label value="Nama Saksi Keluarga *" class="mb-1" />
+                        <x-text-input wire:model.live="newForm.namaSaksiKeluarga" :error="$errors->has('newForm.namaSaksiKeluarga')"
+                            placeholder="Nama lengkap saksi..." :disabled="$formRO" class="w-full" />
+                        <x-input-error :messages="$errors->get('newForm.namaSaksiKeluarga')" class="mt-1" />
+                    </div>
+
                 </div>
 
             </section>
@@ -785,6 +792,8 @@ new class extends Component {
                 @endif
 
                 @if (($newForm['jenisPenjamin'] ?? '') === 'BPJS_KESEHATAN')
+                    <x-consent.ketentuan-bpjs mode="screen" />
+                    <x-consent.ketentuan-selisih-biaya mode="screen" />
                     <div>
                         <x-toggle wire:model.live="newForm.bpjsKlausulDisetujui" trueValue="1" falseValue="0"
                             label="Saya menyetujui ketentuan penjaminan BPJS Kesehatan sesuai dengan peraturan yang berlaku."
@@ -840,13 +849,6 @@ new class extends Component {
                         @else
                             <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
                         @endif
-
-                        <div class="mt-3">
-                            <x-input-label value="Nama Saksi Keluarga *" class="mb-1" />
-                            <x-text-input wire:model.live="newForm.namaSaksiKeluarga" :error="$errors->has('newForm.namaSaksiKeluarga')"
-                                placeholder="Nama lengkap saksi..." :disabled="$formRO" class="w-full" />
-                            <x-input-error :messages="$errors->get('newForm.namaSaksiKeluarga')" class="mt-1" />
-                        </div>
                     </div>
 
                     {{-- Petugas Rumah Sakit = TTD Petugas & Kunci (finalize) --}}

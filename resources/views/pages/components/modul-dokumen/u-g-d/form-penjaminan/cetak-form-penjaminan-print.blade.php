@@ -123,29 +123,12 @@
             </tr>
             <tr>
                 <td colspan="2" class="border border-black px-2 py-1.5">
-                    <p class="font-bold mb-1">Ketentuan Penjaminan BPJS Kesehatan</p>
-                    <p class="mb-1 text-justify leading-snug">
-                        BPJS Kesehatan hanya menjamin pelayanan kesehatan peserta JKN yang sesuai dengan ketentuan
-                        yang berlaku. Pelayanan yang tidak sesuai tidak menjadi tanggungan BPJS Kesehatan, antara lain:
-                    </p>
-                    <ol class="ml-3 list-decimal leading-snug space-y-0.5">
-                        <li>Pelayanan di luar ketentuan/prosedur yang diatur dalam Program JKN.</li>
-                        <li>
-                            Pelayanan yang tidak sesuai ketentuan:
-                            <div class="ml-3 mt-0.5">
-                                <div>a. Rawat jalan/rawat inap atas permintaan sendiri (APS).</div>
-                                <div>b. Penolakan/tidak mematuhi rencana terapi yang direkomendasikan (pulang APS)
-                                    dan menerima segala konsekuensi atas keputusan pribadinya.</div>
-                            </div>
-                        </li>
-                        <li>Pelayanan di luar lingkup penjaminan dalam Perjanjian Kerja Sama.</li>
-                        <li>Pelayanan homecare di rumah (tidak dijamin dalam PKS FKRTL).</li>
-                        <li>Kecelakaan lalu lintas tidak sesuai ketentuan (tidak urus LP/damai, intoksikasi miras).</li>
-                        <li>Pelayanan atas instruksi dari fasilitas kesehatan yang tidak bekerja sama dengan BPJS
-                            Kesehatan.</li>
-                        <li>Apabila peserta memilih pelayanan di luar ketentuan di atas, biaya menjadi tanggungan
-                            pribadi/keluarga.</li>
-                    </ol>
+                    <x-consent.ketentuan-bpjs mode="print" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="border border-black px-2 py-1.5">
+                    <x-consent.ketentuan-selisih-biaya mode="print" />
                 </td>
             </tr>
         @endif
