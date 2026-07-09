@@ -126,28 +126,7 @@
     {{-- ── TANDA TANGAN ── --}}
     <table class="w-full text-[10px]" cellpadding="0" cellspacing="0">
         <tr>
-            {{-- Petugas RS (KIRI) --}}
-            <td class="w-1/2 align-top text-center px-3 py-2">
-                <p class="font-bold mb-1">Petugas RS</p>
-                <p class="text-[9px] text-gray-500 mb-2">{{ $form['petugasDate'] ?? '-' }}</p>
-
-                <div class="text-center my-1">
-                    @if (!empty($data['ttdPetugasPath']))
-                        <img src="{{ $data['ttdPetugasPath'] }}" class="h-16" alt="Tanda Tangan Petugas RS" />
-                    @else
-                        <div class="h-16">&nbsp;</div>
-                    @endif
-                </div>
-
-                <div class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
-                    <p class="font-bold">{{ strtoupper($form['petugas'] ?? '-') }}</p>
-                    @if (!empty($form['petugasCode']))
-                        <p class="text-[9px] text-gray-500">Kode: {{ $form['petugasCode'] }}</p>
-                    @endif
-                </div>
-            </td>
-
-            {{-- Yang membuat pernyataan (KANAN) --}}
+            {{-- Yang membuat pernyataan / Pemohon (KIRI — standar 2 kolom: pemohon/pasien kiri, petugas kanan) --}}
             <td class="w-1/2 align-top text-center px-3 py-2">
                 <p class="font-bold mb-1">Yang membuat pernyataan</p>
                 <p class="text-[9px] text-gray-500 mb-2">{{ $data['tglCetak'] ?? '-' }}</p>
@@ -165,6 +144,27 @@
                     <p class="text-[9px] text-gray-500">{{ $hubunganText }}</p>
                     @if (!empty($form['signatureDate']))
                         <p class="text-[9px] text-gray-500">{{ $form['signatureDate'] }}</p>
+                    @endif
+                </div>
+            </td>
+
+            {{-- Petugas RS (KANAN) --}}
+            <td class="w-1/2 align-top text-center px-3 py-2">
+                <p class="font-bold mb-1">Petugas RS</p>
+                <p class="text-[9px] text-gray-500 mb-2">{{ $form['petugasDate'] ?? '-' }}</p>
+
+                <div class="text-center my-1">
+                    @if (!empty($data['ttdPetugasPath']))
+                        <img src="{{ $data['ttdPetugasPath'] }}" class="h-16" alt="Tanda Tangan Petugas RS" />
+                    @else
+                        <div class="h-16">&nbsp;</div>
+                    @endif
+                </div>
+
+                <div class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
+                    <p class="font-bold">{{ strtoupper($form['petugas'] ?? '-') }}</p>
+                    @if (!empty($form['petugasCode']))
+                        <p class="text-[9px] text-gray-500">Kode: {{ $form['petugasCode'] }}</p>
                     @endif
                 </div>
             </td>
