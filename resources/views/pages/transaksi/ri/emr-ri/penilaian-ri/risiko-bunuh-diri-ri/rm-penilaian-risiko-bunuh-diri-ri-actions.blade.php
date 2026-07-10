@@ -43,6 +43,22 @@ new class extends Component {
         'kategoriResiko' => 'Tidak Ada',
         'tindakLanjut' => [],
         'catatanKlinis' => '',
+        'safetyPlan' => [
+            'tandaBahaya' => [],
+            'tandaBahayaLainnya' => '',
+            'strategiMandiri' => [],
+            'strategiPalingMembantu' => '',
+            'aktivitasPengalih' => [],
+            'aktivitasPengalihLainnya' => '',
+            'orangNama' => '',
+            'orangTelp' => '',
+            'profesionalDokter' => '',
+            'profesionalPsikiater' => '',
+            'profesionalRs' => '',
+            'profesionalIgd' => '',
+            'amankanLingkungan' => [],
+            'komitmen' => false,
+        ],
     ];
 
     // Pertanyaan A (ide bunuh diri, 1 bulan terakhir) — URUTAN = bobot skor keparahan 1-5.
@@ -145,9 +161,16 @@ new class extends Component {
         };
     }
 
-    public function toggleTindakLanjutBunuhDiri(string $opsi): void
+    public function toggleTindakLanjutBunuhDiri(int $index): void
     {
         if ($this->isFormLocked) {
+            return;
+        }
+
+        // Pakai indeks (bukan string) karena label "Edukasi & monitoring" ber-'&'
+        // double-escape lewat wire:click → argumen string tak pernah cocok.
+        $opsi = $this->tindakLanjutBunuhDiriOptions[$index] ?? null;
+        if ($opsi === null) {
             return;
         }
 
@@ -158,6 +181,33 @@ new class extends Component {
             $terpilih[] = $opsi;
         }
         $this->formEntryResikoBunuhDiri['tindakLanjut'] = $terpilih;
+    }
+
+    public function toggleSafetyPlan(string $field, int $index): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        // Kirim nama field + INDEKS (bukan nilai string) mengikuti pola
+        // toggleTindakLanjutBunuhDiri; opsi dari App\Support\SafetyPlanOptions
+        // supaya urutan blade & server selalu sinkron.
+        $options = \App\Support\SafetyPlanOptions::for($field);
+        if ($options === null) {
+            return;
+        }
+        $opsi = $options[$index] ?? null;
+        if ($opsi === null) {
+            return;
+        }
+
+        $terpilih = $this->formEntryResikoBunuhDiri['safetyPlan'][$field] ?? [];
+        if (in_array($opsi, $terpilih, true)) {
+            $terpilih = array_values(array_diff($terpilih, [$opsi]));
+        } else {
+            $terpilih[] = $opsi;
+        }
+        $this->formEntryResikoBunuhDiri['safetyPlan'][$field] = $terpilih;
     }
 
     #[On('save-rm-penilaian-risiko-bunuh-diri-ri')]
@@ -173,6 +223,7 @@ new class extends Component {
             $this->formEntryResikoBunuhDiri['ideBunuhDiri'] = ['inginMati' => 'Tidak', 'ideAktifTanpaCara' => 'Tidak', 'ideAktifDenganCara' => 'Tidak', 'ideAktifDenganNiat' => 'Tidak', 'ideAktifNiatRencana' => 'Tidak'];
             $this->formEntryResikoBunuhDiri['perilakuBunuhDiri'] = ['pernahMencoba' => 'Tidak', 'hampirMencoba' => 'Tidak', 'memulaiLaluBerhenti' => 'Tidak', 'persiapanSerius' => 'Tidak', 'kapanTerakhir' => ''];
             $this->formEntryResikoBunuhDiri['tindakLanjut'] = [];
+            $this->formEntryResikoBunuhDiri['safetyPlan'] = ['tandaBahaya' => [], 'tandaBahayaLainnya' => '', 'strategiMandiri' => [], 'strategiPalingMembantu' => '', 'aktivitasPengalih' => [], 'aktivitasPengalihLainnya' => '', 'orangNama' => '', 'orangTelp' => '', 'profesionalDokter' => '', 'profesionalPsikiater' => '', 'profesionalRs' => '', 'profesionalIgd' => '', 'amankanLingkungan' => [], 'komitmen' => false];
         }
 
         $this->hitungSkorResikoBunuhDiri();
@@ -195,6 +246,20 @@ new class extends Component {
                 'formEntryResikoBunuhDiri.perilakuBunuhDiri.kapanTerakhir' => 'nullable|string|max:100',
                 'formEntryResikoBunuhDiri.tindakLanjut' => 'array',
                 'formEntryResikoBunuhDiri.catatanKlinis' => 'nullable|string|max:1000',
+                'formEntryResikoBunuhDiri.safetyPlan.tandaBahaya' => 'array',
+                'formEntryResikoBunuhDiri.safetyPlan.strategiMandiri' => 'array',
+                'formEntryResikoBunuhDiri.safetyPlan.aktivitasPengalih' => 'array',
+                'formEntryResikoBunuhDiri.safetyPlan.amankanLingkungan' => 'array',
+                'formEntryResikoBunuhDiri.safetyPlan.komitmen' => 'boolean',
+                'formEntryResikoBunuhDiri.safetyPlan.tandaBahayaLainnya' => 'nullable|string|max:500',
+                'formEntryResikoBunuhDiri.safetyPlan.strategiPalingMembantu' => 'nullable|string|max:500',
+                'formEntryResikoBunuhDiri.safetyPlan.aktivitasPengalihLainnya' => 'nullable|string|max:500',
+                'formEntryResikoBunuhDiri.safetyPlan.orangNama' => 'nullable|string|max:150',
+                'formEntryResikoBunuhDiri.safetyPlan.orangTelp' => 'nullable|string|max:50',
+                'formEntryResikoBunuhDiri.safetyPlan.profesionalDokter' => 'nullable|string|max:150',
+                'formEntryResikoBunuhDiri.safetyPlan.profesionalPsikiater' => 'nullable|string|max:150',
+                'formEntryResikoBunuhDiri.safetyPlan.profesionalRs' => 'nullable|string|max:150',
+                'formEntryResikoBunuhDiri.safetyPlan.profesionalIgd' => 'nullable|string|max:50',
             ],
             [
                 'required' => ':attribute wajib diisi.',
@@ -277,14 +342,7 @@ new class extends Component {
         <div class="space-y-4">
 
             {{-- panduan singkat (default tertutup) --}}
-            <details class="p-3 text-sm border rounded-2xl bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/40">
-                <summary class="font-semibold text-blue-800 cursor-pointer dark:text-blue-300">Cara pengisian &amp; catatan penting</summary>
-                <ul class="mt-2 space-y-1 text-blue-900/80 dark:text-blue-200/80" style="list-style: disc; padding-left: 18px">
-                    <li>Ajukan pertanyaan <strong>berurutan</strong>; periode <strong>1 bulan terakhir</strong> (bagian perilaku: sepanjang hidup).</li>
-                    <li>Ini alat skrining — <strong>bukan pengganti wawancara klinis</strong>.</li>
-                    <li>Bertanya tentang bunuh diri <strong>tidak meningkatkan risiko</strong> — gunakan bahasa empatik &amp; tidak menghakimi.</li>
-                </ul>
-            </details>
+            @include('pages.components.rekam-medis.risiko-bunuh-diri-panduan')
 
             {{-- GATE: ada risiko bunuh diri? --}}
             <div class="sm:max-w-xs">
@@ -378,7 +436,7 @@ new class extends Component {
                     @foreach ($tindakLanjutBunuhDiriOptions as $opsi)
                         <x-toggle :current="in_array($opsi, $formEntryResikoBunuhDiri['tindakLanjut'] ?? [], true) ? '1' : '0'"
                             trueValue="1" falseValue="0"
-                            wireClick="toggleTindakLanjutBunuhDiri('{{ $opsi }}')">
+                            wireClick="toggleTindakLanjutBunuhDiri({{ $loop->index }})">
                             {{ $opsi }}
                         </x-toggle>
                     @endforeach
@@ -389,6 +447,8 @@ new class extends Component {
                     <x-input-error :messages="$errors->get('formEntryResikoBunuhDiri.catatanKlinis')" class="mt-1" />
                 </div>
             </x-border-form>
+
+            @include('pages.components.rekam-medis.risiko-bunuh-diri-safety-plan')
             @endif
 
             <div class="flex justify-end pt-2">

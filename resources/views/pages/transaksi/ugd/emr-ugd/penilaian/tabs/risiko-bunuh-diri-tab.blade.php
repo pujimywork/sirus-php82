@@ -7,14 +7,7 @@
             <div class="space-y-4">
 
                 {{-- panduan singkat (default tertutup) --}}
-                <details class="p-3 text-sm border rounded-2xl bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/40">
-                    <summary class="font-semibold text-blue-800 cursor-pointer dark:text-blue-300">Cara pengisian &amp; catatan penting</summary>
-                    <ul class="mt-2 space-y-1 text-blue-900/80 dark:text-blue-200/80" style="list-style: disc; padding-left: 18px">
-                        <li>Ajukan pertanyaan <strong>berurutan</strong>; periode <strong>1 bulan terakhir</strong> (bagian perilaku: sepanjang hidup).</li>
-                        <li>Ini alat skrining — <strong>bukan pengganti wawancara klinis</strong>.</li>
-                        <li>Bertanya tentang bunuh diri <strong>tidak meningkatkan risiko</strong> — gunakan bahasa empatik &amp; tidak menghakimi.</li>
-                    </ul>
-                </details>
+                @include('pages.components.rekam-medis.risiko-bunuh-diri-panduan')
 
                 {{-- GATE: ada risiko bunuh diri? --}}
                 <div class="sm:max-w-xs">
@@ -108,7 +101,7 @@
                         @foreach ($tindakLanjutBunuhDiriOptions as $opsi)
                             <x-toggle :current="in_array($opsi, $formEntryResikoBunuhDiri['tindakLanjut'] ?? [], true) ? '1' : '0'"
                                 trueValue="1" falseValue="0"
-                                wireClick="toggleTindakLanjutBunuhDiri('{{ $opsi }}')">
+                                wireClick="toggleTindakLanjutBunuhDiri({{ $loop->index }})">
                                 {{ $opsi }}
                             </x-toggle>
                         @endforeach
@@ -119,6 +112,8 @@
                         <x-input-error :messages="$errors->get('formEntryResikoBunuhDiri.catatanKlinis')" class="mt-1" />
                     </div>
                 </x-border-form>
+
+                @include('pages.components.rekam-medis.risiko-bunuh-diri-safety-plan')
                 @endif
 
                 <div class="flex justify-end pt-2">

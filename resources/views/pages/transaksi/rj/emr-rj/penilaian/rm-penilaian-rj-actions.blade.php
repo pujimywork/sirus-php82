@@ -500,6 +500,28 @@ new class extends Component {
             'kategoriResiko' => 'Tidak Ada',
             'tindakLanjut' => [],
             'catatanKlinis' => '',
+            'safetyPlan' => $this->emptySafetyPlan(),
+        ];
+    }
+
+    private function emptySafetyPlan(): array
+    {
+        // Struktur mengikuti "Contoh Safety Planning" (Stanley-Brown) — 6 bagian.
+        return [
+            'tandaBahaya' => [],
+            'tandaBahayaLainnya' => '',
+            'strategiMandiri' => [],
+            'strategiPalingMembantu' => '',
+            'aktivitasPengalih' => [],
+            'aktivitasPengalihLainnya' => '',
+            'orangNama' => '',
+            'orangTelp' => '',
+            'profesionalDokter' => '',
+            'profesionalPsikiater' => '',
+            'profesionalRs' => '',
+            'profesionalIgd' => '',
+            'amankanLingkungan' => [],
+            'komitmen' => false,
         ];
     }
 
@@ -547,9 +569,16 @@ new class extends Component {
         };
     }
 
-    public function toggleTindakLanjutBunuhDiri(string $opsi): void
+    public function toggleTindakLanjutBunuhDiri(int $index): void
     {
         if ($this->isFormLocked) {
+            return;
+        }
+
+        // Pakai indeks (bukan string) karena label "Edukasi & monitoring" ber-'&'
+        // double-escape lewat wire:click → argumen string tak pernah cocok.
+        $opsi = $this->tindakLanjutBunuhDiriOptions[$index] ?? null;
+        if ($opsi === null) {
             return;
         }
 
@@ -560,6 +589,33 @@ new class extends Component {
             $terpilih[] = $opsi;
         }
         $this->formEntryResikoBunuhDiri['tindakLanjut'] = $terpilih;
+    }
+
+    public function toggleSafetyPlan(string $field, int $index): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        // Kirim nama field + INDEKS (bukan nilai string) mengikuti pola
+        // toggleTindakLanjutBunuhDiri; opsi dari App\Support\SafetyPlanOptions
+        // supaya urutan blade & server selalu sinkron.
+        $options = \App\Support\SafetyPlanOptions::for($field);
+        if ($options === null) {
+            return;
+        }
+        $opsi = $options[$index] ?? null;
+        if ($opsi === null) {
+            return;
+        }
+
+        $terpilih = $this->formEntryResikoBunuhDiri['safetyPlan'][$field] ?? [];
+        if (in_array($opsi, $terpilih, true)) {
+            $terpilih = array_values(array_diff($terpilih, [$opsi]));
+        } else {
+            $terpilih[] = $opsi;
+        }
+        $this->formEntryResikoBunuhDiri['safetyPlan'][$field] = $terpilih;
     }
 
     public function addAssessmentResikoBunuhDiri(): void
@@ -574,6 +630,7 @@ new class extends Component {
             $this->formEntryResikoBunuhDiri['ideBunuhDiri'] = ['inginMati' => 'Tidak', 'ideAktifTanpaCara' => 'Tidak', 'ideAktifDenganCara' => 'Tidak', 'ideAktifDenganNiat' => 'Tidak', 'ideAktifNiatRencana' => 'Tidak'];
             $this->formEntryResikoBunuhDiri['perilakuBunuhDiri'] = ['pernahMencoba' => 'Tidak', 'hampirMencoba' => 'Tidak', 'memulaiLaluBerhenti' => 'Tidak', 'persiapanSerius' => 'Tidak', 'kapanTerakhir' => ''];
             $this->formEntryResikoBunuhDiri['tindakLanjut'] = [];
+            $this->formEntryResikoBunuhDiri['safetyPlan'] = $this->emptySafetyPlan();
         }
 
         $this->hitungSkorResikoBunuhDiri();
@@ -598,6 +655,20 @@ new class extends Component {
                     'formEntryResikoBunuhDiri.perilakuBunuhDiri.kapanTerakhir' => 'nullable|string|max:100',
                     'formEntryResikoBunuhDiri.tindakLanjut' => 'array',
                     'formEntryResikoBunuhDiri.catatanKlinis' => 'nullable|string|max:1000',
+                    'formEntryResikoBunuhDiri.safetyPlan.tandaBahaya' => 'array',
+                    'formEntryResikoBunuhDiri.safetyPlan.strategiMandiri' => 'array',
+                    'formEntryResikoBunuhDiri.safetyPlan.aktivitasPengalih' => 'array',
+                    'formEntryResikoBunuhDiri.safetyPlan.amankanLingkungan' => 'array',
+                    'formEntryResikoBunuhDiri.safetyPlan.komitmen' => 'boolean',
+                    'formEntryResikoBunuhDiri.safetyPlan.tandaBahayaLainnya' => 'nullable|string|max:500',
+                    'formEntryResikoBunuhDiri.safetyPlan.strategiPalingMembantu' => 'nullable|string|max:500',
+                    'formEntryResikoBunuhDiri.safetyPlan.aktivitasPengalihLainnya' => 'nullable|string|max:500',
+                    'formEntryResikoBunuhDiri.safetyPlan.orangNama' => 'nullable|string|max:150',
+                    'formEntryResikoBunuhDiri.safetyPlan.orangTelp' => 'nullable|string|max:50',
+                    'formEntryResikoBunuhDiri.safetyPlan.profesionalDokter' => 'nullable|string|max:150',
+                    'formEntryResikoBunuhDiri.safetyPlan.profesionalPsikiater' => 'nullable|string|max:150',
+                    'formEntryResikoBunuhDiri.safetyPlan.profesionalRs' => 'nullable|string|max:150',
+                    'formEntryResikoBunuhDiri.safetyPlan.profesionalIgd' => 'nullable|string|max:50',
                 ],
                 [
                     'formEntryResikoBunuhDiri.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
