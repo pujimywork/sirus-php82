@@ -59,9 +59,9 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-ink dark:text-gray-100">Pemeriksaan Lab Dalam &amp; Luar</div>
+                            <div class="font-semibold text-ink dark:text-gray-100">Pemeriksaan Laboratorium RS Sendiri &amp; Rujukan Luar</div>
                             <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
-                                Detail per pasien + rekap — RS sendiri vs rujukan
+                                Detail per pasien + rekap — RS sendiri vs rujukan luar
                             </div>
                         </div>
                     </a>

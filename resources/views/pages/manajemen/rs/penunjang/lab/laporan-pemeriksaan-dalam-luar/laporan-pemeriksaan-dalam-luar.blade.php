@@ -9,8 +9,10 @@ use App\Http\Traits\Manajemen\Rs\Penunjang\Lab\PemeriksaanDalamLuarLabTrait;
 new class extends Component {
     use WithPagination, PemeriksaanDalamLuarLabTrait;
 
-    /** Periode fleksibel: "MM/YYYY" (bulanan, mis. 06/2026) atau "YYYY" (tahunan, mis. 2026). */
-    public string $periode = '';
+    /** Mode periode (pola casemix): 'bulanan' (mm/yyyy) atau 'tahunan' (yyyy). */
+    public string $filterMode = 'bulanan';
+    public string $filterBulan = ''; // mm/yyyy
+    public string $filterTahun = ''; // yyyy
     public int $perPage = 25;
     public string $tab = 'detail'; // 'detail' | 'rekap'
 
@@ -21,7 +23,8 @@ new class extends Component {
 
     public function mount(): void
     {
-        $this->periode = Carbon::now()->format('m/Y');
+        $this->filterBulan = Carbon::now()->format('m/Y');
+        $this->filterTahun = Carbon::now()->format('Y');
     }
 
     public function setTab(string $tab): void
@@ -31,7 +34,17 @@ new class extends Component {
         }
     }
 
-    public function updatedPeriode(): void
+    public function updatedFilterMode(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterBulan(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterTahun(): void
     {
         $this->resetPage();
     }
@@ -58,7 +71,9 @@ new class extends Component {
 
     public function resetFilters(): void
     {
-        $this->periode = Carbon::now()->format('m/Y');
+        $this->filterMode = 'bulanan';
+        $this->filterBulan = Carbon::now()->format('m/Y');
+        $this->filterTahun = Carbon::now()->format('Y');
         $this->perPage = 25;
         $this->reset(['filterPemeriksaan', 'filterJenis', 'filterUnit']);
         $this->resetPage();
@@ -119,32 +134,32 @@ new class extends Component {
     }
 
     /**
-     * Parse $periode → [start, end, tipe('Bulanan'|'Tahunan'), label] atau null bila tak valid.
+     * Range periode sesuai $filterMode → [start, end, tipe, label] atau null bila input tak valid.
      */
     private function periodeRange(): ?array
     {
-        $periodeInput = trim($this->periode);
-
-        if (preg_match('#^(\d{1,2})/(\d{4})$#', $periodeInput, $matches)) {
-            $bulan = (int) $matches[1];
-            $tahun = (int) $matches[2];
-            if ($bulan < 1 || $bulan > 12) {
+        if ($this->filterMode === 'tahunan') {
+            if (!preg_match('#^(\d{4})$#', trim($this->filterTahun), $matches)) {
                 return null;
             }
-            $start = Carbon::create($tahun, $bulan, 1)->startOfMonth();
-            $end = (clone $start)->endOfMonth();
-            $label = $this->bulanId($bulan) . ' ' . $tahun;
-            return [$start, $end, 'Bulanan', $label];
-        }
-
-        if (preg_match('#^(\d{4})$#', $periodeInput, $matches)) {
             $tahun = (int) $matches[1];
             $start = Carbon::create($tahun, 1, 1)->startOfYear();
             $end = (clone $start)->endOfYear();
             return [$start, $end, 'Tahunan', "Tahun {$tahun}"];
         }
 
-        return null;
+        // Bulanan (default)
+        if (!preg_match('#^(\d{1,2})/(\d{4})$#', trim($this->filterBulan), $matches)) {
+            return null;
+        }
+        $bulan = (int) $matches[1];
+        $tahun = (int) $matches[2];
+        if ($bulan < 1 || $bulan > 12) {
+            return null;
+        }
+        $start = Carbon::create($tahun, $bulan, 1)->startOfMonth();
+        $end = (clone $start)->endOfMonth();
+        return [$start, $end, 'Bulanan', $this->bulanId($bulan) . ' ' . $tahun];
     }
 
     #[Computed]
@@ -157,12 +172,6 @@ new class extends Component {
     public function periodeLabel(): string
     {
         return $this->periodeRange()[3] ?? '—';
-    }
-
-    #[Computed]
-    public function periodeTipe(): string
-    {
-        return $this->periodeRange()[2] ?? '—';
     }
 
     #[Computed]
@@ -213,43 +222,65 @@ new class extends Component {
 
 <div>
     <x-page-title
-        title="Laporan Pemeriksaan Lab — Dalam &amp; Luar"
-        subtitle="Detail pemeriksaan per pasien (tanggal, no. reg, nama, pemeriksaan, harga) + rekap jumlah &amp; nilai, dipisah Lab RS Sendiri vs Lab Luar. Filter per bulan (06/2026) atau per tahun (2026)." />
+        title="Laporan Pemeriksaan Laboratorium — RS Sendiri &amp; Rujukan Luar"
+        subtitle="Detail &amp; rekap pemeriksaan lab, dipisah RS sendiri dan rujukan luar." />
 
     <div class="w-full min-h-[calc(100vh-5rem)] bg-surface-soft dark:bg-gray-800">
         <div class="px-6 pt-0 pb-6">
 
-            {{-- TOOLBAR (pola pelayanan-rj) --}}
-            <div class="sticky z-30 px-4 pt-1 pb-2 bg-surface-soft border-b border-hairline top-16 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex flex-wrap items-end gap-3">
+            {{-- TOP BAR: tab kiri + kontrol kanan (1 baris, ringkas) --}}
+            <div class="sticky z-30 pt-1 bg-surface-soft border-b border-hairline top-16 dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
 
-                    {{-- FILTER PERIODE --}}
-                    <div class="w-full sm:w-auto">
-                        <x-input-label value="Bulan" />
-                        <div class="relative mt-1">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                    {{-- TABS kiri --}}
+                    <x-tabs variant="underline" class="-mb-px border-b-0">
+                        <x-tab :active="$tab === 'detail'" color="brand" wire:click="setTab('detail')">Detail Pemeriksaan</x-tab>
+                        <x-tab :active="$tab === 'rekap'" color="blue" wire:click="setTab('rekap')">Rekap Pemeriksaan</x-tab>
+                    </x-tabs>
+
+                    {{-- KONTROL kanan --}}
+                    <div class="flex flex-wrap items-end gap-2.5 pb-2">
+                        {{-- MODE: Bulanan / Tahunan (pola casemix) --}}
+                        <div>
+                            <x-input-label value="Mode" />
+                            <div class="inline-flex mt-1 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                                <button type="button" wire:click="$set('filterMode', 'bulanan')"
+                                    class="px-3 py-2 text-xs font-medium transition-colors {{ $filterMode === 'bulanan' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                    Bulanan
+                                </button>
+                                <button type="button" wire:click="$set('filterMode', 'tahunan')"
+                                    class="px-3 py-2 text-xs font-medium transition-colors border-l border-gray-300 dark:border-gray-600 {{ $filterMode === 'tahunan' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                    Tahunan
+                                </button>
                             </div>
-                            <x-text-input type="text" wire:model.live.debounce.500ms="periode"
-                                class="block w-full pl-10 sm:w-44" placeholder="06/2026 atau 2026" />
                         </div>
-                    </div>
 
-                    {{-- PERIODE AKTIF (badge) --}}
-                    @if ($this->valid)
-                        <div class="w-full pb-2 sm:w-auto">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-brand-green/10 text-brand-green text-xs font-medium dark:bg-brand-lime/15 dark:text-brand-lime">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                                {{ $this->periodeTipe }} · {{ $this->periodeLabel }}
-                            </span>
-                        </div>
-                    @endif
-
-                    {{-- RIGHT ACTIONS --}}
-                    <div class="flex items-center gap-2 ml-auto">
+                        {{-- Input Bulan / Tahun --}}
+                        @if ($filterMode === 'bulanan')
+                            <div>
+                                <x-input-label value="Bulan" />
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <x-text-input type="text" wire:model.live.debounce.500ms="filterBulan" class="block w-32 pl-10" placeholder="mm/yyyy" maxlength="7" />
+                                </div>
+                            </div>
+                        @else
+                            <div>
+                                <x-input-label value="Tahun" />
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <x-text-input type="text" wire:model.live.debounce.500ms="filterTahun" class="block w-28 pl-10" placeholder="yyyy" maxlength="4" />
+                                </div>
+                            </div>
+                        @endif
                         <x-toolbar-refresh-reset :label="null" />
                         <div class="w-20">
                             <x-select-input wire:model.live="perPage" class="text-sm" title="Per halaman">
@@ -267,19 +298,14 @@ new class extends Component {
                 <div class="mt-4 flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-200">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
                     <div class="text-sm">
-                        Format periode belum valid. Ketik <span class="font-semibold">MM/YYYY</span> (mis. 06/2026) untuk bulanan
-                        atau <span class="font-semibold">YYYY</span> (mis. 2026) untuk tahunan.
+                        @if ($filterMode === 'tahunan')
+                            Format tahun belum valid. Ketik <span class="font-semibold">YYYY</span> (mis. 2026).
+                        @else
+                            Format bulan belum valid. Ketik <span class="font-semibold">MM/YYYY</span> (mis. 06/2026).
+                        @endif
                     </div>
                 </div>
             @else
-                {{-- TABS (pola x-tabs underline) --}}
-                <div class="mt-4">
-                    <x-tabs variant="underline">
-                        <x-tab :active="$tab === 'detail'" color="brand" wire:click="setTab('detail')">Detail Pemeriksaan</x-tab>
-                        <x-tab :active="$tab === 'rekap'" color="blue" wire:click="setTab('rekap')">Rekap Pemeriksaan</x-tab>
-                    </x-tabs>
-                </div>
-
                 @if ($tab === 'detail')
                     {{-- FILTER DETAIL: Pemeriksaan · Jenis · Unit --}}
                     <div class="mt-4 flex flex-wrap items-end gap-3">
