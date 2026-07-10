@@ -117,6 +117,89 @@ TXT,
 events.forEach(e => Livewire.dispatch(e, { silent: true }))
 TXT,
 
+'emr-section-skeleton' => <<<'TXT'
+// ⚡rm-<section>-rj-actions.blade.php — KERANGKA UTUH satu section EMR
+// (disarikan dari rm-perencanaan-rj-actions, section acuan paling ramping).
+// ── BAGIAN 1: blok PHP kelas Volt (di antara tag php pembuka & penutup) ──
+
+use Livewire\Component;
+use App\Http\Traits\Txn\Rj\EmrRJTrait;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
+
+new class extends Component {
+    use EmrRJTrait, WithRenderVersioningTrait, WithValidationToastTrait;
+
+    public ?int  $rjNo = null;
+    public bool  $isFormLocked = false;
+    public array $dataDaftarPoliRJ = [];              // cache JSON CLOB kunjungan
+
+    public array $renderVersions = [];
+    protected array $renderAreas = ['modal-<section>-rj'];
+
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-<section>-rj']);
+    }
+
+    // 1) OPEN — host menyebarkan open-rm-<section>-rj saat EMR dibuka
+    #[On('open-rm-<section>-rj')]
+    public function openSection($rjNo): void
+    {
+        if (empty($rjNo)) return;
+        $this->rjNo = $rjNo;
+        $this->resetValidation();
+
+        $data = $this->findDataRJ($rjNo);                     // baca CLOB (OracleLob)
+        if (! $data) {
+            $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
+            return;
+        }
+
+        $this->dataDaftarPoliRJ = $data;
+        $this->dataDaftarPoliRJ['<keySection>'] ??= $this->getDefault(); // backfill record lama
+        $this->incrementVersion('modal-<section>-rj');        // remount area → state segar
+        $this->isFormLocked = $this->checkEmrRJStatus($rjNo); // EMR sudah dikunci?
+    }
+
+    // 2) DEFAULT — struktur key JSON milik section ini
+    //    (record dari SIMRS lama / entry lama belum punya key ini)
+    private function getDefault(): array
+    {
+        return ['field1' => '', 'field2' => ''];
+    }
+
+    // 3) SAVE — dipicu tombol sendiri ATAU broadcast save-all (silent=true)
+    #[On('save-rm-<section>-rj')]
+    public function save(bool $silent = false): void
+    {
+        if ($this->isFormLocked) return;
+        $this->validateWithToast($rules, $messages, $attributes);
+
+        DB::transaction(function () {
+            $this->lockRJRow($this->rjNo);                    // row-lock anti race
+            $data = $this->findDataRJ($this->rjNo) ?? [];
+            // set HANYA key milik section ini — key section lain tak tersentuh:
+            $data['<keySection>'] = $this->dataDaftarPoliRJ['<keySection>'] ?? [];
+            $this->updateJsonRJ($this->rjNo, $data);
+            $this->dataDaftarPoliRJ = $data;
+        });
+
+        $this->afterSave('<Section> tersimpan.', $silent);    // lihat kartu berikutnya
+    }
+};
+
+// ── BAGIAN 2: MARKUP (setelah tag php penutup) ──
+{{-- container ber-wire:key renderKey; SEMUA input hormati $isFormLocked,
+     numerik pakai wire:model.blur (bukan .live) --}}
+<div>
+    <div class="flex flex-col w-full"
+         wire:key="{{ $this->renderKey('modal-<section>-rj', [$rjNo ?? 'new']) }}">
+        {{-- field-field section --}}
+    </div>
+</div>
+TXT,
+
 'emr-save' => <<<'TXT'
 // Di dalam SECTION (mis. anamnesa): listener save menerima flag silent.
 #[On('save-rm-anamnesa-rj')]
@@ -135,6 +218,123 @@ public function save(bool $silent = false): void
     if (! $silent) {
         $this->dispatch('toast', type: 'success', message: 'Anamnesa tersimpan.');
     }
+}
+TXT,
+
+'emr-after-save' => <<<'TXT'
+// SETELAH save — tiap section menutup save()-nya dgn helper afterSave():
+private function afterSave(string $message, bool $silent = false): void
+{
+    $this->incrementVersion('modal-anamnesa-rj');   // remount area → state segar
+    $this->dispatch('refresh-after-rj.saved');      // kabari halaman list
+
+    if (! $silent) {                                // silent saat dipanggil save-all
+        $this->dispatch('toast', type: 'success', message: $message);
+    }
+}
+
+// ...dan halaman list (pelayanan-rj) mendengarkan utk refresh presisi:
+#[On('refresh-after-rj.saved')]
+public function refreshAfterSaved(): void
+{
+    $this->incrementVersion('pelayanan-rj-toolbar');
+    $this->resetPage();   // computed baseQuery re-run → status & % EMR ikut segar
+}
+
+// Padanan jalur: refresh-after-ugd.saved → pelayanan-ugd,
+//                refresh-after-ri.saved  → daftar-ri (+ display-pasien-ri).
+TXT,
+
+'emr-eresep' => <<<'TXT'
+// E-RESEP (diisi dokter) — modal SIBLING di atas EMR, bukan section SOAP.
+// pages/transaksi/rj/eresep-rj/: host + tab NonRacikan + tab Racikan.
+//
+// Pemicu (2 tombol): header EMR (erm-rj) & tab Terapi di section Perencanaan
+//   → dispatch('emr-rj.eresep.open', rjNo) → host buka modal 2 tab
+//   → host menyebarkan open-eresep-non-racikan-rj / open-eresep-racikan-rj.
+
+// NON-RACIKAN — obat dipilih via LOV product, target unik per tab:
+#[On('lov.selected.eresepRjObatNonRacikan')]
+public function eresepRjObatNonRacikan(string $target, array $payload): void { ... }
+
+// insertProduct = DUAL-WRITE dalam SATU transaksi + lockRJRow:
+public function insertProduct(): void
+{
+    DB::transaction(function () {
+        $this->lockRJRow($this->rjNo);
+
+        // 1) baris BILLING — dibaca apotek & administrasi:
+        DB::table('rstxn_rjobats')->insert([ /* rjobat_dtl, product_id, qty, harga */ ]);
+
+        // 2) key JSON 'eresep' — tampilan EMR (qty, signaX/signaHari, catatanKhusus):
+        $data['eresep'][] = [ /* payload LOV + signa */ ];
+        $this->updateJsonRJ($this->rjNo, $data);
+    });
+}
+// update/remove obat juga sinkron DUA tempat itu dalam transaksi yang sama.
+// RACIKAN sama polanya — key JSON 'eresepRacikan' + noRacikan (R1, R2…) + dosis/takar.
+
+// Tombol "Simpan ke Terapi" di host — generate teks resep ke section Perencanaan:
+public function saveAllEreseptoTerapi(): void
+{
+    // guard: pasien sudah pulang = terkunci (checkRJStatus)
+    // format per baris: "R/ {nama} | No. {qty} | S {X}dd{hari} ({catatan})"
+    $data['perencanaan']['terapi']['terapi'] = $eresepText . PHP_EOL . $eresepRacikanText;
+    $this->updateJsonRJ($this->rjNo, $data);
+    $this->dispatch('emr-rj.rekam-medis.open', $this->rjNo);   // reopen EMR, tanpa toast
+}
+// Setelah tersimpan, resep tampil di antrian-apotek-rj utk dilayani apoteker.
+
+// Padanan jalur: eresep-ugd → dual-write ke rstxn_ugdobats;
+// eresep-ri  → JSON saja: eresepHdr[n].eresep (multi-resep per rawatan) —
+//              billing RI menyusul per-item via imtxn_sls* saat apotek memproses.
+TXT,
+
+'emr-penunjang' => <<<'TXT'
+// KIRIM LAB & KIRIM RADIOLOGI — order penunjang dari SECTION PEMERIKSAAN.
+// Komponen: emr-rj/pemeriksaan/penunjang/{laborat,radiologi}/rm-*-rj-actions
+// (+ rm-daftar-* utk tampil hasil, + laborat LUAR utk hasil dari luar RS).
+
+// Modal picker: pilih item dari master (multi-select, cari + paginate).
+// Diagnosis/Keterangan Klinis WAJIB — order tanpa indikasi klinis ditolak:
+public array  $selectedItems = [];        // [clabitem_id => item]
+public string $klinisDesc    = '';        // rules: required
+
+// KIRIM LAB — kirimLaboratorium():
+public function kirimLaboratorium(): void
+{
+    // guard: minimal 1 item + pasien belum pulang (checkRJStatus)
+    DB::transaction(function () use ($rjData) {
+        $checkupNo = DB::scalar('SELECT NVL(MAX(TO_NUMBER(checkup_no)) + 1, 1) FROM lbtxn_checkuphdrs');
+
+        DB::table('lbtxn_checkuphdrs')->insert([
+            'checkup_no'     => $checkupNo,
+            'dr_id'          => $rjData->dr_id,   // dokter PENGIRIM — dari rstxn_rjhdrs
+            'checkup_status' => 'P',              // P = baru masuk antrian lab
+            'klinis_desc'    => $this->klinisDesc,
+            /* reg_no, checkup_date, shift, ... */
+        ]);
+
+        foreach ($this->selectedItems as $item) {
+            $this->insertItemAndChildren($checkupNo, $item);  // item PAKET → child ikut
+        }
+    });
+
+    $this->appendAdminLogRJ((int) $this->rjNo, 'Order Lab — ...', 'MR');
+    $this->dispatch('laborat-order-terkirim');    // section Pemeriksaan refresh daftar
+}
+// → order muncul di modul Penunjang Laborat (siklus status P → C → H → F).
+
+// KIRIM RADIOLOGI — kirimRadiologi(): pola sama, target rstxn_rjrads
+// (rad_dtl max+1, klinis_desc juga wajib) → modul Radiologi (upload-based,
+// TIDAK punya siklus status P/C/H/F seperti lab).
+
+// HASIL KEMBALI ke EMR — petugas lab menekan kirim hasil, Pemeriksaan menerima:
+#[On('laborat-kirim-penunjang')]
+public function terimaPenunjangLaborat(string $text): void
+{
+    // teks hasil masuk key JSON penunjang milik section Pemeriksaan
+    // + appendAdminLogRJ + afterSave(...) → tampil di EMR & ikut cetakan
 }
 TXT,
 
@@ -262,8 +462,9 @@ TXT,
                 'administrasi' => 'Administrasi & Kasir',
             ],
             'Adopsi' => [
-                'adopsi'    => 'Checklist Adopsi',
-                'referensi' => 'Trait & Referensi',
+                'tambah-fitur' => 'Alur: Tambah Fitur',
+                'adopsi'       => 'Checklist Adopsi',
+                'referensi'    => 'Trait & Referensi',
             ],
         ];
 
@@ -380,6 +581,17 @@ TXT,
                                 <strong>Peringatan dual-system:</strong> DB Oracle yang sama masih dipakai
                                 Oracle Dev 6i (SIMRS lama). Entry dari sistem lama <em>tidak mengisi JSON cache</em> —
                                 selalu pertimbangkan data yang JSON-nya kosong/parsial saat menulis fitur.
+                            </span>
+                        </div>
+
+                        <div class="ds-card-outline mt-4" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>Dapat tugas menambah fitur?</strong> Langsung ke bab
+                                <button type="button" class="hover:underline font-semibold" style="color:var(--primary)"
+                                    x-on:click="go('tambah-fitur')">Alur: Tambah Fitur</button>
+                                — step-by-step tiga skenario paling umum (section EMR baru, form modul
+                                dokumen baru, pos administrasi baru); bab lain jadi referensi detailnya.
                             </span>
                         </div>
                     </section>
@@ -629,6 +841,7 @@ TXT,
                             <p class="ds-caption mt-3" style="color:var(--muted)">
                                 Header modal = <span class="ds-code">display-pasien-rj</span> (kartu identitas).
                                 Screening, Modul Dokumen, Administrasi, E-Resep, Log Aktivitas = tombol yang membuka MODAL LAIN via event.
+                                Cara MEMBUAT satu section dari nol: lihat kartu "Membuat section — kerangka utuh" di bawah.
                             </p>
                         </div>
 
@@ -648,9 +861,37 @@ TXT,
 
                         <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
                             <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Membuat section — kerangka utuh rm-&lt;section&gt;-rj-actions.blade.php</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['emr-section-skeleton'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
                                 <span class="ds-caption-up" style="color:var(--on-dark-soft)">Di dalam section — save dgn flag silent</span>
                             </div>
                             <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['emr-save'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Setelah save — afterSave() &amp; refresh list (refresh-after-&lt;jalur&gt;.saved)</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['emr-after-save'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">E-Resep dokter — modal sibling, tab Racikan / Non-Racikan, dual-write</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['emr-eresep'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Kirim Lab &amp; Kirim Radiologi — order penunjang dari section Pemeriksaan</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['emr-penunjang'] }}</pre>
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-2">
@@ -767,9 +1008,164 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 09 CHECKLIST ADOPSI ====== --}}
-                    <section x-show="section === 'adopsi'" x-cloak>
+                    {{-- ====== 09 ALUR TAMBAH FITUR ====== --}}
+                    <section x-show="section === 'tambah-fitur'" x-cloak>
                         <div class="ds-eyebrow mb-3">09 — Adopsi</div>
+                        <h1 class="ds-display-md mb-4">Alur: Tambah Fitur</h1>
+                        <p class="ds-body-md mb-8" style="max-width:62ch">
+                            Pekerjaan paling sering di modul transaksi <strong>bukan membuat jalur baru</strong>,
+                            melainkan menambah fitur di jalur yang sudah ada. Tiga skenario paling umum
+                            di bawah — prinsipnya sama dengan modul master: <strong>salin acuan terdekat,
+                            jangan menulis dari nol</strong>. Contoh path memakai satu jalur;
+                            sesuaikan untuk jalur lain (ingat: RJ / UGD / RI tidak identik).
+                        </p>
+
+                        @php
+                            $fiturCircle = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:var(--primary);color:#fff;font-weight:700;font-size:13px;flex:none';
+                            $fiturSkenario = [
+                                [
+                                    'judul' => 'A · Section EMR baru (contoh: RJ)',
+                                    'acuan' => 'pages/transaksi/rj/emr-rj/anamnesa/',
+                                    'steps' => [
+                                        'Buat folder section + satu file actions: <span class="ds-code">emr-rj/&lt;section&gt;/rm-&lt;section&gt;-rj-actions.blade.php</span> — salin section acuan yang paling mirip; kerangka utuhnya (open → default → save → markup) ada di Bab 06. Section = child Livewire mandiri yang menerima <span class="ds-code">:rjNo</span>.',
+                                        'Sepakati <strong>key JSON</strong> section di CLOB — bukan kolom baru. Simpan lewat trait jalur: <span class="ds-code">lockRJRow → findDataRJ → array_replace → updateJsonRJ</span> di dalam <span class="ds-code">DB::transaction</span> (Bab 03).',
+                                        'Mount di host <span class="ds-code">erm-rj.blade.php</span> dengan <span class="ds-code">:rjNo</span> + <span class="ds-code">wire:key</span>, lalu daftarkan event <span class="ds-code">save-rm-&lt;section&gt;-rj</span> ke daftar <span class="ds-code">save-events</span> supaya ikut tombol Simpan Semua — save menerima flag <span class="ds-code">silent</span> (Bab 06).',
+                                        'Tutup save() dengan helper <span class="ds-code">afterSave()</span>: incrementVersion area modal + dispatch <span class="ds-code">refresh-after-rj.saved</span> + toast (hormati flag silent). Halaman list mendengarkan event itu untuk me-refresh status &amp; persen kelengkapan — tanpa ini, data tersimpan tapi layar basi (Bab 06).',
+                                        'Hormati <span class="ds-code">isFormLocked</span> (read-only penuh) dan pakai <span class="ds-code">wire:model.blur</span> untuk input numerik. Method jangan senama dengan trait EMR lain — helper lintas section = class statis.',
+                                        'Bila section masuk hitungan kelengkapan EMR → tambah bobotnya di <span class="ds-code">EmrCompletenessRJTrait</span>; bila datanya tampil di display / cetakan lain (resume medis dsb.) → update konsumennya sekalian.',
+                                    ],
+                                ],
+                                [
+                                    'judul' => 'B · Form Modul Dokumen baru (contoh: RI)',
+                                    'acuan' => 'pages/transaksi/ri/emr-ri/modul-dokumen/penundaan-pelayanan-ri/ (template pola terbaru)',
+                                    'steps' => [
+                                        'Salin folder form acuan → <span class="ds-code">modul-dokumen/&lt;form&gt;-ri/rm-&lt;form&gt;-ri-actions.blade.php</span>. Siklus Draft → TTD → terkunci → Lihat sudah terbawa dari template; tinggal ganti field &amp; label.',
+                                        'Buat blade cetak: <span class="ds-code">pages/components/modul-dokumen/r-i/&lt;form&gt;-ri/cetak-&lt;form&gt;-ri-print.blade.php</span> — header identitas pasien standar (komponen x-pdf.identitas-pasien) + pola TTD cetak standar.',
+                                        'Buat viewer Lihat: <span class="ds-code">pages/components/rekam-medis/r-i/dokumen-view/&lt;form&gt;-view-ri.blade.php</span> — iframe yang merender blade cetak (docs/dokumen-view-pattern.md).',
+                                        'Registrasi di <strong>dua tempat</strong> pada host <span class="ds-code">modul-dokumen-ri.blade.php</span>: tab / tombol pembuka + embed komponen actions dengan <span class="ds-code">wire:key</span> per <span class="ds-code">riHdrNo</span>.',
+                                        'Teks klausul legal <strong>wajib versioning</strong> (<span class="ds-code">App\Support\*Clause</span> — baca <span class="ds-code">docs/clause-versioning.md</span> dulu), dan nilai pre-fill di-sync ulang di save()/finalize supaya tidak kosong di cetak (Bab 07).',
+                                    ],
+                                ],
+                                [
+                                    'judul' => 'C · Pos administrasi baru (contoh: RJ)',
+                                    'acuan' => 'pages/transaksi/rj/administrasi-rj/lain-lain-rj.blade.php',
+                                    'steps' => [
+                                        'Buat file pos: <span class="ds-code">administrasi-rj/&lt;pos&gt;-rj.blade.php</span> — satu pos = satu file partial; salin pos acuan yang paling mirip.',
+                                        'Include pos di host <span class="ds-code">administrasi-rj.blade.php</span> dan tambahkan <span class="ds-code">sum&lt;Pos&gt;</span> ke <span class="ds-code">sumAll()</span> — kalau lupa, grand total &amp; tagihan kasir salah diam-diam (Bab 08).',
+                                        'Mutasi finansial selalu <span class="ds-code">DB::transaction</span> + <span class="ds-code">lockForUpdate</span>; nominal di UI pakai <span class="ds-code">x-text-input-number</span>.',
+                                        'Catat aksi admin lewat <span class="ds-code">appendAdminLogRJ()</span> (muncul di tab Log Aktivitas); aksi sensitif — hapus / ubah tarif / posting — di-guard role.',
+                                    ],
+                                ],
+                            ];
+                        @endphp
+
+                        @foreach ($fiturSkenario as $sk)
+                            <h2 class="ds-title-lg {{ $loop->first ? '' : 'mt-10' }} mb-1">{{ $sk['judul'] }}</h2>
+                            <p class="ds-caption mb-4" style="color:var(--muted)">Acuan / template: <span class="ds-code">{{ $sk['acuan'] }}</span></p>
+                            <div>
+                                @foreach ($sk['steps'] as $step)
+                                    <div class="flex gap-4">
+                                        <div class="flex flex-col items-center">
+                                            <span style="{{ $fiturCircle }}">{{ $loop->iteration }}</span>
+                                            @if (! $loop->last)
+                                                <span class="flex-1" style="width:2px; background:var(--hairline); margin-top:4px"></span>
+                                            @endif
+                                        </div>
+                                        <div class="flex-1 {{ $loop->last ? '' : 'pb-5' }}" style="min-width:0">
+                                            <p class="ds-body-sm" style="max-width:62ch; padding-top:5px">{!! $step !!}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            @if ($loop->first)
+                                <h3 class="ds-title-sm mt-6 mb-2">Padanan per jalur — langkahnya sama, namanya yang beda</h3>
+                                <div class="ds-card-outline" style="padding:0; overflow-x:auto">
+                                    <table class="ds-table">
+                                        <thead>
+                                            <tr><th>Hal</th><th>RJ</th><th>UGD</th><th>RI</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ds-td-strong">Folder section</td>
+                                                <td class="ds-td-class">rj/emr-rj/&lt;section&gt;/</td>
+                                                <td class="ds-td-class">ugd/emr-ugd/&lt;section&gt;/</td>
+                                                <td class="ds-td-class">ri/emr-ri/&lt;section&gt;-ri/</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">Host EMR</td>
+                                                <td class="ds-td-class">erm-rj.blade.php</td>
+                                                <td class="ds-td-class">erm-ugd.blade.php</td>
+                                                <td class="ds-td-class">erm-ri.blade.php <span class="ds-body-sm">(section terdaftar di array key/label/saveEvent)</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">Prop kunci</td>
+                                                <td class="ds-td-class">:rjNo (rstxn_rjhdrs)</td>
+                                                <td class="ds-td-class">:rjNo (rstxn_ugdhdrs)</td>
+                                                <td class="ds-td-class">:riHdrNo (rstxn_rihdrs)</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">Trait &amp; method</td>
+                                                <td class="ds-td-class">EmrRJTrait<br>lockRJRow · findDataRJ · updateJsonRJ</td>
+                                                <td class="ds-td-class">EmrUGDTrait<br>lockUGDRow · findDataUGD · updateJsonUGD</td>
+                                                <td class="ds-td-class">EmrRITrait<br>lockRIRow · findDataRI · updateJsonRI</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">Event save</td>
+                                                <td class="ds-td-class">save-rm-&lt;section&gt;-rj</td>
+                                                <td class="ds-td-class">save-rm-&lt;section&gt;-ugd</td>
+                                                <td class="ds-td-class">save-rm-&lt;section&gt;-ri <span class="ds-body-sm">(multi-record aktif: save-active-rm-*-ri)</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">Refresh after-save</td>
+                                                <td class="ds-td-class">refresh-after-rj.saved<br><span class="ds-body-sm">→ pelayanan-rj</span></td>
+                                                <td class="ds-td-class">refresh-after-ugd.saved<br><span class="ds-body-sm">→ pelayanan-ugd</span></td>
+                                                <td class="ds-td-class">refresh-after-ri.saved<br><span class="ds-body-sm">→ daftar-ri + display-pasien-ri</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">Kelengkapan</td>
+                                                <td class="ds-td-class">EmrCompletenessRJTrait<br><span class="ds-body-sm">S15 / O25 / A25 / P25 / N10</span></td>
+                                                <td class="ds-td-class">EmrCompletenessUGDTrait</td>
+                                                <td class="ds-td-class">EmrCompletenessRITrait <span class="ds-body-sm">(bobot beda: + CPPT &amp; keperawatan)</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">EMR dibuka dari</td>
+                                                <td class="ds-body-sm">Pelayanan RJ</td>
+                                                <td class="ds-body-sm">Pelayanan UGD</td>
+                                                <td class="ds-body-sm">langsung dari Daftar RI (RI tanpa halaman pelayanan)</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">Section khas jalur</td>
+                                                <td class="ds-body-sm">Screening · SKDP · PRB</td>
+                                                <td class="ds-body-sm">Triase P0–P3 (anamnesa) · Obat &amp; Cairan · Observasi · Rujukan antar RS</td>
+                                                <td class="ds-body-sm">Pengkajian Awal / Dokter · CPPT · SBAR · Asuhan Keperawatan (multi-entry)</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="ds-caption mt-2 mb-2" style="color:var(--muted)">
+                                    Awas dua jebakan: UGD juga memakai nama kolom <span class="ds-code">rj_no</span>
+                                    (tapi tabelnya <span class="ds-code">rstxn_ugdhdrs</span>, bukan rjhdrs) — jangan tertukar;
+                                    dan di RI seluruh folder/file/event <strong>bersuffix -ri</strong> serta section
+                                    baru harus didaftarkan ke array section di host <span class="ds-code">erm-ri</span>.
+                                </p>
+                            @endif
+                        @endforeach
+
+                        <div class="ds-card-outline mt-10" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                Selesai menambah fitur? Jalankan
+                                <button type="button" class="hover:underline font-semibold" style="color:var(--primary)"
+                                    x-on:click="go('adopsi')">Checklist Adopsi</button>
+                                — plus checklist Tutorial Koding Master untuk urusan komponen, validasi, dan LOV.
+                            </span>
+                        </div>
+                    </section>
+
+                    {{-- ====== 10 CHECKLIST ADOPSI ====== --}}
+                    <section x-show="section === 'adopsi'" x-cloak>
+                        <div class="ds-eyebrow mb-3">10 — Adopsi</div>
                         <h1 class="ds-display-md mb-4">Checklist Adopsi</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Mau menambah tahap di jalur yang ada, atau mengadopsi pola transaksi
@@ -810,9 +1206,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 10 TRAIT & REFERENSI ====== --}}
+                    {{-- ====== 11 TRAIT & REFERENSI ====== --}}
                     <section x-show="section === 'referensi'" x-cloak>
-                        <div class="ds-eyebrow mb-3">10 — Adopsi</div>
+                        <div class="ds-eyebrow mb-3">11 — Adopsi</div>
                         <h1 class="ds-display-md mb-4">Trait &amp; Referensi</h1>
                         <p class="ds-body-md mb-6" style="max-width:62ch">
                             Peta trait di <span class="ds-code">app/Http/Traits/</span> yang menopang transaksi —
