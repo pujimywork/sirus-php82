@@ -222,8 +222,8 @@ new class extends Component {
 
 <div>
     <x-page-title
-        title="Laporan Pemeriksaan Laboratorium — RS Sendiri &amp; Rujukan Luar"
-        subtitle="Detail &amp; rekap pemeriksaan lab, dipisah RS sendiri dan rujukan luar." />
+        title="Laporan Pemeriksaan Laboratorium — Internal &amp; Rujukan"
+        subtitle="Detail &amp; rekap pemeriksaan lab, dipisah lab internal dan rujukan." />
 
     <div class="w-full min-h-[calc(100vh-5rem)] bg-surface-soft dark:bg-gray-800">
         <div class="px-6 pt-0 pb-6">
@@ -325,8 +325,8 @@ new class extends Component {
                             <x-input-label value="Jenis" />
                             <x-select-input wire:model.live="filterJenis" class="mt-1 w-full sm:w-44">
                                 <option value="">Semua</option>
-                                <option value="DALAM">RS Sendiri</option>
-                                <option value="LUAR">Lab Luar</option>
+                                <option value="DALAM">Internal</option>
+                                <option value="LUAR">Rujukan</option>
                             </x-select-input>
                         </div>
                         <div class="w-full sm:w-auto">
@@ -381,9 +381,9 @@ new class extends Component {
                                             <td class="px-3 py-2.5 text-body dark:text-gray-200">{{ $row->pemeriksaan ?: '—' }}</td>
                                             <td class="px-3 py-2.5 text-center">
                                                 @if ($row->jenis === 'DALAM')
-                                                    <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300">RS Sendiri</span>
+                                                    <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300">Internal</span>
                                                 @else
-                                                    <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">Lab Luar</span>
+                                                    <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">Rujukan</span>
                                                 @endif
                                             </td>
                                             <td class="px-3 py-2.5 whitespace-nowrap text-muted dark:text-gray-400">{{ $this->unitLabel($row->unit) }}</td>
@@ -422,18 +422,18 @@ new class extends Component {
                         <span class="font-semibold text-body dark:text-gray-200">Ringkasan {{ $this->periodeLabel }}:</span>
                         Total <span class="font-semibold">{{ number_format($rekap['total']['jml']) }}</span> pemeriksaan
                         · Revenue <span class="font-semibold text-blue-700 dark:text-blue-400">Rp {{ number_format($rekap['total']['revenue'], 0, ',', '.') }}</span>
-                        · Lab RS Sendiri <span class="font-medium text-cyan-700 dark:text-cyan-400">{{ number_format($rekap['dalam']['jml']) }}</span> ({{ $persenDalam }}%) Rp {{ number_format($rekap['dalam']['revenue'], 0, ',', '.') }}
-                        · Lab Luar <span class="font-medium text-amber-700 dark:text-amber-400">{{ number_format($rekap['luar']['jml']) }}</span> ({{ $persenLuar }}%) Rp {{ number_format($rekap['luar']['revenue'], 0, ',', '.') }}
+                        · Lab Internal <span class="font-medium text-cyan-700 dark:text-cyan-400">{{ number_format($rekap['dalam']['jml']) }}</span> ({{ $persenDalam }}%) Rp {{ number_format($rekap['dalam']['revenue'], 0, ',', '.') }}
+                        · Lab Rujukan <span class="font-medium text-amber-700 dark:text-amber-400">{{ number_format($rekap['luar']['jml']) }}</span> ({{ $persenLuar }}%) Rp {{ number_format($rekap['luar']['revenue'], 0, ',', '.') }}
                     </div>
 
-                    {{-- PER JENIS — kanan (Lab RS Sendiri) / kiri (Lab Luar) --}}
+                    {{-- PER JENIS — Lab Internal (kiri) / Lab Rujukan (kanan) --}}
                     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-                        {{-- KIRI: Lab RS Sendiri --}}
+                        {{-- KIRI: Lab Internal --}}
                         <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                             <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-                                    Pemeriksaan Lab RS Sendiri
+                                    Pemeriksaan Lab Internal
                                     <span class="ml-1 font-normal text-xs text-muted">({{ $this->periodeLabel }})</span>
                                 </h3>
                                 <span class="text-xs text-muted dark:text-gray-400 tabular-nums">{{ number_format(count($this->perDalam)) }} jenis</span>
@@ -457,7 +457,7 @@ new class extends Component {
                                                     <td class="px-3 py-2.5 text-right tabular-nums text-cyan-700 dark:text-cyan-300">Rp {{ number_format($jenis->total, 0, ',', '.') }}</td>
                                                 </tr>
                                             @empty
-                                                <tr><td colspan="4" class="px-6 py-10 text-center text-muted dark:text-gray-400">Tidak ada pemeriksaan lab RS sendiri</td></tr>
+                                                <tr><td colspan="4" class="px-6 py-10 text-center text-muted dark:text-gray-400">Tidak ada pemeriksaan lab internal</td></tr>
                                             @endforelse
                                         </tbody>
                                         @if (count($this->perDalam))
@@ -473,11 +473,11 @@ new class extends Component {
                                 </div>
                             </div>
 
-                        {{-- KANAN: Lab Luar --}}
+                        {{-- KANAN: Lab Rujukan --}}
                         <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                             <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                                    Pemeriksaan Lab Luar (Rujukan)
+                                    Pemeriksaan Lab Rujukan
                                     <span class="ml-1 font-normal text-xs text-muted">({{ $this->periodeLabel }})</span>
                                 </h3>
                                 <span class="text-xs text-muted dark:text-gray-400 tabular-nums">{{ number_format(count($this->perLuar)) }} jenis</span>
@@ -501,7 +501,7 @@ new class extends Component {
                                                     <td class="px-3 py-2.5 text-right tabular-nums text-amber-700 dark:text-amber-300">Rp {{ number_format($jenis->total, 0, ',', '.') }}</td>
                                                 </tr>
                                             @empty
-                                                <tr><td colspan="4" class="px-6 py-10 text-center text-muted dark:text-gray-400">Tidak ada pemeriksaan lab luar</td></tr>
+                                                <tr><td colspan="4" class="px-6 py-10 text-center text-muted dark:text-gray-400">Tidak ada pemeriksaan lab rujukan</td></tr>
                                             @endforelse
                                         </tbody>
                                         @if (count($this->perLuar))
