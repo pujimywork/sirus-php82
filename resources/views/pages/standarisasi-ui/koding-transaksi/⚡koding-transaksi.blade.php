@@ -43,6 +43,50 @@ DB::transaction(function () use ($rjNo) {
 // Catatan RI: findDataRI membaca VIEW (rsview_rihdrs) — lock tetap ke tabel aslinya.
 TXT,
 
+'pendaftaran-save' => <<<'TXT'
+// KERANGKA SAVE PENDAFTARAN — ⚡daftar-rj-actions.blade.php (dipadatkan).
+// Modal actions terpisah (event daftar-rj.create.open / daftar-rj.edit.open),
+// pola sama dgn form master — bedanya: nomor transaksi, no antrian, dan
+// sederet guard jadwal.
+
+#[On('lov.selected.rjFormPasien')]   // LOV pasien → isi regNo + identitas
+#[On('lov.selected.rjFormDokter')]   // LOV dokter → poli, shift, jadwal
+
+public function save(): void
+{
+    $this->validateDataRJ();                    // validasi Indonesia paling atas
+
+    // GUARD kuota (warning, TIDAK memblok simpan): terdaftar (rjhdrs)
+    //   + booking MJKN status 'Belum' >= kuota jadwal → toast "Kuota penuh".
+    // GUARD shift: shiftMismatchMessage() — jam daftar vs shift jadwal dokter.
+
+    DB::transaction(function () {
+        // CREATE — nomor transaksi dihitung DI DALAM transaksi:
+        $rjNo = (string) ((int) DB::table('rstxn_rjhdrs')->max('rj_no') + 1);
+
+        DB::table('rstxn_rjhdrs')->insert($this->buildPayload($rjNo));
+        // payload = kolom HEADER saja: rj_no, rj_date (to_date), reg_no,
+        // no_antrian, klaim_id, poli_id, dr_id, shift + STATUS AWAL:
+        // txn_status 'A' · rj_status 'A' · erm_status 'A' · pass_status 'O'
+    });
+    // EDIT — update by rj_no; nomor & no antrian TIDAK dihitung ulang.
+}
+
+// No antrian = max gabungan rjhdrs + booking MJKN per dokter/poli/tanggal.
+// Kolom booking bertipe VARCHAR2 → wajib to_number() supaya max-nya numeric
+// (urutan leksikal membuat '9' > '10').
+private function hitungNoAntrian(string $drId, Carbon $tgl): int { ... }
+
+// PENTING: kolom JSON (datadaftarpolirj_json) TIDAK diisi saat pendaftaran —
+// baru terbentuk saat modul lain menulis (EMR, task-id, administrasi).
+// Karena itu semua pembaca JSON wajib toleran kosong (findDataRJ ?? []) —
+// juga demi entry lama dari Oracle Dev 6i (dual-system).
+
+// Setelah tersimpan, aksi lanjutan = komponen SIBLING terpisah:
+// vclaim-rj-actions (SEP) · satu-sehat-rj-actions · cetak etiket
+// (print-agent localhost) · task-id antrean BPJS (AntrianTrait).
+TXT,
+
 'list-query' => <<<'TXT'
 #[Computed]
 public function baseQuery()
@@ -479,6 +523,32 @@ class GeneralConsentClause
 // mengubah teks klausul apa pun atau membuat dokumen ber-TTD baru.
 TXT,
 
+'dokumen-cetak' => <<<'TXT'
+// POLA CETAK / PDF — berlaku utk SEMUA cetakan (dokumen, kwitansi, e-resep,
+// hasil penunjang), bukan hanya modul dokumen.
+
+// 1) Header identitas pasien = SATU komponen standar (x-pdf.identitas-pasien):
+//    No RM · nama (gender) · tgl lahir (umur) · alamat · NIK.
+//    Umur SELALU dihitung dari birth_date — kolom thn/bln/hari di master
+//    adalah snapshot lama yang tidak pernah di-refresh.
+//    Gender: mapping eksplisit L/P/- (JANGAN binary ==1 ? 'L' : 'P').
+
+// 2) Blok TTD: pola h-16 + text-center (+ &nbsp; penahan tinggi) —
+//    JANGAN flex / mx-auto / <br>; layout flex bergeser di PDF renderer.
+//    Detail: docs/ttd-pattern-pdf-print.md.
+
+// 3) Kelas Tailwind ARBITRARY tidak dirender di PDF:
+//    text-[10px] / mt-[3mm] hilang DIAM-DIAM → utk ukuran cetak pakai
+//    inline style (style="font-size:10px").
+
+// 4) Viewer "Lihat" = iframe me-render blade cetak yang SAMA
+//    (docs/dokumen-view-pattern.md) — satu sumber utk layar & kertas,
+//    plus navigasi antar-record di dalam viewer.
+
+// 5) Teks klausul di cetak = versi TERSIMPAN (lihat kartu clause versioning);
+//    lokasi file cetak: pages/components/modul-dokumen/<jalur>/<form>/.
+TXT,
+
 'administrasi' => <<<'TXT'
 // Administrasi = modal rekap biaya per kunjungan. Tiap POS = file partial sendiri
 // (jasa-dokter, jasa-medis, jasa-karyawan, obat, laboratorium, radiologi, lain-lain...).
@@ -606,6 +676,44 @@ if ($this->checkLabPendingRJ($this->rjNo)) {      // ada checkup_status = 'P'
 //   rsmst_pasiens.lockstatus = 'UGD' — pasien dipegang SATU jalur aktif.
 TXT,
 
+'api-trait' => <<<'TXT'
+// SATU TRAIT PER API EKSTERNAL — pola sama utk semua: VclaimTrait, AntrianTrait,
+// AplicaresTrait, iCareTrait, SirsTrait, iDrgTrait, SatuSehatTrait.
+// Template + checklist lengkap: docs/trait-template-api-eksternal.md
+// (ikuti polanya → log otomatis tampil di /database-monitor/log-bpjs).
+//
+// Tiga grup method di tiap trait:
+//   Response helpers : sendResponse() / sendError()  — bentuk seragam + logging
+//   Auth & crypto    : signature() / stringDecrypt() — BPJS: HMAC-SHA256 +
+//                      AES + LZString; iDRG: AES-CBC; SATU SEHAT: OAuth2
+//   API methods      : SATU method statis per endpoint
+
+// CONTOH 1 — VClaim: buat SEP (VclaimTrait::sep_insert):
+$signature = self::signature();                    // cons_id + timestamp + HMAC
+$response  = Http::timeout(8)->connectTimeout(3)   // WAJIB — tanpa ini worker freeze
+    ->withHeaders($signature)
+    ->post($url, $SEPJsonReq);
+return self::response_decrypt($response, $signature, $url,
+    $response->transferStats->getTransferTime());  // decrypt AES+LZString + log
+
+// CONTOH 2 — Antrean BPJS: lapor task-id tiap tahap pelayanan:
+AntrianTrait::update_antrean($kodebooking, $taskid, $waktu, $jenisresep);
+// taskId 3–7 = tahapan pelayanan (tiba di poli → obat diserahkan), 99 = batal.
+// Stempelnya juga disimpan di JSON taskIdPelayanan — dipakai badge status list.
+// Guard idempoten: taskId N butuh taskId N-1 sudah ada.
+
+// CONTOH 3 — SATU SEHAT: token OAuth2 di-CACHE, bukan login tiap request:
+Cache::remember('satusehat_access_token', 3500, function () {
+    // POST accesstoken?grant_type=client_credentials → access_token
+});
+$client = Http::timeout(8)->connectTimeout(3)->withToken($token);
+
+// Aturan memanggil dari Livewire:
+//   - selalu try/catch → toast; kegagalan API tidak boleh jadi error 500;
+//   - respons penting DISIMPAN (JSON kunjungan / tabel log) utk audit & retry;
+//   - jangan panggil API di computed/render — hanya dari aksi user.
+TXT,
+
 'adopsi-tree' => <<<'TXT'
 transaksi/<jalur>/
 ├── daftar-<jalur>/            # pendaftaran + list harian (list + actions modal)
@@ -651,8 +759,10 @@ TXT,
             ],
             'Adopsi' => [
                 'tambah-fitur' => 'Alur: Tambah Fitur',
+                'ranjau'       => 'Ranjau Umum',
                 'adopsi'       => 'Checklist Adopsi',
                 'referensi'    => 'Trait & Referensi',
+                'glosarium'    => 'Glosarium Istilah',
             ],
         ];
 
@@ -780,6 +890,9 @@ TXT,
                                     x-on:click="go('tambah-fitur')">Alur: Tambah Fitur</button>
                                 — step-by-step tiga skenario paling umum (section EMR baru, form modul
                                 dokumen baru, pos administrasi baru); bab lain jadi referensi detailnya.
+                                Menemukan singkatan asing (SEP, CPPT, PRB...)? Buka bab
+                                <button type="button" class="hover:underline font-semibold" style="color:var(--primary)"
+                                    x-on:click="go('glosarium')">Glosarium Istilah</button>.
                             </span>
                         </div>
                     </section>
@@ -928,6 +1041,13 @@ TXT,
                             </table>
                         </div>
 
+                        <div class="ds-card-dark mt-6" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Kerangka save pendaftaran — nomor, antrian, guard, status awal</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['pendaftaran-save'] }}</pre>
+                        </div>
+
                         <div class="ds-card-outline mt-6" style="padding:16px 20px">
                             <span class="ds-spike" style="vertical-align:middle"></span>
                             <span class="ds-body-sm" style="color:var(--body-strong)">
@@ -954,6 +1074,61 @@ TXT,
                             Tiga aturan performa di bawah ini <strong>tidak boleh dilewati</strong> —
                             semuanya lahir dari list yang pernah lemot di produksi.
                         </p>
+
+                        @php
+                            $listBadge = 'display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:9999px;background:var(--primary);color:#fff;font-size:11px;font-weight:700;line-height:1;flex:none';
+                        @endphp
+
+                        {{-- visual anatomi list transaksi --}}
+                        <div class="ds-frame mt-2 mb-2">
+                            <div class="ds-frame-label">Tata letak list transaksi (daftar-rj / antrian-*)</div>
+                            <div class="mt-3" style="border:1px solid var(--hairline); border-radius:14px; overflow:hidden; background:var(--canvas)">
+
+                                {{-- toolbar --}}
+                                <div class="flex flex-wrap items-center gap-2 px-4 py-3" style="position:relative; background:var(--surface-soft); border-bottom:1px solid var(--hairline)">
+                                    <div style="height:34px;padding:8px 12px;border-radius:8px;border:1px solid var(--hairline);background:var(--canvas);color:var(--muted-soft);font-size:13px;display:flex;align-items:center;font-family:var(--mono)">10/07/2026 📅</div>
+                                    <div style="height:34px;padding:8px 12px;border-radius:8px;border:1px solid var(--hairline);background:var(--canvas);color:var(--muted-soft);font-size:13px;display:flex;align-items:center;width:160px">Cari pasien...</div>
+                                    <span class="ds-btn ds-btn-primary" style="height:34px; padding:6px 12px; font-size:12px">+ Daftar Baru</span>
+                                    <span style="{{ $listBadge }};position:absolute;top:8px;right:8px">1</span>
+                                </div>
+
+                                {{-- baris pasien --}}
+                                <div class="px-4 py-3" style="position:relative; border-bottom:1px solid var(--hairline)">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <span>
+                                            <span class="block text-sm"><span style="font-family:var(--mono); color:var(--primary)">012345</span> · <strong style="color:var(--ink)">FULANAH</strong> <span style="color:var(--muted)">(P)</span></span>
+                                            <span class="block text-xs" style="color:var(--muted)">01/01/1990 (36 th) · JL. MAWAR NO. 1, TULUNGAGUNG</span>
+                                        </span>
+                                        <span class="flex items-center gap-1.5">
+                                            <span class="px-2 py-0.5 text-xs font-medium rounded-full" style="background:var(--success-tint); color:var(--success-deep)">Task 5 · Dilayani</span>
+                                            <span class="ds-caption" style="color:var(--muted)">EMR · SEP · Adm</span>
+                                        </span>
+                                    </div>
+                                    <span style="{{ $listBadge }};position:absolute;top:8px;right:8px;background:var(--info)">2</span>
+                                </div>
+
+                                {{-- pagination + poll --}}
+                                <div class="flex items-center justify-between px-4 py-2.5" style="position:relative; background:var(--surface-soft)">
+                                    <span class="ds-caption" style="color:var(--muted)">Menampilkan 1–10 dari 128 kunjungan</span>
+                                    <span class="ds-caption" style="color:var(--muted)">‹ 1 2 3 ›</span>
+                                    <span style="{{ $listBadge }};position:absolute;top:8px;right:8px">3</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- legenda list transaksi --}}
+                        <div class="grid grid-cols-1 gap-2 mb-6 sm:grid-cols-2">
+                            @foreach ([
+                                ['1', 'Toolbar — filter TANGGAL (default hari ini; kunci utama scope query) + cari + tombol Daftar; antrian kasir/apotek menambah wire:poll.30s', ''],
+                                ['2', 'Baris pasien — identitas standar list: No RM · nama (gender) · tgl lahir (umur, dihitung dari birth_date) · alamat; badge status DIHITUNG dari task-id di JSON (3–7, 99 = batal); tombol aksi membuka modal (EMR/SEP/Administrasi)', 'background:var(--info)'],
+                                ['3', 'Pagination DB-level — paginate() di query, decode CLOB hanya utk page aktif via transform()', ''],
+                            ] as [$num, $ket, $extra])
+                                <div class="flex items-start gap-2.5">
+                                    <span style="{{ $listBadge }}; margin-top:2px; {{ $extra }}">{{ $num }}</span>
+                                    <span class="ds-body-sm">{{ $ket }}</span>
+                                </div>
+                            @endforeach
+                        </div>
 
                         <div class="ds-card-dark mt-2" style="padding:0; overflow:hidden">
                             <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
@@ -1232,6 +1407,13 @@ TXT,
                             <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['dokumen-clause'] }}</pre>
                         </div>
 
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Pola cetak / PDF — header identitas, TTD, jebakan Tailwind arbitrary</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['dokumen-cetak'] }}</pre>
+                        </div>
+
                         <div class="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-2">
                             <div class="ds-card-outline" style="padding:20px">
                                 <div class="ds-title-sm mb-2">Komponen &amp; pola pendukung</div>
@@ -1408,6 +1590,7 @@ TXT,
                                         'Tutup save() dengan helper <span class="ds-code">afterSave()</span>: incrementVersion area modal + dispatch <span class="ds-code">refresh-after-rj.saved</span> + toast (hormati flag silent). Halaman list mendengarkan event itu untuk me-refresh status &amp; persen kelengkapan — tanpa ini, data tersimpan tapi layar basi (Bab 06).',
                                         'Hormati <span class="ds-code">isFormLocked</span> (read-only penuh) dan pakai <span class="ds-code">wire:model.blur</span> untuk input numerik. Method jangan senama dengan trait EMR lain — helper lintas section = class statis.',
                                         'Bila section masuk hitungan kelengkapan EMR → tambah bobotnya di <span class="ds-code">EmrCompletenessRJTrait</span>; bila datanya tampil di display / cetakan lain (resume medis dsb.) → update konsumennya sekalian.',
+                                        '<strong>Uji</strong>: buka EMR pasien uji → isi &amp; Simpan (toast muncul) → tombol Simpan Semua (satu toast gabungan, bukan beruntun) → list ter-refresh (status / persen kelengkapan berubah) → buka kunjungan LAMA yang JSON-nya belum punya key section — tidak boleh error.',
                                     ],
                                 ],
                                 [
@@ -1419,6 +1602,7 @@ TXT,
                                         'Buat viewer Lihat: <span class="ds-code">pages/components/rekam-medis/r-i/dokumen-view/&lt;form&gt;-view-ri.blade.php</span> — iframe yang merender blade cetak (docs/dokumen-view-pattern.md).',
                                         'Registrasi di <strong>dua tempat</strong> pada host <span class="ds-code">modul-dokumen-ri.blade.php</span>: tab / tombol pembuka + embed komponen actions dengan <span class="ds-code">wire:key</span> per <span class="ds-code">riHdrNo</span>.',
                                         'Teks klausul legal <strong>wajib versioning</strong> (<span class="ds-code">App\Support\*Clause</span> — baca <span class="ds-code">docs/clause-versioning.md</span> dulu), dan nilai pre-fill di-sync ulang di save()/finalize supaya tidak kosong di cetak (Bab 07).',
+                                        '<strong>Uji</strong>: buat entri → Simpan Draft → Edit lagi (harus entri yang SAMA, bukan duplikat) → TTD &amp; Kunci → coba edit lagi (harus tertolak) → Lihat &amp; cetak: identitas pasien, TTD, dan teks klausul tampil benar.',
                                     ],
                                 ],
                                 [
@@ -1429,6 +1613,7 @@ TXT,
                                         'Include pos di host <span class="ds-code">administrasi-rj.blade.php</span> dan tambahkan <span class="ds-code">sum&lt;Pos&gt;</span> ke <span class="ds-code">sumAll()</span> — kalau lupa, grand total &amp; tagihan kasir salah diam-diam (Bab 08).',
                                         'Mutasi finansial selalu <span class="ds-code">DB::transaction</span> + <span class="ds-code">lockForUpdate</span>; nominal di UI pakai <span class="ds-code">x-text-input-number</span>.',
                                         'Catat aksi admin lewat <span class="ds-code">appendAdminLogRJ()</span> (muncul di tab Log Aktivitas); aksi sensitif — hapus / ubah tarif / posting — di-guard role.',
+                                        '<strong>Uji</strong>: tambah item pos → grand total &amp; breakdown berubah → Selesai Administrasi → pasien muncul di antrian kasir → posting bayar (rj_status jadi L; coba tambah item — harus tertolak) → batal posting → kembali A dan bisa diubah lagi.',
                                     ],
                                 ],
                             ];
@@ -1538,9 +1723,64 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 10 CHECKLIST ADOPSI ====== --}}
-                    <section x-show="section === 'adopsi'" x-cloak>
+                    {{-- ====== 10 RANJAU UMUM ====== --}}
+                    <section x-show="section === 'ranjau'" x-cloak>
                         <div class="ds-eyebrow mb-3">10 — Adopsi</div>
+                        <h1 class="ds-display-md mb-4">Ranjau Umum (Livewire + Oracle + Blade)</h1>
+                        <p class="ds-body-md mb-6" style="max-width:62ch">
+                            Jebakan yang <strong>sudah pernah menggigit</strong> di repo ini — masing-masing
+                            pernah jadi bug produksi atau debugging berjam-jam. Kenali gejalanya;
+                            penangkalnya sudah terstandar.
+                        </p>
+
+                        <div class="ds-card-outline" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead>
+                                    <tr><th>Ranjau</th><th>Gejala</th><th>Penangkal</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ([
+                                        ['wire:model.live di input numerik', 'digit hilang saat mengetik cepat (race roundtrip)', 'wire:model.blur utk numerik EMR; auto-calc di updated()'],
+                                        ['keyup.enter + aksi $wire', 'insert dobel / nilai belum tersinkron saat Enter', 'keydown.enter.prevent + $el.blur() lalu $wire.aksi() (+ .then() refocus)'],
+                                        ['Reload DB lalu $this->state = $data', 'ketikan yang belum di-Simpan ikut terhapus', 'array_replace(state lama, data DB) — jangan replace mentah'],
+                                        ["Oracle: string kosong = NULL", "where col <> '' selalu 0 baris", "IS NOT NULL / LENGTH(TRIM(x)) > 0"],
+                                        ['Kolom mixed-case (dari API)', 'ORA-00904 padahal kolom ada', 'DB::raw(\'"requestTransferTime" as alias_snake\')'],
+                                        ['JSON_VALUE di query', 'ORA-00904 — fungsi tak dikenal di Oracle versi ini', 'INSTR utk filter kasar, atau json_decode di PHP'],
+                                        ["active_status master lama", "filter 'Y'/'N' tidak mengembalikan apa pun", "nilai sebenarnya '1'/'0'"],
+                                        ['Carbon 3: diffInSeconds(x, false)', 'tanda +/- kebalik dari Carbon 2', '$end->getTimestamp() - $start->getTimestamp()'],
+                                        [chr(64) . 'if di dalam atribut komponen x-*', 'ParseError saat compile', 'rakit string di blok php, lalu render via kurung kurawal ganda di atribut'],
+                                        ['Tag komponen dipecah antar ' . chr(64) . 'if', 'konten hilang diam-diam saat cabang skip', 'ekstrak jadi sub-komponen utuh per cabang'],
+                                        ['Literal tag penutup php di string/nowdoc', 'kelas Volt terpotong → ParseError 500', 'tandai batas dgn komentar; pastikan grep tag penutup = 1'],
+                                        ['Kata "re-use"/"reuse" di komentar //', 'Volt salah strip komentar → ParseError', 'hindari kata itu di komentar file Volt'],
+                                        ['Call API BPJS sinkron tanpa timeout', 'seluruh worker app membeku', 'Http::timeout(8)->connectTimeout(3)'],
+                                        ['Umur dari kolom thn/bln/hari', 'umur pasien basi (snapshot lama)', 'selalu hitung dari birth_date'],
+                                    ] as [$ranjau, $gejala, $obat])
+                                        <tr>
+                                            <td class="ds-td-strong">{{ $ranjau }}</td>
+                                            <td class="ds-body-sm">{{ $gejala }}</td>
+                                            <td class="ds-body-sm"><span class="ds-code">{{ $obat }}</span></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ds-card-outline mt-6" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                Daftar hidupnya ada di skill repo: <span class="ds-code">oracle-quirks</span> ·
+                                <span class="ds-code">livewire-input-patterns</span> ·
+                                <span class="ds-code">blade-safe-edit</span> ·
+                                <span class="ds-code">master-pasien</span> — plus
+                                <span class="ds-code">docs/*.md</span> per pola. Kalau menemukan ranjau baru,
+                                tambahkan ke sini &amp; ke skill-nya.
+                            </span>
+                        </div>
+                    </section>
+
+                    {{-- ====== 11 CHECKLIST ADOPSI ====== --}}
+                    <section x-show="section === 'adopsi'" x-cloak>
+                        <div class="ds-eyebrow mb-3">11 — Adopsi</div>
                         <h1 class="ds-display-md mb-4">Checklist Adopsi</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Mau menambah tahap di jalur yang ada, atau mengadopsi pola transaksi
@@ -1568,6 +1808,7 @@ TXT,
                                     'Semua aksi admin/MR tercatat appendAdminLog* (kategori ADMIN/MR)',
                                     'API eksternal (BPJS dkk): trait per-API pola VclaimTrait + timeout wajib',
                                     'Jangan blind-copy antar jalur: UGD punya triase/transfer; RI tanpa pelayanan & billing per-item',
+                                    'Git: kerjakan di branch develop / feature branch → PR; branch main menolak merge commit (fast-forward only)',
                                     'Ikuti juga seluruh checklist Tutorial Koding Master (komponen, event, validasi, LOV)',
                                 ] as $item)
                                     <li class="flex items-start gap-2.5">
@@ -1581,14 +1822,21 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 11 TRAIT & REFERENSI ====== --}}
+                    {{-- ====== 12 TRAIT & REFERENSI ====== --}}
                     <section x-show="section === 'referensi'" x-cloak>
-                        <div class="ds-eyebrow mb-3">11 — Adopsi</div>
+                        <div class="ds-eyebrow mb-3">12 — Adopsi</div>
                         <h1 class="ds-display-md mb-4">Trait &amp; Referensi</h1>
                         <p class="ds-body-md mb-6" style="max-width:62ch">
                             Peta trait di <span class="ds-code">app/Http/Traits/</span> yang menopang transaksi —
                             kenali dulu sebelum menulis helper baru (kemungkinan besar sudah ada).
                         </p>
+
+                        <div class="ds-card-dark mb-6" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Pola trait API eksternal — SEP · task-id antrean · SATU SEHAT</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['api-trait'] }}</pre>
+                        </div>
 
                         <div class="ds-card-outline" style="padding:0; overflow:hidden">
                             <table class="ds-table">
@@ -1626,6 +1874,67 @@ TXT,
                                     <tr><td class="ds-td-strong">Jebakan Oracle & input Livewire</td><td class="ds-td-class">skill oracle-quirks · skill livewire-input-patterns</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </section>
+
+                    {{-- ====== 13 GLOSARIUM ====== --}}
+                    <section x-show="section === 'glosarium'" x-cloak>
+                        <div class="ds-eyebrow mb-3">13 — Adopsi</div>
+                        <h1 class="ds-display-md mb-4">Glosarium Istilah</h1>
+                        <p class="ds-body-md mb-6" style="max-width:62ch">
+                            Domain rumah sakit penuh singkatan. Kalau menemukan istilah asing di
+                            tutorial, kode, atau rapat — cari di sini dulu.
+                        </p>
+
+                        <div class="ds-card-outline" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead><tr><th>Istilah</th><th>Arti</th></tr></thead>
+                                <tbody>
+                                    @foreach ([
+                                        ['RJ · UGD · RI', 'Tiga jalur pelayanan: Rawat Jalan, Unit Gawat Darurat, Rawat Inap'],
+                                        ['No RM / reg_no', 'Nomor rekam medis — identitas pasien seumur hidup (satu per orang)'],
+                                        ['rj_no / rihdr_no', 'Nomor transaksi kunjungan — satu per kedatangan (bukan per pasien)'],
+                                        ['DPJP', 'Dokter Penanggung Jawab Pelayanan — dokter utama pasien'],
+                                        ['EMR / ERM', 'Rekam medis elektronik — modal SOAP di halaman pelayanan'],
+                                        ['SOAP', 'Subjective · Objective · Assessment · Plan — struktur pemeriksaan klinis'],
+                                        ['CPPT', 'Catatan Perkembangan Pasien Terintegrasi — catatan harian multi-profesi di RI'],
+                                        ['SBAR', 'Situation Background Assessment Recommendation — format komunikasi perawat→dokter'],
+                                        ['Askep', 'Asuhan Keperawatan — diagnosis & intervensi perawat (standar SDKI/SLKI/SIKI)'],
+                                        ['Triase P0–P3', 'Prioritas kegawatan pasien UGD (P0 resusitasi ... P3 ringan)'],
+                                        ['SEP', 'Surat Eligibilitas Peserta — dokumen BPJS wajib agar kunjungan bisa diklaim'],
+                                        ['VClaim', 'Web-service BPJS utk SEP, rujukan, surat kontrol'],
+                                        ['MJKN', 'Mobile JKN — aplikasi booking antrean online BPJS'],
+                                        ['Task-id', 'Stempel waktu tahapan pelayanan yang dilaporkan ke antrean BPJS (taskId 3–7; 99 = batal)'],
+                                        ['PRB', 'Program Rujuk Balik — pasien kronis stabil ambil obat rutin di faskes 1'],
+                                        ['SKDP', 'Surat Keterangan Dalam Perawatan — surat kontrol utk kunjungan berikutnya'],
+                                        ['iDRG / INA-CBG', 'Sistem grouping tarif klaim Kemenkes (aplikasi E-Klaim); iDRG menggantikan INA-CBG'],
+                                        ['Casemix', 'Unit pengelola koding & klaim (jembatan medis ↔ administrasi)'],
+                                        ['SATU SEHAT', 'Platform interoperabilitas data kesehatan Kemenkes (standar FHIR)'],
+                                        ['SIRS / Aplicares', 'Pelaporan RS Online Kemenkes / ketersediaan tempat tidur ke BPJS'],
+                                        ['Klaim ID', 'Kode penjamin kunjungan (UMUM, BPJS, karyawan, dst.) — kolom klaim_id'],
+                                        ['Bon', 'Pembayaran kurang dari total tagihan — sisa jadi piutang pasien'],
+                                        ['Etiket', 'Label cetak kecil — identitas pasien (gelang/sampel) atau aturan pakai obat'],
+                                        ['PTO', 'Pemantauan Terapi Obat — telaah apoteker utk resep RI'],
+                                        ['Bangsal · Kamar · Bed', 'Hierarki tempat tidur RI (bangsal → kamar → bed)'],
+                                        ['Shift', 'Pembagian waktu jaga; lookup tabel rstxn_shiftctls berdasar jam sekarang'],
+                                        ['CLOB', 'Kolom teks besar Oracle — tempat JSON detail kunjungan disimpan'],
+                                        ['LOV', 'List of Values — komponen pencarian data master (ketik → pilih)'],
+                                    ] as [$istilah, $arti])
+                                        <tr>
+                                            <td class="ds-td-strong" style="white-space:nowrap">{{ $istilah }}</td>
+                                            <td class="ds-body-sm">{{ $arti }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ds-card-outline mt-6" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                Menemukan istilah lain yang membingungkan? Tambahkan ke tabel ini —
+                                glosarium hidup dari kontribusi tiap programmer baru.
+                            </span>
                         </div>
                     </section>
 

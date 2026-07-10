@@ -892,6 +892,16 @@ TXT,
                             adalah referensi yang bisa dibaca lepas.
                         </p>
 
+                        <div class="ds-card-outline mt-4" style="padding:20px">
+                            <div class="ds-title-sm mb-2">Peta belajar programmer baru</div>
+                            <ol class="ds-body-sm space-y-1.5" style="list-style:decimal; padding-left:18px">
+                                <li><strong>Jalankan proyek di lokal</strong> — <span class="ds-code">composer install</span> · <span class="ds-code">npm install &amp;&amp; npm run build</span> · salin <span class="ds-code">.env</span> (kredensial Oracle dev: minta ke lead) · <span class="ds-code">php artisan serve</span> · login akun dev.</li>
+                                <li><strong>Khatam tutorial ini berurutan</strong> (bab 01–14), lalu praktik <strong>satu master Level 1</strong> sampai lolos checklist bab 14.</li>
+                                <li>Lanjut <a href="{{ route('standarisasi-ui.koding-transaksi') }}" wire:navigate class="hover:underline font-semibold" style="color:var(--primary)">Tutorial Koding Transaksi</a> — mulai dari bab Alur Pasien &amp; Data Inti (JSON CLOB), baru bab tahapan.</li>
+                                <li>Praktik transaksi pertama lewat bab <em>Alur: Tambah Fitur</em> di tutorial transaksi — dan hafalkan bab <em>Ranjau Umum</em> + <em>Glosarium Istilah</em> di sana sebelum menyentuh kode.</li>
+                            </ol>
+                        </div>
+
                         <div class="ds-card-outline mt-4" style="padding:16px 20px">
                             <span class="ds-spike" style="vertical-align:middle"></span>
                             <span class="ds-body-sm" style="color:var(--body-strong)">
