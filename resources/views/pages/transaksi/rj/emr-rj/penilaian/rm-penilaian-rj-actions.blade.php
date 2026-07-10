@@ -28,6 +28,7 @@ new class extends Component {
         $this->registerAreas(['modal-penilaian-rj']);
         $this->formEntryNyeri = $this->defaultFormEntryNyeriState();
         $this->formEntryResikoJatuh = $this->defaultFormEntryResikoJatuhState();
+        $this->formEntryResikoBunuhDiri = $this->defaultFormEntryResikoBunuhDiriState();
         $this->formEntryDekubitus = $this->defaultFormEntryDekubitusState();
         $this->formEntryGizi = $this->defaultFormEntryGiziState();
     }
@@ -80,6 +81,7 @@ new class extends Component {
         return [
             'nyeri' => [],
             'resikoJatuh' => [],
+            'resikoBunuhDiri' => [],
             'dekubitus' => [],
             'gizi' => [],
             'statusPediatrik' => [],
@@ -449,6 +451,185 @@ new class extends Component {
     }
 
     /* ===============================================================
+     | RISIKO BUNUH DIRI — C-SSRS (Columbia Suicide Severity Rating Scale)
+     =============================================================== */
+
+    public array $formEntryResikoBunuhDiri = [];
+
+    // Pertanyaan A (ide bunuh diri, 1 bulan terakhir) — URUTAN = bobot skor keparahan 1-5.
+    public array $ideBunuhDiriPertanyaan = [
+        'inginMati' => 'Berharap tidak bangun lagi atau sudah meninggal (wish to be dead)',
+        'ideAktifTanpaCara' => 'Berpikir untuk mengakhiri hidup, meskipun tanpa memikirkan caranya',
+        'ideAktifDenganCara' => 'Memikirkan cara tertentu untuk bunuh diri, namun tanpa niat melakukannya',
+        'ideAktifDenganNiat' => 'Berniat bunuh diri, meskipun belum ada rencana yang jelas',
+        'ideAktifNiatRencana' => 'Memiliki rencana yang jelas untuk bunuh diri dan berniat melakukannya',
+    ];
+
+    // Pertanyaan B (perilaku bunuh diri — pernah, sepanjang hidup).
+    public array $perilakuBunuhDiriPertanyaan = [
+        'pernahMencoba' => 'Pernah mencoba bunuh diri',
+        'hampirMencoba' => 'Hampir mencoba, dihentikan orang lain',
+        'memulaiLaluBerhenti' => 'Memulai tetapi menghentikan diri sendiri',
+        'persiapanSerius' => 'Melakukan persiapan serius (mengumpulkan obat, menulis pesan perpisahan)',
+    ];
+
+    public array $tindakLanjutBunuhDiriOptions = ['Edukasi & monitoring', 'Safety plan', 'Observasi ketat', 'Rujukan segera / rawat inap'];
+
+    private function defaultFormEntryResikoBunuhDiriState(): array
+    {
+        return [
+            'tglPenilaian' => '',
+            'petugasPenilai' => '',
+            'petugasPenilaiCode' => '',
+            'resikoBunuhDiri' => 'Tidak',
+            'ideBunuhDiri' => [
+                'inginMati' => 'Tidak',
+                'ideAktifTanpaCara' => 'Tidak',
+                'ideAktifDenganCara' => 'Tidak',
+                'ideAktifDenganNiat' => 'Tidak',
+                'ideAktifNiatRencana' => 'Tidak',
+            ],
+            'perilakuBunuhDiri' => [
+                'pernahMencoba' => 'Tidak',
+                'hampirMencoba' => 'Tidak',
+                'memulaiLaluBerhenti' => 'Tidak',
+                'persiapanSerius' => 'Tidak',
+                'kapanTerakhir' => '',
+            ],
+            'skorKeparahan' => 0,
+            'kategoriResiko' => 'Tidak Ada',
+            'tindakLanjut' => [],
+            'catatanKlinis' => '',
+        ];
+    }
+
+    public function setTglPenilaianResikoBunuhDiri(): void
+    {
+        $this->formEntryResikoBunuhDiri['tglPenilaian'] = Carbon::now()->format('d/m/Y H:i:s');
+    }
+
+    /**
+     * Skor keparahan = nomor pertanyaan ide TERTINGGI yang dijawab "Ya" (1-5, 0 = tidak ada).
+     * Stratifikasi C-SSRS: Tinggi = skor 5 ATAU riwayat percobaan;
+     * Sedang = skor 3-4 atau ada perilaku lain (persiapan dsb.);
+     * Rendah = skor 1-2 tanpa perilaku; selain itu "Tidak Ada".
+     */
+    public function hitungSkorResikoBunuhDiri(): void
+    {
+        // Gate "Tidak" → tidak ada risiko yang dinilai
+        if (($this->formEntryResikoBunuhDiri['resikoBunuhDiri'] ?? 'Tidak') !== 'Ya') {
+            $this->formEntryResikoBunuhDiri['skorKeparahan'] = 0;
+            $this->formEntryResikoBunuhDiri['kategoriResiko'] = 'Tidak Ada';
+            return;
+        }
+
+        $ide = $this->formEntryResikoBunuhDiri['ideBunuhDiri'] ?? [];
+        $skor = 0;
+        $nomor = 0;
+        foreach ($this->ideBunuhDiriPertanyaan as $key => $pertanyaan) {
+            $nomor++;
+            if (($ide[$key] ?? '') === 'Ya') {
+                $skor = $nomor;
+            }
+        }
+
+        $perilaku = $this->formEntryResikoBunuhDiri['perilakuBunuhDiri'] ?? [];
+        $pernahMencoba = ($perilaku['pernahMencoba'] ?? '') === 'Ya';
+        $adaPerilakuLain = collect(['hampirMencoba', 'memulaiLaluBerhenti', 'persiapanSerius'])
+            ->contains(fn($key) => ($perilaku[$key] ?? '') === 'Ya');
+
+        $this->formEntryResikoBunuhDiri['skorKeparahan'] = $skor;
+        $this->formEntryResikoBunuhDiri['kategoriResiko'] = match (true) {
+            $skor === 5 || $pernahMencoba => 'Tinggi',
+            $skor >= 3 || $adaPerilakuLain => 'Sedang',
+            $skor >= 1 => 'Rendah',
+            default => 'Tidak Ada',
+        };
+    }
+
+    public function toggleTindakLanjutBunuhDiri(string $opsi): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        $terpilih = $this->formEntryResikoBunuhDiri['tindakLanjut'] ?? [];
+        if (in_array($opsi, $terpilih, true)) {
+            $terpilih = array_values(array_diff($terpilih, [$opsi]));
+        } else {
+            $terpilih[] = $opsi;
+        }
+        $this->formEntryResikoBunuhDiri['tindakLanjut'] = $terpilih;
+    }
+
+    public function addAssessmentResikoBunuhDiri(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menambah penilaian.');
+            return;
+        }
+
+        // Gate "Tidak" → entri bersih; jawaban detail yang sempat terisi tidak ikut tersimpan
+        if (($this->formEntryResikoBunuhDiri['resikoBunuhDiri'] ?? 'Tidak') !== 'Ya') {
+            $this->formEntryResikoBunuhDiri['ideBunuhDiri'] = ['inginMati' => 'Tidak', 'ideAktifTanpaCara' => 'Tidak', 'ideAktifDenganCara' => 'Tidak', 'ideAktifDenganNiat' => 'Tidak', 'ideAktifNiatRencana' => 'Tidak'];
+            $this->formEntryResikoBunuhDiri['perilakuBunuhDiri'] = ['pernahMencoba' => 'Tidak', 'hampirMencoba' => 'Tidak', 'memulaiLaluBerhenti' => 'Tidak', 'persiapanSerius' => 'Tidak', 'kapanTerakhir' => ''];
+            $this->formEntryResikoBunuhDiri['tindakLanjut'] = [];
+        }
+
+        $this->hitungSkorResikoBunuhDiri();
+        $this->formEntryResikoBunuhDiri['petugasPenilai'] = auth()->user()->myuser_name;
+        $this->formEntryResikoBunuhDiri['petugasPenilaiCode'] = auth()->user()->myuser_code;
+
+        if (empty($this->formEntryResikoBunuhDiri['tglPenilaian'])) {
+            $this->setTglPenilaianResikoBunuhDiri();
+        }
+
+        try {
+            $this->validate(
+                [
+                    'formEntryResikoBunuhDiri.resikoBunuhDiri' => 'required|in:Ya,Tidak',
+                    'formEntryResikoBunuhDiri.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                    'formEntryResikoBunuhDiri.petugasPenilai' => 'required|string|max:100',
+                    'formEntryResikoBunuhDiri.ideBunuhDiri.*' => 'required|in:Ya,Tidak',
+                    'formEntryResikoBunuhDiri.perilakuBunuhDiri.pernahMencoba' => 'required|in:Ya,Tidak',
+                    'formEntryResikoBunuhDiri.perilakuBunuhDiri.hampirMencoba' => 'required|in:Ya,Tidak',
+                    'formEntryResikoBunuhDiri.perilakuBunuhDiri.memulaiLaluBerhenti' => 'required|in:Ya,Tidak',
+                    'formEntryResikoBunuhDiri.perilakuBunuhDiri.persiapanSerius' => 'required|in:Ya,Tidak',
+                    'formEntryResikoBunuhDiri.perilakuBunuhDiri.kapanTerakhir' => 'nullable|string|max:100',
+                    'formEntryResikoBunuhDiri.tindakLanjut' => 'array',
+                    'formEntryResikoBunuhDiri.catatanKlinis' => 'nullable|string|max:1000',
+                ],
+                [
+                    'formEntryResikoBunuhDiri.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
+                    'formEntryResikoBunuhDiri.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
+                    'formEntryResikoBunuhDiri.ideBunuhDiri.*.in' => 'Jawaban ide bunuh diri hanya boleh "Ya" atau "Tidak".',
+                ],
+            );
+        } catch (ValidationException $e) {
+            $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data skrining yang diisi.');
+            return;
+        }
+
+        $this->dataDaftarPoliRJ['penilaian']['resikoBunuhDiri'][] = $this->formEntryResikoBunuhDiri;
+        $this->savePenilaian('Tambah Skrining RJ Risiko Bunuh Diri (C-SSRS) — kategori ' . ($this->formEntryResikoBunuhDiri['kategoriResiko'] ?? '-') . ', entri ' . ($this->formEntryResikoBunuhDiri['tglPenilaian'] ?? '-'));
+        $this->formEntryResikoBunuhDiri = $this->defaultFormEntryResikoBunuhDiriState();
+    }
+
+    public function removeAssessmentResikoBunuhDiri(int $index): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menghapus penilaian.');
+            return;
+        }
+
+        if (isset($this->dataDaftarPoliRJ['penilaian']['resikoBunuhDiri'][$index])) {
+            $tglEntri = $this->dataDaftarPoliRJ['penilaian']['resikoBunuhDiri'][$index]['tglPenilaian'] ?? '-';
+            array_splice($this->dataDaftarPoliRJ['penilaian']['resikoBunuhDiri'], $index, 1);
+            $this->savePenilaian('Hapus Skrining RJ Risiko Bunuh Diri (C-SSRS) — entri ' . $tglEntri);
+        }
+    }
+
+    /* ===============================================================
      | DEKUBITUS
      =============================================================== */
 
@@ -709,6 +890,11 @@ new class extends Component {
             $this->hitungSkorBraden();
         }
 
+        // ===== AUTO SKOR C-SSRS (RISIKO BUNUH DIRI) =====
+        if ($property === 'formEntryResikoBunuhDiri.resikoBunuhDiri' || str_starts_with($property, 'formEntryResikoBunuhDiri.ideBunuhDiri') || str_starts_with($property, 'formEntryResikoBunuhDiri.perilakuBunuhDiri')) {
+            $this->hitungSkorResikoBunuhDiri();
+        }
+
         // ===== AUTO MORSE / HUMPTY DUMPTY =====
         if (str_starts_with($property, 'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.dataResikoJatuh')) {
             $metode = $this->formEntryResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '';
@@ -760,6 +946,7 @@ new class extends Component {
         $this->isFormLocked = false;
         $this->formEntryNyeri = $this->defaultFormEntryNyeriState();
         $this->formEntryResikoJatuh = $this->defaultFormEntryResikoJatuhState();
+        $this->formEntryResikoBunuhDiri = $this->defaultFormEntryResikoBunuhDiriState();
         $this->formEntryDekubitus = $this->defaultFormEntryDekubitusState();
         $this->formEntryGizi = $this->defaultFormEntryGiziState();
     }
@@ -778,7 +965,7 @@ new class extends Component {
                     {{-- TAB NAVIGATION --}}
                     <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
                         <div class="flex flex-nowrap w-full gap-2 -mb-px">
-                            @foreach (['Nyeri' => 'Nyeri', 'Risiko Jatuh' => 'Risiko Jatuh', 'Dekubitus' => 'Dekubitus', 'Gizi' => 'Gizi'] as $tab => $label)
+                            @foreach (['Nyeri' => 'Nyeri', 'Risiko Jatuh' => 'Risiko Jatuh', 'Risiko Bunuh Diri' => 'Risiko Bunuh Diri', 'Dekubitus' => 'Dekubitus', 'Gizi' => 'Gizi'] as $tab => $label)
                                 <x-tab variant="underline" active-expr="activeTab === '{{ $tab }}'"
                                     x-on:click="activeTab = '{{ $tab }}'">
                                     {{ $label }}
@@ -796,6 +983,10 @@ new class extends Component {
 
                         <div class="w-full" x-show.transition.in.opacity.duration.600="activeTab === 'Risiko Jatuh'">
                             @include('pages.transaksi.rj.emr-rj.penilaian.tabs.resiko-jatuh-tab')
+                        </div>
+
+                        <div class="w-full" x-show.transition.in.opacity.duration.600="activeTab === 'Risiko Bunuh Diri'">
+                            @include('pages.transaksi.rj.emr-rj.penilaian.tabs.risiko-bunuh-diri-tab')
                         </div>
 
                         <div class="w-full" x-show.transition.in.opacity.duration.600="activeTab === 'Dekubitus'">

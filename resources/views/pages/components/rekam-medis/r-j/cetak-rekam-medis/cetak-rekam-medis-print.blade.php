@@ -37,6 +37,7 @@
         $txn = $data['dataDaftarTxn'];
         $lastNyeri = !empty($txn['penilaian']['nyeri']) ? end($txn['penilaian']['nyeri']) : null;
         $lastResikoJatuh = !empty($txn['penilaian']['resikoJatuh']) ? end($txn['penilaian']['resikoJatuh']) : null;
+        $lastResikoBunuhDiri = !empty($txn['penilaian']['resikoBunuhDiri']) ? end($txn['penilaian']['resikoBunuhDiri']) : null;
         $lastDekubitus = !empty($txn['penilaian']['dekubitus']) ? end($txn['penilaian']['dekubitus']) : null;
         $lastGizi = !empty($txn['penilaian']['gizi']) ? end($txn['penilaian']['gizi']) : null;
     @endphp
@@ -102,6 +103,14 @@
                 Skor : {{ $lastResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? '-' }} /
                 {{ $lastResikoJatuh['resikoJatuh']['kategoriResiko'] ?? '-' }}
                 <br>
+
+                {{-- ── RISIKO BUNUH DIRI C-SSRS (tampil hanya jika ada data) ── --}}
+                @if ($lastResikoBunuhDiri)
+                    <span class="font-bold">Risiko Bunuh Diri (C-SSRS) :</span>
+                    Skor keparahan : {{ $lastResikoBunuhDiri['skorKeparahan'] ?? '-' }} /
+                    {{ $lastResikoBunuhDiri['kategoriResiko'] ?? '-' }}{{ !empty($lastResikoBunuhDiri['tindakLanjut']) ? ' / ' . implode(', ', $lastResikoBunuhDiri['tindakLanjut']) : '' }}
+                    <br>
+                @endif
 
                 {{-- ── DEKUBITUS (tampil hanya jika ada data) ── --}}
                 @if ($lastDekubitus)

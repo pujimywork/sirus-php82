@@ -241,6 +241,17 @@ new class extends Component {
                                         @endforelse
                                     </div>
                                 </div>
+                            @php $bunuhDiriRec = collect($txn['penilaian']['resikoBunuhDiri'] ?? [])->filter(fn($x) => filled(data_get($x, 'tglPenilaian'))); @endphp
+                            @if ($bunuhDiriRec->isNotEmpty())
+                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="w-56 shrink-0 text-right text-muted">Risiko Bunuh Diri (C-SSRS) :</span>
+                                    <div class="space-y-1 text-body dark:text-gray-300">
+                                        @foreach ($bunuhDiriRec as $entriBunuhDiri)
+                                            <div><span class="text-sm font-medium text-muted-soft">{{ $entriBunuhDiri['tglPenilaian'] ?? '-' }}</span> — Skor keparahan: {{ $entriBunuhDiri['skorKeparahan'] ?? '-' }} / {{ $entriBunuhDiri['kategoriResiko'] ?? '-' }}{{ !empty($entriBunuhDiri['tindakLanjut']) ? ' / Tindak lanjut: ' . implode(', ', $entriBunuhDiri['tindakLanjut']) : '' }}</div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                             @php $dkRec = collect($txn['penilaian']['dekubitus'] ?? [])->filter(fn($x) => filled(data_get($x, 'dekubitus.dekubitus'))); @endphp
                                                             <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Dekubitus :</span>

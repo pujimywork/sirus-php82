@@ -18,6 +18,9 @@ new class extends Component {
     /** Penilaian risiko jatuh terbaru — terisi hanya jika kategori Sedang/Tinggi. */
     public array $resikoJatuhTerakhir = [];
 
+    /** Skrining risiko bunuh diri (C-SSRS) terbaru — terisi jika kategori Rendah/Sedang/Tinggi. */
+    public array $resikoBunuhDiriTerakhir = [];
+
     /** Map Cara Masuk (entry_id => entry_desc) dari rsmst_entrytypes — fallback bila entryDesc view kosong. */
     public array $entryLabels = [];
 
@@ -48,6 +51,7 @@ new class extends Component {
         $this->dataDaftarRi = $dataDaftarRi;
         $this->dataPasien = $this->findDataMasterPasien($dataDaftarRi['regNo']) ?? [];
         $this->resikoJatuhTerakhir = $this->hitungResikoJatuhTerakhir($dataDaftarRi);
+        $this->resikoBunuhDiriTerakhir = $this->hitungResikoBunuhDiriTerakhir($dataDaftarRi);
         $this->entryLabels = DB::table('rsmst_entrytypes')->pluck('entry_desc', 'entry_id')
             ->mapWithKeys(fn($entryDesc, $entryId) => [(string) $entryId => $entryDesc])->all();
     }
@@ -87,6 +91,41 @@ new class extends Component {
             'kategori' => $kategori,
             'metode' => $terakhir['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '',
             'skor' => (string) ($terakhir['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? ''),
+            'tgl' => $terakhir['tglPenilaian'] ?? '',
+        ];
+    }
+
+    /**
+     * Ambil skrining risiko bunuh diri (C-SSRS) TERAKHIR dari penilaian.resikoBunuhDiri[].
+     * Pola sama dgn hitungResikoJatuhTerakhir; return kosong jika kategori
+     * bukan Rendah/Sedang/Tinggi → penanda tidak tampil.
+     */
+    private function hitungResikoBunuhDiriTerakhir(array $dataEmr): array
+    {
+        $list = $dataEmr['penilaian']['resikoBunuhDiri'] ?? [];
+        $terakhir = null;
+        $maxTimestamp = null;
+        foreach (is_array($list) ? $list : [] as $entri) {
+            try {
+                $timestamp = Carbon::createFromFormat('d/m/Y H:i:s', trim($entri['tglPenilaian'] ?? ''))->getTimestamp();
+            } catch (\Throwable) {
+                $timestamp = null;
+            }
+            // >= : tanggal sama/tak terparse → entri yang diinput belakangan menang
+            if ($terakhir === null || $timestamp === null || $maxTimestamp === null || $timestamp >= $maxTimestamp) {
+                $terakhir = $entri;
+                $maxTimestamp = $timestamp ?? $maxTimestamp;
+            }
+        }
+
+        $kategori = $terakhir['kategoriResiko'] ?? '';
+        if (!in_array($kategori, ['Rendah', 'Sedang', 'Tinggi'], true)) {
+            return [];
+        }
+
+        return [
+            'kategori' => $kategori,
+            'skor' => (string) ($terakhir['skorKeparahan'] ?? ''),
             'tgl' => $terakhir['tglPenilaian'] ?? '',
         ];
     }
@@ -299,6 +338,21 @@ new class extends Component {
                                             clip-rule="evenodd" />
                                     </svg>
                                     Risiko Jatuh {{ $resikoJatuhTerakhir['kategori'] }}
+                                </x-badge>
+                            </div>
+                        @endif
+
+                        {{-- Penanda Risiko Bunuh Diri (C-SSRS) — tampil utk kategori Rendah/Sedang/Tinggi --}}
+                        @if (!empty($resikoBunuhDiriTerakhir))
+                            <div class="flex justify-end">
+                                <x-badge :variant="$resikoBunuhDiriTerakhir['kategori'] === 'Tinggi' ? 'danger' : 'warning'" class="gap-1"
+                                    title="Skrining C-SSRS terakhir{{ $resikoBunuhDiriTerakhir['tgl'] ? ' ' . $resikoBunuhDiriTerakhir['tgl'] : '' }}{{ $resikoBunuhDiriTerakhir['skor'] !== '' ? ' (skor keparahan ' . $resikoBunuhDiriTerakhir['skor'] . ')' : '' }}">
+                                    <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                    Risiko Bunuh Diri {{ $resikoBunuhDiriTerakhir['kategori'] }}
                                 </x-badge>
                             </div>
                         @endif

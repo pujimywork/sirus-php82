@@ -18,6 +18,7 @@ new class extends Component {
     public array $subDirty = [
         'nyeri' => false,
         'resikoJatuh' => false,
+        'resikoBunuhDiri' => false,
         'dekubitus' => false,
         'gizi' => false,
     ];
@@ -47,12 +48,13 @@ new class extends Component {
         }
 
         $this->dataDaftarRi = $data;
-        $this->dataDaftarRi['penilaian'] ??= ['nyeri' => [], 'resikoJatuh' => [], 'dekubitus' => [], 'gizi' => []];
+        $this->dataDaftarRi['penilaian'] ??= ['nyeri' => [], 'resikoJatuh' => [], 'resikoBunuhDiri' => [], 'dekubitus' => [], 'gizi' => []];
 
         $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo); // ← pakai trait
 
         $this->dispatch('open-rm-penilaian-nyeri-ri', $riHdrNo);
         $this->dispatch('open-rm-penilaian-resiko-jatuh-ri', $riHdrNo);
+        $this->dispatch('open-rm-penilaian-risiko-bunuh-diri-ri', $riHdrNo);
         $this->dispatch('open-rm-penilaian-dekubitus-ri', $riHdrNo);
         $this->dispatch('open-rm-penilaian-gizi-ri', $riHdrNo);
 
@@ -81,6 +83,7 @@ new class extends Component {
         $eventMap = [
             'nyeri' => 'save-rm-penilaian-nyeri-ri',
             'resikoJatuh' => 'save-rm-penilaian-resiko-jatuh-ri',
+            'resikoBunuhDiri' => 'save-rm-penilaian-risiko-bunuh-diri-ri',
             'dekubitus' => 'save-rm-penilaian-dekubitus-ri',
             'gizi' => 'save-rm-penilaian-gizi-ri',
         ];
@@ -107,6 +110,11 @@ new class extends Component {
         return count($this->dataDaftarRi['penilaian']['resikoJatuh'] ?? []);
     }
 
+    public function getCountResikoBunuhDiriProperty(): int
+    {
+        return count($this->dataDaftarRi['penilaian']['resikoBunuhDiri'] ?? []);
+    }
+
     public function getCountDekubitusProperty(): int
     {
         return count($this->dataDaftarRi['penilaian']['dekubitus'] ?? []);
@@ -122,7 +130,7 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
         $this->dataDaftarRi = [];
-        $this->subDirty = ['nyeri' => false, 'resikoJatuh' => false, 'dekubitus' => false, 'gizi' => false];
+        $this->subDirty = ['nyeri' => false, 'resikoJatuh' => false, 'resikoBunuhDiri' => false, 'dekubitus' => false, 'gizi' => false];
     }
 };
 ?>
@@ -151,6 +159,7 @@ new class extends Component {
         saveLabels: {
             nyeri: 'Penilaian Nyeri',
             resikoJatuh: 'Penilaian Risiko Jatuh',
+            resikoBunuhDiri: 'Skrining Risiko Bunuh Diri',
             dekubitus: 'Penilaian Dekubitus',
             gizi: 'Penilaian Gizi',
         },
@@ -192,6 +201,7 @@ new class extends Component {
                     $penilaianTabs = [
                         ['key' => 'nyeri', 'label' => 'Penilaian Nyeri', 'count' => $this->countNyeri],
                         ['key' => 'resikoJatuh', 'label' => 'Risiko Jatuh', 'count' => $this->countResikoJatuh],
+                        ['key' => 'resikoBunuhDiri', 'label' => 'Risiko Bunuh Diri', 'count' => $this->countResikoBunuhDiri],
                         ['key' => 'dekubitus', 'label' => 'Dekubitus', 'count' => $this->countDekubitus],
                         ['key' => 'gizi', 'label' => 'Gizi', 'count' => $this->countGizi],
                     ];
@@ -220,6 +230,12 @@ new class extends Component {
         <div x-show="subTab === 'resikoJatuh'" x-transition.opacity.duration.200ms style="display:none">
             <livewire:pages::transaksi.ri.emr-ri.penilaian-ri.resiko-jatuh-ri.rm-penilaian-resiko-jatuh-ri-actions
                 :riHdrNo="$riHdrNo" wire:key="penilaian-ri-{{ $riHdrNo }}" />
+        </div>
+
+        {{-- TAB: RISIKO BUNUH DIRI (C-SSRS) --}}
+        <div x-show="subTab === 'resikoBunuhDiri'" x-transition.opacity.duration.200ms style="display:none">
+            <livewire:pages::transaksi.ri.emr-ri.penilaian-ri.risiko-bunuh-diri-ri.rm-penilaian-risiko-bunuh-diri-ri-actions
+                :riHdrNo="$riHdrNo" wire:key="penilaian-risiko-bunuh-diri-{{ $riHdrNo }}" />
         </div>
 
         {{-- TAB: DEKUBITUS --}}

@@ -263,6 +263,41 @@ new class extends Component {
         ];
     }
 
+    /**
+     * Ambil skrining risiko bunuh diri (C-SSRS) TERAKHIR dari penilaian.resikoBunuhDiri[].
+     * Pola sama dgn hitungResikoJatuhTerakhir; return kosong jika kategori
+     * bukan Rendah/Sedang/Tinggi → penanda tidak tampil.
+     */
+    private function hitungResikoBunuhDiriTerakhir(array $dataEmr): array
+    {
+        $list = $dataEmr['penilaian']['resikoBunuhDiri'] ?? [];
+        $terakhir = null;
+        $maxTimestamp = null;
+        foreach (is_array($list) ? $list : [] as $entri) {
+            try {
+                $timestamp = Carbon::createFromFormat('d/m/Y H:i:s', trim($entri['tglPenilaian'] ?? ''))->getTimestamp();
+            } catch (\Throwable) {
+                $timestamp = null;
+            }
+            // >= : tanggal sama/tak terparse → entri yang diinput belakangan menang
+            if ($terakhir === null || $timestamp === null || $maxTimestamp === null || $timestamp >= $maxTimestamp) {
+                $terakhir = $entri;
+                $maxTimestamp = $timestamp ?? $maxTimestamp;
+            }
+        }
+
+        $kategori = $terakhir['kategoriResiko'] ?? '';
+        if (!in_array($kategori, ['Rendah', 'Sedang', 'Tinggi'], true)) {
+            return [];
+        }
+
+        return [
+            'kategori' => $kategori,
+            'skor' => (string) ($terakhir['skorKeparahan'] ?? ''),
+            'tgl' => $terakhir['tglPenilaian'] ?? '',
+        ];
+    }
+
     #[Computed]
     public function rows()
     {
@@ -289,6 +324,9 @@ new class extends Component {
             // Penanda risiko jatuh (Sedang/Tinggi) — dari JSON yang sudah di-decode,
             // tanpa query tambahan. Kosong = tidak tampil.
             $row->resiko_jatuh = $this->hitungResikoJatuhTerakhir($json);
+
+            // Penanda risiko bunuh diri C-SSRS (Rendah/Sedang/Tinggi)
+            $row->resiko_bunuh_diri = $this->hitungResikoBunuhDiriTerakhir($json);
 
             $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode(' | ', array_column($json['diagnosis'], 'icdX')) : '-';
             $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
@@ -551,6 +589,18 @@ new class extends Component {
                                                                 clip-rule="evenodd" />
                                                         </svg>
                                                         Risiko Jatuh {{ $row->resiko_jatuh['kategori'] }}
+                                                    </x-badge>
+                                                @endif
+
+                                                @if (!empty($row->resiko_bunuh_diri))
+                                                    <x-badge :variant="$row->resiko_bunuh_diri['kategori'] === 'Tinggi' ? 'danger' : 'warning'" class="gap-1"
+                                                        title="Skrining C-SSRS terakhir{{ $row->resiko_bunuh_diri['tgl'] ? ' ' . $row->resiko_bunuh_diri['tgl'] : '' }}{{ $row->resiko_bunuh_diri['skor'] !== '' ? ' (skor keparahan ' . $row->resiko_bunuh_diri['skor'] . ')' : '' }}">
+                                                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd"
+                                                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                                                clip-rule="evenodd" />
+                                                        </svg>
+                                                        Risiko Bunuh Diri {{ $row->resiko_bunuh_diri['kategori'] }}
                                                     </x-badge>
                                                 @endif
 
