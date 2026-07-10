@@ -99,13 +99,23 @@ new class extends Component {
         };
     }
 
-    private function bulanId(int $m): string
+    /** Nama unit lengkap (tidak disingkat). */
+    public function unitLabel(?string $code): string
+    {
+        return [
+            'RJ' => 'Rawat Jalan',
+            'UGD' => 'Gawat Darurat',
+            'RI' => 'Rawat Inap',
+        ][$code] ?? ($code ?: '-');
+    }
+
+    private function bulanId(int $bulan): string
     {
         return [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-        ][$m] ?? (string) $m;
+        ][$bulan] ?? (string) $bulan;
     }
 
     /**
@@ -113,25 +123,25 @@ new class extends Component {
      */
     private function periodeRange(): ?array
     {
-        $p = trim($this->periode);
+        $periodeInput = trim($this->periode);
 
-        if (preg_match('#^(\d{1,2})/(\d{4})$#', $p, $m)) {
-            $bln = (int) $m[1];
-            $thn = (int) $m[2];
-            if ($bln < 1 || $bln > 12) {
+        if (preg_match('#^(\d{1,2})/(\d{4})$#', $periodeInput, $matches)) {
+            $bulan = (int) $matches[1];
+            $tahun = (int) $matches[2];
+            if ($bulan < 1 || $bulan > 12) {
                 return null;
             }
-            $start = Carbon::create($thn, $bln, 1)->startOfMonth();
+            $start = Carbon::create($tahun, $bulan, 1)->startOfMonth();
             $end = (clone $start)->endOfMonth();
-            $label = $this->bulanId($bln) . ' ' . $thn;
+            $label = $this->bulanId($bulan) . ' ' . $tahun;
             return [$start, $end, 'Bulanan', $label];
         }
 
-        if (preg_match('#^(\d{4})$#', $p, $m)) {
-            $thn = (int) $m[1];
-            $start = Carbon::create($thn, 1, 1)->startOfYear();
+        if (preg_match('#^(\d{4})$#', $periodeInput, $matches)) {
+            $tahun = (int) $matches[1];
+            $start = Carbon::create($tahun, 1, 1)->startOfYear();
             $end = (clone $start)->endOfYear();
-            return [$start, $end, 'Tahunan', "Tahun {$thn}"];
+            return [$start, $end, 'Tahunan', "Tahun {$tahun}"];
         }
 
         return null;
@@ -295,11 +305,11 @@ new class extends Component {
                         </div>
                         <div class="w-full sm:w-auto">
                             <x-input-label value="Unit" />
-                            <x-select-input wire:model.live="filterUnit" class="mt-1 w-full sm:w-32">
+                            <x-select-input wire:model.live="filterUnit" class="mt-1 w-full sm:w-44">
                                 <option value="">Semua</option>
-                                <option value="RJ">RJ</option>
-                                <option value="UGD">UGD</option>
-                                <option value="RI">RI</option>
+                                <option value="RJ">Rawat Jalan</option>
+                                <option value="UGD">Gawat Darurat</option>
+                                <option value="RI">Rawat Inap</option>
                             </x-select-input>
                         </div>
                     </div>
@@ -333,28 +343,28 @@ new class extends Component {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($this->detail as $i => $r)
+                                    @forelse ($this->detail as $i => $row)
                                         <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50">
                                             <td class="px-3 py-2.5 text-muted-soft tabular-nums">{{ $this->detail->firstItem() + $i }}</td>
-                                            <td class="px-3 py-2.5 whitespace-nowrap tabular-nums text-ink dark:text-gray-100">{{ $r->tgl }}</td>
-                                            <td class="px-3 py-2.5 whitespace-nowrap font-medium tabular-nums text-ink dark:text-gray-100">{{ $r->reg_no }}</td>
+                                            <td class="px-3 py-2.5 whitespace-nowrap tabular-nums text-ink dark:text-gray-100">{{ $row->tgl }}</td>
+                                            <td class="px-3 py-2.5 whitespace-nowrap font-medium tabular-nums text-ink dark:text-gray-100">{{ $row->reg_no }}</td>
                                             <td class="px-3 py-2.5 text-ink dark:text-gray-100">
-                                                {{ $r->nama ?: '—' }}
-                                                <span class="text-xs text-muted-soft">({{ $r->sex === 'L' ? 'L' : ($r->sex === 'P' ? 'P' : '-') }})</span>
+                                                {{ $row->nama ?: '—' }}
+                                                <span class="text-xs text-muted-soft">({{ $row->sex === 'L' ? 'L' : ($row->sex === 'P' ? 'P' : '-') }})</span>
                                             </td>
-                                            <td class="px-3 py-2.5 text-body dark:text-gray-200">{{ $r->pemeriksaan ?: '—' }}</td>
+                                            <td class="px-3 py-2.5 text-body dark:text-gray-200">{{ $row->pemeriksaan ?: '—' }}</td>
                                             <td class="px-3 py-2.5 text-center">
-                                                @if ($r->jenis === 'DALAM')
+                                                @if ($row->jenis === 'DALAM')
                                                     <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300">RS Sendiri</span>
                                                 @else
                                                     <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">Lab Luar</span>
                                                 @endif
                                             </td>
-                                            <td class="px-3 py-2.5 text-muted dark:text-gray-400">{{ $r->unit }}</td>
+                                            <td class="px-3 py-2.5 whitespace-nowrap text-muted dark:text-gray-400">{{ $this->unitLabel($row->unit) }}</td>
                                             <td class="px-3 py-2.5 text-center">
-                                                <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold {{ $this->trxStatusBadge($r->trx_status) }}">{{ $this->trxStatusLabel($r->unit, $r->trx_status) }}</span>
+                                                <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold {{ $this->trxStatusBadge($row->trx_status) }}">{{ $this->trxStatusLabel($row->unit, $row->trx_status) }}</span>
                                             </td>
-                                            <td class="px-3 py-2.5 text-right tabular-nums text-ink dark:text-gray-100">Rp {{ number_format($r->harga, 0, ',', '.') }}</td>
+                                            <td class="px-3 py-2.5 text-right tabular-nums text-ink dark:text-gray-100">Rp {{ number_format($row->harga, 0, ',', '.') }}</td>
                                         </tr>
                                     @empty
                                         <tr><td colspan="9" class="px-6 py-12">
@@ -376,18 +386,18 @@ new class extends Component {
                 @else
                     {{-- REKAP TAB: ringkasan (info-bar) + per jenis pemeriksaan (kanan/kiri) --}}
                     @php
-                        $rc = $this->recap;
-                        $pctDalam = $rc['total']['jml'] > 0 ? round($rc['dalam']['jml'] / $rc['total']['jml'] * 100) : 0;
-                        $pctLuar = $rc['total']['jml'] > 0 ? round($rc['luar']['jml'] / $rc['total']['jml'] * 100) : 0;
+                        $rekap = $this->recap;
+                        $persenDalam = $rekap['total']['jml'] > 0 ? round($rekap['dalam']['jml'] / $rekap['total']['jml'] * 100) : 0;
+                        $persenLuar = $rekap['total']['jml'] > 0 ? round($rekap['luar']['jml'] / $rekap['total']['jml'] * 100) : 0;
                     @endphp
 
                     {{-- RINGKASAN (teks biasa, 1 baris) --}}
                     <div class="mt-4 px-4 py-3 bg-canvas border border-hairline rounded-2xl text-sm text-body dark:text-gray-300 dark:border-gray-700 dark:bg-gray-900">
                         <span class="font-semibold text-body dark:text-gray-200">Ringkasan {{ $this->periodeLabel }}:</span>
-                        Total <span class="font-semibold">{{ number_format($rc['total']['jml']) }}</span> pemeriksaan
-                        · Revenue <span class="font-semibold text-blue-700 dark:text-blue-400">Rp {{ number_format($rc['total']['revenue'], 0, ',', '.') }}</span>
-                        · Lab RS Sendiri <span class="font-medium text-cyan-700 dark:text-cyan-400">{{ number_format($rc['dalam']['jml']) }}</span> ({{ $pctDalam }}%) Rp {{ number_format($rc['dalam']['revenue'], 0, ',', '.') }}
-                        · Lab Luar <span class="font-medium text-amber-700 dark:text-amber-400">{{ number_format($rc['luar']['jml']) }}</span> ({{ $pctLuar }}%) Rp {{ number_format($rc['luar']['revenue'], 0, ',', '.') }}
+                        Total <span class="font-semibold">{{ number_format($rekap['total']['jml']) }}</span> pemeriksaan
+                        · Revenue <span class="font-semibold text-blue-700 dark:text-blue-400">Rp {{ number_format($rekap['total']['revenue'], 0, ',', '.') }}</span>
+                        · Lab RS Sendiri <span class="font-medium text-cyan-700 dark:text-cyan-400">{{ number_format($rekap['dalam']['jml']) }}</span> ({{ $persenDalam }}%) Rp {{ number_format($rekap['dalam']['revenue'], 0, ',', '.') }}
+                        · Lab Luar <span class="font-medium text-amber-700 dark:text-amber-400">{{ number_format($rekap['luar']['jml']) }}</span> ({{ $persenLuar }}%) Rp {{ number_format($rekap['luar']['revenue'], 0, ',', '.') }}
                     </div>
 
                     {{-- PER JENIS — kanan (Lab RS Sendiri) / kiri (Lab Luar) --}}
@@ -413,12 +423,12 @@ new class extends Component {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse ($this->perDalam as $i => $it)
+                                            @forelse ($this->perDalam as $i => $jenis)
                                                 <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50">
                                                     <td class="px-3 py-2.5 text-muted-soft tabular-nums">{{ $i + 1 }}</td>
-                                                    <td class="px-3 py-2.5 text-ink dark:text-gray-100">{{ $it->nama ?: '—' }}</td>
-                                                    <td class="px-3 py-2.5 text-right tabular-nums font-semibold text-ink dark:text-gray-100">{{ number_format($it->jml) }}</td>
-                                                    <td class="px-3 py-2.5 text-right tabular-nums text-cyan-700 dark:text-cyan-300">Rp {{ number_format($it->total, 0, ',', '.') }}</td>
+                                                    <td class="px-3 py-2.5 text-ink dark:text-gray-100">{{ $jenis->nama ?: '—' }}</td>
+                                                    <td class="px-3 py-2.5 text-right tabular-nums font-semibold text-ink dark:text-gray-100">{{ number_format($jenis->jml) }}</td>
+                                                    <td class="px-3 py-2.5 text-right tabular-nums text-cyan-700 dark:text-cyan-300">Rp {{ number_format($jenis->total, 0, ',', '.') }}</td>
                                                 </tr>
                                             @empty
                                                 <tr><td colspan="4" class="px-6 py-10 text-center text-muted dark:text-gray-400">Tidak ada pemeriksaan lab RS sendiri</td></tr>
@@ -428,8 +438,8 @@ new class extends Component {
                                             <tfoot class="bg-surface-soft dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600">
                                                 <tr class="text-sm font-bold text-ink dark:text-gray-100">
                                                     <td class="px-3 py-3" colspan="2">TOTAL</td>
-                                                    <td class="px-3 py-3 text-right tabular-nums">{{ number_format($rc['dalam']['jml']) }}</td>
-                                                    <td class="px-3 py-3 text-right tabular-nums text-cyan-800 dark:text-cyan-200">Rp {{ number_format($rc['dalam']['revenue'], 0, ',', '.') }}</td>
+                                                    <td class="px-3 py-3 text-right tabular-nums">{{ number_format($rekap['dalam']['jml']) }}</td>
+                                                    <td class="px-3 py-3 text-right tabular-nums text-cyan-800 dark:text-cyan-200">Rp {{ number_format($rekap['dalam']['revenue'], 0, ',', '.') }}</td>
                                                 </tr>
                                             </tfoot>
                                         @endif
@@ -457,12 +467,12 @@ new class extends Component {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse ($this->perLuar as $i => $it)
+                                            @forelse ($this->perLuar as $i => $jenis)
                                                 <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50">
                                                     <td class="px-3 py-2.5 text-muted-soft tabular-nums">{{ $i + 1 }}</td>
-                                                    <td class="px-3 py-2.5 text-ink dark:text-gray-100">{{ $it->nama ?: '—' }}</td>
-                                                    <td class="px-3 py-2.5 text-right tabular-nums font-semibold text-ink dark:text-gray-100">{{ number_format($it->jml) }}</td>
-                                                    <td class="px-3 py-2.5 text-right tabular-nums text-amber-700 dark:text-amber-300">Rp {{ number_format($it->total, 0, ',', '.') }}</td>
+                                                    <td class="px-3 py-2.5 text-ink dark:text-gray-100">{{ $jenis->nama ?: '—' }}</td>
+                                                    <td class="px-3 py-2.5 text-right tabular-nums font-semibold text-ink dark:text-gray-100">{{ number_format($jenis->jml) }}</td>
+                                                    <td class="px-3 py-2.5 text-right tabular-nums text-amber-700 dark:text-amber-300">Rp {{ number_format($jenis->total, 0, ',', '.') }}</td>
                                                 </tr>
                                             @empty
                                                 <tr><td colspan="4" class="px-6 py-10 text-center text-muted dark:text-gray-400">Tidak ada pemeriksaan lab luar</td></tr>
@@ -472,8 +482,8 @@ new class extends Component {
                                             <tfoot class="bg-surface-soft dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600">
                                                 <tr class="text-sm font-bold text-ink dark:text-gray-100">
                                                     <td class="px-3 py-3" colspan="2">TOTAL</td>
-                                                    <td class="px-3 py-3 text-right tabular-nums">{{ number_format($rc['luar']['jml']) }}</td>
-                                                    <td class="px-3 py-3 text-right tabular-nums text-amber-800 dark:text-amber-200">Rp {{ number_format($rc['luar']['revenue'], 0, ',', '.') }}</td>
+                                                    <td class="px-3 py-3 text-right tabular-nums">{{ number_format($rekap['luar']['jml']) }}</td>
+                                                    <td class="px-3 py-3 text-right tabular-nums text-amber-800 dark:text-amber-200">Rp {{ number_format($rekap['luar']['revenue'], 0, ',', '.') }}</td>
                                                 </tr>
                                             </tfoot>
                                         @endif

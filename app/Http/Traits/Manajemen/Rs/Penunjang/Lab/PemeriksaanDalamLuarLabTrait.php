@@ -21,6 +21,41 @@ use Illuminate\Support\Facades\DB;
 trait PemeriksaanDalamLuarLabTrait
 {
     /**
+     * Tambah LEFT JOIN header induk (RJ/UGD/RI) ke query yang punya alias "h"
+     * (lbtxn_checkuphdrs). Dipakai untuk ambil/filter status transaksi induk.
+     */
+    protected function joinParentHeaders($query)
+    {
+        return $query
+            ->leftJoin('rstxn_rjhdrs as rjh', function ($join) {
+                $join->on('rjh.rj_no', '=', 'h.ref_no')->where('h.status_rjri', 'RJ');
+            })
+            ->leftJoin('rstxn_ugdhdrs as ugh', function ($join) {
+                $join->on('ugh.rj_no', '=', 'h.ref_no')->where('h.status_rjri', 'UGD');
+            })
+            ->leftJoin('rstxn_rihdrs as rih', function ($join) {
+                $join->on('rih.rihdr_no', '=', 'h.ref_no')->where('h.status_rjri', 'RI');
+            });
+    }
+
+    /**
+     * Hanya hitung transaksi yang SUDAH SELESAI di induk:
+     *   RJ/UGD → rj_status 'L' (Selesai) atau 'I' (Transfer — unit sumber selesai,
+     *            pasien pindah: RJ→UGD / UGD→Inap) ;
+     *   RI     → ri_status 'P' (Pulang).
+     * Yang masih Antrian (A), Dirawat (RI 'I'), Batal (F), atau induk tak ditemukan
+     * TIDAK dihitung. Query wajib sudah join header (joinParentHeaders).
+     */
+    protected function whereFinishedParent($query)
+    {
+        return $query->whereRaw("(
+            (h.status_rjri = 'RJ'  AND rjh.rj_status IN ('L', 'I')) OR
+            (h.status_rjri = 'UGD' AND ugh.rj_status IN ('L', 'I')) OR
+            (h.status_rjri = 'RI'  AND rih.ri_status = 'P')
+        )");
+    }
+
+    /**
      * Query DETAIL per item (UNION dalam + luar), siap dipaginate.
      * Union dibungkus fromSub supaya ROWNUM pagination Oracle benar
      * (paginate langsung di atas UNION menghitung total salah).
@@ -29,22 +64,14 @@ trait PemeriksaanDalamLuarLabTrait
     {
         $jenis = $filters['jenis'] ?? '';
         $unit = $filters['unit'] ?? '';
-        $kw = trim($filters['pemeriksaan'] ?? '');
-        $kwUp = $kw !== '' ? '%' . mb_strtoupper($kw) . '%' : null;
+        $keyword = trim($filters['pemeriksaan'] ?? '');
+        $keywordUpper = $keyword !== '' ? '%' . mb_strtoupper($keyword) . '%' : null;
 
         $dalam = DB::table('lbtxn_checkupdtls as d')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'd.checkup_no')
             ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
             ->leftJoin('lbmst_clabitems as m', 'm.clabitem_id', '=', 'd.clabitem_id')
-            ->leftJoin('rstxn_rjhdrs as rjh', function ($j) {
-                $j->on('rjh.rj_no', '=', 'h.ref_no')->where('h.status_rjri', 'RJ');
-            })
-            ->leftJoin('rstxn_ugdhdrs as ugh', function ($j) {
-                $j->on('ugh.rj_no', '=', 'h.ref_no')->where('h.status_rjri', 'UGD');
-            })
-            ->leftJoin('rstxn_rihdrs as rih', function ($j) {
-                $j->on('rih.rihdr_no', '=', 'h.ref_no')->where('h.status_rjri', 'RI');
-            })
+            ->tap($this->joinParentHeaders(...))
             ->select([
                 DB::raw("to_char(h.checkup_date, 'YYYY-MM-DD HH24:MI:SS') as tgl_sort"),
                 DB::raw("to_char(h.checkup_date, 'DD/MM/YYYY') as tgl"),
@@ -59,25 +86,18 @@ trait PemeriksaanDalamLuarLabTrait
             ])
             ->whereBetween('h.checkup_date', [$start, $end])
             ->whereNotNull('d.price');
+        $this->whereFinishedParent($dalam);
         if ($unit !== '') {
             $dalam->where('h.status_rjri', $unit);
         }
-        if ($kwUp !== null) {
-            $dalam->whereRaw('UPPER(m.clabitem_desc) LIKE ?', [$kwUp]);
+        if ($keywordUpper !== null) {
+            $dalam->whereRaw('UPPER(m.clabitem_desc) LIKE ?', [$keywordUpper]);
         }
 
         $luar = DB::table('lbtxn_checkupoutdtls as o')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'o.checkup_no')
             ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
-            ->leftJoin('rstxn_rjhdrs as rjh', function ($j) {
-                $j->on('rjh.rj_no', '=', 'h.ref_no')->where('h.status_rjri', 'RJ');
-            })
-            ->leftJoin('rstxn_ugdhdrs as ugh', function ($j) {
-                $j->on('ugh.rj_no', '=', 'h.ref_no')->where('h.status_rjri', 'UGD');
-            })
-            ->leftJoin('rstxn_rihdrs as rih', function ($j) {
-                $j->on('rih.rihdr_no', '=', 'h.ref_no')->where('h.status_rjri', 'RI');
-            })
+            ->tap($this->joinParentHeaders(...))
             ->select([
                 DB::raw("to_char(h.checkup_date, 'YYYY-MM-DD HH24:MI:SS') as tgl_sort"),
                 DB::raw("to_char(h.checkup_date, 'DD/MM/YYYY') as tgl"),
@@ -92,11 +112,12 @@ trait PemeriksaanDalamLuarLabTrait
             ])
             ->whereBetween('h.checkup_date', [$start, $end])
             ->whereNotNull('o.labout_price');
+        $this->whereFinishedParent($luar);
         if ($unit !== '') {
             $luar->where('h.status_rjri', $unit);
         }
-        if ($kwUp !== null) {
-            $luar->whereRaw('UPPER(o.labout_desc) LIKE ?', [$kwUp]);
+        if ($keywordUpper !== null) {
+            $luar->whereRaw('UPPER(o.labout_desc) LIKE ?', [$keywordUpper]);
         }
 
         // Filter Jenis → pilih subquery; kosong = gabung dua-duanya.
@@ -118,6 +139,8 @@ trait PemeriksaanDalamLuarLabTrait
     {
         $dalam = DB::table('lbtxn_checkupdtls as d')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'd.checkup_no')
+            ->tap($this->joinParentHeaders(...))
+            ->tap($this->whereFinishedParent(...))
             ->whereBetween('h.checkup_date', [$start, $end])
             ->whereNotNull('d.price')
             ->selectRaw('COUNT(*) as jml, NVL(SUM(d.price), 0) as revenue')
@@ -125,6 +148,8 @@ trait PemeriksaanDalamLuarLabTrait
 
         $luar = DB::table('lbtxn_checkupoutdtls as o')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'o.checkup_no')
+            ->tap($this->joinParentHeaders(...))
+            ->tap($this->whereFinishedParent(...))
             ->whereBetween('h.checkup_date', [$start, $end])
             ->whereNotNull('o.labout_price')
             ->selectRaw('COUNT(*) as jml, NVL(SUM(o.labout_price), 0) as revenue')
@@ -151,6 +176,8 @@ trait PemeriksaanDalamLuarLabTrait
         return DB::table('lbtxn_checkupdtls as d')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'd.checkup_no')
             ->leftJoin('lbmst_clabitems as m', 'm.clabitem_id', '=', 'd.clabitem_id')
+            ->tap($this->joinParentHeaders(...))
+            ->tap($this->whereFinishedParent(...))
             ->select([
                 DB::raw('TRIM(MAX(m.clabitem_desc)) as nama'),
                 DB::raw('COUNT(*) as jml'),
@@ -171,6 +198,8 @@ trait PemeriksaanDalamLuarLabTrait
     {
         return DB::table('lbtxn_checkupoutdtls as o')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'o.checkup_no')
+            ->tap($this->joinParentHeaders(...))
+            ->tap($this->whereFinishedParent(...))
             ->select([
                 DB::raw('TRIM(MAX(o.labout_desc)) as nama'),
                 DB::raw('COUNT(*) as jml'),
