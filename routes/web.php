@@ -538,6 +538,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/rs/penunjang/lab/laporan-pemeriksaan-lab', 'pages::manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab')
         ->name('manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab');
 
+    Route::livewire('/manajemen/rs/penunjang/lab/laporan-pemeriksaan-dalam-luar', 'pages::manajemen.rs.penunjang.lab.laporan-pemeriksaan-dalam-luar.laporan-pemeriksaan-dalam-luar')
+        ->name('manajemen.rs.penunjang.lab.laporan-pemeriksaan-dalam-luar');
+
     Route::livewire('/manajemen/rs/penunjang/rad/laporan-pemeriksaan-rad', 'pages::manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad.laporan-pemeriksaan-rad')
         ->name('manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad');
 });
