@@ -25,7 +25,7 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: 'Aksi demo dijalankan — tidak ada data yang berubah.');
     }
 
-    // Listener demo LOV (bab 07) — persis pola parent sungguhan, hanya menampung payload.
+    // Listener demo LOV (bab 08) — persis pola parent sungguhan, hanya menampung payload.
     public string $demoLovId = '';
     public string $demoLovName = '';
 
@@ -56,6 +56,37 @@ TXT,
 {{-- di paling bawah markup LIST: mount FORM sebagai child --}}
 <livewire:pages::master.master-<nama>.master-<nama>-actions
     wire:key="master-<nama>-actions" />
+TXT,
+
+'alur-salin' => <<<'TXT'
+# dari root repo — contoh membuat master baru "pekerjaan"
+cp -r resources/views/pages/master/master-agama \
+      resources/views/pages/master/master-pekerjaan
+
+cd resources/views/pages/master/master-pekerjaan
+mv ⚡master-agama.blade.php         ⚡master-pekerjaan.blade.php
+mv ⚡master-agama-actions.blade.php ⚡master-pekerjaan-actions.blade.php
+
+# lalu di DALAM kedua file, cari-ganti manual (jangan sed membabi-buta):
+#   master-agama       → master-pekerjaan     (nama komponen child + nama modal)
+#   master.agama.*     → master.pekerjaan.*   (namespace event = nama folder)
+#   rsmst_religions    → nama tabel barumu
+#   rel_id / rel_desc  → kolom barumu (key $form = nama kolom DB)
+#   "Agama"            → label Indonesia barumu (judul, pesan validasi, toast)
+TXT,
+
+'alur-route-menu' => <<<'TXT'
+// 1) routes/web.php — di dalam group Route::middleware(['auth'])
+Route::livewire('/master/pekerjaan', 'pages::master.master-pekerjaan.master-pekerjaan')
+    ->name('master.pekerjaan');
+
+// 2) app/Services/AppMenu.php — supaya modul muncul di menu dashboard (difilter role)
+$entry([
+    'group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 13,
+    'route' => 'master.pekerjaan', 'title' => 'Master Pekerjaan',
+    'desc'  => 'Kelola data pekerjaan pasien',
+    'roles' => $masterRoles, 'badge' => 'Pelayanan',
+]),
 TXT,
 
 'event-flow' => <<<'TXT'
@@ -547,6 +578,121 @@ public function afterSaved(string $entity, string $roomId = ''): void
 }
 TXT,
 
+'level-kamar-bed-actions' => <<<'TXT'
+// CRUD UTUH SATU ENTITAS ANAK — ⚡master-bed-actions.blade.php (dipadatkan).
+// Polanya sama persis dgn form bab 06; bedanya: KONTEKS INDUK (room_id)
+// ikut di state, di validasi, dan di payload event saved.
+
+public array $formBed = ['bed_no' => '', 'bed_desc' => '', 'room_id' => ''];
+
+#[On('master.kamar.openCreateBed')]
+public function openCreateBed(string $roomId): void
+{
+    $this->resetAll();
+    $this->formMode           = 'create';
+    $this->formBed['room_id'] = $roomId;          // konteks induk dikunci sejak awal
+    $this->incrementVersion('modal');
+    $this->dispatch('open-modal', name: 'master-kamar-bed');
+    $this->dispatch('focus-bed-no');
+}
+
+#[On('master.kamar.openEditBed')]
+public function openEditBed(string $bedNo, string $roomId): void
+{
+    $row = DB::table('rsmst_beds')
+        ->where('bed_no', $bedNo)->where('room_id', $roomId)->first();
+    if (! $row) return;
+    // ... isi $formBed dari $row, formMode = 'edit', buka modal (spt bab 06)
+}
+
+public function save(): void
+{
+    $this->validate($rules, [], $attributes);     // validate() tetap paling atas
+
+    if ($this->formMode === 'create') {
+        // PK komposit (bed_no + room_id) → cek duplikat manual, bukan rule unique:
+        $exists = DB::table('rsmst_beds')
+            ->where('bed_no', $this->formBed['bed_no'])
+            ->where('room_id', $this->formBed['room_id'])->exists();
+        if ($exists) {
+            $this->addError('formBed.bed_no', 'No Bed sudah ada di kamar ini.');
+            return;
+        }
+        DB::table('rsmst_beds')->insert([ /* bed_no + bed_desc + room_id */ ]);
+    } else {
+        DB::table('rsmst_beds')
+            ->where('bed_no', $this->formBed['bed_no'])
+            ->where('room_id', $this->formBed['room_id'])
+            ->update(['bed_desc' => $this->formBed['bed_desc'] ?: null]);
+    }
+
+    $roomId = $this->formBed['room_id'];          // ambil dulu — closeModal() me-reset form
+    $this->dispatch('toast', type: 'success', message: 'Data bed berhasil disimpan.');
+    $this->closeModal();
+    $this->dispatch('master.kamar.saved', entity: 'bed', roomId: $roomId);
+}
+TXT,
+
+'level-kamar-delete-guard' => <<<'TXT'
+// DELETE INDUK — ⚡master-bangsal-actions.blade.php.
+// Lapis tambahan khas hierarki: cek anak langsung SEBELUM delete supaya
+// pesannya spesifik; ORA-02292 tetap ditangkap sbg jaring pengaman FK lain.
+
+#[On('master.kamar.deleteBangsal')]
+public function deleteBangsal(string $bangsalId): void
+{
+    try {
+        $hasRooms = DB::table('rsmst_rooms')->where('bangsal_id', $bangsalId)->exists();
+        if ($hasRooms) {
+            $this->dispatch('toast', type: 'error',
+                message: 'Bangsal tidak bisa dihapus karena masih memiliki kamar.');
+            return;
+        }
+
+        $deleted = DB::table('rsmst_bangsals')->where('bangsal_id', $bangsalId)->delete();
+        if ($deleted === 0) {
+            $this->dispatch('toast', type: 'error', message: 'Data bangsal tidak ditemukan.');
+            return;
+        }
+
+        $this->dispatch('toast', type: 'success', message: 'Bangsal berhasil dihapus.');
+        $this->dispatch('master.kamar.saved', entity: 'bangsal');
+    } catch (QueryException $e) {
+        if (str_contains($e->getMessage(), 'ORA-02292')) {
+            $this->dispatch('toast', type: 'error',
+                message: 'Bangsal tidak bisa dihapus karena masih dipakai di data lain.');
+            return;
+        }
+        throw $e;
+    }
+}
+TXT,
+
+'level-kamar-refresh' => <<<'TXT'
+// REFRESH PRESISI — sisi list (⚡master-kamar.blade.php).
+// SATU listener utk semua entitas; payload menentukan bagian mana yang
+// disegarkan — save bed tidak perlu memuat ulang tabel kamar.
+
+#[On('master.kamar.saved')]
+public function afterSaved(string $entity, string $roomId = ''): void
+{
+    if ($entity === 'kamar') {
+        unset($this->computedPropertyCache);          // buang cache computed rooms()
+        $this->resetPage('pageKamar');
+        if ($this->selectedRoomId) {
+            $this->selectRoom($this->selectedRoomId); // segarkan panel detail
+        }
+    }
+
+    if ($entity === 'bed' && $roomId) {
+        if ($roomId === $this->selectedRoomId) {
+            $this->loadBeds();                        // cukup panel bed, bukan seluruh list
+        }
+        unset($this->computedPropertyCache);
+    }
+}
+TXT,
+
 'level-jm' => <<<'TXT'
 // LEVEL 3 — sub-list di dalam form (master-jasa-medis: paket obat/lain-lain).
 // Tiap sub-form punya LOV sendiri (target unik) + validate() BERTAHAP sendiri:
@@ -601,6 +747,7 @@ TXT,
         $menuGroups = [
             'Mulai' => [
                 'pendahuluan' => 'Pendahuluan',
+                'alur'        => 'Alur: Buat Master Baru',
                 'struktur'    => 'Struktur File & Routing',
                 'penamaan'    => 'Kontrak Penamaan',
             ],
@@ -737,9 +884,12 @@ TXT,
                         </div>
 
                         <p class="ds-body-md mt-8" style="max-width:62ch">
-                            Ikuti bab-bab di menu kiri secara berurutan saat membuat modul master baru.
-                            Bab terakhir berisi <strong>checklist audit</strong> yang wajib hijau semua
-                            sebelum modul di-merge.
+                            <strong>Baru pertama kali membuat master?</strong> Mulai dari bab
+                            <button type="button" class="hover:underline font-semibold" style="color:var(--primary)"
+                                x-on:click="go('alur')">Alur: Buat Master Baru</button>
+                            — peta jalan 9 langkah dari salin baseline sampai checklist merge;
+                            tiap langkah menunjuk bab referensi detailnya. Bab-bab lain di menu kiri
+                            adalah referensi yang bisa dibaca lepas.
                         </p>
 
                         <div class="ds-card-outline mt-4" style="padding:16px 20px">
@@ -754,9 +904,121 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 02 STRUKTUR ====== --}}
-                    <section x-show="section === 'struktur'" x-cloak>
+                    {{-- ====== 02 ALUR ====== --}}
+                    <section x-show="section === 'alur'" x-cloak>
                         <div class="ds-eyebrow mb-3">02 — Mulai</div>
+                        <h1 class="ds-display-md mb-4">Alur: Buat Master Baru</h1>
+                        <p class="ds-body-md mb-8" style="max-width:62ch">
+                            Peta jalan dari nol sampai siap merge — kerjakan <strong>berurutan</strong>.
+                            Prinsipnya: tidak pernah menulis dari kosong; selalu salin baseline
+                            <span class="ds-code">master-agama</span> lalu sesuaikan. Tiap langkah
+                            menunjuk bab referensi yang membahas detailnya.
+                        </p>
+
+                        @php
+                            $alurCircle = 'display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:var(--primary);color:#fff;font-weight:700;font-size:14px;flex:none';
+                            $alurSteps = [
+                                [
+                                    't' => 'Kenali tabel & tentukan level',
+                                    'd' => 'Sebelum menulis kode: pastikan tabel Oracle-nya — nama tabel (biasanya <span class="ds-code">rsmst_*</span>), primary key, kolom wajib, dan ada/tidaknya kolom <span class="ds-code">active_status</span> (\'1\'/\'0\'). Lalu tentukan level: CRUD satu tabel = <strong>Level 1</strong> · ada FK / LOV / toggle status = <strong>Level 2</strong> · induk-anak seperti bangsal→kamar→bed = <strong>Level 3</strong>. Kalau ragu, mulai Level 1.',
+                                    'go' => 'varian', 'label' => 'Bab 13 · Varian & Level Kompleksitas',
+                                    'snip' => null, 'sniptitle' => null,
+                                ],
+                                [
+                                    't' => 'Salin baseline master-agama',
+                                    'd' => 'Salin folder acuan kanonik, ganti nama kedua file ⚡, lalu cari-ganti identitas domain di dalamnya. Selesai langkah ini, modulmu sudah jalan — tinggal disesuaikan.',
+                                    'go' => 'struktur', 'label' => 'Bab 03 · Struktur File & Routing',
+                                    'snip' => 'alur-salin', 'sniptitle' => 'Terminal — salin & ganti nama',
+                                ],
+                                [
+                                    't' => 'Daftarkan route & menu',
+                                    'd' => 'Route eksplisit di <span class="ds-code">routes/web.php</span> (repo ini tidak memakai auto-discovery), lalu tambahkan entri di <span class="ds-code">app/Services/AppMenu.php</span> supaya modul muncul di menu dashboard sesuai role penggunanya.',
+                                    'go' => null, 'label' => null,
+                                    'snip' => 'alur-route-menu', 'sniptitle' => 'routes/web.php + AppMenu.php',
+                                ],
+                                [
+                                    't' => 'Kerjakan file LIST',
+                                    'd' => 'Sesuaikan kolom tabel &amp; query <span class="ds-code">rows()</span>. Pertahankan kontrak penamaan: <span class="ds-code">searchKeyword</span>, <span class="ds-code">itemsPerPage</span>, <span class="ds-code">resetFilters()</span>, event <span class="ds-code">master.&lt;folder&gt;.*</span> (Bab 04). Ingat prinsip inti: LIST tidak pernah validasi / menulis DB — tombolnya hanya mengirim event.',
+                                    'go' => 'list', 'label' => 'Bab 05 · Halaman List',
+                                    'snip' => null, 'sniptitle' => null,
+                                ],
+                                [
+                                    't' => 'Kerjakan file FORM (actions)',
+                                    'd' => 'Key <span class="ds-code">$form</span> = nama kolom DB. Sesuaikan <span class="ds-code">openCreate</span> / <span class="ds-code">openEdit</span> / <span class="ds-code">save()</span> / <span class="ds-code">closeModal()</span> dan nama modal yang unik. PK di-<span class="ds-code">:disabled</span> saat edit; rule <span class="ds-code">unique</span> hanya saat create.',
+                                    'go' => 'form', 'label' => 'Bab 06 · Form Modal (Actions)',
+                                    'snip' => null, 'sniptitle' => null,
+                                ],
+                                [
+                                    't' => 'Rapikan validasi & delete guard',
+                                    'd' => 'Pesan validasi <strong>selalu Bahasa Indonesia</strong> dan <span class="ds-code">validate()</span> paling atas di save() (Bab 10). Handler delete menangkap <span class="ds-code">ORA-02292</span> menjadi toast yang manusiawi (Bab 11) — tanpa ini user melihat error 500.',
+                                    'go' => 'validasi', 'label' => 'Bab 10 · Validasi',
+                                    'snip' => null, 'sniptitle' => null,
+                                ],
+                                [
+                                    't' => 'Cocokkan tampilan',
+                                    'd' => 'Bandingkan halamanmu dengan mockup zona bernomor di Anatomi Visual. Pakai komponen standar — <span class="ds-code">x-text-input</span>, <span class="ds-code">x-primary-button</span>, <span class="ds-code">x-action-edit/delete</span>, <span class="ds-code">x-modal</span> (Bab 07). Ada field yang merujuk master lain? Pakai LOV (Bab 08), jangan dropdown ribuan baris.',
+                                    'go' => 'anatomi', 'label' => 'Bab 09 · Anatomi Visual (UI/UX)',
+                                    'snip' => null, 'sniptitle' => null,
+                                ],
+                                [
+                                    't' => 'Uji CRUD ujung-ke-ujung',
+                                    'd' => 'Jalankan semuanya di browser: tambah (Enter di field terakhir = simpan), edit, cari + reset, pagination, tutup modal saat ada perubahan belum disimpan (dirty-guard harus konfirmasi), dan hapus baris yang sudah dipakai transaksi — harus muncul toast merah, bukan error 500.',
+                                    'go' => null, 'label' => null,
+                                    'snip' => null, 'sniptitle' => null,
+                                ],
+                                [
+                                    't' => 'Checklist sebelum PR',
+                                    'd' => 'Pastikan semua butir checklist hijau; LIST ≤ ±300 baris, FORM ≤ ±400 baris (lebih dari itu → pecah partial, Bab 12). Kerjakan di branch <span class="ds-code">develop</span> / feature branch, lalu ajukan PR.',
+                                    'go' => 'checklist', 'label' => 'Bab 14 · Checklist & Referensi',
+                                    'snip' => null, 'sniptitle' => null,
+                                ],
+                            ];
+                        @endphp
+
+                        <div>
+                            @foreach ($alurSteps as $st)
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col items-center">
+                                        <span style="{{ $alurCircle }}">{{ $loop->iteration }}</span>
+                                        @if (! $loop->last)
+                                            <span class="flex-1" style="width:2px; background:var(--hairline); margin-top:4px"></span>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 {{ $loop->last ? '' : 'pb-8' }}" style="min-width:0">
+                                        <div class="ds-title-sm mb-1" style="padding-top:4px">{{ $st['t'] }}</div>
+                                        <p class="ds-body-sm" style="max-width:62ch">{!! $st['d'] !!}</p>
+                                        @if ($st['go'])
+                                            <button type="button" class="mt-2 text-sm font-semibold hover:underline" style="color:var(--primary)"
+                                                x-on:click="go('{{ $st['go'] }}')">→ {{ $st['label'] }}</button>
+                                        @endif
+                                        @if ($st['snip'])
+                                            <div class="ds-card-dark mt-3" style="padding:0; overflow:hidden">
+                                                <div class="px-4 py-2" style="background:var(--surface-dark-soft)">
+                                                    <span class="ds-caption-up" style="color:var(--on-dark-soft)">{{ $st['sniptitle'] }}</span>
+                                                </div>
+                                                <pre class="ds-code" style="margin:0; padding:16px 20px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip[$st['snip']] }}</pre>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="ds-card-outline mt-8" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>Contoh hidup per level:</strong>
+                                Level 1 → <span class="ds-code">master-agama</span> ·
+                                Level 2 → <span class="ds-code">master-obat</span> / <span class="ds-code">master-dokter</span> ·
+                                Level 3 → <span class="ds-code">master-kamar</span> (bangsal→kamar→bed).
+                                Buka kodenya berdampingan dengan tutorial ini.
+                            </span>
+                        </div>
+                    </section>
+
+                    {{-- ====== 03 STRUKTUR ====== --}}
+                    <section x-show="section === 'struktur'" x-cloak>
+                        <div class="ds-eyebrow mb-3">03 — Mulai</div>
                         <h1 class="ds-display-md mb-4">Struktur File &amp; Routing</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Satu modul master = <strong>satu folder, dua file Volt SFC</strong>.
@@ -806,9 +1068,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 03 PENAMAAN ====== --}}
+                    {{-- ====== 04 PENAMAAN ====== --}}
                     <section x-show="section === 'penamaan'" x-cloak>
-                        <div class="ds-eyebrow mb-3">03 — Mulai</div>
+                        <div class="ds-eyebrow mb-3">04 — Mulai</div>
                         <h1 class="ds-display-md mb-4">Kontrak Penamaan</h1>
                         <p class="ds-body-md mb-6" style="max-width:62ch">
                             Nama state, method, dan event <strong>tidak bebas</strong> — semuanya kontrak.
@@ -856,9 +1118,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 04 LIST ====== --}}
+                    {{-- ====== 05 LIST ====== --}}
                     <section x-show="section === 'list'" x-cloak>
-                        <div class="ds-eyebrow mb-3">04 — Komponen</div>
+                        <div class="ds-eyebrow mb-3">05 — Komponen</div>
                         <h1 class="ds-display-md mb-4">Halaman List</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Kelas PHP komponen LIST hanya berisi: state filter, dispatch event, dan satu
@@ -914,9 +1176,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 05 FORM ====== --}}
+                    {{-- ====== 06 FORM ====== --}}
                     <section x-show="section === 'form'" x-cloak>
-                        <div class="ds-eyebrow mb-3">05 — Komponen</div>
+                        <div class="ds-eyebrow mb-3">06 — Komponen</div>
                         <h1 class="ds-display-md mb-4">Form Modal (Actions)</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             File <span class="ds-code">-actions</span> memegang <strong>seluruh</strong> logika tulis:
@@ -968,9 +1230,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 06 PEMAKAIAN KOMPONEN ====== --}}
+                    {{-- ====== 07 PEMAKAIAN KOMPONEN ====== --}}
                     <section x-show="section === 'komponen'" x-cloak>
-                        <div class="ds-eyebrow mb-3">06 — Komponen</div>
+                        <div class="ds-eyebrow mb-3">07 — Komponen</div>
                         <h1 class="ds-display-md mb-4">Pemakaian Komponen</h1>
                         <p class="ds-body-md mb-6" style="max-width:62ch">
                             Katalog komponen Blade yang dipakai modul master — semuanya di
@@ -1194,9 +1456,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 07 LOV ====== --}}
+                    {{-- ====== 08 LOV ====== --}}
                     <section x-show="section === 'lov'" x-cloak>
-                        <div class="ds-eyebrow mb-3">07 — Komponen</div>
+                        <div class="ds-eyebrow mb-3">08 — Komponen</div>
                         <h1 class="ds-display-md mb-4">LOV (List of Values)</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             LOV adalah <strong>child Livewire component siap-pakai</strong> untuk field
@@ -1316,9 +1578,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 08 ANATOMI VISUAL ====== --}}
+                    {{-- ====== 09 ANATOMI VISUAL ====== --}}
                     <section x-show="section === 'anatomi'" x-cloak>
-                        <div class="ds-eyebrow mb-3">08 — Komponen</div>
+                        <div class="ds-eyebrow mb-3">09 — Komponen</div>
                         <h1 class="ds-display-md mb-4">Anatomi Visual (UI/UX)</h1>
                         <p class="ds-body-md mb-6" style="max-width:62ch">
                             Bab ini untuk yang bekerja di sisi <strong>UI/UX</strong> — tanpa perlu membaca kode.
@@ -1553,6 +1815,182 @@ TXT,
 
                         {{-- ===== E. HIERARKI LEVEL 3 ===== --}}
                         <h2 class="ds-title-lg mt-12 mb-3">E · Master hierarkis (Level 3 — contoh: kamar)</h2>
+                        <p class="ds-body-md mb-4" style="max-width:62ch">
+                            Satu halaman, dua panel: <strong>induk</strong> (bangsal) di kiri dan
+                            <strong>anak</strong> (kamar + bed) di kanan. Panel kanan kosong sampai
+                            satu baris bangsal diklik — dari situ kamar terfilter, dan tiap kamar
+                            membuka panel detail berisi tarif &amp; daftar bed.
+                        </p>
+
+                        <div class="ds-card-outline" style="padding:0; overflow:hidden">
+
+                            {{-- topbar --}}
+                            <div class="flex items-center gap-3 px-4 py-2.5" style="background:var(--surface-dark)">
+                                <span style="width:22px;height:22px;border-radius:6px;background:var(--accent-lime);display:inline-block"></span>
+                                <span class="ds-title-sm" style="color:var(--on-dark)">RSI&nbsp;Madinah</span>
+                                <span class="px-2.5 py-1 text-xs rounded-full" style="background:var(--surface-dark-elevated); color:var(--on-dark-soft)">
+                                    <strong style="color:var(--on-dark)">Master Kamar</strong> — Bangsal, kamar &amp; bed rawat inap
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr]" style="background:var(--canvas)">
+
+                                {{-- KIRI: LIST BANGSAL (induk) --}}
+                                <div class="lg:border-r" style="position:relative; border-color:var(--hairline)">
+                                    <table class="ds-table">
+                                        <thead>
+                                            <tr><th>Bangsal</th><th class="ds-c">Aksi</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ds-td-strong">AN-NISA</td>
+                                                <td class="ds-c"><span class="text-xs" style="color:var(--muted)">✎ &nbsp;🗑</span></td>
+                                            </tr>
+                                            <tr style="background:var(--success-tint)">
+                                                <td>
+                                                    <span class="inline-flex items-center gap-2">
+                                                        <span style="width:5px;height:20px;border-radius:9999px;background:var(--primary);display:inline-block"></span>
+                                                        <span class="text-sm font-semibold" style="color:var(--ink)">SHOFA</span>
+                                                    </span>
+                                                </td>
+                                                <td class="ds-c"><span class="text-xs" style="color:var(--muted)">✎ &nbsp;🗑</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ds-td-strong">MARWAH</td>
+                                                <td class="ds-c"><span class="text-xs" style="color:var(--muted)">✎ &nbsp;🗑</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <span style="{{ $badge }};position:absolute;top:8px;right:8px">1</span>
+                                    <span style="{{ $badge }};position:absolute;top:64px;right:8px;background:var(--info)">2</span>
+                                </div>
+
+                                {{-- KANAN: KAMAR + DETAIL (anak) --}}
+                                <div style="position:relative">
+
+                                    {{-- toolbar kamar --}}
+                                    <div class="px-4 py-3" style="position:relative; background:var(--surface-soft); border-bottom:1px solid var(--hairline)">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <div style="{{ $mockInput }}; width:160px">Cari kamar...</div>
+                                            <span class="ds-btn ds-btn-primary" style="height:36px; padding:8px 14px; font-size:13px">+ Tambah Data Kamar Baru</span>
+                                        </div>
+                                        <span style="{{ $badge }};position:absolute;top:8px;right:8px">3</span>
+                                    </div>
+
+                                    {{-- rekap --}}
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 ds-caption" style="background:var(--surface-soft); border-bottom:1px solid var(--hairline); color:var(--muted)">
+                                        <span><strong style="color:var(--body)">KAMAR</strong> Total 4 ·
+                                            <span style="color:var(--success-deep)">● Aktif 3</span> ·
+                                            <span style="color:var(--error)">● Non-Aktif 1</span></span>
+                                        <span><strong style="color:var(--body)">TEMPAT TIDUR</strong>
+                                            <span style="color:var(--success-deep)">● Aktif 8</span> ·
+                                            <span style="color:var(--error)">● Non-Aktif 2</span></span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2">
+
+                                        {{-- tabel kamar terfilter --}}
+                                        <div style="position:relative; border:1px solid var(--hairline); border-radius:12px; overflow:hidden">
+                                            <table class="ds-table">
+                                                <thead>
+                                                    <tr><th>Kamar — <span style="color:var(--primary); text-transform:none">SHOFA</span></th><th class="ds-c">Status</th></tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr style="background:var(--success-tint)">
+                                                        <td>
+                                                            <span class="flex items-center gap-2">
+                                                                <span style="width:5px;height:28px;border-radius:9999px;background:var(--primary);display:inline-block;flex:none"></span>
+                                                                <span>
+                                                                    <span class="block text-sm font-semibold" style="color:var(--ink)">SHOFA 101</span>
+                                                                    <span class="block text-xs" style="color:var(--muted)"><span style="font-family:var(--mono)">S101</span> · KELAS 1</span>
+                                                                </span>
+                                                            </span>
+                                                        </td>
+                                                        <td class="ds-c">
+                                                            <span class="block px-2 py-0.5 mx-auto text-xs font-medium rounded-full w-max" style="background:var(--success-tint); color:var(--success-deep)">Aktif</span>
+                                                            <span class="block px-2 py-0.5 mx-auto mt-1 text-xs font-medium rounded-full w-max" style="background:var(--info-tint); color:var(--info-deep)">2 Bed</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <span class="block text-sm font-semibold" style="color:var(--ink)">SHOFA 102</span>
+                                                            <span class="block text-xs" style="color:var(--muted)"><span style="font-family:var(--mono)">S102</span> · KELAS 2</span>
+                                                        </td>
+                                                        <td class="ds-c">
+                                                            <span class="block px-2 py-0.5 mx-auto text-xs font-medium rounded-full w-max" style="background:var(--success-tint); color:var(--success-deep)">Aktif</span>
+                                                            <span class="block px-2 py-0.5 mx-auto mt-1 text-xs font-medium rounded-full w-max" style="background:var(--info-tint); color:var(--info-deep)">3 Bed</span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <span style="{{ $badge }};position:absolute;top:8px;right:8px">4</span>
+                                        </div>
+
+                                        {{-- panel detail kamar --}}
+                                        <div style="position:relative; border:1px solid var(--hairline); border-radius:12px; overflow:hidden">
+                                            <div class="flex items-start justify-between gap-2 px-4 py-3" style="border-bottom:1px solid var(--hairline)">
+                                                <span>
+                                                    <span class="block ds-title-sm">SHOFA 101</span>
+                                                    <span class="block text-xs" style="color:var(--muted)"><span style="font-family:var(--mono)">S101</span> · KELAS 1</span>
+                                                </span>
+                                                <span class="text-xs" style="color:var(--muted)">✎ &nbsp;🗑</span>
+                                            </div>
+                                            <div class="px-4 py-3" style="border-bottom:1px solid var(--hairline)">
+                                                <div class="ds-caption-up mb-2">Tarif Kamar</div>
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <span class="block mb-0.5 text-xs" style="color:var(--muted)">Kamar</span>
+                                                        <div style="{{ $mockInput }}; height:30px; font-size:12px; color:var(--ink)">250.000</div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="block mb-0.5 text-xs" style="color:var(--muted)">Askep</span>
+                                                        <div style="{{ $mockInput }}; height:30px; font-size:12px; color:var(--ink)">50.000</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="px-4 py-3">
+                                                <div class="flex items-center justify-between gap-2 mb-2">
+                                                    <span class="ds-caption-up">Tempat Tidur (2)</span>
+                                                    <span class="ds-btn ds-btn-secondary" style="height:28px; padding:4px 10px; font-size:12px">+ Tambah Bed</span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach (['S101-A', 'S101-B'] as $mockBed)
+                                                        <span class="inline-flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg" style="border:1px solid var(--hairline); background:var(--surface-soft)">
+                                                            <span class="font-bold" style="font-family:var(--mono); color:var(--ink)">{{ $mockBed }}</span>
+                                                            <span style="color:var(--muted)">✎ ✕</span>
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            <span style="{{ $badge }};position:absolute;top:8px;right:8px">5</span>
+                                            <span style="{{ $badge }};position:absolute;bottom:8px;right:8px;background:var(--info)">6</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- legenda hierarki --}}
+                        <div class="grid grid-cols-1 gap-2 mt-4 sm:grid-cols-2">
+                            @foreach ([
+                                ['1', 'Panel INDUK — list bangsal (komponen master-bangsal); klik baris = memilih konteks', ''],
+                                ['2', 'Baris terpilih — highlight hijau + bar kiri; mengirim event bangsal.selected ke panel kanan', 'background:var(--info)'],
+                                ['3', 'Toolbar kamar — baru muncul setelah bangsal dipilih; pencarian & Tambah hanya berlaku utk bangsal aktif', ''],
+                                ['4', 'List ANAK — kamar terfilter bangsal aktif; klik baris membuka panel detail di sebelahnya', ''],
+                                ['5', 'Panel detail kamar — tarif + daftar bed; Edit/Hapus kamar dari sini', ''],
+                                ['6', 'Tambah/Edit Bed — kirim openCreateBed(roomId); event saved membawa entity + roomId → refresh presisi', 'background:var(--info)'],
+                            ] as [$num, $ket, $extra])
+                                <div class="flex items-start gap-2.5">
+                                    <span style="{{ $badge }}; margin-top:2px; {{ $extra }}">{{ $num }}</span>
+                                    <span class="ds-body-sm">{{ $ket }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <p class="ds-body-md mt-8 mb-3" style="max-width:62ch">
+                            Di balik layar, ketiganya tetap memakai pola event yang sama dengan bab C —
+                            hanya rantainya lebih panjang:
+                        </p>
                         <div class="grid items-center grid-cols-1 gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr]">
                             <div class="ds-card-outline" style="padding:16px">
                                 <div class="ds-caption-up mb-1">Induk</div>
@@ -1583,9 +2021,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 09 VALIDASI ====== --}}
+                    {{-- ====== 10 VALIDASI ====== --}}
                     <section x-show="section === 'validasi'" x-cloak>
-                        <div class="ds-eyebrow mb-3">09 — Aturan</div>
+                        <div class="ds-eyebrow mb-3">10 — Aturan</div>
                         <h1 class="ds-display-md mb-4">Validasi</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Dua aturan mati: pesan <strong>selalu Bahasa Indonesia</strong>, dan
@@ -1618,9 +2056,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 07 DELETE ====== --}}
+                    {{-- ====== 11 DELETE ====== --}}
                     <section x-show="section === 'delete'" x-cloak>
-                        <div class="ds-eyebrow mb-3">10 — Aturan</div>
+                        <div class="ds-eyebrow mb-3">11 — Aturan</div>
                         <h1 class="ds-display-md mb-4">Delete &amp; ORA-02292</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Delete selalu <strong>dua lapis pengaman</strong>. Lapis 1 di UI:
@@ -1648,9 +2086,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 08 PARTIAL ====== --}}
+                    {{-- ====== 12 PARTIAL ====== --}}
                     <section x-show="section === 'partial'" x-cloak>
-                        <div class="ds-eyebrow mb-3">11 — Aturan</div>
+                        <div class="ds-eyebrow mb-3">12 — Aturan</div>
                         <h1 class="ds-display-md mb-4">Ukuran File &amp; Partial</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Batas kewajaran: LIST ≤ ±300 baris, FORM ≤ ±400 baris. Lewat dari itu —
@@ -1676,9 +2114,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 09 VARIAN ====== --}}
+                    {{-- ====== 13 VARIAN ====== --}}
                     <section x-show="section === 'varian'" x-cloak>
-                        <div class="ds-eyebrow mb-3">12 — Lanjutan</div>
+                        <div class="ds-eyebrow mb-3">13 — Lanjutan</div>
                         <h1 class="ds-display-md mb-4">Varian &amp; Level Kompleksitas</h1>
                         <p class="ds-body-md mb-6" style="max-width:62ch">
                             Tidak semua master sama beratnya: ada yang <strong>biasa</strong> (poli, agama),
@@ -1697,13 +2135,13 @@ TXT,
                                     <tr>
                                         <td class="ds-td-strong">1 · Dasar</td>
                                         <td class="ds-body-sm">Satu tabel, CRUD murni</td>
-                                        <td class="ds-body-sm">Pola bab 01–10 persis, tanpa tambahan</td>
+                                        <td class="ds-body-sm">Pola bab 01–11 persis, tanpa tambahan</td>
                                         <td class="ds-td-class">agama · poli · kelas-rawat · stocklocations · signa-catatan</td>
                                     </tr>
                                     <tr>
                                         <td class="ds-td-strong">2 · Menengah</td>
                                         <td class="ds-body-sm">CRUD + FK / status / query berat</td>
-                                        <td class="ds-body-sm">LOV (bab 07) · <span class="ds-code">baseQuery()</span> terpisah · <span class="ds-code">toggleActive</span> · rules/messages sbg method · form bertab + partial</td>
+                                        <td class="ds-body-sm">LOV (bab 08) · <span class="ds-code">baseQuery()</span> terpisah · <span class="ds-code">toggleActive</span> · rules/messages sbg method · form bertab + partial</td>
                                         <td class="ds-td-class">obat · obat-kronis · dokter · karyawan · diagnosa · pasien</td>
                                     </tr>
                                     <tr>
@@ -1767,6 +2205,46 @@ TXT,
                             <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['level-kamar'] }}</pre>
                         </div>
 
+                        <p class="ds-body-md mt-6 mb-2" style="max-width:62ch">
+                            CRUD per entitasnya sendiri <strong>tidak berubah</strong> dari bab 05–11:
+                            tiap entitas (bangsal, kamar, bed) punya file actions + modal sendiri.
+                            Yang benar-benar baru di Level 3 hanya <strong>tiga hal</strong> berikut —
+                            ditunjukkan lewat kode asli modul kamar:
+                        </p>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">1 · CRUD entitas anak — konteks induk ikut ke mana-mana</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['level-kamar-bed-actions'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-6" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">2 · Delete induk — cek anak dulu, baru jaring ORA-02292</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['level-kamar-delete-guard'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-6" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">3 · Refresh presisi — satu listener saved, payload yang menentukan</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['level-kamar-refresh'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-outline mt-6" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                Rantai lengkapnya: klik "Tambah Bed" di panel detail →
+                                <span class="ds-code">openCreateBed(roomId)</span> → modal bed simpan →
+                                <span class="ds-code">saved(entity: 'bed', roomId)</span> →
+                                list me-refresh <em>hanya</em> panel bed kamar itu. Kode acuan utuh:
+                                <span class="ds-code">pages/master/master-kamar/</span> — header file
+                                utamanya memuat diagram struktur folder &amp; alur event selengkapnya.
+                            </span>
+                        </div>
+
                         {{-- deep-dive expert B: sub-list dalam form --}}
                         <h2 class="ds-title-lg mt-10 mb-2">Expert B — Sub-list di dalam form (master-jasa-medis)</h2>
                         <p class="ds-body-md mb-2" style="max-width:62ch">
@@ -1804,9 +2282,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 10 CHECKLIST ====== --}}
+                    {{-- ====== 14 CHECKLIST ====== --}}
                     <section x-show="section === 'checklist'" x-cloak>
-                        <div class="ds-eyebrow mb-3">13 — Lanjutan</div>
+                        <div class="ds-eyebrow mb-3">14 — Lanjutan</div>
                         <h1 class="ds-display-md mb-4">Checklist &amp; Referensi</h1>
                         <p class="ds-body-md mb-6" style="max-width:62ch">
                             Sebelum modul master baru di-merge, semua butir ini harus terpenuhi:
