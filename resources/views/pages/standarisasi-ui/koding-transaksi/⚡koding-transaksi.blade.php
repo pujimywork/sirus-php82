@@ -364,6 +364,121 @@ public function setPetugasPemeriksa(): void
 // Baca docs/clause-versioning.md sebelum mengubah teks klausul apa pun.
 TXT,
 
+'dokumen-skeleton' => <<<'TXT'
+// KERANGKA FORM MULTI-ENTRI — pola TERBARU (penundaan-pelayanan-ri /
+// permintaan-kerohanian-ri). Satu kunjungan bisa punya BANYAK entri;
+// tiap entri hidup sendiri: Draft (bebas edit) → TTD (terkunci selamanya).
+
+public bool   $isFormLocked = false;   // EMR terkunci / prop disabled
+public bool   $viewOnly     = false;   // mode "Lihat" dari tabel entri
+public string $signature    = '';      // TTD pasien/keluarga — dataURL signature-pad
+public string $editingKey   = '';      // signatureDate entri = KUNCI STABIL
+public array  $newForm      = [
+    /* field-field form..., */
+    'clauseVersion' => PenundaanClause::CURRENT,   // stempel versi klausul
+];
+
+public function mount(?string $riHdrNo = null, bool $disabled = false): void
+{
+    // muat list entri dari JSON; isFormLocked = checkEmrRIStatus() || $disabled
+}
+
+// DRAFT — boleh sebagian; entri yang sama terus di-update (tidak duplikat):
+public function saveDraft(): void
+{
+    if ($this->isFormLocked || $this->viewOnly) return;
+
+    $key = $this->editingKey ?: Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+    $this->persistEntry($key, false, 'Simpan draft');
+    $this->editingKey = $key;              // lanjut edit entri yang sama
+}
+
+// TTD PETUGAS — validasi LENGKAP + TTD pasien wajib, lalu kunci permanen:
+public function setPemberiInfo(): void
+{
+    // validate() penuh; guard signature pasien tidak boleh kosong
+    $this->persistEntry($key, true, 'Kunci (TTD Petugas)');
+}
+
+// SATU pintu tulis — semua guard hidup di sini:
+private function persistEntry(string $key, bool $finalized, string $logVerb): void
+{
+    DB::transaction(function () use ($key, $finalized, $logVerb) {
+        $this->lockRIRow($this->riHdrNo);
+        $data = $this->findDataRI($this->riHdrNo);
+
+        $list = $data['penundaanPelayananRI'] ?? [];
+        $idx  = collect($list)->search(fn($it) => ($it['signatureDate'] ?? '') === $key);
+
+        if ($idx === false) {
+            $list[] = $entry;                                  // entri baru
+        } elseif ($this->entryIsFinal($list[$idx])) {
+            throw new \RuntimeException('Entri sudah terkunci, tidak dapat diubah.');
+        } else {
+            $list[$idx] = $entry;                              // update draft
+        }
+
+        $data['penundaanPelayananRI'] = array_values($list);
+        $this->updateJsonRI((int) $this->riHdrNo, $data);
+        $this->appendAdminLogRI((int) $this->riHdrNo, $logVerb . ' ...', 'MR');
+    });
+}
+
+// clauseVersion distempel saat entri DIBUAT dan dipertahankan saat edit —
+// cetak ulang selalu memakai redaksi klausul SAAT DITANDATANGANI
+// (registry App\Support\*Clause; baca docs/clause-versioning.md).
+TXT,
+
+'dokumen-clause' => <<<'TXT'
+// CLAUSE VERSIONING — kenapa: teks klausul dokumen legal bisa berubah karena
+// kebijakan (contoh nyata: transisi INA-CBG → iDRG). Cetak ulang record LAMA
+// wajib memakai redaksi SAAT DITANDATANGANI, bukan redaksi terbaru.
+
+// 1) Teks hidup di CLASS REGISTRY per-versi — bukan hardcoded di komponen/cetak:
+//    app/Support/GeneralConsentClause.php (juga: PenjaminanClause, dst.)
+class GeneralConsentClause
+{
+    public const CURRENT = 'v1';
+
+    public static function get(string $context, ?string $version = null): array
+    {
+        $reg = self::registry();
+        $ver = $version && isset($reg[$version]) ? $version : self::CURRENT;
+        return $reg[$ver][$context] ?? [];
+    }
+
+    private static function registry(): array
+    {
+        return [
+            'v1' => [ 'rj' => [...], 'ugd' => [...], 'ri' => [...] ],
+            // versi baru = TAMBAH 'v2' + naikkan CURRENT — 'v1' JANGAN diubah
+            // (versi lama = arsip legal). Bagian dinamis (%WALI% %HUB% %RS%)
+            // diinterpolasi komponen via strtr, bukan disimpan di registry.
+        ];
+    }
+}
+
+// 2) Record MENSTEMPEL versi saat dibuat (di defaultConsent()/buildEntry()):
+'clauseVersion' => GeneralConsentClause::CURRENT,
+
+// 3) Cetak & Lihat me-render versi TERSIMPAN — fallback 'v1', BUKAN null:
+//    record legacy pra-versioning tak punya stempel → wajib redaksi TERTUA
+//    (?? null berarti CURRENT — salah utk cetak!). Di blade cetak, komponen
+//    consent (x-consent.general-consent-rj dkk.) menerima prop version:
+//      :version="$consent['clauseVersion'] ?? 'v1'"
+
+// 4) Form entri BARU boleh ?? null (→ CURRENT); entri lama teruskan versi tersimpan.
+
+// VERSIONING vs SNAPSHOT — jangan salah pilih:
+//   Versioning (registry) → TEKS KLAUSUL, jarang berubah.
+//   Snapshot (salin nilai ke entri) → DATA sering berubah per record,
+//   mis. tarif/fasilitas kelas kamar: simpan salinan nama+tarif+fasilitas
+//   saat buildEntry(); cetak prefer snapshot, fallback master utk legacy.
+
+// WAJIB baca docs/clause-versioning.md (+ skill clause-versioning) SEBELUM
+// mengubah teks klausul apa pun atau membuat dokumen ber-TTD baru.
+TXT,
+
 'administrasi' => <<<'TXT'
 // Administrasi = modal rekap biaya per kunjungan. Tiap POS = file partial sendiri
 // (jasa-dokter, jasa-medis, jasa-karyawan, obat, laboratorium, radiologi, lain-lain...).
@@ -383,6 +498,45 @@ public function sumAll(): void
 // → pasien naik ke atas di antrian kasir (wire:poll.30s).
 // RI: pos lebih banyak (visit, konsul, room, pindah-kamar, OK, obat-pinjam,
 //     bon-resep, transfer UGD/RJ) dan billing per-item ke imtxn_slshdrs/slsdtls.
+TXT,
+
+'administrasi-pos' => <<<'TXT'
+// KERANGKA SATU POS — lain-lain-rj (pos paling generik).
+// Satu pos = satu child Livewire ber-:rjNo yang baca-tulis TABEL BILLING
+// (rstxn_rjothers dst.) — BUKAN JSON CLOB; JSON hanya utk stempel AdministrasiRj.
+
+// Muat baris pos: tabel billing join master-nya
+$this->rjLainLain = DB::table('rstxn_rjothers')
+    ->join('rsmst_others', 'rsmst_others.other_id', 'rstxn_rjothers.other_id')
+    ->where('rstxn_rjothers.rj_no', $rjNo)
+    ->orderBy('rstxn_rjothers.rjo_dtl')->get();
+
+// Tambah item: LOV target unik per pos + nomor detail max+1
+#[On('lov.selected.lain-lain-rj')]
+public function onLainLainSelected(?array $payload): void { /* isi form dari payload */ }
+
+public function insertLainLain(): void
+{
+    // guard rj_status 'A' — lihat kartu "Model pengunci" di bawah
+    DB::transaction(function () {
+        $last = DB::table('rstxn_rjothers')
+            ->select(DB::raw('nvl(max(rjo_dtl)+1,1) as rjo_dtl_max'))->first();
+        DB::table('rstxn_rjothers')->insert([ /* rjo_dtl, rj_no, other_id, other_price */ ]);
+    });
+
+    $this->dispatch('administrasi-rj.updated');   // ← host menghitung ulang sumAll()
+}
+// Edit inline: startEdit / saveEdit / cancelEdit — SETIAP mutasi dispatch
+// administrasi-rj.updated; listener rj.administrasi-selesai men-disable pos.
+
+// SISI HOST — embed tiap pos sebagai tab + dengarkan mutasi:
+<livewire:pages::transaksi.rj.administrasi-rj.lain-lain-rj :rjNo="$rjNo" />
+
+#[On('administrasi-rj.updated')]
+public function onPosUpdated(): void
+{
+    $this->sumAll();          // grand total & breakdown selalu segar
+}
 TXT,
 
 'kasir-post' => <<<'TXT'
@@ -416,6 +570,40 @@ $this->appendAdminLogRJ($rjNo, 'Ubah tanggal kunjungan 01-07 → 02-07', 'ADMIN'
 $this->appendAdminLogUGD($ugdNo, 'Koreksi diagnosa oleh Casemix', 'MR');
 
 // Ditampilkan di tab "Log Aktivitas" EMR. Teks lewat App\Support\LogText::sanitize.
+TXT,
+
+'lock-model' => <<<'TXT'
+// MODEL PENGUNCI — E-Resep, Kirim Lab, dan Kirim Radiologi semuanya menulis
+// baris TAGIHAN yang dibaca Administrasi, maka ketiganya tunduk pada lapisan
+// kunci yang sama. Sumber kebenaran: rstxn_rjhdrs.rj_status.
+
+// L1 · KUNCI FINANSIAL — rj_status (checkRJStatus = rj_status !== 'A'):
+//   'A' aktif    → resep / order / pos administrasi masih boleh berubah
+//   'L' lunas    → di-set kasir saat posting bayar (txn_status 'L', bon = 'H')
+//   'I' transfer → kasir memindahkan biaya RJ ke transaksi UGD
+//   batal posting → kembali 'A' (tagihan bisa diubah lagi)
+// SEMUA pintu mutasi tagihan memeriksa ini: insertProduct e-resep,
+// kirimLaboratorium / kirimRadiologi, pos administrasi, posting kasir (idempoten).
+
+// L2 · KUNCI URUTAN — order lab pending MENAHAN kasir:
+if ($this->checkLabPendingRJ($this->rjNo)) {      // ada checkup_status = 'P'
+    // 'Hasil Laborat belum selesai, pembayaran tidak bisa diproses.'
+    // → tagihan belum final; posting ditolak sampai order lab selesai.
+}
+
+// L3 · KUNCI KEPEMILIKAN — administrasi yang sudah disimpan petugas lain:
+//   JSON AdministrasiRj.userLog terisi → 'Administrasi sudah tersimpan oleh X'.
+
+// L4 · KUNCI KONKURENSI — setiap tulis: DB::transaction + lockRJRow /
+//   lockForUpdate (bab 03) — dua user tidak saling menimpa.
+
+// L5 · KUNCI KLINIS (longgar, beda dgn finansial):
+//   - erm_status: checkEmrRJStatus saat ini SENGAJA selalu false — kebijakan:
+//     EMR tetap bisa diedit, cukup terjejak appendAdminLog (tab Log Aktivitas)
+//   - dokumen ber-TTD: isFormLocked per-form setelah tanda tangan (bab 07)
+
+// + KUNCI LINTAS JALUR: transfer RJ→UGD juga men-set
+//   rsmst_pasiens.lockstatus = 'UGD' — pasien dipegang SATU jalur aktif.
 TXT,
 
 'adopsi-tree' => <<<'TXT'
@@ -937,11 +1125,111 @@ TXT,
                             @endforeach
                         </div>
 
+                        @php
+                            $dokBadge = 'display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:9999px;background:var(--primary);color:#fff;font-size:11px;font-weight:700;line-height:1;flex:none';
+                        @endphp
+
+                        {{-- visual anatomi form dokumen multi-entri --}}
+                        <div class="ds-frame mt-2 mb-2">
+                            <div class="ds-frame-label">Tata letak form dokumen multi-entri (modal)</div>
+                            <div class="mt-3" style="border:1px solid var(--hairline); border-radius:14px; overflow:hidden; background:var(--canvas)">
+
+                                {{-- header --}}
+                                <div class="flex items-center justify-between gap-3 px-4 py-3" style="background:var(--surface-soft); border-bottom:1px solid var(--hairline)">
+                                    <span class="flex items-center gap-2">
+                                        <span class="ds-title-sm">Penundaan Pelayanan</span>
+                                        <span class="px-2 py-0.5 text-xs font-medium rounded-full" style="background:var(--info-tint); color:var(--info-deep)">2 entri</span>
+                                    </span>
+                                    <span class="flex items-center gap-2">
+                                        <span style="color:var(--muted)">✕</span>
+                                        <span style="{{ $dokBadge }}">1</span>
+                                    </span>
+                                </div>
+
+                                {{-- tabel entri multi-record --}}
+                                <div class="px-4 py-3" style="position:relative; border-bottom:1px solid var(--hairline)">
+                                    <div class="flex flex-wrap items-center gap-2 py-1.5" style="border-bottom:1px solid var(--hairline-soft)">
+                                        <span class="ds-body-sm" style="font-family:var(--mono)">08/07/2026 10:12</span>
+                                        <span class="px-2 py-0.5 text-xs font-medium rounded-full" style="background:var(--success-tint); color:var(--success-deep)">Terkunci</span>
+                                        <span class="ds-caption" style="color:var(--muted)">aksi: Lihat</span>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2 py-1.5">
+                                        <span class="ds-body-sm" style="font-family:var(--mono)">10/07/2026 08:45</span>
+                                        <span class="px-2 py-0.5 text-xs font-medium rounded-full" style="background:var(--warning-tint); color:var(--warning-deep)">Draft</span>
+                                        <span class="ds-caption" style="color:var(--muted)">aksi: Edit · TTD &amp; Kunci</span>
+                                    </div>
+                                    <span style="{{ $dokBadge }};position:absolute;top:10px;right:12px;background:var(--info)">2</span>
+                                </div>
+
+                                {{-- form entri aktif --}}
+                                <div class="px-4 py-3" style="position:relative; border-bottom:1px solid var(--hairline)">
+                                    <span class="block mb-1 text-xs font-medium" style="color:var(--body)">Alasan penundaan</span>
+                                    <div class="flex items-center gap-2">
+                                        <div style="height:34px;padding:8px 12px;border-radius:8px;border:1px solid var(--hairline);background:var(--canvas);color:var(--muted-soft);font-size:13px;flex:1;display:flex;align-items:center">Menunggu hasil laboratorium...</div>
+                                        <span class="px-2 py-1.5 text-xs rounded-lg" style="border:1px solid var(--hairline); color:var(--muted)" title="x-now-button">🕐</span>
+                                    </div>
+                                    <span style="{{ $dokBadge }};position:absolute;top:10px;right:12px">3</span>
+                                </div>
+
+                                {{-- area TTD --}}
+                                <div class="grid grid-cols-1 gap-3 px-4 py-3 sm:grid-cols-2" style="position:relative; border-bottom:1px solid var(--hairline)">
+                                    <div class="p-3 text-center" style="border:1px dashed var(--hairline); border-radius:10px">
+                                        <span class="ds-caption" style="color:var(--muted)">TTD Pasien / Keluarga</span>
+                                        <div class="mt-4 mb-1 mx-8" style="border-bottom:1px solid var(--muted-soft)"></div>
+                                        <span class="ds-caption" style="color:var(--muted-soft)">signature-pad (dataURL) — bisa menyusul</span>
+                                    </div>
+                                    <div class="p-3 text-center" style="border:1px dashed var(--hairline); border-radius:10px">
+                                        <span class="ds-caption" style="color:var(--muted)">TTD Petugas</span>
+                                        <div class="mt-3 mb-1 text-sm font-semibold" style="color:var(--ink)">Ns. FULAN, S.Kep</div>
+                                        <span class="ds-caption" style="color:var(--muted-soft)">komponen ttd-petugas — klik = stempel nama + kode</span>
+                                    </div>
+                                    <span style="{{ $dokBadge }};position:absolute;top:10px;right:12px">4</span>
+                                </div>
+
+                                {{-- footer --}}
+                                <div class="flex items-center justify-end gap-2 px-4 py-3" style="background:var(--surface-soft)">
+                                    <span class="ds-btn ds-btn-secondary" style="height:32px; padding:6px 12px; font-size:12px">Simpan Draft</span>
+                                    <span class="ds-btn ds-btn-primary" style="height:32px; padding:6px 12px; font-size:12px">TTD &amp; Kunci</span>
+                                    <span style="{{ $dokBadge }}">5</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- legenda anatomi dokumen --}}
+                        <div class="grid grid-cols-1 gap-2 mb-6 sm:grid-cols-2">
+                            @foreach ([
+                                ['1', 'Header form + jumlah entri — dibuka dari host: RI = tab per form (modul-dokumen-ri), RJ = kartu + tombol Buka', ''],
+                                ['2', 'Tabel entri multi-record — Draft (kuning: bisa Edit) vs Terkunci (hijau: hanya Lihat = viewer iframe render blade cetak); kunci stabil entri = signatureDate', 'background:var(--info)'],
+                                ['3', 'Form entri aktif — semua input di-guard isFormLocked / viewOnly; tombol jam = x-now-button', ''],
+                                ['4', 'TTD pasien = signature-pad (bisa "TTD menyusul"/staged) · TTD petugas = komponen ttd-petugas (stempel nama + ttdCode, guard server-side)', ''],
+                                ['5', 'Simpan Draft (validasi minimal) vs TTD & Kunci (validasi lengkap → entri terkunci permanen)', ''],
+                            ] as [$num, $ket, $extra])
+                                <div class="flex items-start gap-2.5">
+                                    <span style="{{ $dokBadge }}; margin-top:2px; {{ $extra }}">{{ $num }}</span>
+                                    <span class="ds-body-sm">{{ $ket }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+
                         <div class="ds-card-dark mt-2" style="padding:0; overflow:hidden">
                             <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
                                 <span class="ds-caption-up" style="color:var(--on-dark-soft)">Dua tahap: draft vs finalize — rm-general-consent-rj-actions</span>
                             </div>
                             <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['dokumen-flow'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Membuat form — kerangka utuh multi-entri (penundaan-pelayanan-ri)</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['dokumen-skeleton'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Clause versioning — registry per-versi (GeneralConsentClause) + snapshot</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['dokumen-clause'] }}</pre>
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-2">
@@ -974,11 +1262,91 @@ TXT,
                             Setelah petugas menandai selesai, pasien masuk antrian kasir untuk posting bayar.
                         </p>
 
+                        @php
+                            $admBadge = 'display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:9999px;background:var(--primary);color:#fff;font-size:11px;font-weight:700;line-height:1;flex:none';
+                        @endphp
+
+                        {{-- visual anatomi modal administrasi --}}
+                        <div class="ds-frame mt-2 mb-2">
+                            <div class="ds-frame-label">Tata letak modal Administrasi (administrasi-rj)</div>
+                            <div class="mt-3" style="border:1px solid var(--hairline); border-radius:14px; overflow:hidden; background:var(--canvas)">
+
+                                {{-- row 1: identitas + total + close --}}
+                                <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3" style="position:relative; background:var(--surface-soft); border-bottom:1px solid var(--hairline)">
+                                    <span class="ds-body-sm" style="color:var(--muted)">Identitas pasien (display-pasien-rj)</span>
+                                    <span class="px-3 py-1.5 rounded-xl" style="border:1px solid var(--hairline); background:var(--canvas)">
+                                        <span class="block ds-caption" style="color:var(--muted)">Total Tagihan</span>
+                                        <span class="block text-sm font-bold" style="color:var(--ink)">Rp 385.000 ▾</span>
+                                    </span>
+                                    <span class="flex items-center gap-2">
+                                        <span style="color:var(--muted)">✕</span>
+                                        <span style="{{ $admBadge }}">1</span>
+                                    </span>
+                                </div>
+
+                                {{-- row 2: breakdown pos --}}
+                                <div class="flex flex-wrap items-center gap-1.5 px-4 py-2" style="position:relative; border-bottom:1px solid var(--hairline); background:var(--surface-soft)">
+                                    @foreach (['Adm RS', 'Adm RJ', 'Poli', 'Js Karyawan', 'Js Dokter', 'Js Medis', 'Obat', 'Lab', 'Rad', 'Lain-lain'] as $pos)
+                                        <span class="px-2 py-0.5 text-xs rounded-full" style="border:1px solid var(--hairline); background:var(--canvas); color:var(--body)">{{ $pos }}</span>
+                                    @endforeach
+                                    <span style="{{ $admBadge }};background:var(--info)">2</span>
+                                </div>
+
+                                {{-- row 3: tab pos --}}
+                                <div class="flex flex-wrap items-center gap-3 px-4 py-2" style="position:relative; border-bottom:1px solid var(--hairline)">
+                                    @foreach (['Jasa Dokter', 'Obat', 'Laboratorium', 'Lain-lain', 'Kasir'] as $i => $tabPos)
+                                        <span class="text-sm {{ $i === 3 ? 'font-bold' : '' }}"
+                                            style="color:{{ $i === 3 ? 'var(--primary)' : 'var(--muted)' }}; {{ $i === 3 ? 'border-bottom:2px solid var(--primary); padding-bottom:2px' : '' }}">{{ $tabPos }}</span>
+                                    @endforeach
+                                    <span class="ds-caption" style="color:var(--muted)">…</span>
+                                    <span style="{{ $admBadge }}">3</span>
+                                </div>
+
+                                {{-- panel pos aktif --}}
+                                <div class="px-4 py-3" style="position:relative">
+                                    <p class="ds-body-sm" style="color:var(--muted)">
+                                        Tabel baris pos aktif (child Livewire ber-<span class="ds-code">:rjNo</span>) —
+                                        tambah item via LOV, edit inline per baris, hapus dgn konfirmasi.
+                                    </p>
+                                    <span style="{{ $admBadge }};position:absolute;top:10px;right:12px">4</span>
+                                </div>
+
+                                {{-- footer --}}
+                                <div class="flex items-center justify-end gap-2 px-4 py-3" style="position:relative; border-top:1px solid var(--hairline); background:var(--surface-soft)">
+                                    <span class="ds-btn ds-btn-primary" style="height:32px; padding:6px 12px; font-size:12px">Selesai Administrasi</span>
+                                    <span style="{{ $admBadge }}">5</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- legenda anatomi --}}
+                        <div class="grid grid-cols-1 gap-2 mb-6 sm:grid-cols-2">
+                            @foreach ([
+                                ['1', 'Header — identitas pasien + kartu Total Tagihan (klik = buka/tutup rincian) + tutup modal', ''],
+                                ['2', 'Rincian breakdown 10 pos hasil sumAll() — 3 dari kolom header (adm RS/RJ/poli), 7 dari SUM tabel billing per pos', 'background:var(--info)'],
+                                ['3', 'Tab per pos + tab Kasir — tiap tab adalah child Livewire sendiri ber-:rjNo (file per pos)', ''],
+                                ['4', 'Panel pos aktif — mutasi apa pun dispatch administrasi-rj.updated → host re-sumAll()', ''],
+                                ['5', 'Selesai Administrasi — stempel userLog ke JSON + set status → pasien masuk antrian kasir (poll 30s)', ''],
+                            ] as [$num, $ket, $extra])
+                                <div class="flex items-start gap-2.5">
+                                    <span style="{{ $admBadge }}; margin-top:2px; {{ $extra }}">{{ $num }}</span>
+                                    <span class="ds-body-sm">{{ $ket }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+
                         <div class="ds-card-dark mt-2" style="padding:0; overflow:hidden">
                             <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
                                 <span class="ds-caption-up" style="color:var(--on-dark-soft)">Pos biaya &amp; total — administrasi-rj</span>
                             </div>
                             <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['administrasi'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Membuat pos — kerangka utuh satu pos + wiring host (lain-lain-rj)</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['administrasi-pos'] }}</pre>
                         </div>
 
                         <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
@@ -994,6 +1362,13 @@ TXT,
                             </div>
                             <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['role-audit'] }}
 {{ $snip['audit-log'] }}</pre>
+                        </div>
+
+                        <div class="ds-card-dark mt-4" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Model pengunci — rj_status · lab pending · userLog · row-lock · TTD</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['lock-model'] }}</pre>
                         </div>
 
                         <div class="ds-card-outline mt-6" style="padding:16px 20px">
