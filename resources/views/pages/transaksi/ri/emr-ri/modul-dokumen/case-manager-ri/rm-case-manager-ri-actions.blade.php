@@ -587,6 +587,17 @@ new class extends Component {
         $this->incrementVersion('modal-case-manager-ri');
     }
 
+    // Tutup editor Form B sepenuhnya (buang referensi Form A juga) → editor tersembunyi lagi.
+    // Form B kini "anak" Form A: editor hanya muncul saat + Form B / Lanjut Isi / Lihat.
+    public function tutupFormB(): void
+    {
+        $this->resetFormB();
+        $this->editingKeyB = null;
+        $this->viewOnlyB = false;
+        $this->resetValidation();
+        $this->incrementVersion('modal-case-manager-ri');
+    }
+
     /* ===============================
      | HAPUS entri (draft atau final)
      =============================== */
@@ -797,11 +808,14 @@ new class extends Component {
         $formRO_B = $isFormLocked || $viewOnlyB;
         $listFormA = $dataDaftarRi['formMPP']['formA'] ?? [];
         $listFormB = $dataDaftarRi['formMPP']['formB'] ?? [];
-        // Peta label Form A (untuk kolom referensi di Form B)
+        // Peta label Form A (untuk referensi read-only di Form B)
         $formALabels = [];
         foreach ($listFormA as $fa) {
             $formALabels[$fa['formA_id'] ?? ''] = ($fa['tanggal'] ?? '-') . ' — ' . (data_get($fa, 'tandaTanganPetugas.petugasName') ?: 'Draft');
         }
+        // Editor Form B hanya tampil saat sedang menambah/melanjutkan/melihat satu Form B
+        // (dipicu tombol + Form B / Lanjut Isi / Lihat pada entri Form A) — Form B = anak Form A.
+        $formBActive = $viewOnlyB || filled($editingKeyB) || filled($formB['formA_id'] ?? null);
     @endphp
 
     @if ($isFormLocked)
@@ -929,6 +943,8 @@ new class extends Component {
                                 $isFinal = $this->entryIsFinal($entry);
                                 $rowKey = $entry['formA_id'] ?? '';
                                 $petugas = data_get($entry, 'tandaTanganPetugas.petugasName');
+                                // Form B milik Form A ini (tampil nested di detail)
+                                $relatedFormB = collect($listFormB)->where('formA_id', $rowKey)->values();
                             @endphp
                             <tbody x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }" class="border-b border-hairline dark:border-gray-700">
                                 <tr @click="open = !open"
@@ -972,9 +988,6 @@ new class extends Component {
                                                     </svg>
                                                     Lihat
                                                 </x-secondary-button>
-                                            @endif
-                                            @if (!$isFormLocked)
-                                                <x-info-button type="button" wire:click="tambahFormB('{{ $rowKey }}')" title="Tambah Form B untuk entri ini">+ Form B</x-info-button>
                                             @endif
                                             <x-primary-button wire:click="cetakFormA('{{ $rowKey }}')" type="button" wire:loading.attr="disabled" wire:target="cetakFormA('{{ $rowKey }}')" title="Cetak">
                                                 <span wire:loading.remove wire:target="cetakFormA('{{ $rowKey }}')" class="flex items-center gap-1">
@@ -1030,6 +1043,74 @@ new class extends Component {
                                                 <dd class="mt-0.5 whitespace-pre-line text-ink dark:text-gray-200">{{ $entry['perencanaan'] ?: '-' }}</dd>
                                             </div>
                                         </dl>
+
+                                        {{-- ── FORM B (Tindak Lanjut) — nested di bawah Form A induk ── --}}
+                                        <div class="pt-4 mt-4 border-t border-hairline dark:border-gray-700">
+                                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                                <span class="text-xs font-semibold tracking-wide uppercase text-muted-soft">
+                                                    Form B — Pelaksanaan / Monitoring ({{ $relatedFormB->count() }})
+                                                </span>
+                                                @if (!$isFormLocked)
+                                                    <x-info-button type="button" wire:click="tambahFormB('{{ $rowKey }}')"
+                                                        title="Tambah Form B untuk Form A ini">+ Form B</x-info-button>
+                                                @endif
+                                            </div>
+
+                                            @if ($relatedFormB->count())
+                                                <div class="space-y-2">
+                                                    @foreach ($relatedFormB as $fb)
+                                                        @php
+                                                            $fbKey = $fb['formB_id'] ?? '';
+                                                            $fbFinal = $this->entryIsFinal($fb);
+                                                            $fbPetugas = data_get($fb, 'tandaTanganPetugas.petugasName');
+                                                        @endphp
+                                                        <div class="p-3 border rounded-lg bg-canvas border-hairline dark:bg-gray-900 dark:border-gray-700 {{ $editingKeyB && $editingKeyB === $fbKey ? 'ring-1 ring-brand-lime/40' : '' }}">
+                                                            <div class="flex flex-wrap items-start justify-between gap-2">
+                                                                <div class="min-w-0">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <span class="font-mono text-sm font-semibold text-ink dark:text-gray-100">{{ $fb['tanggal'] ?: '-' }}</span>
+                                                                        @if ($fbFinal)
+                                                                            <x-badge variant="info">Terkunci</x-badge>
+                                                                        @else
+                                                                            <x-badge variant="warning">Draft</x-badge>
+                                                                        @endif
+                                                                    </div>
+                                                                    <p class="mt-1 text-sm text-muted dark:text-gray-400">{{ \Illuminate\Support\Str::limit($fb['pelaksanaanMonitoring'] ?? '', 90) ?: '-' }}</p>
+                                                                    <p class="mt-0.5 text-xs text-muted-soft">
+                                                                        @if (!empty($fbPetugas)) TTD: {{ $fbPetugas }} @else <span class="text-red-600 dark:text-red-400">Belum TTD</span> @endif
+                                                                    </p>
+                                                                </div>
+                                                                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                                                    @if (!$fbFinal && !$isFormLocked)
+                                                                        <x-primary-button type="button" wire:click="editEntryB('{{ $fbKey }}')" class="!px-2.5 !py-1 gap-1" title="Lanjutkan mengisi draft ini">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                                            Lanjut Isi
+                                                                        </x-primary-button>
+                                                                    @endif
+                                                                    @if ($fbFinal)
+                                                                        <x-secondary-button type="button" wire:click="viewEntryB('{{ $fbKey }}')" class="!px-2.5 !py-1 gap-1" title="Lihat detail (read-only)">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                                            Lihat
+                                                                        </x-secondary-button>
+                                                                    @endif
+                                                                    <x-primary-button type="button" wire:click="cetakFormB('{{ $fbKey }}')" wire:loading.attr="disabled" wire:target="cetakFormB('{{ $fbKey }}')" class="!px-2.5 !py-1 gap-1" title="Cetak Form B">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                                                    </x-primary-button>
+                                                                    @if (!$isFormLocked)
+                                                                        <x-outline-button type="button" wire:click.prevent="hapusForm('formB','{{ $fbKey }}')" wire:confirm="Hapus Form B ini?"
+                                                                            class="!px-2.5 !py-1 !text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30" title="Hapus Form B">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                        </x-outline-button>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <p class="text-sm text-muted-soft">Belum ada Form B untuk entri ini.</p>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1042,7 +1123,8 @@ new class extends Component {
         </div>
     </x-border-form>
 
-    {{-- ══════════════════════════ SECTION B — PELAKSANAAN / MONITORING MPP ══════════════════════════ --}}
+    {{-- ══════ EDITOR FORM B — muncul saat + Form B / Lanjut Isi / Lihat pada entri Form A (Form B = anak Form A) ══════ --}}
+    @if ($formBActive)
     <x-border-form title="Form B — Pelaksanaan, Monitoring, Advokasi, Terminasi" align="start" bgcolor="bg-surface-soft">
 
         {{-- Banner status per-section B --}}
@@ -1076,15 +1158,12 @@ new class extends Component {
                 @endif
             </div>
 
-            {{-- Referensi Form A --}}
+            {{-- Referensi Form A (read-only) — otomatis dari entri Form A saat klik "+ Form B" --}}
             <div>
-                <x-input-label value="Referensi Form A *" />
-                <x-select-input wire:model="formB.formA_id" class="w-full mt-1" :error="$errors->has('formB.formA_id')">
-                    <option value="">— Pilih Form A —</option>
-                    @foreach ($formALabels as $faId => $faLabel)
-                        <option value="{{ $faId }}">{{ $faLabel }}</option>
-                    @endforeach
-                </x-select-input>
+                <x-input-label value="Referensi Form A" />
+                <div class="w-full px-3 py-2 mt-1 text-sm border rounded-lg bg-surface-soft border-hairline text-ink dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200">
+                    {{ $formALabels[$formB['formA_id'] ?? ''] ?? '(Form A tidak ditemukan)' }}
+                </div>
                 <x-input-error :messages="$errors->get('formB.formA_id')" class="mt-1" />
             </div>
 
@@ -1111,10 +1190,10 @@ new class extends Component {
             <p class="mt-2 mb-3 text-xs text-center text-muted">Menandatangani = mengunci entri Form B ini (tidak bisa diubah lagi).</p>
         @endif
 
-        {{-- Footer aksi Section B --}}
+        {{-- Footer aksi Editor Form B --}}
         <div class="flex flex-wrap items-center justify-end gap-2 mt-3">
             @if ($viewOnlyB)
-                <x-primary-button wire:click.prevent="cancelEditB" wire:target="cancelEditB" wire:loading.attr="disabled"
+                <x-primary-button wire:click.prevent="tutupFormB" wire:target="tutupFormB" wire:loading.attr="disabled"
                     class="gap-1.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -1122,6 +1201,13 @@ new class extends Component {
                     Selesai Melihat
                 </x-primary-button>
             @elseif (!$isFormLocked)
+                <x-outline-button wire:click.prevent="tutupFormB" wire:target="tutupFormB" wire:loading.attr="disabled"
+                    class="gap-1.5" title="Tutup editor Form B tanpa menyimpan">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Tutup
+                </x-outline-button>
                 @if ($editingKeyB)
                     <x-outline-button wire:click.prevent="tambahFormB" wire:target="tambahFormB" wire:loading.attr="disabled"
                         class="gap-1.5" title="Kosongkan form untuk menambah catatan lain — entri tersimpan tidak berubah">
@@ -1144,141 +1230,8 @@ new class extends Component {
             @endif
         </div>
 
-        {{-- ── TABEL EXPANDABLE Form B ── --}}
-        <div class="mt-4">
-            @if (count($listFormB))
-                <span class="block mb-2 text-xs italic text-muted-soft">Klik baris untuk lihat detail lengkap</span>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm border border-hairline rounded-lg dark:border-gray-700">
-                        <thead class="bg-surface-soft dark:bg-gray-800">
-                            <tr class="text-left text-sm font-semibold tracking-wide uppercase text-muted dark:text-gray-300">
-                                <th class="w-8 px-2 py-3 border-b"></th>
-                                <th class="px-4 py-3 border-b">Tanggal</th>
-                                <th class="px-4 py-3 border-b">Referensi Form A</th>
-                                <th class="px-4 py-3 border-b">Petugas (TTD)</th>
-                                <th class="px-4 py-3 text-center border-b">Status</th>
-                                <th class="px-4 py-3 text-center border-b">Aksi</th>
-                            </tr>
-                        </thead>
-                        @foreach (array_reverse($listFormB) as $entry)
-                            @php
-                                $isFinal = $this->entryIsFinal($entry);
-                                $rowKey = $entry['formB_id'] ?? '';
-                                $petugas = data_get($entry, 'tandaTanganPetugas.petugasName');
-                                $refLabel = $formALabels[$entry['formA_id'] ?? ''] ?? '(Form A tidak ditemukan)';
-                            @endphp
-                            <tbody x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }" class="border-b border-hairline dark:border-gray-700">
-                                <tr @click="open = !open"
-                                    class="cursor-pointer hover:bg-surface-soft dark:hover:bg-gray-800 {{ $editingKeyB && $editingKeyB === $rowKey ? 'bg-brand-lime/10 dark:bg-brand-lime/5' : '' }}">
-                                    <td class="px-2 py-3 text-center align-middle">
-                                        <svg class="w-4 h-4 mx-auto transition-transform text-muted" :class="{ 'rotate-90': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </td>
-                                    <td class="px-4 py-3 font-semibold align-middle text-ink dark:text-gray-100 font-mono">{{ $entry['tanggal'] ?: '-' }}</td>
-                                    <td class="px-4 py-3 align-middle text-muted dark:text-gray-300 font-mono text-xs">{{ $refLabel }}</td>
-                                    <td class="px-4 py-3 align-middle text-muted dark:text-gray-300">
-                                        @if (!empty($petugas))
-                                            <span class="font-medium text-ink dark:text-gray-200">{{ $petugas }}</span>
-                                        @else
-                                            <x-badge variant="danger">Belum TTD</x-badge>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-center align-middle">
-                                        @if ($isFinal)
-                                            <x-badge variant="info">Terkunci</x-badge>
-                                        @else
-                                            <x-badge variant="warning">Draft</x-badge>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-center align-middle" @click.stop>
-                                        <div class="flex flex-wrap items-center justify-center gap-2">
-                                            @if (!$isFinal && !$isFormLocked)
-                                                <x-primary-button type="button" wire:click="editEntryB('{{ $rowKey }}')" wire:loading.attr="disabled" wire:target="editEntryB('{{ $rowKey }}')" class="gap-1.5" title="Lanjutkan mengisi draft ini">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                    Lanjut Isi
-                                                </x-primary-button>
-                                            @endif
-                                            @if ($isFinal)
-                                                <x-secondary-button type="button" wire:click="viewEntryB('{{ $rowKey }}')" wire:loading.attr="disabled" wire:target="viewEntryB('{{ $rowKey }}')" class="gap-1.5" title="Lihat detail (read-only)">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                    </svg>
-                                                    Lihat
-                                                </x-secondary-button>
-                                            @endif
-                                            <x-primary-button wire:click="cetakFormB('{{ $rowKey }}')" type="button" wire:loading.attr="disabled" wire:target="cetakFormB('{{ $rowKey }}')" title="Cetak">
-                                                <span wire:loading.remove wire:target="cetakFormB('{{ $rowKey }}')" class="flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                    </svg>
-                                                    Cetak
-                                                </span>
-                                                <span wire:loading wire:target="cetakFormB('{{ $rowKey }}')" class="flex items-center gap-1"><x-loading /> ...</span>
-                                            </x-primary-button>
-                                            @if (!$isFormLocked)
-                                                <x-outline-button type="button" wire:click.prevent="hapusForm('formB','{{ $rowKey }}')" wire:confirm="Hapus Form B ini?" wire:loading.attr="disabled"
-                                                    class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
-                                                    title="Hapus">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </x-outline-button>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                {{-- DETAIL (expand) --}}
-                                <tr x-show="open" x-cloak>
-                                    <td colspan="6" class="px-4 py-4 bg-surface-soft/60 dark:bg-gray-950/30">
-                                        <dl class="grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-2">
-                                            <div>
-                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Tanggal</dt>
-                                                <dd class="mt-0.5 font-mono text-ink dark:text-gray-200">{{ $entry['tanggal'] ?: '-' }}</dd>
-                                            </div>
-                                            <div>
-                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Referensi Form A</dt>
-                                                <dd class="mt-0.5 text-ink dark:text-gray-200">{{ $refLabel }}</dd>
-                                            </div>
-                                            <div class="md:col-span-2">
-                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Pelaksanaan & Monitoring</dt>
-                                                <dd class="mt-0.5 whitespace-pre-line text-ink dark:text-gray-200">{{ $entry['pelaksanaanMonitoring'] ?: '-' }}</dd>
-                                            </div>
-                                            <div class="md:col-span-2">
-                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Advokasi / Kolaborasi</dt>
-                                                <dd class="mt-0.5 whitespace-pre-line text-ink dark:text-gray-200">{{ $entry['advokasiKolaborasi'] ?: '-' }}</dd>
-                                            </div>
-                                            <div class="md:col-span-2">
-                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Terminasi</dt>
-                                                <dd class="mt-0.5 whitespace-pre-line text-ink dark:text-gray-200">{{ $entry['terminasi'] ?: '-' }}</dd>
-                                            </div>
-                                            <div>
-                                                <dt class="text-xs font-semibold tracking-wide uppercase text-muted-soft">Petugas (TTD)</dt>
-                                                <dd class="mt-0.5">
-                                                    @if (!empty($petugas))
-                                                        <span class="text-ink dark:text-gray-200">{{ $petugas }}</span>
-                                                        <span class="text-sm text-muted-soft">— {{ data_get($entry, 'tandaTanganPetugas.jabatan', 'MPP') }}</span>
-                                                    @else
-                                                        <x-badge variant="danger">Belum TTD</x-badge>
-                                                    @endif
-                                                </dd>
-                                            </div>
-                                        </dl>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        @endforeach
-                    </table>
-                </div>
-            @else
-                <p class="text-sm text-muted dark:text-gray-400">Belum ada entri Form B tersimpan.</p>
-            @endif
-        </div>
     </x-border-form>
+    @endif
 
                 </div>
             </div>
