@@ -41,8 +41,6 @@ new class extends Component {
         $this->dataDaftarRi = $data;
         $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo);
 
-        $this->dispatch('open-rm-case-manager-ri', $riHdrNo);
-
         $this->incrementVersion('modal-modul-dokumen-ri');
 
         $this->dispatch('open-modal', name: 'modul-dokumen-ri'); // ← WAJIB ada ini
@@ -234,7 +232,8 @@ new class extends Component {
                 @hasanyrole('Perawat|Admin|MPP')
                     <div x-show="activeTab === 'caseManager'" x-transition.opacity.duration.200ms style="display:none">
                         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.case-manager-ri.rm-case-manager-ri-actions
-                            :riHdrNo="$riHdrNo" wire:key="case-manager-ri-{{ $riHdrNo }}" />
+                            :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
+                            wire:key="case-manager-ri-{{ $riHdrNo ?? 'init' }}" />
                     </div>
                 @endhasanyrole
 

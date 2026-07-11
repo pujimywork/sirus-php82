@@ -57,7 +57,6 @@ new class extends Component {
         $this->dispatch('open-rm-edukasi-pasien-ri', $riHdrNo);
         $this->dispatch('open-rm-inform-consent-ri', $riHdrNo);
         $this->dispatch('open-rm-general-consent-ri', $riHdrNo);
-        $this->dispatch('open-rm-case-manager-ri', $riHdrNo);
 
         // SKDP hanya untuk BPJS
         $klaimStatus =

@@ -15,13 +15,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
+    public bool $disabled = false;
     public array $dataDaftarRi = [];
 
     public array $formA = [
@@ -59,9 +59,10 @@ new class extends Component {
     /* ===============================
      | MOUNT
      =============================== */
-    public function mount(?string $riHdrNo = null): void
+    public function mount(?string $riHdrNo = null, bool $disabled = false): void
     {
         $this->riHdrNo = $riHdrNo ?: $this->riHdrNo;
+        $this->disabled = $disabled;
         $this->registerAreas(['modal-case-manager-ri']);
 
         if ($this->riHdrNo) {
@@ -77,20 +78,21 @@ new class extends Component {
         }
         $this->dataDaftarRi = $data;
         $this->dataDaftarRi['formMPP'] ??= ['formA' => [], 'formB' => []];
-        $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo);
+        $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled;
     }
 
-    #[On('open-rm-case-manager-ri')]
-    public function open(string $riHdrNo): void
+    /* ===============================
+     | OPEN / CLOSE MODAL — pola standar modul-dokumen (kartu + tombol Buka → x-modal)
+     =============================== */
+    public function openModal(): void
     {
-        if (empty($riHdrNo)) {
+        if (!$this->riHdrNo || $this->disabled) {
             return;
         }
 
-        $this->riHdrNo = $riHdrNo;
         $this->resetForm();
 
-        $data = $this->findDataRI($riHdrNo);
+        $data = $this->findDataRI($this->riHdrNo);
         if (!$data) {
             $this->dispatch('toast', type: 'error', message: 'Data RI tidak ditemukan.');
             return;
@@ -98,9 +100,15 @@ new class extends Component {
 
         $this->dataDaftarRi = $data;
         $this->dataDaftarRi['formMPP'] ??= ['formA' => [], 'formB' => []];
-        $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo);
+        $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled;
 
         $this->incrementVersion('modal-case-manager-ri');
+        $this->dispatch('open-modal', name: "rm-case-manager-ri-{$this->riHdrNo}");
+    }
+
+    public function closeModal(): void
+    {
+        $this->dispatch('close-modal', name: "rm-case-manager-ri-{$this->riHdrNo}");
     }
 
     /* ===============================
@@ -718,7 +726,71 @@ new class extends Component {
 };
 ?>
 
-<div class="space-y-4" wire:key="{{ $this->renderKey('modal-case-manager-ri', [$riHdrNo ?? 'new']) }}">
+<div>
+    {{-- ══ SUMMARY CARD (inline di tab) ══ --}}
+    @php
+        $mppCountA = count($dataDaftarRi['formMPP']['formA'] ?? []);
+        $mppCountB = count($dataDaftarRi['formMPP']['formB'] ?? []);
+    @endphp
+    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex-1 space-y-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">Case Manager (MPP)</h3>
+                    <x-badge variant="{{ $mppCountA > 0 ? 'success' : 'warning' }}">Form A: {{ $mppCountA }}</x-badge>
+                    <x-badge variant="{{ $mppCountB > 0 ? 'success' : 'warning' }}">Form B: {{ $mppCountB }}</x-badge>
+                </div>
+                <p class="text-base text-muted dark:text-gray-400">
+                    Skrining awal &amp; pelaksanaan/monitoring oleh Manajer Pelayanan Pasien selama perawatan.
+                </p>
+            </div>
+            <div class="flex shrink-0">
+                <x-primary-button type="button" wire:click="openModal" wire:loading.attr="disabled"
+                    wire:target="openModal" :disabled="$disabled || !$riHdrNo" class="gap-2">
+                    <span wire:loading.remove wire:target="openModal" class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                        Buka Case Manager (MPP)
+                    </span>
+                    <span wire:loading wire:target="openModal" class="flex items-center gap-1.5">
+                        <x-loading class="w-4 h-4" /> Memuat...
+                    </span>
+                </x-primary-button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══ MODAL FORM ══ --}}
+    <x-modal name="rm-case-manager-ri-{{ $riHdrNo ?? 'init' }}" size="full" height="full" focusable>
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
+            wire:key="{{ $this->renderKey('modal-case-manager-ri', [$riHdrNo ?? 'new']) }}">
+
+            {{-- HEADER MODAL --}}
+            <div class="flex items-center justify-between gap-4 px-6 py-4 border-b border-hairline bg-surface-soft dark:border-gray-700 shrink-0">
+                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Case Manager (MPP)</h2>
+                <div class="flex items-center gap-2">
+                    @if ($mppCountA + $mppCountB > 0)
+                        <x-badge variant="info">{{ $mppCountA + $mppCountB }} tersimpan</x-badge>
+                    @endif
+                    @if ($isFormLocked)
+                        <x-badge variant="danger">Read Only</x-badge>
+                    @endif
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                        <span class="sr-only">Close</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+            </div>
+
+            {{-- BODY --}}
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft dark:bg-gray-950/20">
+                <div class="max-w-5xl mx-auto space-y-4">
 
     @php
         $formRO_A = $isFormLocked || $viewOnlyA;
@@ -1208,4 +1280,8 @@ new class extends Component {
         </div>
     </x-border-form>
 
+                </div>
+            </div>
+        </div>
+    </x-modal>
 </div>
