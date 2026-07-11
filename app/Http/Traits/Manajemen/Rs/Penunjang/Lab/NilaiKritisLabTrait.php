@@ -55,6 +55,8 @@ trait NilaiKritisLabTrait
                 DB::raw('TRIM(m.clabitem_desc) as pemeriksaan'),
                 DB::raw('d.lab_result as hasil'),
                 DB::raw('m.unit_desc as satuan'),
+                DB::raw('m.unit_convert as unit_convert'),
+                DB::raw('m.lowhigh_status as lowhigh_status'),
                 DB::raw("CASE WHEN p.sex = 'P' THEN m.low_limit_f ELSE m.low_limit_m END as low_limit"),
                 DB::raw("CASE WHEN p.sex = 'P' THEN m.high_limit_f ELSE m.high_limit_m END as high_limit"),
                 DB::raw('UPPER(d.lab_result_status) as flag'),

@@ -277,7 +277,24 @@ new class extends Component {
                                 </thead>
                                 <tbody>
                                     @forelse ($this->detail as $i => $row)
-                                        @php $tinggi = $this->isTinggi($row->flag); @endphp
+                                        @php
+                                            $tinggi = $this->isTinggi($row->flag);
+                                            // Konversi satuan seperti tampilan hasil lab: lowhigh_status='Y' & unit_convert numerik>0 → dikali.
+                                            $unitConvertRaw = trim((string) ($row->unit_convert ?? ''));
+                                            $factor = (($row->lowhigh_status ?? '') === 'Y' && is_numeric($unitConvertRaw) && (float) $unitConvertRaw > 0) ? (float) $unitConvertRaw : 1.0;
+                                            $konversi = function ($nilai) use ($factor) {
+                                                $teks = trim((string) ($nilai ?? ''));
+                                                if ($teks === '' || !is_numeric($teks)) {
+                                                    return $teks;
+                                                }
+                                                $nilaiKonversi = (float) $teks * $factor;
+                                                return fmod($nilaiKonversi, 1) !== 0.0 ? (string) round($nilaiKonversi, 2) : number_format($nilaiKonversi);
+                                            };
+                                            $hasilFmt = $konversi($row->hasil);
+                                            $lowFmt = $konversi($row->low_limit);
+                                            $highFmt = $konversi($row->high_limit);
+                                            $rujukanFmt = ($lowFmt !== '' || $highFmt !== '') ? trim($lowFmt . ' – ' . $highFmt) : '-';
+                                        @endphp
                                         <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50">
                                             <td class="px-3 py-2.5 text-muted-soft tabular-nums">{{ $this->detail->firstItem() + $i }}</td>
                                             <td class="px-3 py-2.5 whitespace-nowrap tabular-nums text-ink dark:text-gray-100">{{ $row->tgl }}</td>
@@ -287,10 +304,10 @@ new class extends Component {
                                                 <span class="text-xs text-muted-soft">({{ $row->sex === 'L' ? 'L' : ($row->sex === 'P' ? 'P' : '-') }})</span>
                                             </td>
                                             <td class="px-3 py-2.5 text-body dark:text-gray-200">{{ $row->pemeriksaan ?: '—' }}</td>
-                                            <td class="px-3 py-2.5 text-right font-bold tabular-nums {{ $tinggi ? 'text-red-700 dark:text-red-400' : 'text-blue-700 dark:text-blue-400' }}">{{ $row->hasil ?: '-' }}</td>
+                                            <td class="px-3 py-2.5 text-right font-bold tabular-nums {{ $tinggi ? 'text-red-700 dark:text-red-400' : 'text-blue-700 dark:text-blue-400' }}">{{ $hasilFmt !== '' ? $hasilFmt : '-' }}</td>
                                             <td class="px-3 py-2.5 text-muted dark:text-gray-400">{{ $row->satuan ?: '-' }}</td>
                                             <td class="px-3 py-2.5 text-center whitespace-nowrap text-muted dark:text-gray-400 tabular-nums">
-                                                {{ ($row->low_limit ?? '') !== '' || ($row->high_limit ?? '') !== '' ? trim(($row->low_limit ?? '') . ' – ' . ($row->high_limit ?? '')) : '-' }}
+                                                {{ $rujukanFmt }}
                                             </td>
                                             <td class="px-3 py-2.5 text-center">
                                                 @if ($tinggi)
