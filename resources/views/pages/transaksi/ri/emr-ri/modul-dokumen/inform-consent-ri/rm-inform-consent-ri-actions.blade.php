@@ -328,6 +328,56 @@ new class extends Component {
         }
     }
 
+    /* ===============================
+     | BUKA KUNCI (unlock) — hanya Admin / Manager keatas.
+     | Mencabut kunci entri: finalized=false + hapus TTD petugas (dokter penjelas).
+     | TTD pasien & saksi DIPERTAHANKAN. Entri kembali jadi draft utk dikoreksi lalu dikunci ulang.
+     =============================== */
+    private function bolehBukaKunci(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
+    }
+
+    public function bukaKunci(string $signatureDate): void
+    {
+        if (!$this->bolehBukaKunci()) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin / Manager yang dapat membuka kunci.');
+            return;
+        }
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang — form read-only.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($signatureDate) {
+                $this->lockRIRow($this->riHdrNo);
+                $fresh = $this->findDataRI($this->riHdrNo) ?: [];
+                $list = $fresh['informConsentPasienRI'] ?? [];
+                $index = collect($list)->search(fn($it) => ($it['signatureDate'] ?? '') === $signatureDate);
+                if ($index === false) {
+                    throw new \RuntimeException('Entri tidak ditemukan.');
+                }
+                // Cabut kunci + TTD petugas (pemberi informasi); TTD pasien & saksi tetap.
+                $list[$index]['finalized'] = false;
+                $list[$index]['dokter'] = '';
+                $list[$index]['dokterCode'] = '';
+                $list[$index]['dokterDate'] = '';
+                $fresh['informConsentPasienRI'] = array_values($list);
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+                $this->consentList = $fresh['informConsentPasienRI'];
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Buka kunci Inform Consent — entri ' . $signatureDate . ' (oleh ' . (auth()->user()->myuser_name ?? auth()->user()->name ?? '-') . ')', 'MR');
+            });
+            $this->incrementVersion('modal-inform-consent-ri');
+            $this->dispatch('toast', type: 'success', message: 'Kunci dibuka — entri kembali draft & TTD petugas dicabut. Silakan koreksi lalu kunci ulang.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuka kunci: ' . $e->getMessage());
+        }
+    }
+
     // Best-effort resolve kode PPA (myuser_code) dari nama pilihan/ketik. Kosong jika tak cocok
     // — aman: cetak fallback ke nama (kode diresolve ulang di buildConsentEntry).
     private function resolvePpaCode(string $name): string
@@ -1327,6 +1377,20 @@ new class extends Component {
                                                                 </span>
                                                                 <span wire:loading wire:target="cetak('{{ $rowKey }}')" class="flex items-center gap-1.5"><x-loading class="w-5 h-5" /> Mencetak...</span>
                                                             </x-secondary-button>
+                                                            @if (!$isFormLocked)
+                                                                @hasanyrole('Admin|Manager Umum|Manager Medis')
+                                                                    <x-outline-button type="button" wire:click.prevent="bukaKunci('{{ $rowKey }}')"
+                                                                        wire:confirm="Buka kunci Inform Consent ini? TTD petugas akan dicabut & entri kembali menjadi draft untuk dikoreksi."
+                                                                        wire:loading.attr="disabled" wire:target="bukaKunci('{{ $rowKey }}')"
+                                                                        class="gap-1.5 !text-amber-700 !bg-amber-50 !border-amber-200 hover:!bg-amber-100 dark:!text-amber-300 dark:!bg-amber-900/20 dark:!border-amber-700/40"
+                                                                        title="Buka kunci (Admin/Manager) — cabut TTD petugas, entri jadi draft">
+                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" />
+                                                                        </svg>
+                                                                        Buka Kunci
+                                                                    </x-outline-button>
+                                                                @endhasanyrole
+                                                            @endif
                                                         @endif
                                                         @if (!$isFormLocked)
                                                             <x-outline-button type="button" wire:click.prevent="hapus('{{ $rowKey }}')" wire:confirm="Yakin hapus Inform Consent ini?"

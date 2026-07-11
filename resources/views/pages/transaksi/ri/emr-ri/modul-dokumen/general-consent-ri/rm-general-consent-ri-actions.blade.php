@@ -276,6 +276,51 @@ new class extends Component {
         }
     }
 
+    /* ===============================
+     | BUKA KUNCI (unlock) — hanya Admin / Manager keatas.
+     | Mencabut TTD petugas pemeriksa (yang mengunci); TTD pasien DIPERTAHANKAN.
+     | Form kembali dapat diedit lalu di-TTD & dikunci ulang.
+     =============================== */
+    private function bolehBukaKunci(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
+    }
+
+    public function bukaKunci(): void
+    {
+        if (!$this->bolehBukaKunci()) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin / Manager yang dapat membuka kunci.');
+            return;
+        }
+        if ($this->checkEmrRIStatus($this->riHdrNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang — tidak dapat membuka kunci.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockRIRow($this->riHdrNo);
+                $fresh = $this->findDataRI($this->riHdrNo) ?: [];
+                $gc = $fresh['generalConsentPasienRI'] ?? [];
+                // Cabut kunci = hapus TTD petugas pemeriksa; TTD pasien tetap.
+                $gc['petugasPemeriksa'] = '';
+                $gc['petugasPemeriksaCode'] = '';
+                $gc['petugasPemeriksaDate'] = '';
+                $fresh['generalConsentPasienRI'] = $gc;
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Buka kunci General Consent — TTD petugas dicabut (oleh ' . (auth()->user()->myuser_name ?? auth()->user()->name ?? '-') . ')', 'MR');
+            });
+
+            $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled
+                || !empty($this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksa'] ?? '');
+            $this->incrementVersion('modal-general-consent-ri');
+            $this->dispatch('toast', type: 'success', message: 'Kunci dibuka — TTD petugas dicabut. Silakan koreksi lalu TTD & kunci ulang.');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuka kunci: ' . $e->getMessage());
+        }
+    }
+
     public function save(): void
     {
         if ($this->isFormLocked) {
@@ -763,6 +808,21 @@ new class extends Component {
                                 <span wire:loading wire:target="save"><x-loading class="w-4 h-4" />
                                     Menyimpan...</span>
                             </x-primary-button>
+                        @endif
+
+                        @if ($isFormLocked && !empty($consent['petugasPemeriksa']))
+                            @hasanyrole('Admin|Manager Umum|Manager Medis')
+                                <x-outline-button type="button" wire:click.prevent="bukaKunci"
+                                    wire:confirm="Buka kunci General Consent? TTD petugas akan dicabut & form dapat diedit kembali."
+                                    wire:loading.attr="disabled" wire:target="bukaKunci"
+                                    class="gap-1.5 !text-amber-700 !bg-amber-50 !border-amber-200 hover:!bg-amber-100 dark:!text-amber-300 dark:!bg-amber-900/20 dark:!border-amber-700/40"
+                                    title="Buka kunci (Admin/Manager) — cabut TTD petugas, form dapat diedit">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" />
+                                    </svg>
+                                    Buka Kunci
+                                </x-outline-button>
+                            @endhasanyrole
                         @endif
                     @endif
                 </div>
