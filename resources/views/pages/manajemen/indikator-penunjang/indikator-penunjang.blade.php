@@ -66,6 +66,21 @@ new class extends Component {
                         </div>
                     </a>
 
+                    <a href="{{ route('manajemen.rs.penunjang.lab.laporan-nilai-kritis') }}" wire:navigate
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-rose-50 text-rose-700 group-hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="font-semibold text-ink dark:text-gray-100">Nilai Kritis Laboratorium</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
+                                Hasil melewati ambang (Tinggi/Rendah) — perlu perhatian dokter
+                            </div>
+                        </div>
+                    </a>
+
                     <a href="{{ route('manajemen.sirs.penunjang.laporan-rl-3-8-laboratorium') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300">
