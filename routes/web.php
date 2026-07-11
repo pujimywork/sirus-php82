@@ -543,6 +543,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::livewire('/manajemen/rs/penunjang/rad/laporan-pemeriksaan-rad', 'pages::manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad.laporan-pemeriksaan-rad')
         ->name('manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad');
+
+    Route::livewire('/manajemen/rs/penunjang/rad/laporan-pemeriksaan-rad-detail', 'pages::manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad-detail.laporan-pemeriksaan-rad-detail')
+        ->name('manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad-detail');
 });
 
 
