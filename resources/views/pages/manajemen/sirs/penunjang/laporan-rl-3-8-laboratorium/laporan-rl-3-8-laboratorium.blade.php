@@ -48,7 +48,7 @@ new class extends Component {
 <div>
     <x-page-title
         title="Laporan RL 3.8 — Laboratorium"
-        subtitle="Rekap pemeriksaan lab per bulan, sesuai format SIRS Online Kemenkes (138 jenis pemeriksaan). MVP: mapping clabitem → SIRS belum aktif — semua lab order valid jatuh ke baris &quot;0 - Tidak Ada Data&quot;. Per-jenis pemeriksaan butuh master mapping lbmst_clabitems." />
+        subtitle="Rekap pemeriksaan lab per bulan sesuai format SIRS Online Kemenkes (138 jenis). Dihitung dari tes individual (komponen panel), jumlah = pemeriksaan berbeda per pasien, rata-rata/hari = jumlah ÷ hari buka lab." />
 
     <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-800">
         <div class="px-6 pt-4 pb-6 space-y-4">

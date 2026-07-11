@@ -257,28 +257,78 @@ trait RL38Trait
             $buckets[$jp['id']] = ['L' => 0, 'P' => 0];
         }
 
-        // Single fetch: aggregate per (clabitem_desc, sex) di periode
-        $rows = DB::table('lbtxn_checkupdtls as d')
+        // ── Langkah 1: petakan clabitem_id → SIRS bucket (klasifikasi item unik sekali).
+        // TIDAK filter price: tes individual (HAEMOGLOBIN, LEUKOSIT, UREUM, dst) tersimpan
+        // sebagai komponen TAK-BERHARGA di dalam panel ber-harga (HEMATOLOGI 3 DIFF, RFT).
+        // Panel ber-harga sendiri tak match tes spesifik → jatuh ke '0'.
+        $items = DB::table('lbtxn_checkupdtls as d')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'd.checkup_no')
             ->leftJoin('lbmst_clabitems as m', 'm.clabitem_id', '=', 'd.clabitem_id')
-            ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
             ->whereBetween('h.checkup_date', [$start, $end])
-            ->whereNotNull('d.price') // billable item only (exclude header/grup parent)
+            ->whereNotNull('d.clabitem_id')
+            ->whereNotNull('m.clabitem_desc')
             ->select([
+                'd.clabitem_id',
                 DB::raw('MAX(m.clabitem_desc) as item_desc'),
-                'p.sex',
-                DB::raw('COUNT(*) as cnt'),
+                DB::raw('MAX(CASE WHEN d.price IS NOT NULL THEN 1 ELSE 0 END) as has_price'),
             ])
-            ->groupBy('d.clabitem_id', 'p.sex')
+            ->groupBy('d.clabitem_id')
             ->get();
 
-        foreach ($rows as $r) {
-            $sirsId = $this->classifyRl38Item((string) ($r->item_desc ?? ''));
-            $sex = (string) ($r->sex ?? '');
-            if ($sex !== 'L' && $sex !== 'P') {
-                continue; // skip data tanpa gender
+        // Bangun CASE clabitem_id → bucket. Item TAK-BERHARGA yang tak terpetakan
+        // (indeks analyzer: MCH/MCV/MPV/GRAN#/RDW/dll) dibuang sebagai noise.
+        $whenParts = [];
+        $panelKeywords = ['HEMATOLOGI', 'DARAH LENGKAP', 'DARAH RUTIN', 'URIN LENGKAP', 'URINE LENGKAP', 'RFT', 'LFT', 'FAAL GINJAL', 'FAAL HATI', 'PAKET'];
+        foreach ($items as $it) {
+            $bucket = $this->classifyRl38Item((string) ($it->item_desc ?? ''));
+            if ($bucket === '0') {
+                // Komponen non-billable yg tak terpetakan (indeks analyzer MCH/MCV/GRAN#) → noise.
+                if ((int) $it->has_price === 0) {
+                    continue;
+                }
+                // Panel/paket ber-harga: komponennya sudah dihitung per tes → jangan dobel di '0'.
+                $descUpper = mb_strtoupper((string) ($it->item_desc ?? ''));
+                foreach ($panelKeywords as $panel) {
+                    if (str_contains($descUpper, $panel)) {
+                        continue 2;
+                    }
+                }
             }
-            $buckets[$sirsId][$sex] += (int) $r->cnt;
+            $whenParts[] = "WHEN '" . addslashes((string) $it->clabitem_id) . "' THEN '" . $bucket . "'";
+        }
+
+        // ── Langkah 2: hitung DISTINCT checkup per (bucket, sex) — dedup per pasien/kunjungan.
+        // 1 panel darah lengkap = 1× Hemoglobin, dan UREUM+BUN dalam RFT tak dihitung dobel.
+        if (!empty($whenParts)) {
+            $caseSql = 'CASE d.clabitem_id ' . implode(' ', $whenParts) . ' END';
+
+            $inner = DB::table('lbtxn_checkupdtls as d')
+                ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'd.checkup_no')
+                ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
+                ->whereBetween('h.checkup_date', [$start, $end])
+                ->whereNotNull('d.clabitem_id')
+                ->select([
+                    DB::raw("{$caseSql} as sirs_id"),
+                    'p.sex',
+                    'd.checkup_no',
+                ]);
+
+            $agg = DB::query()
+                ->fromSub($inner, 't')
+                ->whereNotNull('sirs_id')
+                ->whereIn('sex', ['L', 'P'])
+                ->select(['sirs_id', 'sex', DB::raw('COUNT(DISTINCT checkup_no) as cnt')])
+                ->groupBy('sirs_id', 'sex')
+                ->get();
+
+            foreach ($agg as $r) {
+                $sirsId = (string) ($r->sirs_id ?? '');
+                $sex = (string) ($r->sex ?? '');
+                if ($sirsId === '' || !isset($buckets[$sirsId])) {
+                    continue;
+                }
+                $buckets[$sirsId][$sex] += (int) $r->cnt;
+            }
         }
 
         $hariBuka = $this->countHariBukaLab($start, $end);
