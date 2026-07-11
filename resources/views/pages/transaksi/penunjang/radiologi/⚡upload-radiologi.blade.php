@@ -206,7 +206,7 @@ new class extends Component {
             ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
             ->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')
             ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-            ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
+            ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
     }
 
     private function baseQueryUGD(array $pasienCols)
@@ -215,7 +215,7 @@ new class extends Component {
             ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
             ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
             ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-            ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
+            ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
     }
 
     private function baseQueryRI(array $pasienCols)
@@ -224,7 +224,7 @@ new class extends Component {
             ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
             ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
             ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-            ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.ri_status as hdr_status']));
+            ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', 'h.ri_status as hdr_status']));
     }
 
     /* ===============================
