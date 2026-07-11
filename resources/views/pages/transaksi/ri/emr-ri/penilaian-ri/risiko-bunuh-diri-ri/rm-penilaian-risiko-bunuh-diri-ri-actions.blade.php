@@ -448,7 +448,10 @@ new class extends Component {
                 </div>
             </x-border-form>
 
-            @include('pages.components.rekam-medis.risiko-bunuh-diri-safety-plan')
+            {{-- D. Safety Plan — hanya muncul bila tindak lanjut "Safety plan" dipilih di bagian C --}}
+            @if (in_array('Safety plan', $formEntryResikoBunuhDiri['tindakLanjut'] ?? [], true))
+                @include('pages.components.rekam-medis.risiko-bunuh-diri-safety-plan')
+            @endif
             @endif
 
             <div class="flex justify-end pt-2">
