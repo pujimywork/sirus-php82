@@ -75,7 +75,7 @@ new class extends Component {
                 $this->dataDaftarRi = $data;
                 $this->dataDaftarRi[$this->jsonKey] ??= [];
                 $this->regNo = $data['regNo'] ?? null;
-                $this->entriList = $this->dataDaftarRi[$this->jsonKey];
+                $this->entriList = $this->normalizeEntriList($this->dataDaftarRi[$this->jsonKey]);
                 $this->formEntryEdukasi['sasaranEdukasi'] = $data['regName'] ?? '';
                 $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
             }
@@ -107,7 +107,7 @@ new class extends Component {
         if (!isset($this->dataDaftarRi[$this->jsonKey]) || !is_array($this->dataDaftarRi[$this->jsonKey])) {
             $this->dataDaftarRi[$this->jsonKey] = [];
         }
-        $this->entriList = $this->dataDaftarRi[$this->jsonKey];
+        $this->entriList = $this->normalizeEntriList($this->dataDaftarRi[$this->jsonKey]);
         $this->formEntryEdukasi['sasaranEdukasi'] = $data['regName'] ?? '';
         $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled;
 
@@ -139,6 +139,19 @@ new class extends Component {
     public function entryIsFinal(array $e): bool
     {
         return array_key_exists('finalized', $e) ? (bool) $e['finalized'] : !empty($e['petugasEdukasi']);
+    }
+
+    // Entri legacy (disimpan sebelum sebagian field ada) bisa kekurangan key → samakan ke
+    // bentuk default agar blade tak "Undefined array key" (mis. sasaranEdukasi). Nilai entri
+    // yang sudah ada tetap menang; hanya key yang hilang yang diisi default.
+    private function normalizeEntriList(array $list): array
+    {
+        $default = $this->defaultFormEntry();
+
+        return array_map(
+            fn ($e) => is_array($e) ? array_replace_recursive($default, $e) : $e,
+            $list,
+        );
     }
 
     // Struktur kosong 1 entri edukasi (nested).
@@ -200,7 +213,7 @@ new class extends Component {
 
             $this->updateJsonRI((int) $this->riHdrNo, $fresh);
             $this->dataDaftarRi = $fresh;
-            $this->entriList = $fresh[$this->jsonKey];
+            $this->entriList = $this->normalizeEntriList($fresh[$this->jsonKey]);
 
             $this->appendAdminLogRI((int) $this->riHdrNo, $logVerb . ' Edukasi Pasien — ' . ($entry['tglEdukasi'] ?: '-') . ' (' . $key . ')', 'MR');
         });
@@ -383,7 +396,7 @@ new class extends Component {
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
-                $this->entriList = $fresh[$this->jsonKey];
+                $this->entriList = $this->normalizeEntriList($fresh[$this->jsonKey]);
 
                 $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Edukasi Pasien — ' . ($deletedRow['tglEdukasi'] ?? $createdAt), 'MR');
             });
