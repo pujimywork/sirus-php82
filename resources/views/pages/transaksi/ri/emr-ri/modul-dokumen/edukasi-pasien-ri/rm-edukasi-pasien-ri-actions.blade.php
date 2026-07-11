@@ -144,13 +144,13 @@ new class extends Component {
     // Entri legacy (disimpan sebelum sebagian field ada) bisa kekurangan key → samakan ke
     // bentuk default agar blade tak "Undefined array key" (mis. sasaranEdukasi). Nilai entri
     // yang sudah ada tetap menang; hanya key yang hilang yang diisi default.
-    private function normalizeEntriList(array $list): array
+    private function normalizeEntriList(array $entriList): array
     {
-        $default = $this->defaultFormEntry();
+        $entriDefault = $this->defaultFormEntry();
 
         return array_map(
-            fn ($e) => is_array($e) ? array_replace_recursive($default, $e) : $e,
-            $list,
+            fn ($entri) => is_array($entri) ? array_replace_recursive($entriDefault, $entri) : $entri,
+            $entriList,
         );
     }
 
