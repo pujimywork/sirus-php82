@@ -143,7 +143,7 @@ new class extends Component {
                 ) AS parent_status"),
             )
             ->whereBetween('checkup_date', [$start, $end])
-            ->orderBy('checkup_date', 'desc');
+            ->orderBy('checkup_no', 'desc');
 
         if ($this->filterStatus !== '') {
             $query->where('checkup_status', $this->filterStatus);
