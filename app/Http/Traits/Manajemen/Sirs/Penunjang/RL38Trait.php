@@ -271,6 +271,8 @@ trait RL38Trait
                 'd.clabitem_id',
                 DB::raw('MAX(m.clabitem_desc) as item_desc'),
                 DB::raw('MAX(CASE WHEN d.price IS NOT NULL THEN 1 ELSE 0 END) as has_price'),
+                DB::raw('MAX(m.unit_convert) as unit_convert'),
+                DB::raw('MAX(m.lowhigh_status) as lowhigh_status'),
             ])
             ->groupBy('d.clabitem_id')
             ->get();
@@ -278,9 +280,18 @@ trait RL38Trait
         // Bangun CASE clabitem_id → bucket. Item TAK-BERHARGA yang tak terpetakan
         // (indeks analyzer: MCH/MCV/MPV/GRAN#/RDW/dll) dibuang sebagai noise.
         $whenParts = [];
+        $itemMeta = []; // clabitem_id => ['bucket'=>, 'factor'=>] untuk rata-rata nilai hasil
         $panelKeywords = ['HEMATOLOGI', 'DARAH LENGKAP', 'DARAH RUTIN', 'URIN LENGKAP', 'URINE LENGKAP', 'RFT', 'LFT', 'FAAL GINJAL', 'FAAL HATI', 'PAKET'];
         foreach ($items as $it) {
             $bucket = $this->classifyRl38Item((string) ($it->item_desc ?? ''));
+
+            // Faktor konversi satuan (mirror display lab): lowhigh_status='Y' & unit_convert numerik>0 → hasil dikali.
+            $unitConvert = trim((string) ($it->unit_convert ?? ''));
+            $factor = (($it->lowhigh_status ?? '') === 'Y' && is_numeric($unitConvert) && (float) $unitConvert > 0)
+                ? (float) $unitConvert
+                : 1.0;
+            $itemMeta[(string) $it->clabitem_id] = ['bucket' => $bucket, 'factor' => $factor];
+
             if ($bucket === '0') {
                 // Komponen non-billable yg tak terpetakan (indeks analyzer MCH/MCV/GRAN#) → noise.
                 if ((int) $it->has_price === 0) {
@@ -331,36 +342,78 @@ trait RL38Trait
             }
         }
 
-        $hariBuka = $this->countHariBukaLab($start, $end);
+        // ── Langkah 3: RATA-RATA NILAI HASIL per (bucket, sex).
+        //   Numerik: rata-rata (lab_result × factor konversi). Kualitatif: hasil paling sering muncul.
+        $numSum = [];
+        $numCnt = [];
+        $txtTally = [];
+        $details = DB::table('lbtxn_checkupdtls as d')
+            ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'd.checkup_no')
+            ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
+            ->whereBetween('h.checkup_date', [$start, $end])
+            ->whereNotNull('d.clabitem_id')
+            ->whereNotNull('d.lab_result')
+            ->whereIn('p.sex', ['L', 'P'])
+            ->select(['d.clabitem_id', 'p.sex', 'd.lab_result'])
+            ->get();
+
+        foreach ($details as $d) {
+            $meta = $itemMeta[(string) $d->clabitem_id] ?? null;
+            if ($meta === null || $meta['bucket'] === '0') {
+                continue;
+            }
+            $bucket = $meta['bucket'];
+            $sex = (string) $d->sex;
+            $raw = trim((string) $d->lab_result);
+            if ($raw === '') {
+                continue;
+            }
+            if (is_numeric($raw)) {
+                $numSum[$bucket][$sex] = ($numSum[$bucket][$sex] ?? 0) + ((float) $raw * $meta['factor']);
+                $numCnt[$bucket][$sex] = ($numCnt[$bucket][$sex] ?? 0) + 1;
+            } else {
+                $key = mb_strtoupper($raw);
+                $txtTally[$bucket][$sex][$key] = ($txtTally[$bucket][$sex][$key] ?? 0) + 1;
+            }
+        }
 
         // Build flat output
         $out = [];
         foreach (self::JENIS_PEMERIKSAAN_LIST as $jp) {
-            $jl = $buckets[$jp['id']]['L'];
-            $jp_ = $buckets[$jp['id']]['P'];
+            $id = $jp['id'];
             $out[] = [
-                'id'        => $jp['id'],
-                'grup'      => $jp['grup'],
-                'nama'      => $jp['nama'],
-                'jumlah_l'  => $jl,
-                'jumlah_p'  => $jp_,
-                'rata_l'    => $hariBuka > 0 ? round($jl / $hariBuka, 1) : 0.0,
-                'rata_p'    => $hariBuka > 0 ? round($jp_ / $hariBuka, 1) : 0.0,
+                'id'       => $id,
+                'grup'     => $jp['grup'],
+                'nama'     => $jp['nama'],
+                'jumlah_l' => $buckets[$id]['L'],
+                'jumlah_p' => $buckets[$id]['P'],
+                'rata_l'   => $this->rl38RataValue($numSum[$id]['L'] ?? null, $numCnt[$id]['L'] ?? 0, $txtTally[$id]['L'] ?? []),
+                'rata_p'   => $this->rl38RataValue($numSum[$id]['P'] ?? null, $numCnt[$id]['P'] ?? 0, $txtTally[$id]['P'] ?? []),
             ];
         }
         return $out;
     }
 
     /**
-     * Hari buka lab = COUNT DISTINCT TRUNC(checkup_date) di lbtxn_checkuphdrs
-     * untuk periode (semua status_rjri, sumber: internal lab).
+     * Nilai rata-rata hasil 1 sel: numerik (rata-rata) atau hasil kualitatif dominan.
+     * Mirror format display lab: pecahan → 1 desimal; bulat → number_format (pemisah ribuan).
      */
-    private function countHariBukaLab(Carbon $start, Carbon $end): int
+    private function rl38RataValue(?float $sum, int $cnt, array $txtTally): string
     {
-        return (int) DB::table('lbtxn_checkuphdrs')
-            ->whereBetween('checkup_date', [$start, $end])
-            ->distinct()
-            ->count(DB::raw("TRUNC(checkup_date)"));
+        if ($cnt > 0) {
+            $avg = $sum / $cnt;
+            // Besar (≥1000, mis. Lekosit/Eritrosit/Trombosit): bulatkan + pemisah ribuan.
+            if (abs($avg) >= 1000) {
+                return number_format(round($avg));
+            }
+            // Kecil (Hb/Hct/kimia): 1 desimal bila pecahan, bulat bila tidak.
+            return fmod($avg, 1) !== 0.0 ? (string) round($avg, 1) : (string) (int) round($avg);
+        }
+        if (!empty($txtTally)) {
+            arsort($txtTally);
+            return (string) array_key_first($txtTally);
+        }
+        return '';
     }
 
     /**

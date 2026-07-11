@@ -105,7 +105,7 @@ new class extends Component {
                                 <th rowspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center w-16">No.</th>
                                 <th rowspan="2" class="px-3 py-2 border border-hairline dark:border-gray-700 text-left min-w-[24rem]">Jenis Pemeriksaan</th>
                                 <th colspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center text-blue-700 dark:text-blue-300">Jumlah Pemeriksaan</th>
-                                <th colspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center text-purple-700 dark:text-purple-300">Rata-Rata Pemeriksaan/Hari</th>
+                                <th colspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center text-purple-700 dark:text-purple-300">Rata-Rata Nilai Hasil</th>
                             </tr>
                             <tr class="text-[10px] font-semibold tracking-wider uppercase">
                                 <th class="px-2 py-2 border border-hairline dark:border-gray-700 text-right text-blue-700 dark:text-blue-300">Laki-Laki</th>
@@ -135,8 +135,8 @@ new class extends Component {
                                     <td class="px-3 py-1.5 border-r border-hairline dark:border-gray-700 text-ink dark:text-gray-100">{{ $r['nama'] }}</td>
                                     <td class="px-2 py-1.5 border-r border-hairline dark:border-gray-700 text-right tabular-nums text-blue-700 dark:text-blue-300">{{ number_format($r['jumlah_l']) }}</td>
                                     <td class="px-2 py-1.5 border-r border-hairline dark:border-gray-700 text-right tabular-nums text-blue-700 dark:text-blue-300">{{ number_format($r['jumlah_p']) }}</td>
-                                    <td class="px-2 py-1.5 border-r border-hairline dark:border-gray-700 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ number_format($r['rata_l'], 1) }}</td>
-                                    <td class="px-2 py-1.5 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ number_format($r['rata_p'], 1) }}</td>
+                                    <td class="px-2 py-1.5 border-r border-hairline dark:border-gray-700 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ $r['rata_l'] !== '' ? $r['rata_l'] : '-' }}</td>
+                                    <td class="px-2 py-1.5 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ $r['rata_p'] !== '' ? $r['rata_p'] : '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -152,14 +152,12 @@ new class extends Component {
                 </div>
 
                 <div class="px-4 py-2 text-[10px] text-muted dark:text-gray-500 border-t border-hairline-soft dark:border-gray-800 leading-relaxed">
-                    <strong>Source:</strong> rstxn_rjlabs (RJ filter rj_date), rstxn_ugdlabs (UGD filter rj_date),
-                    rstxn_rilabs (RI filter exit_date sesuai konvensi laporan RI). JOIN ke rsmst_pasiens untuk gender.
-                    <strong>Hari buka lab</strong> = COUNT DISTINCT TRUNC(rj_date) lintas RJ + UGD lab dalam periode.
-                    <strong>Rata-rata</strong> = total / hari_buka per gender.
-                    <strong>Mapping clabitem &rarr; SIRS:</strong> belum ada di master &mdash; semua lab valid jatuh
-                    ke baris <code>"0 - Tidak Ada Data"</code>. 138 row resmi diisi 0. Aktivasi mapping butuh
-                    DDL kolom <code>sirs_rl38_id</code> di <code>lbmst_clabitems</code> atau master mapping terpisah.
-                    Filter: <code>klaim_id &lt;&gt; 'KR'</code>.
+                    <strong>Source:</strong> lbtxn_checkupdtls (item + komponen panel), JOIN lbtxn_checkuphdrs
+                    (checkup_date), lbmst_clabitems (mapping &amp; satuan), rsmst_pasiens (gender).
+                    <strong>Jumlah</strong> = COUNT DISTINCT checkup per jenis &amp; gender (dedup per pasien; tes
+                    individual dihitung dari komponen panel).
+                    <strong>Rata-Rata Nilai Hasil</strong> = rata-rata hasil pemeriksaan (dikali unit_convert bila
+                    berlaku, seperti tampilan hasil lab); untuk hasil kualitatif = hasil paling sering muncul.
                 </div>
             </div>
         </div>
