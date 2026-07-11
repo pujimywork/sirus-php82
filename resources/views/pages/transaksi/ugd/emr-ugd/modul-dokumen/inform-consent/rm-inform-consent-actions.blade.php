@@ -1214,11 +1214,11 @@ new class extends Component {
                                                             </x-secondary-button>
                                                             @if (!$isFormLocked)
                                                                 @hasanyrole('Admin|Manager Umum|Manager Medis')
-                                                                    <x-confirm-button variant="outline" action="bukaKunci('{{ $rowKey }}')"
+                                                                    <x-confirm-button action="bukaKunci('{{ $rowKey }}')"
                                                                         title="Buka Kunci Inform Consent"
                                                                         message="TTD petugas akan dicabut &amp; entri kembali menjadi draft untuk dikoreksi. Lanjutkan?"
                                                                         confirmText="Ya, Buka Kunci"
-                                                                        class="gap-1.5 !text-red-600 !bg-red-600/5 !border-red-600/20 hover:!bg-red-600/10 hover:!text-red-700 hover:!border-red-600/30 dark:!text-red-400 dark:!bg-red-500/10 dark:!border-red-500/20 dark:hover:!bg-red-500/20">
+                                                                        class="gap-1.5">
                                                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" /></svg>
                                                                         Buka Kunci
                                                                     </x-confirm-button>
