@@ -39,19 +39,21 @@ trait PemeriksaanDalamLuarLabTrait
     }
 
     /**
-     * Hanya hitung transaksi yang SUDAH SELESAI di induk:
-     *   RJ/UGD → rj_status 'L' (Selesai) atau 'I' (Transfer — unit sumber selesai,
-     *            pasien pindah: RJ→UGD / UGD→Inap) ;
-     *   RI     → ri_status 'P' (Pulang).
-     * Yang masih Antrian (A), Dirawat (RI 'I'), Batal (F), atau induk tak ditemukan
-     * TIDAK dihitung. Query wajib sudah join header (joinParentHeaders).
+     * Buang HANYA transaksi induk yang BATAL (status 'F'); sisanya dihitung
+     * (Antrian/Dirawat/Selesai/Pulang/Transfer, termasuk induk tak ditemukan).
+     *
+     * Alasan: periode di-anchor ke tgl pemeriksaan (checkup_date). Pemeriksaan yang
+     * SUDAH DIKERJAKAN bulan X harus terhitung di bulan X apa pun status pasien,
+     * supaya angka bulan FINAL & tidak berubah saat pasien pulang di bulan berikutnya.
+     * NVL agar status null (induk tak ketemu) tidak ikut terbuang.
+     * Query wajib sudah join header (joinParentHeaders).
      */
-    protected function whereFinishedParent($query)
+    protected function whereNotCancelledParent($query)
     {
-        return $query->whereRaw("(
-            (h.status_rjri = 'RJ'  AND rjh.rj_status IN ('L', 'I')) OR
-            (h.status_rjri = 'UGD' AND ugh.rj_status IN ('L', 'I')) OR
-            (h.status_rjri = 'RI'  AND rih.ri_status = 'P')
+        return $query->whereRaw("NOT (
+            (h.status_rjri = 'RJ'  AND NVL(rjh.rj_status, '?') = 'F') OR
+            (h.status_rjri = 'UGD' AND NVL(ugh.rj_status, '?') = 'F') OR
+            (h.status_rjri = 'RI'  AND NVL(rih.ri_status, '?') = 'F')
         )");
     }
 
@@ -86,7 +88,7 @@ trait PemeriksaanDalamLuarLabTrait
             ])
             ->whereBetween('h.checkup_date', [$start, $end])
             ->whereNotNull('d.price');
-        $this->whereFinishedParent($dalam);
+        $this->whereNotCancelledParent($dalam);
         if ($unit !== '') {
             $dalam->where('h.status_rjri', $unit);
         }
@@ -112,7 +114,7 @@ trait PemeriksaanDalamLuarLabTrait
             ])
             ->whereBetween('h.checkup_date', [$start, $end])
             ->whereNotNull('o.labout_price');
-        $this->whereFinishedParent($luar);
+        $this->whereNotCancelledParent($luar);
         if ($unit !== '') {
             $luar->where('h.status_rjri', $unit);
         }
@@ -140,7 +142,7 @@ trait PemeriksaanDalamLuarLabTrait
         $dalam = DB::table('lbtxn_checkupdtls as d')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'd.checkup_no')
             ->tap($this->joinParentHeaders(...))
-            ->tap($this->whereFinishedParent(...))
+            ->tap($this->whereNotCancelledParent(...))
             ->whereBetween('h.checkup_date', [$start, $end])
             ->whereNotNull('d.price')
             ->selectRaw('COUNT(*) as jml, NVL(SUM(d.price), 0) as revenue')
@@ -149,7 +151,7 @@ trait PemeriksaanDalamLuarLabTrait
         $luar = DB::table('lbtxn_checkupoutdtls as o')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'o.checkup_no')
             ->tap($this->joinParentHeaders(...))
-            ->tap($this->whereFinishedParent(...))
+            ->tap($this->whereNotCancelledParent(...))
             ->whereBetween('h.checkup_date', [$start, $end])
             ->whereNotNull('o.labout_price')
             ->selectRaw('COUNT(*) as jml, NVL(SUM(o.labout_price), 0) as revenue')
@@ -177,7 +179,7 @@ trait PemeriksaanDalamLuarLabTrait
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'd.checkup_no')
             ->leftJoin('lbmst_clabitems as m', 'm.clabitem_id', '=', 'd.clabitem_id')
             ->tap($this->joinParentHeaders(...))
-            ->tap($this->whereFinishedParent(...))
+            ->tap($this->whereNotCancelledParent(...))
             ->select([
                 DB::raw('TRIM(MAX(m.clabitem_desc)) as nama'),
                 DB::raw('COUNT(*) as jml'),
@@ -199,7 +201,7 @@ trait PemeriksaanDalamLuarLabTrait
         return DB::table('lbtxn_checkupoutdtls as o')
             ->join('lbtxn_checkuphdrs as h', 'h.checkup_no', '=', 'o.checkup_no')
             ->tap($this->joinParentHeaders(...))
-            ->tap($this->whereFinishedParent(...))
+            ->tap($this->whereNotCancelledParent(...))
             ->select([
                 DB::raw('TRIM(MAX(o.labout_desc)) as nama'),
                 DB::raw('COUNT(*) as jml'),
