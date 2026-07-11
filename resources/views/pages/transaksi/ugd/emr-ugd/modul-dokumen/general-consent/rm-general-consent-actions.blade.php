@@ -816,16 +816,14 @@ new class extends Component {
 
                         @if ($isFormLocked && !empty($gc['petugasPemeriksa']))
                             @hasanyrole('Admin|Manager Umum|Manager Medis')
-                                <x-ghost-button type="button" wire:click.prevent="bukaKunci"
-                                    wire:confirm="Buka kunci General Consent? TTD petugas akan dicabut & form dapat diedit kembali."
-                                    wire:loading.attr="disabled" wire:target="bukaKunci"
-                                    class="gap-1.5 !text-red-600 !bg-red-600/5 !border-red-600/20 hover:!bg-red-600/10 hover:!text-red-700 hover:!border-red-600/30 focus:!ring-red-600/20 dark:!text-red-400 dark:!bg-red-500/10 dark:!border-red-500/20 dark:hover:!bg-red-500/20 dark:hover:!border-red-500/30"
-                                    title="Buka kunci (Admin/Manager) — cabut TTD petugas, form dapat diedit">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" />
-                                    </svg>
+                                <x-confirm-button variant="outline" action="bukaKunci()"
+                                    title="Buka Kunci General Consent"
+                                    message="TTD petugas akan dicabut &amp; form dapat diedit kembali. Lanjutkan?"
+                                    confirmText="Ya, Buka Kunci"
+                                    class="gap-1.5 !text-red-600 !bg-red-600/5 !border-red-600/20 hover:!bg-red-600/10 hover:!text-red-700 hover:!border-red-600/30 dark:!text-red-400 dark:!bg-red-500/10 dark:!border-red-500/20 dark:hover:!bg-red-500/20">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" /></svg>
                                     Buka Kunci
-                                </x-ghost-button>
+                                </x-confirm-button>
                             @endhasanyrole
                         @endif
                     @endif
