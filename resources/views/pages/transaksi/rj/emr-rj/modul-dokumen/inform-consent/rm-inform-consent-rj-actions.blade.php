@@ -302,6 +302,56 @@ new class extends Component {
     }
 
     /* ===============================
+     | BUKA KUNCI (unlock) — hanya Admin / Manager keatas.
+     | Cabut kunci entri: finalized=false + hapus TTD petugas (dokter penjelas).
+     | TTD pasien & saksi DIPERTAHANKAN. Entri kembali draft utk dikoreksi lalu dikunci ulang.
+     =============================== */
+    private function bolehBukaKunci(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
+    }
+
+    public function bukaKunci(string $signatureDate): void
+    {
+        if (!$this->bolehBukaKunci()) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin / Manager yang dapat membuka kunci.');
+            return;
+        }
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang — form read-only.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($signatureDate) {
+                $this->lockRJRow($this->rjNo);
+                $fresh = $this->findDataRJ($this->rjNo) ?: [];
+                $list = $fresh['informConsentPasienRJ'] ?? [];
+                $index = collect($list)->search(fn($it) => ($it['signatureDate'] ?? '') === $signatureDate);
+                if ($index === false) {
+                    throw new \RuntimeException('Entri tidak ditemukan.');
+                }
+                $list[$index]['finalized'] = false;
+                $list[$index]['dokter'] = '';
+                $list[$index]['dokterCode'] = '';
+                $list[$index]['dokterDate'] = '';
+                $fresh['informConsentPasienRJ'] = array_values($list);
+                $this->updateJsonRJ($this->rjNo, $fresh);
+                $this->dataDaftarPoliRJ = $fresh;
+                $this->consentList = $fresh['informConsentPasienRJ'];
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Buka kunci Inform Consent — entri ' . $signatureDate . ' (oleh ' . (auth()->user()->myuser_name ?? auth()->user()->name ?? '-') . ')', 'MR');
+            });
+            $this->incrementVersion('modal-inform-consent-rj');
+            $this->dispatch('toast', type: 'success', message: 'Kunci dibuka — entri kembali draft & TTD petugas dicabut. Silakan koreksi lalu kunci ulang.');
+            $this->dispatch('refresh-modul-dokumen-rj-data', rjNo: $this->rjNo);
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuka kunci: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
      | PPA (Profesional Pemberi Asuhan) — combobox: pilih dari daftar atau ketik bebas.
      | Ganti LOV dokter agar perawat/bidan/apoteker/gizi & nama lain bisa diisi.
      =============================== */
@@ -1162,6 +1212,20 @@ new class extends Component {
                                                                 </span>
                                                                 <span wire:loading wire:target="cetak('{{ $rowKey }}')" class="flex items-center gap-1.5"><x-loading class="w-5 h-5" /> Mencetak...</span>
                                                             </x-secondary-button>
+                                                            @if (!$isFormLocked)
+                                                                @hasanyrole('Admin|Manager Umum|Manager Medis')
+                                                                    <x-ghost-button type="button" wire:click.prevent="bukaKunci('{{ $rowKey }}')"
+                                                                        wire:confirm="Buka kunci Inform Consent ini? TTD petugas akan dicabut & entri kembali menjadi draft untuk dikoreksi."
+                                                                        wire:loading.attr="disabled" wire:target="bukaKunci('{{ $rowKey }}')"
+                                                                        class="gap-1.5 !text-red-600 !bg-red-600/5 !border-red-600/20 hover:!bg-red-600/10 hover:!text-red-700 hover:!border-red-600/30 focus:!ring-red-600/20 dark:!text-red-400 dark:!bg-red-500/10 dark:!border-red-500/20 dark:hover:!bg-red-500/20 dark:hover:!border-red-500/30"
+                                                                        title="Buka kunci (Admin/Manager) — cabut TTD petugas, entri jadi draft">
+                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" />
+                                                                        </svg>
+                                                                        Buka Kunci
+                                                                    </x-ghost-button>
+                                                                @endhasanyrole
+                                                            @endif
                                                         @endif
                                                         @if (!$isFormLocked)
                                                             <x-outline-button type="button" wire:click.prevent="hapus('{{ $rowKey }}')" wire:confirm="Yakin hapus Inform Consent ini?"

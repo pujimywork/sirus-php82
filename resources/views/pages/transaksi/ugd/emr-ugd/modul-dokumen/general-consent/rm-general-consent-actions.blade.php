@@ -305,6 +305,50 @@ new class extends Component {
     }
 
     /* ===============================
+     | BUKA KUNCI (unlock) — hanya Admin / Manager keatas.
+     | Cabut TTD petugas pemeriksa (yang mengunci); TTD pasien DIPERTAHANKAN.
+     =============================== */
+    private function bolehBukaKunci(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
+    }
+
+    public function bukaKunci(): void
+    {
+        if (!$this->bolehBukaKunci()) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin / Manager yang dapat membuka kunci.');
+            return;
+        }
+        if ($this->checkEmrUGDStatus($this->rjNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang — tidak dapat membuka kunci.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockUGDRow($this->rjNo);
+                $data = $this->findDataUGD($this->rjNo) ?: [];
+                $gc = $data['generalConsentPasienUGD'] ?? [];
+                $gc['petugasPemeriksa'] = '';
+                $gc['petugasPemeriksaCode'] = '';
+                $gc['petugasPemeriksaDate'] = '';
+                $data['generalConsentPasienUGD'] = $gc;
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Buka kunci General Consent — TTD petugas dicabut (oleh ' . (auth()->user()->myuser_name ?? auth()->user()->name ?? '-') . ')', 'MR');
+            });
+
+            $this->isFormLocked = $this->checkEmrUGDStatus($this->rjNo) || $this->disabled
+                || !empty($this->dataDaftarUGD['generalConsentPasienUGD']['petugasPemeriksa'] ?? '');
+            $this->incrementVersion('modal-general-consent-ugd');
+            $this->dispatch('toast', type: 'success', message: 'Kunci dibuka — TTD petugas dicabut. Silakan koreksi lalu TTD & kunci ulang.');
+            $this->dispatch('refresh-modul-dokumen-ugd-data', rjNo: $this->rjNo);
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuka kunci: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
      | SAVE
      =============================== */
     public function save(): void
@@ -768,6 +812,21 @@ new class extends Component {
                                 <span wire:loading wire:target="save"><x-loading class="w-4 h-4" />
                                     Menyimpan...</span>
                             </x-primary-button>
+                        @endif
+
+                        @if ($isFormLocked && !empty($gc['petugasPemeriksa']))
+                            @hasanyrole('Admin|Manager Umum|Manager Medis')
+                                <x-ghost-button type="button" wire:click.prevent="bukaKunci"
+                                    wire:confirm="Buka kunci General Consent? TTD petugas akan dicabut & form dapat diedit kembali."
+                                    wire:loading.attr="disabled" wire:target="bukaKunci"
+                                    class="gap-1.5 !text-red-600 !bg-red-600/5 !border-red-600/20 hover:!bg-red-600/10 hover:!text-red-700 hover:!border-red-600/30 focus:!ring-red-600/20 dark:!text-red-400 dark:!bg-red-500/10 dark:!border-red-500/20 dark:hover:!bg-red-500/20 dark:hover:!border-red-500/30"
+                                    title="Buka kunci (Admin/Manager) — cabut TTD petugas, form dapat diedit">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" />
+                                    </svg>
+                                    Buka Kunci
+                                </x-ghost-button>
+                            @endhasanyrole
                         @endif
                     @endif
                 </div>
