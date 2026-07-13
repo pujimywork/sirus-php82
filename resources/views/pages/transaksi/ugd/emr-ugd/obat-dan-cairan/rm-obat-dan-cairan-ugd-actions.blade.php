@@ -312,7 +312,11 @@ new class extends Component {
 
                 {{-- FORM INPUT --}}
                 @if (!$isFormLocked)
-                    <div
+                    {{-- wire:key SADAR-FASE: kunci berubah p1<->p2 saat productId berubah. Kalau server
+                         me-render fase berbeda dari DOM (mis. setelah Simpan EMR morph, DOM nyangkut di
+                         Fase 1 padahal productId terisi), morph MENGGANTI BERSIH subtree ini alih-alih
+                         mencoba menambal placeholder LOV yang nyangkut. --}}
+                    <div wire:key="oc-form-{{ $rjNo }}-{{ empty($obatDanCairan['productId']) ? 'p1' : 'p2' }}"
                         class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
 
                         @if (empty($obatDanCairan['productId']))
@@ -328,7 +332,7 @@ new class extends Component {
                             <div class="grid grid-cols-12 gap-3" wire:key="oc-fase2-{{ $rjNo }}">
 
                                 {{-- Nama Obat (disabled) + tombol Ganti --}}
-                                <div class="col-span-12 md:col-span-6">
+                                <div wire:key="oc-f2-nama" class="col-span-12 md:col-span-6">
                                     <x-input-label value="Nama Obat / Jenis Cairan *" class="mb-1" />
                                     <div class="flex items-center gap-2">
                                         <x-text-input wire:model="obatDanCairan.namaObatAtauJenisCairan" disabled
@@ -343,49 +347,53 @@ new class extends Component {
                                 </div>
 
                                 {{-- Jumlah --}}
-                                <div class="col-span-6 md:col-span-2">
+                                <div wire:key="oc-f2-jumlah" class="col-span-6 md:col-span-2">
                                     <x-input-label value="Jumlah *" class="mb-1" />
                                     <x-text-input wire:model="obatDanCairan.jumlah" placeholder="Jumlah"
-                                        class="w-full" />
+                                        class="w-full" x-ref="ocJumlah"
+                                        x-on:keydown.enter.prevent="$refs.ocDosis?.focus()" />
                                     <x-input-error :messages="$errors->get('obatDanCairan.jumlah')" class="mt-1" />
                                 </div>
 
                                 {{-- Dosis --}}
-                                <div class="col-span-6 md:col-span-2">
+                                <div wire:key="oc-f2-dosis" class="col-span-6 md:col-span-2">
                                     <x-input-label value="Dosis *" class="mb-1" />
-                                    <x-text-input wire:model="obatDanCairan.dosis" placeholder="Dosis" class="w-full" />
+                                    <x-text-input wire:model="obatDanCairan.dosis" placeholder="Dosis" class="w-full"
+                                        x-ref="ocDosis" x-on:keydown.enter.prevent="$refs.ocRute?.focus()" />
                                     <x-input-error :messages="$errors->get('obatDanCairan.dosis')" class="mt-1" />
                                 </div>
 
                                 {{-- Rute --}}
-                                <div class="col-span-6 md:col-span-2">
+                                <div wire:key="oc-f2-rute" class="col-span-6 md:col-span-2">
                                     <x-input-label value="Rute *" class="mb-1" />
                                     <x-text-input wire:model="obatDanCairan.rute" placeholder="IV / PO / SC ..."
-                                        class="w-full" />
+                                        class="w-full" x-ref="ocRute"
+                                        x-on:keydown.enter.prevent="$refs.ocKeterangan?.focus()" />
                                     <x-input-error :messages="$errors->get('obatDanCairan.rute')" class="mt-1" />
                                 </div>
 
                                 {{-- Keterangan --}}
-                                <div class="col-span-12 md:col-span-6">
+                                <div wire:key="oc-f2-ket" class="col-span-12 md:col-span-6">
                                     <x-input-label value="Keterangan *" class="mb-1" />
                                     <x-text-input wire:model="obatDanCairan.keterangan"
-                                        placeholder="Keterangan pemberian..." class="w-full" />
+                                        placeholder="Keterangan pemberian..." class="w-full" x-ref="ocKeterangan"
+                                        x-on:keydown.enter.prevent="$refs.ocWaktu?.focus()" />
                                     <x-input-error :messages="$errors->get('obatDanCairan.keterangan')" class="mt-1" />
                                 </div>
 
                                 {{-- Waktu Pemberian --}}
-                                <div class="col-span-12 md:col-span-4">
+                                <div wire:key="oc-f2-waktu" class="col-span-12 md:col-span-4">
                                     <x-input-label value="Waktu Pemberian *" class="mb-1" />
                                     <div class="flex items-center gap-2">
                                         <x-text-input wire:model="obatDanCairan.waktuPemberian"
-                                            placeholder="dd/mm/yyyy hh:mm:ss" class="grow" />
+                                            placeholder="dd/mm/yyyy hh:mm:ss" class="grow" x-ref="ocWaktu" />
                                         <x-now-button wire:click.prevent="setWaktuPemberian" />
                                     </div>
                                     <x-input-error :messages="$errors->get('obatDanCairan.waktuPemberian')" class="mt-1" />
                                 </div>
 
                                 {{-- Tombol Tambah --}}
-                                <div class="col-span-12 md:col-span-2 flex items-end">
+                                <div wire:key="oc-f2-tambah" class="col-span-12 md:col-span-2 flex items-end">
                                     <x-primary-button wire:click.prevent="addObatDanCairan" wire:loading.attr="disabled"
                                         wire:target="addObatDanCairan" class="gap-2 w-full justify-center">
                                         <span wire:loading.remove wire:target="addObatDanCairan">
