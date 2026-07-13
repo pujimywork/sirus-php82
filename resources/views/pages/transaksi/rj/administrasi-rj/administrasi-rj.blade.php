@@ -847,4 +847,7 @@ new class extends Component {
     <livewire:pages::components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj wire:key="cetak-kwitansi-rj" />
     <livewire:pages::components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj-obat wire:key="cetak-kwitansi-rj-obat" />
     <livewire:pages::components.modul-dokumen.r-j.resep-iter.cetak-resep-iter-rj wire:key="cetak-resep-iter-rj" />
+
+    {{-- Modal Transfer ke UGD (pola x-modal, meniru transfer UGD→RI) --}}
+    <livewire:pages::transaksi.rj.administrasi-rj.transfer-rj-ugd-actions wire:key="transfer-rj-ugd-actions" />
 </div>

@@ -1071,6 +1071,30 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
+                                                                {{-- Transfer ke UGD — HANYA saat status Antrian (rj_status='A') --}}
+                                                                @hasanyrole('Admin|Tu')
+                                                                    @if ($row->rj_status === 'A')
+                                                                        <x-dropdown-link href="#"
+                                                                            wire:click.prevent="$dispatch('open-transfer-rj-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                                            class="px-3 py-2 text-sm rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40">
+                                                                            <div class="flex items-start gap-2">
+                                                                                <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                    fill="none" stroke="currentColor"
+                                                                                    viewBox="0 0 24 24" stroke-width="2">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                                                </svg>
+                                                                                <span>
+                                                                                    Transfer ke UGD <br>
+                                                                                    <span
+                                                                                        class="font-semibold">{{ $row->reg_name }}</span>
+                                                                                </span>
+                                                                            </div>
+                                                                        </x-dropdown-link>
+                                                                    @endif
+                                                                @endhasanyrole
+
                                                             </div>
 
                                                         </div>

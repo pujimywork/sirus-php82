@@ -4,8 +4,6 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\QueryException;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -58,6 +56,19 @@ new class extends Component {
         if ($this->rjNo) {
             $this->hitungTotal();
         }
+    }
+
+    /* Setelah Transfer ke UGD berhasil (komponen transfer-rj-ugd-actions) → kunci form kasir RJ. */
+    #[On('rj-transferred-to-ugd')]
+    public function onRjTransferredToUgd(int $rjNo): void
+    {
+        if ($rjNo !== $this->rjNo) {
+            return;
+        }
+        $this->isFormLocked = true;
+        $this->txnStatus = 'I';
+        $this->hitungTotal();
+        $this->incrementVersion('kasir-rj');
     }
 
     /* ===============================
@@ -377,167 +388,6 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal membatalkan transaksi: ' . $e->getMessage());
-        }
-    }
-
-    /* ===============================
-     | TRANSFER KE UGD
-     =============================== */
-    public function transferKeUGD(): void
-    {
-        if (!$this->rjNo) {
-            $this->dispatch('toast', type: 'error', message: 'Data transaksi tidak ditemukan.');
-            return;
-        }
-
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Transaksi sudah selesai, tidak bisa ditransfer.');
-            return;
-        }
-
-        // Cek RJ masih aktif
-        if ($this->checkRJStatus($this->rjNo)) {
-            $this->dispatch('toast', type: 'error', message: 'RJ sudah diproses, tidak bisa ditransfer.');
-            return;
-        }
-
-        // Cek lab pending
-        if ($this->checkLabPendingRJ($this->rjNo)) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat belum selesai, transfer tidak bisa dilakukan.');
-            return;
-        }
-
-        // Cek sudah pernah transfer
-        $sudahTransfer = DB::table('rstxn_ugdbiayaselamadirjs')
-            ->where('rj_no', $this->rjNo)
-            ->exists();
-
-        if ($sudahTransfer) {
-            $this->dispatch('toast', type: 'error', message: 'Transfer ke UGD sudah pernah dilakukan untuk RJ ini.');
-            return;
-        }
-
-        try {
-            // Global lock + retry: cegah rj_no (RSTXN_UGDHDRS) & tempadm_no (RSTXN_UGDTEMPADMINS)
-            // kembar antar request, dan toleransi race lintas-sistem (legacy Oracle Dev 6i).
-            $maxAttempts = 5;
-            for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-                try {
-                    Cache::lock('lock:ugd-rjno-seq', 15)->block(5, function () {
-                        DB::transaction(function () {
-                            // Lock RJ row
-                            $this->lockRJRow($this->rjNo);
-
-                            // Re-check setelah lock
-                            if ($this->checkRJStatus($this->rjNo)) {
-                                throw new \RuntimeException('Data sudah diproses oleh user lain.');
-                            }
-
-                            $rjHdr = DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->first();
-                            if (!$rjHdr) {
-                                throw new \RuntimeException('Data RJ tidak ditemukan.');
-                            }
-
-                            // Cek lockstatus pasien
-                            $pasien = DB::table('rsmst_pasiens')
-                                ->where('reg_no', $rjHdr->reg_no)
-                                ->lockForUpdate()
-                                ->first();
-
-                            if ($pasien->lockstatus && !in_array($pasien->lockstatus, ['RJ', null])) {
-                                throw new \RuntimeException("Pasien sedang dalam status {$pasien->lockstatus}, tidak bisa transfer.");
-                            }
-
-                            // Hitung biaya RJ
-                            $costs = $this->calculateRJCosts($this->rjNo);
-                            $totalBiayaRJ = array_sum($costs);
-
-                            // Generate UGD rj_no
-                            $ugdRjNo = (int) DB::table('rstxn_ugdhdrs')->max('rj_no') + 1;
-
-                            // Insert UGD header (minimal — bisa diedit oleh admin UGD)
-                            DB::table('rstxn_ugdhdrs')->insert([
-                                'rj_no'       => $ugdRjNo,
-                                'rj_date'     => $rjHdr->rj_date,
-                                'reg_no'      => $rjHdr->reg_no,
-                                'klaim_id'    => $rjHdr->klaim_id,
-                                'dr_id'       => $rjHdr->dr_id,
-                                'shift'       => $rjHdr->shift,
-                                'txn_status'  => 'A',
-                                'rj_status'   => 'A',
-                                'pass_status' => $rjHdr->pass_status ?? 'O',
-                                'sl_codefrom' => '02',
-                                'cek_lab'     => 0,
-                            ]);
-
-                            // Generate tempadm_no
-                            $tempadmNo = (int) DB::table('rstxn_ugdtempadmins')->max('tempadm_no') + 1;
-
-                            // Insert temp admin biaya RJ
-                            DB::table('rstxn_ugdtempadmins')->insert([
-                                'tempadm_no'   => $tempadmNo,
-                                'tempadm_date' => $rjHdr->rj_date,
-                                'tempadm_flag' => 'RJ',
-                                'tempadm_ref'  => $this->rjNo,
-                                'rj_no'        => $ugdRjNo,
-                                'rj_admin'     => $costs['rjAdmin'],
-                                'poli_price'   => $costs['poliPrice'],
-                                'acte_price'   => $costs['actePrice'],
-                                'actp_price'   => $costs['actpPrice'],
-                                'actd_price'   => $costs['actdPrice'],
-                                'obat'         => $costs['obat'],
-                                'lab'          => $costs['lab'],
-                                'rad'          => $costs['rad'],
-                                'other'        => $costs['other'],
-                                'rs_admin'     => $costs['rsAdmin'],
-                            ]);
-
-                            // Insert biaya selama di RJ
-                            DB::table('rstxn_ugdbiayaselamadirjs')->insert([
-                                'rj_no'              => $this->rjNo,
-                                'rj_no_rsugd'        => $ugdRjNo,
-                                'tanggal_rj'         => $rjHdr->rj_date,
-                                'total_biayarj'      => $totalBiayaRJ,
-                                'keterangan_biayarj' => 'RAWAT JALAN',
-                            ]);
-
-                            // Update RJ status → 'I' (Transfer UGD)
-                            DB::table('rstxn_rjhdrs')
-                                ->where('rj_no', $this->rjNo)
-                                ->update([
-                                    'rj_status'  => 'I',
-                                    'txn_status' => 'I',
-                                ]);
-
-                            // Update lockstatus pasien → UGD
-                            DB::table('rsmst_pasiens')
-                                ->where('reg_no', $rjHdr->reg_no)
-                                ->update(['lockstatus' => 'UGD']);
-
-                            $this->appendAdminLogRJ($this->rjNo, 'Transfer ke UGD #' . $ugdRjNo . ' (total biaya RJ Rp ' . number_format($totalBiayaRJ, 0, ',', '.') . ')');
-                        });
-                    });
-                    break;
-                } catch (QueryException $e) {
-                    if (str_contains($e->getMessage(), 'ORA-00001') && $attempt < $maxAttempts) {
-                        usleep(random_int(50_000, 200_000));
-                        continue;
-                    }
-                    throw $e;
-                }
-            }
-
-            $this->isFormLocked = true;
-            $this->txnStatus = 'I';
-            $this->hitungTotal();
-            $this->incrementVersion('kasir-rj');
-
-            $this->dispatch('toast', type: 'success', message: 'Transfer biaya RJ ke UGD berhasil.');
-            $this->dispatch('administrasi-rj.updated');
-        } catch (\RuntimeException $e) {
-            $this->dispatch('toast', type: 'error', message: $e->getMessage());
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal transfer ke UGD: ' . $e->getMessage());
         }
     }
 
@@ -875,11 +725,10 @@ new class extends Component {
                     </x-primary-button>
 
                     @if ($txnStatus === null || $txnStatus === 'A')
-                        <x-confirm-button variant="warning" :action="'transferKeUGD()'" title="Transfer ke UGD"
-                            message="Yakin ingin mentransfer biaya RJ ini ke UGD? Status RJ akan diubah menjadi 'Transfer UGD' dan data biaya akan dipindahkan ke UGD."
-                            confirmText="Ya, transfer" cancelText="Batal">
+                        <x-secondary-button type="button"
+                            wire:click="$dispatch('open-transfer-rj-ugd', { rjNo: {{ $rjNo }} })">
                             Transfer ke UGD
-                        </x-confirm-button>
+                        </x-secondary-button>
                     @endif
                 </div>
                 @endhasanyrole

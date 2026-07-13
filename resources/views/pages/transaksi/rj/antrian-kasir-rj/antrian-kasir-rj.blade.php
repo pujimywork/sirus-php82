@@ -657,6 +657,22 @@ new class extends Component {
                                                     </x-secondary-button>
                                                 @endhasanyrole
 
+                                                {{-- Transfer ke UGD — aktif HANYA saat status Antrian (rj_status='A') --}}
+                                                @hasanyrole('Admin|Tu')
+                                                    <x-secondary-button type="button"
+                                                        :disabled="$row->rj_status !== 'A'"
+                                                        wire:click="$dispatch('open-transfer-rj-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                        title="{{ $row->rj_status === 'A' ? 'Transfer pasien ke UGD' : 'Hanya bisa saat status Antrian' }}"
+                                                        class="text-xs whitespace-nowrap justify-center !bg-teal-600 !text-white !border-teal-700 hover:!bg-teal-700 dark:!bg-teal-600 dark:!text-white dark:!border-teal-700 dark:hover:!bg-teal-700">
+                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                        </svg>
+                                                        Transfer ke UGD
+                                                    </x-secondary-button>
+                                                @endhasanyrole
+
                                             </div>
                                         @endif
                                     </td>
