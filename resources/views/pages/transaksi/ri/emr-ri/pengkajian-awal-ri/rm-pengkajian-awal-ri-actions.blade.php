@@ -207,7 +207,9 @@ new class extends Component {
         $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo); // ← trait
 
         // Lock untuk role bukan Perawat/Admin: Dokter boleh lihat tapi tidak edit/simpan
-        $this->isReadOnlyByRole = !auth()->user()->hasAnyRole(['Perawat', 'Admin']);
+        $this->isReadOnlyByRole = !auth()
+            ->user()
+            ->hasAnyRole(['Perawat', 'Admin']);
 
         $this->incrementVersion('modal-pengkajian-awal-ri');
     }
@@ -237,7 +239,7 @@ new class extends Component {
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
 
-                $this->appendAdminLogRI((int) $this->riHdrNo, $logKeterangan ?? (($isBaru ? 'Buat' : 'Update') . ' Pengkajian Awal RI'), 'MR');
+                $this->appendAdminLogRI((int) $this->riHdrNo, $logKeterangan ?? ($isBaru ? 'Buat' : 'Update') . ' Pengkajian Awal RI', 'MR');
             });
             $this->afterSave('Pengkajian Awal berhasil disimpan.');
         } catch (\RuntimeException $e) {
@@ -249,7 +251,11 @@ new class extends Component {
 
     public function setPetugasPengkaji(): void
     {
-        if (!auth()->user()->hasAnyRole(['Perawat', 'Admin'])) {
+        if (
+            !auth()
+                ->user()
+                ->hasAnyRole(['Perawat', 'Admin'])
+        ) {
             $this->dispatch('toast', type: 'error', message: 'Hanya Perawat / Admin yang dapat melakukan TTD.');
             return;
         }
@@ -367,17 +373,12 @@ new class extends Component {
                 this.$dispatch('section-dirty', { tab: this.tab });
             }
         },
-    }"
-    x-init="
+    }" x-init="openedAt = Date.now();
+    window.addEventListener('refresh-after-ri.saved', () => {
+        sectionDirty = false;
         openedAt = Date.now();
-        window.addEventListener('refresh-after-ri.saved', () => {
-            sectionDirty = false;
-            openedAt = Date.now();
-            $dispatch('section-clean', { tab: tab });
-        });
-    "
-    x-on:input="markDirty()"
-    x-on:change="markDirty()">
+        $dispatch('section-clean', { tab: tab });
+    });" x-on:input="markDirty()" x-on:change="markDirty()">
 
     {{-- ── Read-only banner ── --}}
     @if ($isFormLocked)
@@ -400,14 +401,16 @@ new class extends Component {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Mode lihat (view-only) — hanya <strong>Perawat / Admin</strong> yang dapat mengedit & menyimpan Pengkajian Awal Perawat.
+            Mode lihat (view-only) — hanya <strong>Perawat / Admin</strong> yang dapat mengedit & menyimpan Pengkajian
+            Awal Perawat.
         </div>
     @endif
 
     {{-- ══════════════════════════════════════════
     | BAGIAN 1 — DATA UMUM
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 1 — Data Umum" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="true">
+    <x-border-form title="Bagian 1 — Data Umum" align="start" bgcolor="bg-surface-soft" :collapsible="true"
+        :open="true">
         <div class="mt-3 grid grid-cols-4 gap-2">
 
             {{-- Kondisi Saat Masuk --}}
@@ -451,9 +454,9 @@ new class extends Component {
 
             {{-- DPJP --}}
             <div>
-                <x-input-label value="DPJP" />
+                {{-- <x-input-label value="DPJP" />
                 <x-text-input wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.dpjp"
-                    class="w-full mt-1" placeholder="Nama DPJP..." :disabled="$isFormLocked || $isReadOnlyByRole" />
+                    class="w-full mt-1" placeholder="Nama DPJP..." :disabled="$isFormLocked || $isReadOnlyByRole" /> --}}
             </div>
 
             {{-- Barang Berharga --}}
@@ -503,7 +506,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 2 — RIWAYAT PASIEN
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2 — Riwayat Pasien" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 2 — Riwayat Pasien" align="start" bgcolor="bg-surface-soft" :collapsible="true"
+        :open="false">
         <div class="mt-3 space-y-4">
 
             {{-- Riwayat Penyakit / Operasi / Cedera --}}
@@ -673,7 +677,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 3 — PSIKOSOSIAL & EKONOMI
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 3 — Psikososial & Ekonomi" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 3 — Psikososial & Ekonomi" align="start" bgcolor="bg-surface-soft"
+        :collapsible="true" :open="false">
         <div class="mt-3 grid grid-cols-6 gap-2">
 
             {{-- Agama / Kepercayaan --}}
@@ -823,7 +828,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 4 — TTV & PEMERIKSAAN FISIK
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 4 — Tanda Vital & Pemeriksaan Fisik" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 4 — Tanda Vital & Pemeriksaan Fisik" align="start" bgcolor="bg-surface-soft"
+        :collapsible="true" :open="false">
 
         {{-- TTV --}}
         <div class="mt-3 grid grid-cols-9 gap-2">
@@ -982,7 +988,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | LEVELING DOKTER
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Leveling Dokter (DPJP)" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Leveling Dokter (DPJP)" align="start" bgcolor="bg-surface-soft" :collapsible="true"
+        :open="false">
 
         {{-- Tabel Leveling Dokter --}}
         @php $levelingList = $dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? []; @endphp
@@ -1104,7 +1111,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 5 — CATATAN & TTD
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 5 — Catatan & Tanda Tangan" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 5 — Catatan & Tanda Tangan" align="start" bgcolor="bg-surface-soft"
+        :collapsible="true" :open="false">
 
         {{-- Catatan Umum --}}
         <div class="mt-3">
@@ -1130,13 +1138,16 @@ new class extends Component {
 
         {{-- TTD Perawat --}}
         <div class="mt-3">
-            <x-signature.ttd-petugas :framed="false" :allowClear="false"
-                :ttd="$dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['petugasPengkaji'] ?? ''"
-                :date="$dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['jamPengkaji'] ?? ''"
-                :code="$dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['petugasPengkajiCode'] ?? ''"
-                :locked="$isFormLocked || $isReadOnlyByRole"
-                :canSign="auth()->user()?->hasAnyRole(['Perawat', 'Admin'])"
-                sign="setPetugasPengkaji" nameLabel="Petugas Pengkaji" dateLabel="Jam Pengkajian" signLabel="TTD Saya" />
+            <x-signature.ttd-petugas :framed="false" :allowClear="false" :ttd="$dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan'][
+                'petugasPengkaji'
+            ] ?? ''" :date="$dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['jamPengkaji'] ??
+                ''"
+                :code="$dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan'][
+                    'petugasPengkajiCode'
+                ] ?? ''" :locked="$isFormLocked || $isReadOnlyByRole" :canSign="auth()
+                    ->user()
+                    ?->hasAnyRole(['Perawat', 'Admin'])" sign="setPetugasPengkaji"
+                nameLabel="Petugas Pengkaji" dateLabel="Jam Pengkajian" signLabel="TTD Saya" />
         </div>
     </x-border-form>
 
