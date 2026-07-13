@@ -380,6 +380,13 @@ new class extends Component {
     #[On('administrasi-rj.updated')]
     public function onAdministrasiUpdated(): void
     {
+        // Instance administrasi-rj yang belum memuat pasien (mis. di list pelayanan/antrian-kasir,
+        // di-embed tanpa :rjNo) tak perlu proses — dan JANGAN broadcast rj.administrasi-selesai
+        // dengan rjNo null (bikin TypeError di listener sibling yang bertipe int).
+        if (!$this->rjNo) {
+            return;
+        }
+
         $this->sumAll();
 
         // Refresh status header (kronis, iter, rj_status) — dapat berubah saat obat di-edit/hapus / postTransaksi
