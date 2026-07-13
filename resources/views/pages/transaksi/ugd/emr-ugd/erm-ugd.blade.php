@@ -308,17 +308,13 @@ new class extends Component {
                     </div>
 
                     {{-- TAB GROUP N | L | T (Penilaian / Observasi / Obat-Cairan)
-
-                         wire:ignore WAJIB: beda dari grup SOAP (S/O/A/P) yg di-stack polos spt EMR RJ,
-                         grup ini dibungkus Alpine (x-data activeTab + x-show). Saat parent (erm-ugd)
-                         morph — mis. setelah Simpan EMR mem-broadcast save-rm-* — subtree Alpine ini
-                         bikin morphdom melepas/menyusun-ulang node → komponen anak Livewire (penilaian/
-                         observasi/obat-cairan) RE-MOUNT & kehilangan state ($rjNo balik null, "Data UGD
-                         belum dimuat"). wire:ignore menyuruh morph parent MELEWATI subtree ini; komponen
-                         anak tetap hidup & update sendiri (island), Alpine tetap urus pindah tab.
-                         Aman utk ganti pasien: seluruh isi modal (dirty-modal-content) ber-wire:key
-                         renderKey('modal-emr-ugd',[rjNo]) → dibuat ulang saat rjNo berganti. --}}
-                    <div wire:ignore wire:key="nlt-tab-group-{{ $rjNo }}" x-data="{ activeTab: 'penilaian' }"
+                         Pola disamakan dgn EMR RI (erm-ri) yg TERBUKTI aman saat Simpan:
+                         panel = `x-show` + `x-transition` polos, TANPA wire:key & TANPA x-cloak.
+                         wire:key HANYA di komponen anak (island). Panel ber-wire:key bikin morphdom
+                         boleh melepas/pindah node saat parent morph → anak RE-MOUNT ($rjNo reset).
+                         JANGAN pakai wire:ignore membungkus komponen Livewire nested: itu meng-orphan
+                         listener #[On] (mis. lov.selected.obat-dan-cairan-ugd mati setelah Simpan). --}}
+                    <div x-data="{ activeTab: 'penilaian' }"
                         class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div class="px-2 border-b border-hairline dark:border-gray-700">
                             <div class="flex flex-nowrap gap-2 -mb-px">
@@ -344,21 +340,19 @@ new class extends Component {
                         </div>
 
                         <div class="p-3">
-                            {{-- wire:key pada wrapper x-show: tanpa ini, morph Livewire (mis. setelah Simpan EMR
-                                 yang me-morph modul EMR) bisa memindah/re-parent div tab tak-ber-key → komponen
-                                 anak (penilaian/observasi/obat-cairan) re-init & kehilangan state (mis. productId
-                                 obat-cairan hilang → form balik ke Fase 1). --}}
-                            <div wire:key="tab-penilaian-{{ $rjNo }}" x-show="activeTab === 'penilaian'" x-cloak>
+                            {{-- Panel polos meniru EMR RI: x-show + x-transition, TANPA wire:key & x-cloak.
+                                 Identitas komponen dipegang wire:key di tag <livewire:...> (island). --}}
+                            <div x-show="activeTab === 'penilaian'" x-transition.opacity.duration.200ms>
                                 <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
                                     wire:key="penilaian-ugd-{{ $rjNo }}" />
                             </div>
 
-                            <div wire:key="tab-observasi-{{ $rjNo }}" x-show="activeTab === 'observasi'" x-cloak>
+                            <div x-show="activeTab === 'observasi'" x-transition.opacity.duration.200ms>
                                 <livewire:pages::transaksi.ugd.emr-ugd.observasi.rm-observasi-ugd-actions :rjNo="$rjNo"
                                     wire:key="observasi-ugd-{{ $rjNo }}" />
                             </div>
 
-                            <div wire:key="tab-terapi-{{ $rjNo }}" x-show="activeTab === 'terapi'" x-cloak>
+                            <div x-show="activeTab === 'terapi'" x-transition.opacity.duration.200ms>
                                 <livewire:pages::transaksi.ugd.emr-ugd.obat-dan-cairan.rm-obat-dan-cairan-ugd-actions
                                     :rjNo="$rjNo" wire:key="obat-dan-cairan-ugd-{{ $rjNo }}" />
                             </div>
