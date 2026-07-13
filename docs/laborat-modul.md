@@ -45,6 +45,65 @@ Disimpan di header (`lbtxn_checkuphdrs.checkup_kesimpulan`), tampil **di bawah t
 > **Administrasi RJ/UGD/RI (tab Laboratorium) READ-ONLY** — hanya tampil daftar biaya + total. Order lewat
 > EMR, batal/kelola lewat modul penunjang lab (modal `daftar-laborat`). Tidak ada entry/edit/hapus di Administrasi.
 
+## Nilai Kritis (ambang `critical_*`)
+
+**Nilai kritis** = hasil yang melewati ambang **lebih ekstrem** dari rentang normal, pada item yang
+auto-alert-nya aktif (`lbmst_clabitems.nilai_kritis='Y'`). Contoh: Kalium rujukan 3.5–5.5, kritis
+`<2.5` atau `>6.5`. Perlu perhatian dokter segera.
+
+### Master — struktur kolom (`lbmst_clabitems`)
+
+Tiga kelompok pasien, masing-masing punya **rentang normal** dan **ambang kritis**:
+
+| Kelompok | Rentang normal (bawah/atas) | Ambang kritis (bawah/atas) |
+|---|---|---|
+| Pria | `low_limit_m` / `high_limit_m` | `critical_low_m` / `critical_high_m` |
+| Wanita | `low_limit_f` / `high_limit_f` | `critical_low_f` / `critical_high_f` |
+| Anak | `low_limit_k` / `high_limit_k` | `critical_low_k` / `critical_high_k` |
+
+Semua `NUMBER`, nullable. DDL penambahan kolom kritis: `ALTER TABLE lbmst_clabitems ADD (critical_low_m
+NUMBER, critical_high_m NUMBER, ...)`. **Wajib dijalankan di tiap environment** (dev & prod) sebelum
+deploy — query display/cetak menyebut kolom eksplisit, jadi kalau kolom belum ada → `ORA-00904`.
+
+**Input di `/master/laborat`** (modal `⚡master-clabitem-actions`): blok **"Ambang Nilai Kritis"** (kartu
+rose, P/W/A) muncul **hanya** saat toggle `nilai_kritis=Y` **dan** mode "Rentang Angka" (`lowhigh_status=Y`)
+— karena ambang kritis itu numerik. List `⚡master-clabitem` menampilkan sub-blok KRITIS merah di kolom
+Nilai Rujukan bila item ber-flag Y & ada nilainya.
+
+### Definisi & aturan hitung (SATU pola, dipakai 3 konsumen)
+
+```
+isKritis(item, hasil):
+  jika nilai_kritis != 'Y' → false
+  pilih kolom per gender: sex 'P' → _f, selain itu → _m   (Anak/_k TIDAK dipakai di runtime, lihat catatan)
+  jika (critical_low ATAU critical_high terisi) DAN hasil numerik:
+      → hasil <= critical_low  ATAU  hasil >= critical_high
+  else (ambang belum diisi ATAU hasil non-numerik):
+      → FALLBACK: pakai flag lama lab_result_status (H/HH/HIGH=Tinggi, L/LL/LOW=Rendah)
+```
+
+- **Fallback** menjaga item lama (ambang belum diisi) tetap terhitung/ter-badge — sama seperti sebelum fitur ini.
+  Setelah admin mengisi ambang, klasifikasi jadi presisi (bukan sekadar "di luar normal").
+- **Satuan**: `critical_*` disimpan dalam unit **RAW** (sama seperti `low/high_limit`), dibandingkan lawan
+  `lab_result` RAW. Perkalian `× unit_convert` hanya untuk **tampilan**, bukan untuk perbandingan.
+- **Anak (`_k`)**: runtime display/cetak/laporan hanya bedakan Pria/Wanita (tak deteksi umur), **konsisten
+  dengan rentang normal** yang juga hanya pakai `_m/_f`. Kolom `_k` tersimpan di master untuk kelengkapan;
+  kalau mau dipakai butuh deteksi umur dari `birth_date` (penyesuaian terpisah, memengaruhi normal range juga).
+
+### Konsumen (3 tempat — ubah bersamaan agar konsisten)
+
+| Tempat | File | Peran |
+|---|---|---|
+| Display layar | `components/rekam-medis/penunjang/laboratorium-display/laboratorium-display.blade.php` | Badge **KRITIS** + baris rose di tabel hasil |
+| Cetak PDF | `...laboratorium-display/laboratorium-display-print.blade.php` | Idem, versi cetak |
+| Laporan | `App\Http\Traits\...\Lab\NilaiKritisLabTrait` (dipakai `pages/manajemen/rs/penunjang/lab/laporan-nilai-kritis`) | Detail + Rekap + Per-Jenis, filter Tinggi/Rendah |
+
+**Query**: kedua blade display menyebut `d.critical_low_m/high_m/low_f/high_f` (alias master `d`, ikut pola
+`low/high_limit` yang hanya pilih m/f). Trait laporan membangun predikat SQL berbasis ambang + fallback;
+karena butuh `sex`, `baseKritis` **left-join `rsmst_pasiens`** (helper: `numResultSql/critHigh/critLow/
+useThreshold/useFallback/tinggi/rendah/kritisSql`). Numerik-guard di Oracle:
+`REGEXP_LIKE(TRIM(lab_result),'^-?[0-9]+(\.[0-9]+)?$')` lalu `TO_NUMBER` (CASE short-circuit).
+
 ## Batal — dua jenis
 
 Keduanya dijaga role `isAllowedBatal()` = **Admin · Supervisor Penunjang**.
@@ -102,7 +161,7 @@ task-id — per-workstation via local print agent.
 | `lbtxn_checkupdtls` | Detail item pemeriksaan. `checkup_dtl`, `checkup_no`, `clabitem_id`, `lab_item_code`, `lab_result`, `lab_result_status` (H/L/N/R), `price`. |
 | `lbtxn_checkupoutdtls` | Pemeriksaan luar. `labout_price`, `labout_result`, `labout_normal`, dst. |
 | `lbtxn_checkupobats` | Obat/bahan pakai. `price`, `qty`. |
-| `lbmst_clabitems` | Master item lab. `clabitem_desc`, `normal_m/f`, `low/high_limit_m/f`, `unit_convert`, `unit_desc`, `lowhigh_status`, `nilai_kritis`. |
+| `lbmst_clabitems` | Master item lab. `clabitem_desc`, `normal_m/f`, `low/high_limit_m/f` (+ `_k` anak), `critical_low/high_m/f/k` (ambang kritis), `unit_convert`, `unit_desc`, `lowhigh_status`, `nilai_kritis`. |
 | `lbmst_clabs` | Master kelompok lab. |
 | `rstxn_rjlabs` / `rstxn_ugdlabs` / `rstxn_rilabs` | Baris biaya lab yang di-post ke transaksi induk RJ/UGD/RI. |
 
