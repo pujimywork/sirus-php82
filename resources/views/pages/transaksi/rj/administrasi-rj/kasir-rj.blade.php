@@ -690,7 +690,7 @@ new class extends Component {
                         <p class="font-semibold text-blue-900 dark:text-blue-100">Panduan Kasir RJ:</p>
                         <ul class="mt-1 space-y-0.5 list-disc list-inside">
                             <li><strong>Post Transaksi</strong> — Pilih Akun Kas, isi nominal bayar, lalu klik "Post Transaksi". Bisa cicilan (bayar sebagian) atau lunas (bayar penuh).</li>
-                            <li><strong>Transfer ke UGD</strong> — Jika pasien RJ perlu dilanjutkan ke UGD, klik "Transfer ke UGD". Seluruh biaya RJ akan dipindahkan ke UGD dan status RJ menjadi Transfer UGD.</li>
+                            <li><strong>Transfer ke UGD</strong> — Jika pasien RJ perlu dilanjutkan ke UGD, gunakan tombol "Transfer ke UGD" di daftar <em>Antrian Kasir RJ</em> atau <em>Pelayanan RJ</em> (aktif hanya saat status Antrian). Seluruh biaya RJ akan dipindahkan ke UGD dan status RJ menjadi Transfer UGD.</li>
                         </ul>
                     </div>
                 </div>
@@ -715,7 +715,7 @@ new class extends Component {
                     <x-input-error :messages="$errors->get('bayar')" class="mt-1" />
                 </div>
 
-                {{-- Tombol Post & Transfer — Admin, Tu --}}
+                {{-- Tombol Post — Admin, Tu. Transfer ke UGD ada di list Antrian Kasir & Pelayanan RJ. --}}
                 @hasanyrole(['Admin', 'Tu'])
                 <div class="flex gap-2 pt-6">
                     <x-primary-button wire:click="postTransaksi" wire:loading.attr="disabled"
@@ -723,13 +723,6 @@ new class extends Component {
                         <span wire:loading.remove wire:target="postTransaksi">Post Transaksi</span>
                         <span wire:loading wire:target="postTransaksi"><x-loading /></span>
                     </x-primary-button>
-
-                    @if ($txnStatus === null || $txnStatus === 'A')
-                        <x-secondary-button type="button"
-                            wire:click="$dispatch('open-transfer-rj-ugd', { rjNo: {{ $rjNo }} })">
-                            Transfer ke UGD
-                        </x-secondary-button>
-                    @endif
                 </div>
                 @endhasanyrole
 

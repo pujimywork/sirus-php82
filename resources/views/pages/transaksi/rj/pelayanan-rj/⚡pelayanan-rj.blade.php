@@ -1071,28 +1071,33 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
-                                                                {{-- Transfer ke UGD — HANYA saat status Antrian (rj_status='A') --}}
+                                                                {{-- Transfer ke UGD — disabled (tak bisa diklik) bila bukan status Antrian (rj_status='A') --}}
                                                                 @hasanyrole('Admin|Tu')
-                                                                    @if ($row->rj_status === 'A')
-                                                                        <x-dropdown-link href="#"
-                                                                            wire:click.prevent="$dispatch('open-transfer-rj-ugd', { rjNo: {{ $row->rj_no }} })"
-                                                                            class="px-3 py-2 text-sm rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40">
-                                                                            <div class="flex items-start gap-2">
-                                                                                <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                                    fill="none" stroke="currentColor"
-                                                                                    viewBox="0 0 24 24" stroke-width="2">
-                                                                                    <path stroke-linecap="round"
-                                                                                        stroke-linejoin="round"
-                                                                                        d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                                                                </svg>
-                                                                                <span>
-                                                                                    Transfer ke UGD <br>
-                                                                                    <span
-                                                                                        class="font-semibold">{{ $row->reg_name }}</span>
-                                                                                </span>
-                                                                            </div>
-                                                                        </x-dropdown-link>
-                                                                    @endif
+                                                                    @php
+                                                                        $canTransferUgd = $row->rj_status === 'A';
+                                                                        $trfUgdClass = $canTransferUgd
+                                                                            ? 'bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40'
+                                                                            : 'opacity-50 cursor-not-allowed pointer-events-none bg-surface-soft dark:bg-gray-800 text-muted-soft';
+                                                                    @endphp
+                                                                    <x-dropdown-link href="#"
+                                                                        wire:click.prevent="$dispatch('open-transfer-rj-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                                        title="{{ $canTransferUgd ? 'Transfer pasien ke UGD' : 'Hanya bisa saat status Antrian' }}"
+                                                                        class="px-3 py-2 text-sm rounded-lg {{ $trfUgdClass }}">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Transfer ke UGD <br>
+                                                                                <span
+                                                                                    class="font-semibold">{{ $row->reg_name }}</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
                                                                 @endhasanyrole
 
                                                             </div>
@@ -1138,6 +1143,7 @@ new class extends Component {
             <livewire:pages::transaksi.rj.emr-rj.modul-dokumen.modul-dokumen-rj wire:key="modul-dokumen-rj" />
             <livewire:pages::transaksi.rj.emr-rj.log-aktivitas.log-aktivitas-rj wire:key="log-aktivitas-rj" />
             <livewire:pages::transaksi.rj.administrasi-rj.administrasi-rj wire:key="administrasi-rj-actions" />
+            <livewire:pages::transaksi.rj.administrasi-rj.transfer-rj-ugd-actions wire:key="transfer-rj-ugd-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
             <livewire:pages::transaksi.rj.daftar-rj.info-kelengkapan-emr wire:key="info-kelengkapan-emr-rj" />
