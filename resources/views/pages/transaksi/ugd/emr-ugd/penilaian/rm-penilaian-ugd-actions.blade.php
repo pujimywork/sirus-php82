@@ -121,6 +121,23 @@ new class extends Component {
     }
 
     /* ===============================
+     | RELOAD SETELAH SIMPAN EMR GLOBAL
+     | Simpan SOAP (anamnesa/pemeriksaan/diagnosa/perencanaan) mem-morph parent EMR.
+     | Komponen "pasif" yg tak menerima event save (penilaian/observasi/obat-cairan)
+     | ikut ter-wipe saat morph → dataDaftarUGD kosong ("Buka kunjungan..."). Muat ulang
+     | HANYA bila memang ter-wipe (regNo hilang), supaya input berjalan tak ke-reset.
+     =============================== */
+    #[On('refresh-after-ugd.saved')]
+    public function reloadAfterUgdSaved(): void
+    {
+        if (empty($this->rjNo) || !empty($this->dataDaftarUGD['regNo'])) {
+            return;
+        }
+
+        $this->openPenilaian((int) $this->rjNo);
+    }
+
+    /* ===============================
      | SAVE PENILAIAN — private helper
      | Dipanggil dari add/remove methods.
      | lockUGDRow() sudah ditangani di sini — caller tidak perlu lock sendiri.

@@ -83,6 +83,22 @@ new class extends Component {
     }
 
     /* ===============================
+     | RELOAD SETELAH SIMPAN EMR GLOBAL
+     | Simpan SOAP mem-morph parent EMR → komponen pasif (tak dapat event save) ikut
+     | ter-wipe ("Data UGD belum dimuat"). Muat ulang HANYA bila memang ter-wipe
+     | (regNo hilang), supaya input berjalan tak ke-reset.
+     =============================== */
+    #[On('refresh-after-ugd.saved')]
+    public function reloadAfterUgdSaved(): void
+    {
+        if (empty($this->rjNo) || !empty($this->dataDaftarUGD['regNo'])) {
+            return;
+        }
+
+        $this->openObservasi((int) $this->rjNo);
+    }
+
+    /* ===============================
      | VALIDATION
      =============================== */
     protected function rules(): array
