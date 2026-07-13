@@ -12,7 +12,8 @@
                 ])>
                     <div>
                         <x-input-label value="Status Nyeri" :required="true" />
-                        <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeri" class="w-full mt-1">
+                        <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeri" class="w-full mt-1"
+                            x-ref="nyStatus" x-on:keydown.enter.prevent="$refs.nyTgl?.focus()">
                             <option value="Tidak">Tidak</option>
                             <option value="Ya">Ya</option>
                         </x-select-input>
@@ -24,7 +25,8 @@
                             <x-input-label value="Tanggal Penilaian" :required="true" />
                             <div class="flex gap-2 mt-1">
                                 <x-text-input wire:model="formEntryNyeri.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                    :error="$errors->has('formEntryNyeri.tglPenilaian')" class="w-full" />
+                                    :error="$errors->has('formEntryNyeri.tglPenilaian')" class="w-full"
+                                    x-ref="nyTgl" x-on:keydown.enter.prevent="$refs.nyMetode?.focus()" />
                                 <x-now-button wire:click="setTglPenilaianNyeri" />
                             </div>
                             <x-input-error :messages="$errors->get('formEntryNyeri.tglPenilaian')" class="mt-1" />
@@ -37,7 +39,8 @@
                         <div>
                             <x-input-label value="Metode Penilaian" :required="true" />
                             <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeriMetode.nyeriMetode"
-                                class="w-full mt-1">
+                                class="w-full mt-1"
+                                x-ref="nyMetode" x-on:keydown.enter.prevent="($refs.nyMetodeScore || $refs.nyPencetus)?.focus()">
                                 <option value="">-- Pilih Metode --</option>
                                 @foreach ($nyeriMetodeOptions as $opt)
                                     <option value="{{ $opt['nyeriMetode'] }}">{{ $opt['nyeriMetode'] }}</option>
@@ -82,7 +85,8 @@
                                 <x-input-label value="Skor NRS (0–10)" :required="true" />
                                 <x-text-input type="number" min="0" max="10"
                                     wire:model.live="formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore"
-                                    class="w-32 mt-1" />
+                                    class="w-32 mt-1"
+                                    x-ref="nyMetodeScore" x-on:keydown.enter.prevent="$refs.nyPencetus?.focus()" />
                                 <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore')" class="mt-1" />
                             </div>
                         </div>
@@ -155,7 +159,8 @@
                                 <x-input-label value="Skor" :required="true" />
                                 <x-text-input type="number" min="0"
                                     wire:model.live="formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore"
-                                    class="w-32 mt-1" />
+                                    class="w-32 mt-1"
+                                    x-ref="nyMetodeScore" x-on:keydown.enter.prevent="$refs.nyPencetus?.focus()" />
                                 <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore')" class="mt-1" />
                             </div>
                         </div>
@@ -169,25 +174,30 @@
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <x-input-label value="Pencetus" />
-                                    <x-text-input wire:model="formEntryNyeri.nyeri.pencetus" class="w-full mt-1" />
+                                    <x-text-input wire:model="formEntryNyeri.nyeri.pencetus" class="w-full mt-1"
+                                        x-ref="nyPencetus" x-on:keydown.enter.prevent="$refs.nyDurasi?.focus()" />
                                 </div>
                                 <div>
                                     <x-input-label value="Durasi" />
                                     <x-text-input wire:model="formEntryNyeri.nyeri.durasi"
-                                        placeholder="Contoh: 30 menit" class="w-full mt-1" />
+                                        placeholder="Contoh: 30 menit" class="w-full mt-1"
+                                        x-ref="nyDurasi" x-on:keydown.enter.prevent="$refs.nyLokasi?.focus()" />
                                 </div>
                                 <div>
                                     <x-input-label value="Lokasi" />
-                                    <x-text-input wire:model="formEntryNyeri.nyeri.lokasi" class="w-full mt-1" />
+                                    <x-text-input wire:model="formEntryNyeri.nyeri.lokasi" class="w-full mt-1"
+                                        x-ref="nyLokasi" x-on:keydown.enter.prevent="$refs.nyWaktu?.focus()" />
                                 </div>
                                 <div>
                                     <x-input-label value="Waktu Nyeri" />
                                     <x-text-input wire:model="formEntryNyeri.nyeri.waktuNyeri"
-                                        placeholder="Contoh: Malam hari" class="w-full mt-1" />
+                                        placeholder="Contoh: Malam hari" class="w-full mt-1"
+                                        x-ref="nyWaktu" x-on:keydown.enter.prevent="$refs.nySensasi?.focus()" />
                                 </div>
                                 <div>
                                     <x-input-label value="Sensasi" />
-                                    <x-select-input wire:model="formEntryNyeri.nyeri.sensasi" class="w-full mt-1">
+                                    <x-select-input wire:model="formEntryNyeri.nyeri.sensasi" class="w-full mt-1"
+                                        x-ref="nySensasi" x-on:keydown.enter.prevent="$refs.nyKesadaran?.focus()">
                                         <option value="">-- Pilih Sensasi --</option>
                                         <option value="Tertusuk">Tertusuk</option>
                                         <option value="Tertekan">Tertekan</option>
@@ -201,7 +211,8 @@
                                 <div>
                                     <x-input-label value="Tingkat Kesadaran" />
                                     <x-select-input wire:model="formEntryNyeri.nyeri.tingkatKesadaran"
-                                        class="w-full mt-1">
+                                        class="w-full mt-1"
+                                        x-ref="nyKesadaran" x-on:keydown.enter.prevent="$refs.nyAktivitas?.focus()">
                                         <option value="">-- Pilih --</option>
                                         <option value="Composmentis">Composmentis</option>
                                         <option value="Apatis">Apatis</option>
@@ -213,7 +224,8 @@
                                 <div>
                                     <x-input-label value="Tingkat Aktivitas" />
                                     <x-select-input wire:model="formEntryNyeri.nyeri.tingkatAktivitas"
-                                        class="w-full mt-1">
+                                        class="w-full mt-1"
+                                        x-ref="nyAktivitas" x-on:keydown.enter.prevent="$refs.nyFarmakologi?.focus()">
                                         <option value="">-- Pilih --</option>
                                         <option value="Mandiri">Mandiri</option>
                                         <option value="Dibantu Sebagian">Dibantu Sebagian</option>
@@ -232,7 +244,8 @@
                             <div>
                                 <x-input-label value="Intervensi Farmakologi" />
                                 <x-textarea wire:model="formEntryNyeri.nyeri.ketIntervensiFarmakologi"
-                                    class="w-full mt-1" rows="2" placeholder="Nama obat, dosis, rute..." />
+                                    class="w-full mt-1" rows="2" placeholder="Nama obat, dosis, rute..."
+                                    x-ref="nyFarmakologi" />
                             </div>
                             <div>
                                 <x-input-label value="Intervensi Non-Farmakologi" />

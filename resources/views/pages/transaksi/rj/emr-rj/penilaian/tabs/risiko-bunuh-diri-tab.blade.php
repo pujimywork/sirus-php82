@@ -12,7 +12,8 @@
                 {{-- GATE: ada risiko bunuh diri? --}}
                 <div class="sm:max-w-xs">
                     <x-input-label value="Risiko Bunuh Diri" :required="true" />
-                    <x-select-input wire:model.live="formEntryResikoBunuhDiri.resikoBunuhDiri" class="w-full mt-1">
+                    <x-select-input wire:model.live="formEntryResikoBunuhDiri.resikoBunuhDiri" class="w-full mt-1"
+                        x-ref="rbdRisiko" x-on:keydown.enter.prevent="$refs.rbdTgl?.focus()">
                         <option value="Tidak">Tidak</option>
                         <option value="Ya">Ya</option>
                     </x-select-input>
@@ -25,7 +26,8 @@
                         <x-input-label value="Tanggal Penilaian" :required="true" />
                         <div class="flex gap-2 mt-1">
                             <x-text-input wire:model="formEntryResikoBunuhDiri.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                :error="$errors->has('formEntryResikoBunuhDiri.tglPenilaian')" class="w-full" />
+                                :error="$errors->has('formEntryResikoBunuhDiri.tglPenilaian')" class="w-full"
+                                x-ref="rbdTgl" />
                             <x-now-button wire:click="setTglPenilaianResikoBunuhDiri" />
                         </div>
                         <x-input-error :messages="$errors->get('formEntryResikoBunuhDiri.tglPenilaian')" class="mt-1" />
@@ -88,7 +90,8 @@
                             <div>
                                 <x-input-label value="Jika Ya — kapan terakhir?" />
                                 <x-text-input wire:model="formEntryResikoBunuhDiri.perilakuBunuhDiri.kapanTerakhir"
-                                    placeholder="mis. 2 bulan yang lalu" class="w-full mt-1" />
+                                    placeholder="mis. 2 bulan yang lalu" class="w-full mt-1"
+                                    x-ref="rbdKapan" x-on:keydown.enter.prevent="$refs.rbdCatatan?.focus()" />
                                 <x-input-error :messages="$errors->get('formEntryResikoBunuhDiri.perilakuBunuhDiri.kapanTerakhir')" class="mt-1" />
                             </div>
                         @endif
@@ -108,7 +111,8 @@
                     </div>
                     <div class="mt-3">
                         <x-input-label value="Catatan klinis singkat" />
-                        <x-textarea wire:model="formEntryResikoBunuhDiri.catatanKlinis" class="w-full mt-1" rows="2" />
+                        <x-textarea wire:model="formEntryResikoBunuhDiri.catatanKlinis" class="w-full mt-1" rows="2"
+                            x-ref="rbdCatatan" />
                         <x-input-error :messages="$errors->get('formEntryResikoBunuhDiri.catatanKlinis')" class="mt-1" />
                     </div>
                 </x-border-form>

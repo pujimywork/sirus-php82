@@ -13,7 +13,8 @@
                     <div>
                         <x-input-label value="Risiko Jatuh" :required="true" />
                         <x-select-input wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuh"
-                            class="w-full mt-1">
+                            class="w-full mt-1"
+                            x-ref="rjStatus" x-on:keydown.enter.prevent="$refs.rjTgl?.focus()">
                             <option value="Tidak">Tidak</option>
                             <option value="Ya">Ya</option>
                         </x-select-input>
@@ -25,7 +26,8 @@
                             <x-input-label value="Tanggal Penilaian" :required="true" />
                             <div class="flex gap-2 mt-1">
                                 <x-text-input wire:model="formEntryResikoJatuh.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                    :error="$errors->has('formEntryResikoJatuh.tglPenilaian')" class="w-full" />
+                                    :error="$errors->has('formEntryResikoJatuh.tglPenilaian')" class="w-full"
+                                    x-ref="rjTgl" x-on:keydown.enter.prevent="$refs.rjMetode?.focus()" />
                                 <x-now-button wire:click="setTglPenilaianResikoJatuh" />
                             </div>
                             <x-input-error :messages="$errors->get('formEntryResikoJatuh.tglPenilaian')" class="mt-1" />
@@ -35,7 +37,8 @@
                             <x-input-label value="Metode" :required="true" />
                             <x-select-input
                                 wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode"
-                                class="w-full mt-1">
+                                class="w-full mt-1"
+                                x-ref="rjMetode" x-on:keydown.enter.prevent="($refs.rjMorse0 || $refs.rjHumpty0)?.focus()">
                                 <option value="">-- Pilih Metode --</option>
                                 <option value="Skala Morse">Skala Morse</option>
                                 <option value="Humpty Dumpty">Humpty Dumpty</option>
@@ -71,11 +74,14 @@
                             </div>
                             <div class="grid grid-cols-1 gap-3">
                                 @foreach ($skalaMorseOptions as $key => $options)
+                                    @php $rjNextRef = $loop->last ? 'rjRekomendasi' : 'rjMorse' . ($loop->index + 1); @endphp
                                     <div>
                                         <x-input-label :value="ucwords(preg_replace('/(?<!^)[A-Z]/', ' $0', $key))" />
                                         <x-select-input
                                             wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.dataResikoJatuh.{{ $key }}"
-                                            class="w-full mt-1">
+                                            class="w-full mt-1"
+                                            x-ref="rjMorse{{ $loop->index }}"
+                                            x-on:keydown.enter.prevent="$refs['{{ $rjNextRef }}']?.focus()">
                                             <option value="">-- Pilih --</option>
                                             @foreach ($options as $opt)
                                                 <option value="{{ $opt[$key] }}">{{ $opt[$key] }} (Skor:
@@ -115,11 +121,14 @@
                             </div>
                             <div class="grid grid-cols-1 gap-3">
                                 @foreach ($humptyDumptyOptions as $key => $options)
+                                    @php $rjNextRef = $loop->last ? 'rjRekomendasi' : 'rjHumpty' . ($loop->index + 1); @endphp
                                     <div>
                                         <x-input-label :value="ucwords(preg_replace('/(?<!^)[A-Z]/', ' $0', $key))" />
                                         <x-select-input
                                             wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.dataResikoJatuh.{{ $key }}"
-                                            class="w-full mt-1">
+                                            class="w-full mt-1"
+                                            x-ref="rjHumpty{{ $loop->index }}"
+                                            x-on:keydown.enter.prevent="$refs['{{ $rjNextRef }}']?.focus()">
                                             <option value="">-- Pilih --</option>
                                             @foreach ($options as $opt)
                                                 <option value="{{ $opt[$key] }}">{{ $opt[$key] }} (Skor:
@@ -137,7 +146,7 @@
                     <div>
                         <x-input-label value="Rekomendasi" />
                         <x-textarea wire:model="formEntryResikoJatuh.resikoJatuh.rekomendasi" class="w-full mt-1"
-                            rows="2" />
+                            rows="2" x-ref="rjRekomendasi" />
                     </div>
                 @endif
 

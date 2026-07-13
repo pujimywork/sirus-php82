@@ -10,7 +10,8 @@
                         <x-input-label value="Tanggal Penilaian" :required="true" />
                         <div class="flex gap-2 mt-1">
                             <x-text-input wire:model="formEntryGizi.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                :error="$errors->has('formEntryGizi.tglPenilaian')" class="w-full" />
+                                :error="$errors->has('formEntryGizi.tglPenilaian')" class="w-full"
+                                x-ref="gzTgl" x-on:keydown.enter.prevent="$refs.gzBB?.focus()" />
                             <x-now-button wire:click="setTglPenilaianGizi" />
                         </div>
                         <x-input-error :messages="$errors->get('formEntryGizi.tglPenilaian')" class="mt-1" />
@@ -21,14 +22,16 @@
                     <div>
                         <x-input-label value="Berat Badan (kg)" :required="true" />
                         <x-text-input type="number" step="0.1" wire:model.live="formEntryGizi.gizi.beratBadan"
-                            :error="$errors->has('formEntryGizi.gizi.beratBadan')" class="w-full mt-1" />
+                            :error="$errors->has('formEntryGizi.gizi.beratBadan')" class="w-full mt-1"
+                            x-ref="gzBB" x-on:keydown.enter.prevent="$refs.gzTB?.focus()" />
                         <x-input-error :messages="$errors->get('formEntryGizi.gizi.beratBadan')" class="mt-1" />
                     </div>
 
                     <div>
                         <x-input-label value="Tinggi Badan (cm)" :required="true" />
                         <x-text-input type="number" step="0.1" wire:model.live="formEntryGizi.gizi.tinggiBadan"
-                            :error="$errors->has('formEntryGizi.gizi.tinggiBadan')" class="w-full mt-1" />
+                            :error="$errors->has('formEntryGizi.gizi.tinggiBadan')" class="w-full mt-1"
+                            x-ref="gzTB" x-on:keydown.enter.prevent="$refs.gzKebutuhan?.focus()" />
                         <x-input-error :messages="$errors->get('formEntryGizi.gizi.tinggiBadan')" class="mt-1" />
                     </div>
 
@@ -42,7 +45,8 @@
                     <div>
                         <x-input-label value="Kebutuhan Gizi" />
                         <x-text-input wire:model="formEntryGizi.gizi.kebutuhanGizi" placeholder="Contoh: 1800 kkal/hari"
-                            class="w-full mt-1" />
+                            class="w-full mt-1"
+                            x-ref="gzKebutuhan" x-on:keydown.enter.prevent="$refs.gzSkrining0?.focus()" />
                     </div>
                     </div>
                 </div>
@@ -80,11 +84,14 @@
                                         default => ucwords(preg_replace('/(?<!^)[A-Z]/', ' $0', $key)),
                                     };
                                 @endphp
+                                @php $gzNextRef = $loop->last ? 'gzCatatan' : 'gzSkrining' . ($loop->index + 1); @endphp
                                 <div>
                                     <x-input-label :value="$label" />
                                     <x-select-input
                                         wire:model.live="formEntryGizi.gizi.skriningGizi.{{ $key }}"
-                                        class="w-full mt-1">
+                                        class="w-full mt-1"
+                                        x-ref="gzSkrining{{ $loop->index }}"
+                                        x-on:keydown.enter.prevent="$refs['{{ $gzNextRef }}']?.focus()">
                                         <option value="">-- Pilih --</option>
                                         @foreach ($options as $opt)
                                             <option value="{{ $opt[$fieldKey] }}">
@@ -100,7 +107,8 @@
 
                 <div>
                     <x-input-label value="Catatan" />
-                    <x-textarea wire:model="formEntryGizi.gizi.catatan" class="w-full mt-1" rows="2" />
+                    <x-textarea wire:model="formEntryGizi.gizi.catatan" class="w-full mt-1" rows="2"
+                        x-ref="gzCatatan" />
                 </div>
 
                 <div class="flex justify-end pt-2">

@@ -12,7 +12,8 @@
                 ])>
                     <div>
                         <x-input-label value="Status Dekubitus" :required="true" />
-                        <x-select-input wire:model.live="formEntryDekubitus.dekubitus.dekubitus" class="w-full mt-1">
+                        <x-select-input wire:model.live="formEntryDekubitus.dekubitus.dekubitus" class="w-full mt-1"
+                            x-ref="dkStatus" x-on:keydown.enter.prevent="$refs.dkTgl?.focus()">
                             <option value="Tidak">Tidak</option>
                             <option value="Ya">Ya</option>
                         </x-select-input>
@@ -24,7 +25,8 @@
                             <x-input-label value="Tanggal Penilaian" :required="true" />
                             <div class="flex gap-2 mt-1">
                                 <x-text-input wire:model="formEntryDekubitus.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                    :error="$errors->has('formEntryDekubitus.tglPenilaian')" class="w-full" />
+                                    :error="$errors->has('formEntryDekubitus.tglPenilaian')" class="w-full"
+                                    x-ref="dkTgl" x-on:keydown.enter.prevent="$refs.dkBraden0?.focus()" />
                                 <x-now-button wire:click="setTglPenilaianDekubitus" />
                             </div>
                             <x-input-error :messages="$errors->get('formEntryDekubitus.tglPenilaian')" class="mt-1" />
@@ -53,11 +55,14 @@
                             </div>
                             <div class="grid grid-cols-1 gap-3">
                                 @foreach ($bradenScaleOptions as $key => $options)
+                                    @php $dkNextRef = $loop->last ? 'dkRekomendasi' : 'dkBraden' . ($loop->index + 1); @endphp
                                     <div>
                                         <x-input-label :value="ucwords(preg_replace('/(?<!^)[A-Z]/', ' $0', $key))" />
                                         <x-select-input
                                             wire:model.live="formEntryDekubitus.dekubitus.dataBraden.{{ $key }}"
-                                            class="w-full mt-1">
+                                            class="w-full mt-1"
+                                            x-ref="dkBraden{{ $loop->index }}"
+                                            x-on:keydown.enter.prevent="$refs['{{ $dkNextRef }}']?.focus()">
                                             <option value="">-- Pilih --</option>
                                             @foreach ($options as $opt)
                                                 <option value="{{ $opt['score'] }}">{{ $opt['description'] }} (Skor:
@@ -73,7 +78,7 @@
                     <div>
                         <x-input-label value="Rekomendasi" />
                         <x-textarea wire:model="formEntryDekubitus.dekubitus.rekomendasi" class="w-full mt-1"
-                            rows="2" />
+                            rows="2" x-ref="dkRekomendasi" />
                     </div>
 
                 @endif {{-- /if dekubitus = Ya --}}
