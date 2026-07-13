@@ -23,7 +23,7 @@
                         <span style="color:#dc2626"> PRB</span>
                     @endif
                     @if (($dataDaftarPoliRJ['statusResep']['status'] ?? null) === 'DITINGGAL')
-                        <span style="color:#dc2626"> Ditinggal</span>
+                        <span style="color:#dc2626; font-size:14px; font-weight:bold"> Ditinggal</span>
                     @endif
                 </td>
             </tr>
