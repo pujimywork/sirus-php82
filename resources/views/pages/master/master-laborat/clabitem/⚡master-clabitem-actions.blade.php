@@ -35,6 +35,12 @@ new class extends Component {
         'high_limit_f' => '',
         'low_limit_k' => '',
         'high_limit_k' => '',
+        'critical_low_m' => '',
+        'critical_high_m' => '',
+        'critical_low_f' => '',
+        'critical_high_f' => '',
+        'critical_low_k' => '',
+        'critical_high_k' => '',
         'unit_convert' => '',
         'loinc_code' => '',
         'loinc_display' => '',
@@ -106,6 +112,12 @@ new class extends Component {
             'high_limit_f' => (string) ($row->high_limit_f ?? ''),
             'low_limit_k' => (string) ($row->low_limit_k ?? ''),
             'high_limit_k' => (string) ($row->high_limit_k ?? ''),
+            'critical_low_m' => (string) ($row->critical_low_m ?? ''),
+            'critical_high_m' => (string) ($row->critical_high_m ?? ''),
+            'critical_low_f' => (string) ($row->critical_low_f ?? ''),
+            'critical_high_f' => (string) ($row->critical_high_f ?? ''),
+            'critical_low_k' => (string) ($row->critical_low_k ?? ''),
+            'critical_high_k' => (string) ($row->critical_high_k ?? ''),
             'unit_convert' => (string) ($row->unit_convert ?? ''),
             'loinc_code' => (string) ($row->loinc_code ?? ''),
             'loinc_display' => (string) ($row->loinc_display ?? ''),
@@ -165,6 +177,12 @@ new class extends Component {
                 'formClabitem.high_limit_f' => 'nullable|numeric',
                 'formClabitem.low_limit_k' => 'nullable|numeric',
                 'formClabitem.high_limit_k' => 'nullable|numeric',
+                'formClabitem.critical_low_m' => 'nullable|numeric',
+                'formClabitem.critical_high_m' => 'nullable|numeric',
+                'formClabitem.critical_low_f' => 'nullable|numeric',
+                'formClabitem.critical_high_f' => 'nullable|numeric',
+                'formClabitem.critical_low_k' => 'nullable|numeric',
+                'formClabitem.critical_high_k' => 'nullable|numeric',
                 'formClabitem.unit_convert' => 'nullable|numeric',
                 'formClabitem.loinc_code' => 'nullable|string|max:20',
                 'formClabitem.loinc_display' => 'nullable|string|max:200',
@@ -201,6 +219,12 @@ new class extends Component {
             'high_limit_f' => $this->formClabitem['high_limit_f'] !== '' ? (float) $this->formClabitem['high_limit_f'] : null,
             'low_limit_k' => $this->formClabitem['low_limit_k'] !== '' ? (float) $this->formClabitem['low_limit_k'] : null,
             'high_limit_k' => $this->formClabitem['high_limit_k'] !== '' ? (float) $this->formClabitem['high_limit_k'] : null,
+            'critical_low_m' => $this->formClabitem['critical_low_m'] !== '' ? (float) $this->formClabitem['critical_low_m'] : null,
+            'critical_high_m' => $this->formClabitem['critical_high_m'] !== '' ? (float) $this->formClabitem['critical_high_m'] : null,
+            'critical_low_f' => $this->formClabitem['critical_low_f'] !== '' ? (float) $this->formClabitem['critical_low_f'] : null,
+            'critical_high_f' => $this->formClabitem['critical_high_f'] !== '' ? (float) $this->formClabitem['critical_high_f'] : null,
+            'critical_low_k' => $this->formClabitem['critical_low_k'] !== '' ? (float) $this->formClabitem['critical_low_k'] : null,
+            'critical_high_k' => $this->formClabitem['critical_high_k'] !== '' ? (float) $this->formClabitem['critical_high_k'] : null,
             'unit_convert' => $this->formClabitem['unit_convert'] !== '' ? (float) $this->formClabitem['unit_convert'] : null,
             'loinc_code' => $this->formClabitem['loinc_code'] ?: null,
             'loinc_display' => $this->formClabitem['loinc_display'] ?: null,
@@ -285,6 +309,12 @@ new class extends Component {
             'high_limit_f' => '',
             'low_limit_k' => '',
             'high_limit_k' => '',
+            'critical_low_m' => '',
+            'critical_high_m' => '',
+            'critical_low_f' => '',
+            'critical_high_f' => '',
+            'critical_low_k' => '',
+            'critical_high_k' => '',
             'unit_convert' => '',
             'loinc_code' => '',
             'loinc_display' => '',
@@ -514,10 +544,65 @@ new class extends Component {
                                         <span class="text-gray-400">-</span>
                                         <x-text-input wire:model.live="formClabitem.high_limit_k" x-ref="inputHighK"
                                             type="number" step="0.01" class="w-full" placeholder="Atas"
-                                            x-on:keydown.enter.prevent="$refs.inputUnitConvert?.focus()" />
+                                            x-on:keydown.enter.prevent="$refs.inputCritLowM?.focus() || $refs.inputUnitConvert?.focus()" />
                                     </div>
                                 </div>
                             </div>
+
+                            {{-- Ambang Nilai Kritis — hanya saat toggle Nilai Kritis aktif --}}
+                            @if (($formClabitem['nilai_kritis'] ?? 'N') === 'Y')
+                                <div class="p-4 border rounded-xl border-rose-200 bg-rose-50/60 dark:border-rose-900/40 dark:bg-rose-900/10">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                        <span class="text-sm font-semibold text-rose-700 dark:text-rose-300">Ambang Nilai Kritis</span>
+                                    </div>
+                                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                        <div>
+                                            <x-input-label value="Pria (Kritis Bawah - Atas)" />
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <x-text-input wire:model.live="formClabitem.critical_low_m" x-ref="inputCritLowM"
+                                                    type="number" step="0.01" class="w-full" placeholder="Bawah"
+                                                    x-on:keydown.enter.prevent="$refs.inputCritHighM?.focus()" />
+                                                <span class="text-gray-400">-</span>
+                                                <x-text-input wire:model.live="formClabitem.critical_high_m" x-ref="inputCritHighM"
+                                                    type="number" step="0.01" class="w-full" placeholder="Atas"
+                                                    x-on:keydown.enter.prevent="$refs.inputCritLowF?.focus()" />
+                                            </div>
+                                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Hasil di bawah/atas ambang ini ditandai
+                                                <strong class="text-rose-600 dark:text-rose-400">NILAI KRITIS</strong></p>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Wanita (Kritis Bawah - Atas)" />
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <x-text-input wire:model.live="formClabitem.critical_low_f" x-ref="inputCritLowF"
+                                                    type="number" step="0.01" class="w-full" placeholder="Bawah"
+                                                    x-on:keydown.enter.prevent="$refs.inputCritHighF?.focus()" />
+                                                <span class="text-gray-400">-</span>
+                                                <x-text-input wire:model.live="formClabitem.critical_high_f" x-ref="inputCritHighF"
+                                                    type="number" step="0.01" class="w-full" placeholder="Atas"
+                                                    x-on:keydown.enter.prevent="$refs.inputCritLowK?.focus()" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Anak (Kritis Bawah - Atas)" />
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <x-text-input wire:model.live="formClabitem.critical_low_k" x-ref="inputCritLowK"
+                                                    type="number" step="0.01" class="w-full" placeholder="Bawah"
+                                                    x-on:keydown.enter.prevent="$refs.inputCritHighK?.focus()" />
+                                                <span class="text-gray-400">-</span>
+                                                <x-text-input wire:model.live="formClabitem.critical_high_k" x-ref="inputCritHighK"
+                                                    type="number" step="0.01" class="w-full" placeholder="Atas"
+                                                    x-on:keydown.enter.prevent="$refs.inputUnitConvert?.focus()" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                                        Kosongkan jika tidak berlaku untuk kelompok tertentu. Ambang kritis biasanya lebih ekstrem dari batas rujukan
+                                        (contoh: Kalium rujukan 3.5&ndash;5.5, kritis &lt;2.5 atau &gt;6.5 mEq/L).
+                                    </p>
+                                </div>
+                            @endif
+
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
                                 <div>
                                     <x-input-label value="Faktor Konversi" />

@@ -81,7 +81,7 @@ new class extends Component {
             return null;
         }
 
-        $q = DB::table('lbmst_clabitems')->select('clabitem_id', 'clabitem_desc', 'clab_id', 'product_id', 'is_group', 'clabitem_group', 'price', 'dosage', 'unit_desc', 'item_seq', 'item_code', 'normal_m', 'normal_f', 'low_limit_m', 'high_limit_m', 'low_limit_f', 'high_limit_f', 'low_limit_k', 'high_limit_k', 'unit_convert', 'lowhigh_status', 'hidden_status', 'status', 'loinc_code', 'loinc_display', 'nilai_kritis')->where('clab_id', $this->selectedClabId)->orderBy('item_seq')->orderBy('clabitem_desc');
+        $q = DB::table('lbmst_clabitems')->select('clabitem_id', 'clabitem_desc', 'clab_id', 'product_id', 'is_group', 'clabitem_group', 'price', 'dosage', 'unit_desc', 'item_seq', 'item_code', 'normal_m', 'normal_f', 'low_limit_m', 'high_limit_m', 'low_limit_f', 'high_limit_f', 'low_limit_k', 'high_limit_k', 'critical_low_m', 'critical_high_m', 'critical_low_f', 'critical_high_f', 'critical_low_k', 'critical_high_k', 'unit_convert', 'lowhigh_status', 'hidden_status', 'status', 'loinc_code', 'loinc_display', 'nilai_kritis')->where('clab_id', $this->selectedClabId)->orderBy('item_seq')->orderBy('clabitem_desc');
 
         if (trim($this->searchItem) !== '') {
             $kw = mb_strtoupper(trim($this->searchItem));
@@ -278,6 +278,37 @@ new class extends Component {
                                                         <span class="text-green-500">A</span>:
                                                         {{ $item->low_limit_k ?? '-' }} -
                                                         {{ $item->high_limit_k ?? '-' }}
+                                                    </div>
+                                                @endif
+
+                                                @php
+                                                    $hasCrit =
+                                                        ($item->nilai_kritis ?? 'N') === 'Y' &&
+                                                        ($item->critical_low_m !== null || $item->critical_high_m !== null ||
+                                                            $item->critical_low_f !== null || $item->critical_high_f !== null ||
+                                                            $item->critical_low_k !== null || $item->critical_high_k !== null);
+                                                @endphp
+                                                @if ($hasCrit)
+                                                    <div class="mt-1 pt-1 border-t border-rose-100 dark:border-rose-900/30 space-y-0.5">
+                                                        <div class="text-[10px] font-bold text-rose-600 dark:text-rose-400">KRITIS</div>
+                                                        @if ($item->critical_low_m !== null || $item->critical_high_m !== null)
+                                                            <div class="text-rose-500 dark:text-rose-300">
+                                                                <span class="text-blue-500">P</span>:
+                                                                {{ $item->critical_low_m ?? '-' }} - {{ $item->critical_high_m ?? '-' }}
+                                                            </div>
+                                                        @endif
+                                                        @if ($item->critical_low_f !== null || $item->critical_high_f !== null)
+                                                            <div class="text-rose-500 dark:text-rose-300">
+                                                                <span class="text-pink-500">W</span>:
+                                                                {{ $item->critical_low_f ?? '-' }} - {{ $item->critical_high_f ?? '-' }}
+                                                            </div>
+                                                        @endif
+                                                        @if ($item->critical_low_k !== null || $item->critical_high_k !== null)
+                                                            <div class="text-rose-500 dark:text-rose-300">
+                                                                <span class="text-green-500">A</span>:
+                                                                {{ $item->critical_low_k ?? '-' }} - {{ $item->critical_high_k ?? '-' }}
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 @endif
                                             @else
