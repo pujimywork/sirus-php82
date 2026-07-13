@@ -108,6 +108,7 @@ new class extends Component {
                 'p.cost_price',
                 'p.sales_price',
                 'p.stock',
+                'p.product_id_satusehat',
 
                 // Nama dari tabel relasi (untuk display)
                 'u.uom_desc as uom_name',
@@ -273,6 +274,15 @@ new class extends Component {
                                         <div class="font-mono text-xs" style="color:var(--muted)">
                                             {{ $row->product_id }}@if (!empty($row->kode)) · {{ $row->kode }}@endif
                                         </div>
+                                        @if (!empty($row->product_id_satusehat))
+                                            <div class="mt-1">
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                                                    title="Kode Satu Sehat (KFA)">
+                                                    Satu Sehat
+                                                    <span class="font-mono">{{ $row->product_id_satusehat }}</span>
+                                                </span>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4">{{ $row->uom_name ?? '-' }}</td>
                                     <td class="px-6 py-4">
