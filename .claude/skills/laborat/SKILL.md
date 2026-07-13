@@ -5,8 +5,12 @@ description: Arsitektur & jebakan modul Laboratorium (lbtxn_/lbmst_, hasil lab, 
 
 # Modul Laboratorium (sirus-php82)
 
-Dok lengkap: **`docs/laborat-modul.md`** — baca itu untuk detail (struktur file, status, batal, Mindray,
-operasi SQL, **Nilai Kritis**). Ringkasan keputusan cepat di bawah.
+Dok:
+- **`docs/laborat-architecture.md`** — siklus PENUH end-to-end (EMR order → petugas → admin/kasir → dokter
+  lihat hasil → master → laporan), model data, gap/inkonsistensi. Baca ini dulu untuk gambaran besar.
+- **`docs/laborat-modul.md`** — deep-dive modul petugas (status, batal, Mindray, SQL, **Nilai Kritis**).
+
+Ringkasan keputusan cepat di bawah.
 
 ## Peta komponen
 
@@ -33,9 +37,11 @@ Prefix tabel: `lbtxn_` (transaksi) & `lbmst_` (master). Header `lbtxn_checkuphdr
 
 2. **Nilai kritis = lewat AMBANG KRITIS, dengan FALLBACK.** Definisi: `nilai_kritis='Y'` DAN
    (`hasil <= critical_low` ATAU `hasil >= critical_high`) per gender. Bila ambang belum diisi ATAU hasil
-   non-numerik → **fallback** ke flag lama `lab_result_status` (H/L). Pola ini WAJIB sama di 3 konsumen
-   (display, cetak, trait laporan). Kalau ubah salah satu, ubah ketiganya. Detail: `docs/laborat-modul.md`
-   bagian "Nilai Kritis".
+   non-numerik → **fallback** ke flag lama `lab_result_status` (H/L). Pola ini WAJIB sama di konsumen:
+   display (`laboratorium-display`), cetak (`-print`), trait laporan (`NilaiKritisLabTrait`). ⚠️ **GAP
+   diketahui**: layar input petugas `pemeriksaan-laborat.blade.php:869` MASIH flag-based (belum ambang) —
+   selaraskan bila menyentuh area itu. `lab_result_status` (H/L/N/R) sendiri TETAP dari rentang normal,
+   BUKAN critical (kritis = lapisan badge di atas normal). Detail: `docs/laborat-architecture.md` §8-9.
 
 3. **`unit_convert` cuma untuk TAMPILAN.** `lab_result`, `low/high_limit`, `critical_*` semua disimpan unit
    **RAW** (nilai alat). Perbandingan Tinggi/Rendah/Kritis pakai RAW. `× unit_convert` hanya saat render
