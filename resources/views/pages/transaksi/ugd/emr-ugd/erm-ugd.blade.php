@@ -334,17 +334,21 @@ new class extends Component {
                         </div>
 
                         <div class="p-3">
-                            <div x-show="activeTab === 'penilaian'" x-cloak>
+                            {{-- wire:key pada wrapper x-show: tanpa ini, morph Livewire (mis. setelah Simpan EMR
+                                 yang me-morph modul EMR) bisa memindah/re-parent div tab tak-ber-key → komponen
+                                 anak (penilaian/observasi/obat-cairan) re-init & kehilangan state (mis. productId
+                                 obat-cairan hilang → form balik ke Fase 1). --}}
+                            <div wire:key="tab-penilaian-{{ $rjNo }}" x-show="activeTab === 'penilaian'" x-cloak>
                                 <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
                                     wire:key="penilaian-ugd-{{ $rjNo }}" />
                             </div>
 
-                            <div x-show="activeTab === 'observasi'" x-cloak>
+                            <div wire:key="tab-observasi-{{ $rjNo }}" x-show="activeTab === 'observasi'" x-cloak>
                                 <livewire:pages::transaksi.ugd.emr-ugd.observasi.rm-observasi-ugd-actions :rjNo="$rjNo"
                                     wire:key="observasi-ugd-{{ $rjNo }}" />
                             </div>
 
-                            <div x-show="activeTab === 'terapi'" x-cloak>
+                            <div wire:key="tab-terapi-{{ $rjNo }}" x-show="activeTab === 'terapi'" x-cloak>
                                 <livewire:pages::transaksi.ugd.emr-ugd.obat-dan-cairan.rm-obat-dan-cairan-ugd-actions
                                     :rjNo="$rjNo" wire:key="obat-dan-cairan-ugd-{{ $rjNo }}" />
                             </div>
