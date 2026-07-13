@@ -307,8 +307,18 @@ new class extends Component {
 
                     </div>
 
-                    {{-- TAB GROUP N | L | T (Penilaian / Observasi / Obat-Cairan) --}}
-                    <div x-data="{ activeTab: 'penilaian' }"
+                    {{-- TAB GROUP N | L | T (Penilaian / Observasi / Obat-Cairan)
+
+                         wire:ignore WAJIB: beda dari grup SOAP (S/O/A/P) yg di-stack polos spt EMR RJ,
+                         grup ini dibungkus Alpine (x-data activeTab + x-show). Saat parent (erm-ugd)
+                         morph — mis. setelah Simpan EMR mem-broadcast save-rm-* — subtree Alpine ini
+                         bikin morphdom melepas/menyusun-ulang node → komponen anak Livewire (penilaian/
+                         observasi/obat-cairan) RE-MOUNT & kehilangan state ($rjNo balik null, "Data UGD
+                         belum dimuat"). wire:ignore menyuruh morph parent MELEWATI subtree ini; komponen
+                         anak tetap hidup & update sendiri (island), Alpine tetap urus pindah tab.
+                         Aman utk ganti pasien: seluruh isi modal (dirty-modal-content) ber-wire:key
+                         renderKey('modal-emr-ugd',[rjNo]) → dibuat ulang saat rjNo berganti. --}}
+                    <div wire:ignore wire:key="nlt-tab-group-{{ $rjNo }}" x-data="{ activeTab: 'penilaian' }"
                         class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div class="px-2 border-b border-hairline dark:border-gray-700">
                             <div class="flex flex-nowrap gap-2 -mb-px">
