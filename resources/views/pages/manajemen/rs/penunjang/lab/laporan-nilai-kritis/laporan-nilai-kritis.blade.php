@@ -293,7 +293,16 @@ new class extends Component {
                                             $hasilFmt = $konversi($row->hasil);
                                             $lowFmt = $konversi($row->crit_low);
                                             $highFmt = $konversi($row->crit_high);
-                                            $rujukanFmt = ($lowFmt !== '' || $highFmt !== '') ? trim($lowFmt . ' – ' . $highFmt) : '-';
+                                            // Satu-arah pakai ≥/≤ agar tidak terbaca sebagai minus (mis. "– 7.4").
+                                            if ($lowFmt !== '' && $highFmt !== '') {
+                                                $rujukanFmt = $lowFmt . ' – ' . $highFmt;
+                                            } elseif ($highFmt !== '') {
+                                                $rujukanFmt = '≥ ' . $highFmt;
+                                            } elseif ($lowFmt !== '') {
+                                                $rujukanFmt = '≤ ' . $lowFmt;
+                                            } else {
+                                                $rujukanFmt = '-';
+                                            }
                                         @endphp
                                         <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50">
                                             <td class="px-3 py-2.5 text-muted-soft tabular-nums">{{ $this->detail->firstItem() + $i }}</td>
