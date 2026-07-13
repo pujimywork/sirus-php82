@@ -10,14 +10,13 @@ use Illuminate\Support\Facades\DB;
  * Nilai kritis = hasil pemeriksaan yang MELEWATI AMBANG KRITIS (critical_low/high
  * limit, dipilih per jenis kelamin) pada item yang auto-alert-nya AKTIF
  * (lbmst_clabitems.nilai_kritis='Y'):
- *   - hasil >= critical_high → Tinggi
- *   - hasil <= critical_low  → Rendah
+ *   - hasil numerik >= critical_high → Tinggi
+ *   - hasil numerik <= critical_low  → Rendah
  *
- * FALLBACK: bila ambang kritis belum diisi untuk item/gender itu (kedua kolom
- * critical NULL), ATAU hasil bukan angka, dipakai perilaku lama berbasis flag
- * status hasil (H/HH/HIGH = Tinggi, L/LL/LOW = Rendah). Ini menjaga item lama
- * yang belum diisi ambangnya tetap terhitung, sekaligus konsisten dengan badge
- * KRITIS di tampilan & cetak hasil lab.
+ * THRESHOLD-ONLY (tanpa fallback): item yang ambang kritisnya BELUM diisi (kedua
+ * kolom critical NULL untuk gender itu) TIDAK muncul di laporan — laporan hanya
+ * memuat hasil yang benar-benar melewati ambang yang sudah dikonfigurasi. (Beda
+ * dari badge KRITIS di tampilan/cetak hasil lab yang masih pakai fallback flag.)
  *
  * Sumber: lbtxn_checkupdtls (hasil) + lbtxn_checkuphdrs (checkup_date, status_rjri)
  *         + lbmst_clabitems (flag kritis, ambang, satuan) + rsmst_pasiens (gender).
@@ -42,39 +41,20 @@ trait NilaiKritisLabTrait
         return "(CASE WHEN p.sex = 'P' THEN m.critical_low_f ELSE m.critical_low_m END)";
     }
 
-    /** Ambang kritis terisi untuk gender ini? */
-    private function hasThresholdSql(): string
-    {
-        return '(' . $this->critHighSql() . ' IS NOT NULL OR ' . $this->critLowSql() . ' IS NOT NULL)';
-    }
-
-    /** Kapan pakai jalur ambang vs jalur fallback flag. */
-    private function useThresholdSql(): string
-    {
-        return '(' . $this->hasThresholdSql() . ' AND ' . $this->numResultSql() . ' IS NOT NULL)';
-    }
-
-    private function useFallbackSql(): string
-    {
-        return '(NOT ' . $this->hasThresholdSql() . ' OR ' . $this->numResultSql() . ' IS NULL)';
-    }
-
-    /** Predikat Tinggi: hasil >= critical_high, atau fallback flag H. */
+    /** Predikat Tinggi: hasil numerik >= critical_high (ambang WAJIB terisi; tanpa fallback). */
     private function tinggiSql(): string
     {
-        $num = $this->numResultSql();
-        $ch = $this->critHighSql();
-        return '((' . $this->useThresholdSql() . " AND {$ch} IS NOT NULL AND {$num} >= {$ch})"
-            . ' OR (' . $this->useFallbackSql() . " AND UPPER(d.lab_result_status) IN ('H', 'HH', 'HIGH')))";
+        $numericResultSql = $this->numResultSql();
+        $criticalHighSql = $this->critHighSql();
+        return "({$criticalHighSql} IS NOT NULL AND {$numericResultSql} IS NOT NULL AND {$numericResultSql} >= {$criticalHighSql})";
     }
 
-    /** Predikat Rendah: hasil <= critical_low, atau fallback flag L. */
+    /** Predikat Rendah: hasil numerik <= critical_low (ambang WAJIB terisi; tanpa fallback). */
     private function rendahSql(): string
     {
-        $num = $this->numResultSql();
-        $cl = $this->critLowSql();
-        return '((' . $this->useThresholdSql() . " AND {$cl} IS NOT NULL AND {$num} <= {$cl})"
-            . ' OR (' . $this->useFallbackSql() . " AND UPPER(d.lab_result_status) IN ('L', 'LL', 'LOW')))";
+        $numericResultSql = $this->numResultSql();
+        $criticalLowSql = $this->critLowSql();
+        return "({$criticalLowSql} IS NOT NULL AND {$numericResultSql} IS NOT NULL AND {$numericResultSql} <= {$criticalLowSql})";
     }
 
     /** Predikat kritis = Tinggi ATAU Rendah. */

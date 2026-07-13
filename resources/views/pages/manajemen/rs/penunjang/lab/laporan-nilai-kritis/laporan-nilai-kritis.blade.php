@@ -145,7 +145,7 @@ new class extends Component {
 <div>
     <x-page-title
         title="Laporan Nilai Kritis Laboratorium"
-        subtitle="Hasil lab yang melewati ambang kritis (critical low/high) pada item auto-alert aktif — perlu perhatian dokter segera." />
+        subtitle="Hasil lab yang melewati ambang kritis (critical low/high) yang sudah dikonfigurasi di master — perlu perhatian dokter segera. Item yang ambang kritisnya belum diisi tidak ditampilkan." />
 
     <div class="w-full min-h-[calc(100vh-5rem)] bg-surface-soft dark:bg-gray-800">
         <div class="px-6 pt-0 pb-6">

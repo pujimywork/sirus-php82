@@ -230,8 +230,12 @@ Definisi & aturan lengkap: `docs/laborat-modul.md` bagian "Nilai Kritis". Inti:
 | Master `/master/laborat` (input + list) | — (definisi ambang) | ✅ |
 | Dokter `laboratorium-display` (layar) | **ambang + fallback** | ✅ |
 | Cetak `laboratorium-display-print` | **ambang + fallback** | ✅ |
-| Laporan Nilai Kritis (`NilaiKritisLabTrait`) | **ambang + fallback** | ✅ |
+| Laporan Nilai Kritis (`NilaiKritisLabTrait`) | **ambang SAJA (tanpa fallback)** — item tanpa ambang tak muncul | ✅ |
 | **Petugas input `pemeriksaan-laborat`** | **flag lama** (`nilai_kritis=Y` + status H/L) | ⚠️ BELUM diselaraskan |
+
+> **Catatan kebijakan**: laporan sengaja **threshold-only** (beda dari display/cetak yang fallback) — laporan
+> manajemen hanya menghitung hasil yang melewati ambang yang SUDAH dikonfigurasi, agar tidak tercemar item
+> yang ambangnya belum diisi (mis. PCT rendah yang secara klinis bukan kritis).
 
 ---
 

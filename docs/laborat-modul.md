@@ -82,26 +82,33 @@ isKritis(item, hasil):
       → FALLBACK: pakai flag lama lab_result_status (H/HH/HIGH=Tinggi, L/LL/LOW=Rendah)
 ```
 
-- **Fallback** menjaga item lama (ambang belum diisi) tetap terhitung/ter-badge — sama seperti sebelum fitur ini.
+- **Fallback** (HANYA display & cetak hasil): menjaga item lama (ambang belum diisi) tetap ter-badge.
   Setelah admin mengisi ambang, klasifikasi jadi presisi (bukan sekadar "di luar normal").
+- **Laporan Nilai Kritis = THRESHOLD-ONLY (tanpa fallback)**: item yang ambangnya belum diisi TIDAK muncul
+  di laporan — laporan manajemen hanya memuat hasil yang melewati ambang yang sudah dikonfigurasi (agar tak
+  tercemar mis. PCT rendah yang klinis bukan kritis). Jadi definisi di atas berlaku untuk display/cetak;
+  untuk laporan buang baris `else FALLBACK`.
 - **Satuan**: `critical_*` disimpan dalam unit **RAW** (sama seperti `low/high_limit`), dibandingkan lawan
   `lab_result` RAW. Perkalian `× unit_convert` hanya untuk **tampilan**, bukan untuk perbandingan.
 - **Anak (`_k`)**: runtime display/cetak/laporan hanya bedakan Pria/Wanita (tak deteksi umur), **konsisten
   dengan rentang normal** yang juga hanya pakai `_m/_f`. Kolom `_k` tersimpan di master untuk kelengkapan;
   kalau mau dipakai butuh deteksi umur dari `birth_date` (penyesuaian terpisah, memengaruhi normal range juga).
 
-### Konsumen (3 tempat — ubah bersamaan agar konsisten)
+### Konsumen (3 tempat)
 
-| Tempat | File | Peran |
+| Tempat | File | Basis kritis |
 |---|---|---|
-| Display layar | `components/rekam-medis/penunjang/laboratorium-display/laboratorium-display.blade.php` | Badge **KRITIS** + baris rose di tabel hasil |
-| Cetak PDF | `...laboratorium-display/laboratorium-display-print.blade.php` | Idem, versi cetak |
-| Laporan | `App\Http\Traits\...\Lab\NilaiKritisLabTrait` (dipakai `pages/manajemen/rs/penunjang/lab/laporan-nilai-kritis`) | Detail + Rekap + Per-Jenis, filter Tinggi/Rendah |
+| Display layar | `components/rekam-medis/penunjang/laboratorium-display/laboratorium-display.blade.php` | ambang **+ fallback**; badge KRITIS + baris rose |
+| Cetak PDF | `...laboratorium-display/laboratorium-display-print.blade.php` | idem (ambang + fallback) |
+| Laporan | `App\Http\Traits\...\Lab\NilaiKritisLabTrait` (`pages/manajemen/rs/penunjang/lab/laporan-nilai-kritis`) | **ambang SAJA (tanpa fallback)** — item tanpa ambang tak muncul |
+
+Display & cetak pakai fallback (item lama tetap ter-badge); **laporan tidak** (hanya yang ambangnya sudah
+diisi). Kalau mengubah pola kritis di display/cetak, ingat laporan sengaja berbeda.
 
 **Query**: kedua blade display menyebut `d.critical_low_m/high_m/low_f/high_f` (alias master `d`, ikut pola
-`low/high_limit` yang hanya pilih m/f). Trait laporan membangun predikat SQL berbasis ambang + fallback;
-karena butuh `sex`, `baseKritis` **left-join `rsmst_pasiens`** (helper: `numResultSql/critHigh/critLow/
-useThreshold/useFallback/tinggi/rendah/kritisSql`). Numerik-guard di Oracle:
+`low/high_limit` yang hanya pilih m/f). Trait laporan membangun predikat SQL berbasis ambang saja; karena
+butuh `sex`, `baseKritis` **left-join `rsmst_pasiens`** (helper: `numResultSql/critHigh/critLow/tinggi/
+rendah/kritisSql`). Numerik-guard di Oracle:
 `REGEXP_LIKE(TRIM(lab_result),'^-?[0-9]+(\.[0-9]+)?$')` lalu `TO_NUMBER` (CASE short-circuit).
 
 ## Batal — dua jenis
