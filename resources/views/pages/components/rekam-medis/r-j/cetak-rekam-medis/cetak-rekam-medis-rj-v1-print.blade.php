@@ -2,14 +2,8 @@
 
     {{-- IDENTITAS PASIEN — sejajar dengan logo --}}
     <x-slot name="patientData">
-        <x-pdf.identitas-pasien
-            :rm="$dataPasien['pasien']['regNo'] ?? null"
-            :nama="$dataPasien['pasien']['regName'] ?? null"
-            :jenisKelamin="$dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] ?? null"
-            :tempatLahir="$dataPasien['pasien']['tempatLahir'] ?? null"
-            :tglLahir="$dataPasien['pasien']['tglLahir'] ?? null"
-            :umur="$dataPasien['pasien']['thn'] ?? null"
-            :alamat="$dataPasien['pasien']['identitas']['alamat'] ?? null">
+        <x-pdf.identitas-pasien :rm="$dataPasien['pasien']['regNo'] ?? null" :nama="$dataPasien['pasien']['regName'] ?? null" :jenisKelamin="$dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] ?? null" :tempatLahir="$dataPasien['pasien']['tempatLahir'] ?? null"
+            :tglLahir="$dataPasien['pasien']['tglLahir'] ?? null" :umur="$dataPasien['pasien']['thn'] ?? null" :alamat="$dataPasien['pasien']['identitas']['alamat'] ?? null">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">NIK</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
@@ -32,13 +26,15 @@
         // Status Psikologis: kumpulkan flag aktif
         $sp = $dataDaftarTxn['anamnesa']['statusPsikologis'] ?? [];
         $psikoFlags = collect([
-            ($sp['tidakAdaKelainan'] ?? false) ? 'Tidak Ada Kelainan' : null,
-            ($sp['marah'] ?? false) ? 'Marah' : null,
-            ($sp['ccemas'] ?? false) ? 'Cemas' : null,
-            ($sp['takut'] ?? false) ? 'Takut' : null,
-            ($sp['sedih'] ?? false) ? 'Sedih' : null,
-            ($sp['cenderungBunuhDiri'] ?? false) ? 'Resiko Bunuh Diri' : null,
-        ])->filter()->implode(' / ');
+            $sp['tidakAdaKelainan'] ?? false ? 'Tidak Ada Kelainan' : null,
+            $sp['marah'] ?? false ? 'Marah' : null,
+            $sp['ccemas'] ?? false ? 'Cemas' : null,
+            $sp['takut'] ?? false ? 'Takut' : null,
+            $sp['sedih'] ?? false ? 'Sedih' : null,
+            $sp['cenderungBunuhDiri'] ?? false ? 'Resiko Bunuh Diri' : null,
+        ])
+            ->filter()
+            ->implode(' / ');
         $psikoKet = $sp['sebutstatusPsikologis'] ?? '';
 
         // Status Mental
@@ -133,17 +129,19 @@
                 <td class="border border-black px-1.5 py-1 font-bold align-top uppercase">Tindak Lanjut</td>
                 <td class="border border-black px-1.5 py-1 align-top text-center" colspan="2">
                     <span class="font-bold">Tindak Lanjut :</span>
-                    {{ $tindakLanjut ?: '-' }}@if (!empty($tindakLanjutKet)) / {{ $tindakLanjutKet }} @endif
+                    {{ $tindakLanjut ?: '-' }}@if (!empty($tindakLanjutKet))
+                        / {{ $tindakLanjutKet }}
+                    @endif
                 </td>
             </tr>
 
             {{-- TERAPI --}}
-            <tr>
+            {{-- <tr>
                 <td class="border border-black px-1.5 py-1 font-bold align-top uppercase">Terapi</td>
                 <td class="border border-black px-1.5 py-1 align-top" colspan="2">
                     {!! nl2br(e($terapi)) !!}
                 </td>
-            </tr>
+            </tr> --}}
 
             {{-- TTD --}}
             <tr>
