@@ -106,7 +106,24 @@
                                 $flagStatus = strtoupper(trim($item->lab_result_status ?? ''));
                                 $isHigh = in_array($flagStatus, ['H', 'HH', 'HIGH']);
                                 $isLow = in_array($flagStatus, ['L', 'LL', 'LOW']);
-                                $isKritis = (($item->nilai_kritis ?? 'N') === 'Y') && ($isHigh || $isLow);
+
+                                // Nilai Kritis = flag Y DAN hasil melewati AMBANG KRITIS (critical_low/high per
+                                // jenis kelamin). Fallback ke perilaku lama (flag Y + abnormal) bila ambang belum diisi.
+                                $sexK = $sex === 'P' ? 'f' : 'm';
+                                $critLow = $item->{'critical_low_' . $sexK} ?? null;
+                                $critHigh = $item->{'critical_high_' . $sexK} ?? null;
+                                $hasCritThreshold = ($critLow !== null && $critLow !== '') || ($critHigh !== null && $critHigh !== '');
+                                $isKritis = false;
+                                if (($item->nilai_kritis ?? 'N') === 'Y') {
+                                    if ($hasCritThreshold && is_numeric($item->lab_result ?? null)) {
+                                        $rv = floatval($item->lab_result);
+                                        $isKritis =
+                                            ($critLow !== null && $critLow !== '' && $rv <= floatval($critLow)) ||
+                                            ($critHigh !== null && $critHigh !== '' && $rv >= floatval($critHigh));
+                                    } else {
+                                        $isKritis = $isHigh || $isLow;
+                                    }
+                                }
 
                                 $normalLow = $sex === 'P' ? $item->low_limit_f ?? '' : $item->low_limit_m ?? '';
                                 $normalHigh = $sex === 'P' ? $item->high_limit_f ?? '' : $item->high_limit_m ?? '';

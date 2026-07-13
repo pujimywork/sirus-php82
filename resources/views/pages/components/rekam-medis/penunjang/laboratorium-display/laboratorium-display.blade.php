@@ -250,6 +250,7 @@ new class extends Component {
                    normal_f, normal_m, lab_result, item_seq,
                    unit_desc, unit_convert, item_code,
                    high_limit_m, high_limit_f, low_limit_m, low_limit_f,
+                   d.critical_low_m, d.critical_high_m, d.critical_low_f, d.critical_high_f,
                    lowhigh_status, lab_result_status, d.nilai_kritis,
                    to_char(checkup_date,'dd/mm/yyyy') AS checkup_date1x,
                    WAKTU_SELESAI_PELAYANAN
@@ -389,7 +390,9 @@ new class extends Component {
             SELECT b.clabitem_id, clabitem_desc, clab_desc, app_seq, item_seq,
                    lab_result, unit_desc, unit_convert, item_code,
                    normal_f, normal_m, high_limit_m, high_limit_f,
-                   low_limit_m, low_limit_f, lowhigh_status, lab_result_status, d.nilai_kritis,
+                   low_limit_m, low_limit_f,
+                   d.critical_low_m, d.critical_high_m, d.critical_low_f, d.critical_high_f,
+                   lowhigh_status, lab_result_status, d.nilai_kritis,
                    sex, a.dr_id, dr_name, a.emp_id, emp_name
             FROM lbtxn_checkuphdrs a
             JOIN lbtxn_checkupdtls b ON a.checkup_no = b.checkup_no
@@ -854,8 +857,25 @@ new class extends Component {
                                                 $flagStatus = strtoupper(trim($item->lab_result_status ?? ''));
                                                 $isHigh = in_array($flagStatus, ['H', 'HH', 'HIGH']);
                                                 $isLow = in_array($flagStatus, ['L', 'LL', 'LOW']);
-                                                // Nilai Kritis = item bertanda kritis (Y) DAN hasil melewati ambang (high/low)
-                                                $isKritis = (($item->nilai_kritis ?? 'N') === 'Y') && ($isHigh || $isLow);
+
+                                                // Nilai Kritis = item bertanda kritis (Y) DAN hasil melewati AMBANG KRITIS
+                                                // (critical_low/high sesuai jenis kelamin). Fallback: bila ambang kritis
+                                                // belum diisi untuk item ini, pakai perilaku lama (flag Y + abnormal H/L).
+                                                $sexK = strtoupper($item->sex ?? 'L') === 'P' ? 'f' : 'm';
+                                                $critLow = $item->{'critical_low_' . $sexK} ?? null;
+                                                $critHigh = $item->{'critical_high_' . $sexK} ?? null;
+                                                $hasCritThreshold = ($critLow !== null && $critLow !== '') || ($critHigh !== null && $critHigh !== '');
+                                                $isKritis = false;
+                                                if (($item->nilai_kritis ?? 'N') === 'Y') {
+                                                    if ($hasCritThreshold && is_numeric($item->lab_result ?? null)) {
+                                                        $rv = floatval($item->lab_result);
+                                                        $isKritis =
+                                                            ($critLow !== null && $critLow !== '' && $rv <= floatval($critLow)) ||
+                                                            ($critHigh !== null && $critHigh !== '' && $rv >= floatval($critHigh));
+                                                    } else {
+                                                        $isKritis = $isHigh || $isLow;
+                                                    }
+                                                }
 
                                                 $rowClass = $isKritis
                                                     ? 'bg-rose-100 dark:bg-rose-900/30 ring-1 ring-rose-300 dark:ring-rose-700'
