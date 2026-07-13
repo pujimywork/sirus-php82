@@ -308,7 +308,8 @@ new class extends Component {
                             <x-input-label value="Cairan" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.cairan" placeholder="Cairan"
-                                    class="w-full pr-8" />
+                                    class="w-full pr-8" x-ref="olCairan"
+                                    x-on:keydown.enter.prevent="$refs.olTetesan?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">ml</span>
                             </div>
@@ -319,7 +320,8 @@ new class extends Component {
                             <x-input-label value="Tetesan" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.tetesan" placeholder="Tetesan/menit"
-                                    class="w-full pr-16" />
+                                    class="w-full pr-16" x-ref="olTetesan"
+                                    x-on:keydown.enter.prevent="$refs.olSistolik?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">gtt/menit</span>
                             </div>
@@ -330,7 +332,8 @@ new class extends Component {
                             <x-input-label value="TD Sistolik *" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.sistolik" placeholder="Sistolik"
-                                    class="w-full pr-12" />
+                                    class="w-full pr-12" x-ref="olSistolik"
+                                    x-on:keydown.enter.prevent="$refs.olDistolik?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mmHg</span>
                             </div>
@@ -341,7 +344,8 @@ new class extends Component {
                             <x-input-label value="TD Diastolik *" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.distolik" placeholder="Diastolik"
-                                    class="w-full pr-12" />
+                                    class="w-full pr-12" x-ref="olDistolik"
+                                    x-on:keydown.enter.prevent="$refs.olNafas?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mmHg</span>
                             </div>
@@ -352,7 +356,8 @@ new class extends Component {
                             <x-input-label value="Frekuensi Nafas *" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.frekuensiNafas" placeholder="Nafas"
-                                    class="w-full pr-14" />
+                                    class="w-full pr-14" x-ref="olNafas"
+                                    x-on:keydown.enter.prevent="$refs.olNadi?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">x/mnt</span>
                             </div>
@@ -363,7 +368,8 @@ new class extends Component {
                             <x-input-label value="Frekuensi Nadi *" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.frekuensiNadi" placeholder="Nadi"
-                                    class="w-full pr-14" />
+                                    class="w-full pr-14" x-ref="olNadi"
+                                    x-on:keydown.enter.prevent="$refs.olSuhu?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">x/mnt</span>
                             </div>
@@ -374,7 +380,8 @@ new class extends Component {
                             <x-input-label value="Suhu *" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.suhu" placeholder="Suhu"
-                                    class="w-full pr-6" />
+                                    class="w-full pr-6" x-ref="olSuhu"
+                                    x-on:keydown.enter.prevent="$refs.olSpo2?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">°C</span>
                             </div>
@@ -385,7 +392,8 @@ new class extends Component {
                             <x-input-label value="SpO₂ *" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.spo2" placeholder="SpO₂"
-                                    class="w-full pr-5" />
+                                    class="w-full pr-5" x-ref="olSpo2"
+                                    x-on:keydown.enter.prevent="$refs.olGda?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">%</span>
                             </div>
@@ -396,7 +404,8 @@ new class extends Component {
                             <x-input-label value="GDA" class="mb-1" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.gda" placeholder="Gula Darah Acak"
-                                    class="w-full pr-12" />
+                                    class="w-full pr-12" x-ref="olGda"
+                                    x-on:keydown.enter.prevent="$refs.olGcs?.focus()" />
                                 <span
                                     class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mg/dL</span>
                             </div>
@@ -404,7 +413,8 @@ new class extends Component {
 
                         <div class="col-span-6 md:col-span-3">
                             <x-input-label value="GCS" class="mb-1" />
-                            <x-text-input wire:model="observasiLanjutan.gcs" placeholder="E V M" class="w-full" />
+                            <x-text-input wire:model="observasiLanjutan.gcs" placeholder="E V M" class="w-full"
+                                x-ref="olGcs" x-on:keydown.enter.prevent="$refs.olWaktu?.focus()" />
                         </div>
 
                         {{-- Waktu + Aksi --}}
@@ -412,7 +422,7 @@ new class extends Component {
                             <x-input-label value="Waktu Pemeriksaan *" class="mb-1" />
                             <div class="flex items-center gap-2">
                                 <x-text-input wire:model="observasiLanjutan.waktuPemeriksaan"
-                                    placeholder="dd/mm/yyyy hh:mm:ss" class="grow" />
+                                    placeholder="dd/mm/yyyy hh:mm:ss" class="grow" x-ref="olWaktu" />
                                 <x-now-button wire:click.prevent="setWaktuPemeriksaan" />
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.waktuPemeriksaan')" class="mt-1" />
