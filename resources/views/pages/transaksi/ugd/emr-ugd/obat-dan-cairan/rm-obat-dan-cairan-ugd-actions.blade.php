@@ -366,6 +366,7 @@ new class extends Component {
                                     <x-input-label value="Jumlah *" class="mb-1" />
                                     <x-text-input wire:model="obatDanCairan.jumlah" placeholder="Jumlah"
                                         class="w-full" x-ref="ocJumlah"
+                                        x-init="$nextTick(() => $el.focus())"
                                         x-on:keydown.enter.prevent="$refs.ocDosis?.focus()" />
                                     <x-input-error :messages="$errors->get('obatDanCairan.jumlah')" class="mt-1" />
                                 </div>
