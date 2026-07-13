@@ -493,7 +493,10 @@ new class extends Component {
                                 <table class="w-full text-sm text-left text-muted table-auto border-separate border-spacing-y-2 -mt-2 dark:text-gray-400">
                                     <tbody class="bg-canvas dark:bg-gray-800">
                                         @forelse ($this->rows as $myQData)
-                                            <tr class="group">
+                                            {{-- wire:key WAJIB: tanpa ini, morph Livewire (mis. setelah save EMR)
+                                                 memindah/klon node & memisahkan child x-show dari x-data induknya →
+                                                 "expandedDx is not defined" → morph putus → EMR berhenti berfungsi. --}}
+                                            <tr wire:key="rmd-{{ $myQData->layanan_status ?? 'x' }}-{{ $myQData->txn_no }}" class="group">
                                                 @php
                                                     $datadaftar_json =
                                                         json_decode($myQData->datadaftar_json, true) ?? [];
