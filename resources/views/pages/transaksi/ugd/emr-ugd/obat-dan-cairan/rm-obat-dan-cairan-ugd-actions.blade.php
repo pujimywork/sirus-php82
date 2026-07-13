@@ -315,16 +315,19 @@ new class extends Component {
                     <div
                         class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
 
-                        @if (empty($obatDanCairan['productId']))
-                            {{-- Fase 1: pilih obat via LOV --}}
+                        {{-- LOV Fase 1: SELALU dirender, cuma disembunyikan (hidden) saat Fase 2.
+                             INTI FIX: komponen nested (LOV) TIDAK di-insert/remove lewat morph saat fase
+                             berganti — itu yang bikin LOV gagal mount (setelah Tambah) atau grid tak muncul
+                             (setelah Simpan EMR). Grid Fase 2 di bawah tetap kondisional (HTML biasa → morph
+                             aman menambah/menghapusnya). --}}
+                        <div @class(['hidden' => !empty($obatDanCairan['productId'])])>
                             <livewire:lov.product.lov-product target="obat-dan-cairan-ugd"
                                 label="Nama Obat / Jenis Cairan" placeholder="Ketik nama/kode obat atau cairan..."
                                 wire:key="lov-obat-cairan-ugd-{{ $rjNo }}-{{ $renderVersions['modal-obat-cairan-ugd'] ?? 0 }}" />
-                        @else
-                            {{-- Fase 2: form isian setelah obat dipilih.
-                                 wire:key WAJIB: cabang @else ini menggantikan nested-livewire LOV (Fase 1).
-                                 Tanpa key pembeda, morph Livewire (mis. setelah Simpan EMR) tidak menukar
-                                 Fase 1↔Fase 2 dengan bersih → grid field (Jumlah/Dosis/dst.) tak muncul. --}}
+                        </div>
+
+                        @if (!empty($obatDanCairan['productId']))
+                            {{-- Fase 2: form isian (HTML biasa, morph aman menambah/menghapus) --}}
                             <div class="grid grid-cols-12 gap-3" wire:key="oc-fase2-{{ $rjNo }}">
 
                                 {{-- Nama Obat (disabled) + tombol Ganti --}}
