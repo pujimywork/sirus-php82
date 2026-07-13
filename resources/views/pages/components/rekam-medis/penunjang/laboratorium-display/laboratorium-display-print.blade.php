@@ -109,17 +109,17 @@
 
                                 // Nilai Kritis = flag Y DAN hasil melewati AMBANG KRITIS (critical_low/high per
                                 // jenis kelamin). Fallback ke perilaku lama (flag Y + abnormal) bila ambang belum diisi.
-                                $sexK = $sex === 'P' ? 'f' : 'm';
-                                $critLow = $item->{'critical_low_' . $sexK} ?? null;
-                                $critHigh = $item->{'critical_high_' . $sexK} ?? null;
-                                $hasCritThreshold = ($critLow !== null && $critLow !== '') || ($critHigh !== null && $critHigh !== '');
+                                $genderSuffix = $sex === 'P' ? 'f' : 'm';
+                                $criticalLow = $item->{'critical_low_' . $genderSuffix} ?? null;
+                                $criticalHigh = $item->{'critical_high_' . $genderSuffix} ?? null;
+                                $hasCriticalThreshold = ($criticalLow !== null && $criticalLow !== '') || ($criticalHigh !== null && $criticalHigh !== '');
                                 $isKritis = false;
                                 if (($item->nilai_kritis ?? 'N') === 'Y') {
-                                    if ($hasCritThreshold && is_numeric($item->lab_result ?? null)) {
-                                        $rv = floatval($item->lab_result);
+                                    if ($hasCriticalThreshold && is_numeric($item->lab_result ?? null)) {
+                                        $numericResult = floatval($item->lab_result);
                                         $isKritis =
-                                            ($critLow !== null && $critLow !== '' && $rv <= floatval($critLow)) ||
-                                            ($critHigh !== null && $critHigh !== '' && $rv >= floatval($critHigh));
+                                            ($criticalLow !== null && $criticalLow !== '' && $numericResult <= floatval($criticalLow)) ||
+                                            ($criticalHigh !== null && $criticalHigh !== '' && $numericResult >= floatval($criticalHigh));
                                     } else {
                                         $isKritis = $isHigh || $isLow;
                                     }
