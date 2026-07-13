@@ -145,7 +145,7 @@ new class extends Component {
 <div>
     <x-page-title
         title="Laporan Nilai Kritis Laboratorium"
-        subtitle="Hasil lab yang melewati ambang (low/high limit) pada item auto-alert aktif — perlu perhatian dokter segera." />
+        subtitle="Hasil lab yang melewati ambang kritis (critical low/high) pada item auto-alert aktif — perlu perhatian dokter segera." />
 
     <div class="w-full min-h-[calc(100vh-5rem)] bg-surface-soft dark:bg-gray-800">
         <div class="px-6 pt-0 pb-6">
@@ -270,7 +270,7 @@ new class extends Component {
                                         <th class="px-3 py-3 text-left">Pemeriksaan</th>
                                         <th class="px-3 py-3 text-right">Hasil</th>
                                         <th class="px-3 py-3 text-left">Satuan</th>
-                                        <th class="px-3 py-3 text-center">Nilai Rujukan</th>
+                                        <th class="px-3 py-3 text-center">Ambang Kritis</th>
                                         <th class="px-3 py-3 text-center">Status</th>
                                         <th class="px-3 py-3 text-left">Unit</th>
                                     </tr>
@@ -291,8 +291,8 @@ new class extends Component {
                                                 return fmod($nilaiKonversi, 1) !== 0.0 ? (string) round($nilaiKonversi, 2) : number_format($nilaiKonversi);
                                             };
                                             $hasilFmt = $konversi($row->hasil);
-                                            $lowFmt = $konversi($row->low_limit);
-                                            $highFmt = $konversi($row->high_limit);
+                                            $lowFmt = $konversi($row->crit_low);
+                                            $highFmt = $konversi($row->crit_high);
                                             $rujukanFmt = ($lowFmt !== '' || $highFmt !== '') ? trim($lowFmt . ' – ' . $highFmt) : '-';
                                         @endphp
                                         <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50">
