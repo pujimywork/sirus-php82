@@ -569,18 +569,23 @@ new class extends Component {
 
                         @if (!$isFormLocked)
                             <template x-if="saveMap[activeTab]">
-                                <x-primary-button type="button" class="min-w-[120px]" x-data="{ cpptEditing: false }"
+                                <x-primary-button type="button" class="min-w-[120px]"
+                                    x-data="{ cpptEditing: false, sbarEditing: false }"
                                     x-on:cppt-edit-mode.window="cpptEditing = $event.detail?.editing ?? false"
-                                    x-on:open-modal.window="cpptEditing = false" x-on:click="saveActive()">
+                                    x-on:sbar-edit-mode.window="sbarEditing = $event.detail?.editing ?? false"
+                                    x-on:open-modal.window="cpptEditing = false; sbarEditing = false"
+                                    x-on:click="saveActive()">
                                     <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
                                     </svg>
-                                    {{-- Saat mode edit CPPT, label berubah jadi "Perbarui CPPT" --}}
+                                    {{-- Saat mode edit, label berubah jadi "Perbarui CPPT/SBAR" --}}
                                     <span x-show="activeTab === 'cppt' && cpptEditing" x-cloak>Perbarui CPPT</span>
-                                    <span x-show="!(activeTab === 'cppt' && cpptEditing)">Simpan <span
-                                            x-text="saveMap[activeTab].label"></span></span>
+                                    <span x-show="activeTab === 'sbar' && sbarEditing" x-cloak>Perbarui SBAR</span>
+                                    <span
+                                        x-show="!((activeTab === 'cppt' && cpptEditing) || (activeTab === 'sbar' && sbarEditing))">Simpan
+                                        <span x-text="saveMap[activeTab].label"></span></span>
                                 </x-primary-button>
                             </template>
                         @endif

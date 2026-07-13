@@ -30,6 +30,8 @@ new class extends Component {
         'sbar' => ['situation' => '', 'background' => '', 'assessment' => '', 'recommendation' => ''],
     ];
 
+    public ?string $editingSbarId = null;
+
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-sbar-ri'];
 
@@ -86,6 +88,12 @@ new class extends Component {
             return;
         }
 
+        // Mode edit → alihkan ke update (identitas petugas tetap milik penulis asli).
+        if ($this->editingSbarId !== null) {
+            $this->updateSBAR();
+            return;
+        }
+
         $this->formEntrySBAR['petugasSBAR'] = auth()->user()->myuser_name;
         $this->formEntrySBAR['petugasSBARCode'] = auth()->user()->myuser_code;
         $this->formEntrySBAR['profession'] = auth()->user()->profesiKlinis();
@@ -138,6 +146,129 @@ new class extends Component {
             if ($inserted) {
                 $this->reset(['formEntrySBAR']);
                 $this->afterSave('SBAR berhasil ditambahkan.');
+            }
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    /* ── Mulai edit: muat entri ke form (pola editCPPT) ── */
+    public function editSBAR(string $sbarId): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+
+        $sbar = collect($this->dataDaftarRi['sbar'] ?? [])->first(fn($r) => ($r['sbarId'] ?? null) === $sbarId);
+        if (!$sbar) {
+            $this->dispatch('toast', type: 'error', message: 'SBAR tidak ditemukan.');
+            return;
+        }
+
+        if (!$this->canEditSbar($sbar)) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya pemilik entri atau Admin yang dapat mengedit SBAR.');
+            return;
+        }
+
+        $this->editingSbarId = $sbarId;
+        $this->formEntrySBAR = array_merge($this->formEntrySBAR, [
+            'tglSBAR' => $sbar['tglSBAR'] ?? '',
+            'petugasSBAR' => $sbar['petugasSBAR'] ?? '',
+            'petugasSBARCode' => $sbar['petugasSBARCode'] ?? '',
+            'profession' => $sbar['profession'] ?? '',
+            'sbar' => $sbar['sbar'] ?? ['situation' => '', 'background' => '', 'assessment' => '', 'recommendation' => ''],
+        ]);
+
+        $this->resetValidation();
+        $this->incrementVersion('modal-sbar-ri');
+        // Beritahu footer modal agar label tombol Simpan → "Perbarui SBAR"
+        $this->dispatch('sbar-edit-mode', editing: true);
+        $this->dispatch('toast', type: 'info', message: 'Mode edit SBAR — ubah lalu klik Perbarui SBAR.');
+    }
+
+    /* ── Pemilik entri (petugasSBARCode === myuser_code) atau Admin ── */
+    private function canEditSbar(array $sbar): bool
+    {
+        if (auth()->user()->hasRole('Admin')) {
+            return true;
+        }
+        $ownerCode = (string) ($sbar['petugasSBARCode'] ?? '');
+        return $ownerCode !== '' && $ownerCode === auth()->user()->myuser_code;
+    }
+
+    public function cancelEditSBAR(): void
+    {
+        $this->editingSbarId = null;
+        $this->reset(['formEntrySBAR']);
+        $this->resetValidation();
+        $this->incrementVersion('modal-sbar-ri');
+        $this->dispatch('sbar-edit-mode', editing: false);
+    }
+
+    private function updateSBAR(): void
+    {
+        $this->validateWithToast(
+            [
+                'formEntrySBAR.tglSBAR' => 'required|date_format:d/m/Y H:i:s',
+                'formEntrySBAR.sbar.situation' => 'required|string|max:2000',
+                'formEntrySBAR.sbar.background' => 'required|string|max:2000',
+                'formEntrySBAR.sbar.assessment' => 'required|string|max:2000',
+                'formEntrySBAR.sbar.recommendation' => 'required|string|max:2000',
+            ],
+            [
+                'formEntrySBAR.tglSBAR.required' => 'Tanggal SBAR wajib diisi.',
+                'formEntrySBAR.sbar.situation.required' => 'Situation (S) wajib diisi.',
+                'formEntrySBAR.sbar.background.required' => 'Background (B) wajib diisi.',
+                'formEntrySBAR.sbar.assessment.required' => 'Assessment (A) wajib diisi.',
+                'formEntrySBAR.sbar.recommendation.required' => 'Recommendation (R) wajib diisi.',
+            ],
+        );
+
+        try {
+            $updated = false;
+
+            DB::transaction(function () use (&$updated) {
+                $this->lockRIRow($this->riHdrNo);
+
+                $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $list = collect($fresh['sbar'] ?? []);
+                $idx = $list->search(fn($r) => ($r['sbarId'] ?? null) === $this->editingSbarId);
+                if ($idx === false) {
+                    throw new \RuntimeException('SBAR tidak ditemukan.');
+                }
+
+                $row = $list->get($idx);
+
+                // Guard ulang terhadap data segar (hindari bypass via state lama).
+                if (!$this->canEditSbar($row)) {
+                    throw new \RuntimeException('Hanya pemilik entri atau Admin yang dapat mengedit SBAR.');
+                }
+
+                // Perbarui konten saja; identitas petugas tetap milik penulis asli.
+                $row['tglSBAR'] = $this->formEntrySBAR['tglSBAR'];
+                $row['sbar'] = $this->formEntrySBAR['sbar'];
+                $row['fingerprint'] = md5(json_encode([$row['tglSBAR'], $row['sbar']], JSON_UNESCAPED_UNICODE));
+                // Konten berubah → review/TTD DPJP sebelumnya tidak lagi valid.
+                unset($row['reviewDpjp']);
+
+                $list->put($idx, $row);
+                $fresh['sbar'] = $list->values()->all();
+
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+                $updated = true;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Edit SBAR — entri ' . ($row['tglSBAR'] ?? '-') . ' (' . ($row['profession'] ?: '-') . ')', 'MR');
+            });
+
+            if ($updated) {
+                $this->editingSbarId = null;
+                $this->reset(['formEntrySBAR']);
+                $this->dispatch('sbar-edit-mode', editing: false);
+                $this->afterSave('SBAR berhasil diperbarui.');
             }
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -342,6 +473,10 @@ new class extends Component {
             }
         }
 
+        // Copy = entri baru → keluar dari mode edit bila sedang aktif.
+        $this->editingSbarId = null;
+        $this->dispatch('sbar-edit-mode', editing: false);
+
         $this->formEntrySBAR = array_merge($this->formEntrySBAR, [
             'tglSBAR' => '',
             'petugasSBAR' => '',
@@ -376,6 +511,7 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
         $this->activeProfession = 'Semua';
+        $this->editingSbarId = null;
         $this->reset(['formEntrySBAR']);
     }
 };
@@ -424,6 +560,24 @@ new class extends Component {
         {{-- FORM ENTRY --}}
         @if (!$isFormLocked)
             <div class="space-y-3">
+
+                @if ($editingSbarId)
+                    <div class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg
+                            bg-indigo-50 border border-indigo-200 text-indigo-800
+                            dark:bg-indigo-900/20 dark:border-indigo-700 dark:text-indigo-300 text-sm">
+                        <span class="inline-flex items-center gap-2">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Mengedit SBAR milik <strong>{{ $formEntrySBAR['petugasSBAR'] ?: '-' }}</strong> — ubah lalu klik <strong>Perbarui SBAR</strong>.
+                        </span>
+                        <x-secondary-button type="button" wire:click="cancelEditSBAR"
+                            wire:loading.attr="disabled" class="shrink-0">
+                            Batal
+                        </x-secondary-button>
+                    </div>
+                @endif
 
                 <div class="flex items-end gap-3">
                     <div class="flex-1">
@@ -612,6 +766,9 @@ new class extends Component {
                                         // Hapus SBAR: hanya level Supervisor (2) ke atas — fungsional (Dokter/Perawat dll) tidak bisa, walau pemilik entri
                                         $canDelete = auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis', 'Supervisor Penunjang', 'Supervisor Tu', 'Mr', 'Casemix']);
                                         $canCopy = $isAdmin || $myRole === $sbarRole;
+                                        // Edit: pemilik entri (petugasSBARCode) atau Admin
+                                        $ownerCode = (string) ($sbar['petugasSBARCode'] ?? '');
+                                        $canEdit = $isAdmin || ($ownerCode !== '' && $ownerCode === auth()->user()->myuser_code);
                                     @endphp
                                     <div class="flex gap-1.5">
                                         @if ($canReviewDpjp)
@@ -650,6 +807,20 @@ new class extends Component {
                                                 </span>
                                             </x-outline-button>
                                             @endif
+                                        @endif
+                                        @if ($canEdit)
+                                        <x-outline-button type="button"
+                                            wire:click="editSBAR('{{ $sbar['sbarId'] }}')"
+                                            wire:loading.attr="disabled"
+                                            class="!text-indigo-600 !bg-indigo-50 !border-indigo-200 hover:!bg-indigo-100 hover:!text-indigo-700 hover:!border-indigo-300 dark:!text-indigo-400 dark:!bg-indigo-900/20 dark:!border-indigo-800/30 dark:hover:!bg-indigo-900/30 dark:hover:!text-indigo-300"
+                                            title="Edit SBAR">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </x-outline-button>
                                         @endif
                                         @if ($canCopy)
                                         <x-outline-button type="button"
