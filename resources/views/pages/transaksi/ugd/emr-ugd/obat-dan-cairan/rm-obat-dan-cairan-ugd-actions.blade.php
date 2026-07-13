@@ -321,8 +321,11 @@ new class extends Component {
                                 label="Nama Obat / Jenis Cairan" placeholder="Ketik nama/kode obat atau cairan..."
                                 wire:key="lov-obat-cairan-ugd-{{ $rjNo }}-{{ $renderVersions['modal-obat-cairan-ugd'] ?? 0 }}" />
                         @else
-                            {{-- Fase 2: form isian setelah obat dipilih --}}
-                            <div class="grid grid-cols-12 gap-3">
+                            {{-- Fase 2: form isian setelah obat dipilih.
+                                 wire:key WAJIB: cabang @else ini menggantikan nested-livewire LOV (Fase 1).
+                                 Tanpa key pembeda, morph Livewire (mis. setelah Simpan EMR) tidak menukar
+                                 Fase 1↔Fase 2 dengan bersih → grid field (Jumlah/Dosis/dst.) tak muncul. --}}
+                            <div class="grid grid-cols-12 gap-3" wire:key="oc-fase2-{{ $rjNo }}">
 
                                 {{-- Nama Obat (disabled) + tombol Ganti --}}
                                 <div class="col-span-12 md:col-span-6">
