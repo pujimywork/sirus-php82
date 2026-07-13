@@ -312,11 +312,7 @@ new class extends Component {
 
                 {{-- FORM INPUT --}}
                 @if (!$isFormLocked)
-                    {{-- wire:key SADAR-FASE: kunci berubah p1<->p2 saat productId berubah. Kalau server
-                         me-render fase berbeda dari DOM (mis. setelah Simpan EMR morph, DOM nyangkut di
-                         Fase 1 padahal productId terisi), morph MENGGANTI BERSIH subtree ini alih-alih
-                         mencoba menambal placeholder LOV yang nyangkut. --}}
-                    <div wire:key="oc-form-{{ $rjNo }}-{{ empty($obatDanCairan['productId']) ? 'p1' : 'p2' }}"
+                    <div
                         class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
 
                         @if (empty($obatDanCairan['productId']))
