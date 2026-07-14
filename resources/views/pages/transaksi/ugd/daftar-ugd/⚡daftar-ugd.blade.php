@@ -779,6 +779,26 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
+                                                                {{-- Kirim Satu Sehat — Admin, Mr --}}
+                                                                @hasanyrole('Admin|Mr')
+                                                                    <x-dropdown-link href="#"
+                                                                        x-on:click.prevent="$dispatch('daftar-ugd.satu-sehat.open', { rjNo: {{ $row->rj_no }} })"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/30 dark:hover:bg-teal-900/40">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0 text-teal-700"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Kirim Satu Sehat<br>
+                                                                                <span class="font-semibold">FHIR — UGD (Emergency)</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endhasanyrole
+
                                                                 {{-- Berkas BPJS — Admin/Casemix/Tu/Mr --}}
                                                                 @hasanyrole('Admin|Casemix|Tu|Mr')
                                                                     <x-dropdown-link href="#"
@@ -867,6 +887,9 @@ new class extends Component {
 
             {{-- EMR UGD khusus Diagnosa — komponen modal terpisah (listen: daftar-ugd.diagnosa.open) --}}
             <livewire:pages::transaksi.ugd.daftar-ugd.diagnosa-ugd-actions wire:key="diagnosa-ugd-actions" />
+
+            {{-- Kirim Satu Sehat UGD — modal 9 kartu (listen: daftar-ugd.satu-sehat.open) --}}
+            <livewire:pages::transaksi.ugd.daftar-ugd.satu-sehat-ugd-actions wire:key="satu-sehat-ugd-actions" />
 
         </div>
     </div>

@@ -1,17 +1,18 @@
 <?php
-// Komponen Modal Satu Sehat RJ.
-// Dipisah dari daftar-rj-actions supaya orchestrator tetap ramping.
-// Trigger dari parent: dispatch event 'daftar-rj.satu-sehat.open' dengan rjNo.
+// Komponen Modal Satu Sehat UGD — pola sama satu-sehat-rj-actions.
+// Trigger dari parent: dispatch event 'daftar-ugd.satu-sehat.open' dengan rjNo (= rj_no ugdhdrs).
+// CATATAN UGD (beda dari RJ): Encounter class EMER, tanpa poli (lokasi via env/DB),
+//   anamnesa tanpa SNOMED → tidak ada kartu Chief Complaint & Allergy.
 
 use Livewire\Component;
 use Livewire\Attributes\On;
-use App\Http\Traits\Txn\Rj\EmrRJTrait;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 
 new class extends Component {
-    use EmrRJTrait;
+    use EmrUGDTrait;
 
     public ?string $rjNo = null;
-    public array $dataDaftarPoliRJ = [];
+    public array $dataDaftarUGD = [];
 
     public function mount(?string $initialRjNo = null): void
     {
@@ -21,7 +22,7 @@ new class extends Component {
         }
     }
 
-    #[On('daftar-rj.satu-sehat.open')]
+    #[On('daftar-ugd.satu-sehat.open')]
     public function handleOpenSatuSehat(string $rjNo): void
     {
         $this->rjNo = $rjNo;
@@ -30,10 +31,10 @@ new class extends Component {
             return;
         }
 
-        $this->dispatch('open-modal', name: 'rj-satu-sehat');
+        $this->dispatch('open-modal', name: 'ugd-satu-sehat');
     }
 
-    #[On('rj-satu-sehat.refresh')]
+    #[On('ugd-satu-sehat.refresh')]
     public function onRefresh(string $rjNo): void
     {
         if ((string) $this->rjNo !== $rjNo) {
@@ -47,19 +48,19 @@ new class extends Component {
         if (empty($this->rjNo)) {
             return false;
         }
-        $data = $this->findDataRJ($this->rjNo);
+        $data = $this->findDataUGD($this->rjNo);
         if (!$data) {
-            $this->dispatch('toast', type: 'error', message: 'Data Rawat Jalan tidak ditemukan.');
+            $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
             return false;
         }
-        $this->dataDaftarPoliRJ = $data;
+        $this->dataDaftarUGD = $data;
         return true;
     }
 };
 ?>
 
 <div>
-    <x-modal name="rj-satu-sehat" size="full" height="full" focusable>
+    <x-modal name="ugd-satu-sehat" size="full" height="full" focusable>
         <div class="flex flex-col min-h-0">
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
@@ -79,17 +80,18 @@ new class extends Component {
                             </div>
                             <div>
                                 <h2 class="font-semibold text-2xl text-ink dark:text-gray-100">Kirim Satu Sehat
+                                    <span class="text-sm font-normal text-muted dark:text-gray-400">— UGD (Emergency)</span>
                                 </h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
-                                    <span class="font-semibold">{{ $dataDaftarPoliRJ['regName'] ?? '-' }}</span>
-                                    &mdash; RM: {{ $dataDaftarPoliRJ['regNo'] ?? '-' }}
-                                    &mdash; RJ: {{ $rjNo ?? '-' }}
+                                    <span class="font-semibold">{{ $dataDaftarUGD['regName'] ?? '-' }}</span>
+                                    &mdash; RM: {{ $dataDaftarUGD['regNo'] ?? '-' }}
+                                    &mdash; UGD: {{ $rjNo ?? '-' }}
                                 </p>
                             </div>
                         </div>
                     </div>
                     <x-icon-button color="gray" type="button"
-                        x-on:click="$dispatch('close-modal', { name: 'rj-satu-sehat' })">
+                        x-on:click="$dispatch('close-modal', { name: 'ugd-satu-sehat' })">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -99,31 +101,27 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- BODY — 5 SFC self-contained --}}
+            {{-- BODY — SFC self-contained (UGD: tanpa Chief Complaint & Allergy, anamnesa tanpa SNOMED) --}}
             <div class="flex-1 px-6 py-6 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-4xl mx-auto space-y-3">
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-encounter :rjNo="$rjNo"
-                        wire:key="ss-encounter-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-condition :rjNo="$rjNo"
-                        wire:key="ss-condition-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-observation :rjNo="$rjNo"
-                        wire:key="ss-observation-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-procedure :rjNo="$rjNo"
-                        wire:key="ss-procedure-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-medication-request :rjNo="$rjNo"
-                        wire:key="ss-medication-request-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-chief-complaint :rjNo="$rjNo"
-                        wire:key="ss-chief-complaint-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-allergy :rjNo="$rjNo"
-                        wire:key="ss-allergy-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-medication-dispense :rjNo="$rjNo"
-                        wire:key="ss-medication-dispense-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-lab :rjNo="$rjNo"
-                        wire:key="ss-lab-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-radiologi :rjNo="$rjNo"
-                        wire:key="ss-radiologi-rj-{{ $rjNo ?? 'none' }}" />
-                    <livewire:pages::transaksi.rj.satu-sehat.kirim-clinical-impression :rjNo="$rjNo"
-                        wire:key="ss-clinical-impression-rj-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-encounter :rjNo="$rjNo"
+                        wire:key="ss-encounter-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-condition :rjNo="$rjNo"
+                        wire:key="ss-condition-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-observation :rjNo="$rjNo"
+                        wire:key="ss-observation-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-procedure :rjNo="$rjNo"
+                        wire:key="ss-procedure-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-medication-request :rjNo="$rjNo"
+                        wire:key="ss-medication-request-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-medication-dispense :rjNo="$rjNo"
+                        wire:key="ss-medication-dispense-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-lab :rjNo="$rjNo"
+                        wire:key="ss-lab-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-radiologi :rjNo="$rjNo"
+                        wire:key="ss-radiologi-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-clinical-impression :rjNo="$rjNo"
+                        wire:key="ss-clinical-impression-ugd-{{ $rjNo ?? 'none' }}" />
                 </div>
             </div>
         </div>

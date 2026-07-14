@@ -39,6 +39,11 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/standarisasi-ui/koding-transaksi', 'pages::standarisasi-ui.koding-transaksi.koding-transaksi')
         ->name('standarisasi-ui.koding-transaksi');
 
+    // Tutorial standarisasi pengiriman data SATUSEHAT (FHIR R4: auth, transport, IHS,
+    // urutan resource, standarisasi per-resource, peta dashboard) — docs/satusehat-api.md versi web
+    Route::livewire('/standarisasi-ui/koding-satusehat', 'pages::standarisasi-ui.koding-satusehat.koding-satusehat')
+        ->name('standarisasi-ui.koding-satusehat');
+
     Route::livewire('/master/poli', 'pages::master.master-poli.master-poli')
         ->name('master.poli');
 

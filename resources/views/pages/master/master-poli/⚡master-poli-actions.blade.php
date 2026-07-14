@@ -7,9 +7,11 @@ use Illuminate\Database\QueryException;
 
 // Deklarasi Render Versioning Trait //
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+// Registrasi Location SATUSEHAT (mendaftarkan poli → poli_uuid; dipakai Encounter UGD/RJ).
+use App\Http\Traits\SATUSEHAT\LocationTrait;
 
 new class extends Component {
-    use WithRenderVersioningTrait;
+    use WithRenderVersioningTrait, LocationTrait;
     public string $formMode = 'create'; // create|edit
     public string $originalPoliId = '';
     public array $renderVersions = [];
@@ -146,6 +148,61 @@ new class extends Component {
         $this->closeModal();
 
         $this->dispatch('master.poli.saved');
+    }
+
+    /**
+     * Daftarkan poli sebagai Location di SATUSEHAT → dapat poli_uuid.
+     * Idempoten: cari dulu by identifier (poli_id); kalau belum ada baru createLocation.
+     * Untuk poli UGD/IGD, poli_uuid ini dipakai sebagai lokasi Encounter UGD.
+     */
+    public function daftarkanUuidPoli(): void
+    {
+        $poliId = trim((string) ($this->formPoli['poliId'] ?? ''));
+        $poliName = trim((string) ($this->formPoli['poliName'] ?? ''));
+
+        if ($poliId === '' || $poliName === '') {
+            $this->dispatch('toast', type: 'warning', message: 'Isi Poli ID & Nama Poli dulu sebelum daftarkan UUID.');
+            return;
+        }
+
+        try {
+            $this->initializeSatuSehat();
+            $orgId = $this->organizationId ?: env('SATUSEHAT_ORGANIZATION_ID');
+
+            // 1. Cari Location existing (idempoten) by identifier bisnis = poli_id.
+            $search = $this->searchLocation(['identifier' => "http://sys-ids.kemkes.go.id/location/{$orgId}|{$poliId}"]);
+            $foundUuid = collect($search['entry'] ?? [])->pluck('resource.id')->first();
+
+            $uuid = $foundUuid;
+            if (empty($uuid)) {
+                // 2. Belum ada → buat Location baru.
+                $res = $this->createLocation([
+                    'name' => $poliName,
+                    'description' => 'Poli ' . $poliName,
+                    'identifier' => $poliId,
+                    'physical_type_code' => 'ro',
+                    'physical_type_display' => 'Room',
+                    'organization_id' => $orgId,
+                ]);
+                $uuid = $res['id'] ?? null;
+            }
+
+            if (empty($uuid)) {
+                $this->dispatch('toast', type: 'error', message: 'Gagal mendapatkan UUID Location dari SATUSEHAT.');
+                return;
+            }
+
+            // 3. Set ke form; kalau poli sudah tersimpan (edit) langsung persist ke DB.
+            $this->formPoli['poliUuid'] = $uuid;
+            if ($this->formMode === 'edit') {
+                DB::table('rsmst_polis')->where('poli_id', $poliId)->update(['poli_uuid' => $uuid]);
+            }
+
+            $this->dispatch('toast', type: 'success',
+                message: ($foundUuid ? 'UUID Location ditemukan' : 'Location baru dibuat') . ": {$uuid}");
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Daftar UUID Poli gagal: ' . $e->getMessage());
+        }
     }
 
     public function closeModal(): void
@@ -296,14 +353,26 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('formPoli.bpjsPoliCode')" class="mt-1" />
                                 </div>
 
-                                {{-- UUID --}}
+                                {{-- UUID (Location SATUSEHAT) --}}
                                 <div>
                                     <x-input-label value="UUID" />
-                                    <x-text-input wire:model.live="formPoli.poliUuid" x-ref="inputPoliUuid"
-                                        :error="$errors->has('formPoli.poliUuid')" class="w-full mt-1"
-                                        x-on:keydown.enter.prevent="$wire.save()" />
+                                    <div class="flex items-start gap-2 mt-1">
+                                        <x-text-input wire:model.live="formPoli.poliUuid" x-ref="inputPoliUuid"
+                                            :error="$errors->has('formPoli.poliUuid')" class="flex-1"
+                                            placeholder="Klik Daftarkan untuk ambil dari SATUSEHAT"
+                                            x-on:keydown.enter.prevent="$wire.save()" />
+                                        <x-primary-button type="button"
+                                            wire:click.prevent="daftarkanUuidPoli"
+                                            wire:loading.attr="disabled" wire:target="daftarkanUuidPoli"
+                                            title="Daftarkan poli sebagai Location SATUSEHAT (khususnya poli UGD/IGD)"
+                                            class="!px-3 shrink-0 !bg-teal-600 hover:!bg-teal-700">
+                                            <span wire:loading.remove wire:target="daftarkanUuidPoli">Daftarkan UUID</span>
+                                            <span wire:loading wire:target="daftarkanUuidPoli"><x-loading /></span>
+                                        </x-primary-button>
+                                    </div>
                                     <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Opsional — untuk sinkronisasi sistem.
+                                        Opsional — daftarkan poli sebagai <span class="font-mono">Location</span> di SATUSEHAT.
+                                        Wajib untuk poli <span class="font-semibold">UGD/IGD</span> agar Encounter UGD bisa dikirim.
                                     </p>
                                     <x-input-error :messages="$errors->get('formPoli.poliUuid')" class="mt-1" />
                                 </div>
