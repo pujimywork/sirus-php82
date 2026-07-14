@@ -426,13 +426,12 @@ TXT,
                         <div class="ds-eyebrow mb-3">04 — Alur Visual</div>
                         <h1 class="ds-display-md mb-4">Alur Visual (Flowchart)</h1>
                         <p class="ds-body-md mb-2" style="max-width:64ch">
-                            Peta perjalanan pasien dari <strong>masuk sampai pulang</strong>, cabang penunjang
-                            (lab/radiologi) &amp; resep, skenario <strong>eskalasi/transfer</strong>, dan
-                            <strong>titik-titik pembatalan</strong>.
+                            Bab ini menceritakan <strong>perjalanan seorang pasien</strong> — dari mendaftar,
+                            dilayani, sampai pulang &amp; membayar — dengan gambar sederhana. Semua di sini
+                            pakai <strong>bahasa sehari-hari</strong>, tanpa istilah teknis.
                         </p>
                         <p class="ds-caption mb-8" style="color:var(--muted)">
-                            <strong>Bagian 1 (Visual)</strong> di bawah ini untuk siapa saja — cukup gambar &amp; alur.
-                            <strong>Bagian 2 (Detail Teknis / Coding)</strong> di bagian bawah halaman untuk programmer.
+                            Butuh detail kode / nama tabel / aturan teknis? Buka <strong>Sisi 2 — Coding</strong> (tombol di atas).
                         </p>
 
                         @php
@@ -448,21 +447,74 @@ TXT,
                             $arrow = '<span class="ds-code" style="color:var(--primary); font-size:16px">▶</span>';
                         @endphp
 
-                        {{-- =================================================================== --}}
-                        {{-- ============ BAGIAN 1 · VISUAL (untuk siapa saja) ================ --}}
-                        {{-- =================================================================== --}}
-                        <div class="ds-eyebrow mb-3" style="color:var(--primary)">Bagian 1 — Visual</div>
+                        {{-- ===== 1. TIGA JALUR (RJ / UGD / RI) ===== --}}
+                        <h2 class="ds-title-lg mb-2">1. Tiga jenis transaksi (tiga jalur pelayanan)</h2>
+                        <p class="ds-body-md mb-4" style="max-width:64ch">
+                            Ada <strong>tiga jenis pelayanan</strong>, masing-masing punya alur &amp; kasir sendiri:
+                            <strong>Rawat Jalan (RJ)</strong>, <strong>UGD</strong>, dan <strong>Rawat Inap (RI)</strong>.
+                        </p>
 
-                        {{-- ===== FLOW 1: ALUR NORMAL (MASUK → PULANG) ===== --}}
-                        <div class="ds-caption-up mb-2">Alur normal — masuk sampai pulang (RJ / UGD)</div>
+                        @php
+                            $jalurFlows = [
+                                ['RJ · Rawat Jalan', 'pasien poli — pulang hari itu juga', [
+                                    ['Daftar', 'di loket', 'entry'],
+                                    ['Diperiksa Dokter', 'di poli', 'main'],
+                                    ['Lab / Rontgen', 'bila perlu', 'opt'],
+                                    ['Ambil Obat', 'di apotek', 'main'],
+                                    ['Kasir RJ', 'bayar', 'cash'],
+                                    ['Pulang', '', 'done'],
+                                ]],
+                                ['UGD · Gawat Darurat', 'pasien darurat — bisa pulang atau dirawat', [
+                                    ['Daftar UGD', 'di IGD', 'entry'],
+                                    ['Triase &amp; Ditangani', 'sesuai kegawatan', 'main'],
+                                    ['Lab / Rontgen', 'bila perlu', 'opt'],
+                                    ['Ambil Obat', 'di apotek', 'main'],
+                                    ['Kasir UGD', 'bayar', 'cash'],
+                                    ['Pulang', 'atau transfer ke Rawat Inap', 'done'],
+                                ]],
+                                ['RI · Rawat Inap', 'pasien menginap — biaya dihitung per hari / per-item', [
+                                    ['Masuk', 'daftar / transfer', 'entry'],
+                                    ['Dirawat', 'visit · obat · lab · tindakan tiap hari', 'main'],
+                                    ['Kasir RI', 'dijumlah saat mau pulang', 'cash'],
+                                    ['Pulang', 'lunas / bon', 'done'],
+                                ]],
+                            ];
+                        @endphp
+
+                        @foreach ($jalurFlows as [$namaJalur, $ketJalur, $steps])
+                            <div class="ds-card-outline mb-4" style="padding:14px 16px">
+                                <div class="flex flex-wrap items-baseline gap-x-2 mb-2">
+                                    <span class="ds-title-sm" style="color:var(--primary)">{{ $namaJalur }}</span>
+                                    <span class="ds-caption" style="color:var(--muted)">— {{ $ketJalur }}</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    @foreach ($steps as $i => [$judul, $ket, $tone])
+                                        @if ($i > 0) {!! $arrow !!} @endif
+                                        <span class="ds-card-outline" style="{{ $flowBox($tone) }}; background:var(--canvas)">
+                                            <span class="block text-sm font-semibold" style="color:var(--ink)">{!! $judul !!}</span>
+                                            @if ($ket !== '')<span class="block text-xs" style="color:var(--muted)">{!! $ket !!}</span>@endif
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+
+                        <p class="ds-caption mb-8" style="color:var(--muted)">
+                            <span style="color:#d97706">▦ kotak garis putus-putus</span> = langkah <strong>opsional</strong> (cuma bila perlu lab/rontgen).
+                            <strong>RJ &amp; UGD mirip</strong> — selesai di hari yang sama. <strong>RI beda</strong> — pasien
+                            menginap, jadi biaya dikumpulkan tiap hari &amp; baru ditotal saat pulang. Ketiganya bisa
+                            <strong>lunas</strong> (dibayar penuh) atau <strong>bon</strong> (dibayar sebagian).
+                        </p>
+
+                        {{-- ===== 2. TRANSFER (PINDAH TINGKAT PELAYANAN) ===== --}}
+                        <h2 class="ds-title-lg mb-2">2. Kalau pasien dipindah (transfer)</h2>
                         <div class="flex flex-wrap items-center gap-2 mb-3">
                             @foreach ([
-                                ['Pendaftaran', 'pasien didaftarkan', 'entry'],
-                                ['Pelayanan / EMR', 'diperiksa &amp; didiagnosa dokter', 'main'],
-                                ['Penunjang', 'Lab / Radiologi — bila perlu', 'opt'],
-                                ['E-Resep → Apotek', 'obat diresepkan &amp; dilayani', 'main'],
-                                ['Kasir', 'hitung total → bayar', 'cash'],
-                                ['Pulang', 'Lunas atau Bon', 'done'],
+                                ['Rawat Jalan', 'poli', 'entry'],
+                                ['UGD', 'kondisi darurat', 'main'],
+                                ['Rawat Inap', 'perlu dirawat', 'main'],
+                                ['Kasir', 'biaya semua tahap dijumlah', 'cash'],
+                                ['Pulang', '', 'done'],
                             ] as $i => [$judul, $ket, $tone])
                                 @if ($i > 0) {!! $arrow !!} @endif
                                 <span class="ds-card-outline" style="{{ $flowBox($tone) }}">
@@ -471,106 +523,72 @@ TXT,
                                 </span>
                             @endforeach
                         </div>
-                        <p class="ds-caption mb-8" style="color:var(--muted)">
-                            <span style="color:#d97706">▦ garis putus-putus</span> = langkah opsional (hanya bila pasien butuh penunjang / resep).
+                        <p class="ds-body-md mb-2" style="max-width:64ch">
+                            Kalau kondisi memburuk, pasien bisa <strong>dipindah</strong> ke pelayanan yang lebih tinggi —
+                            dari <strong>poli ke UGD</strong>, lalu dari <strong>UGD ke rawat inap</strong>.
                         </p>
-
-                        {{-- ===== FLOW 2: ESKALASI / TRANSFER ===== --}}
-                        <div class="ds-caption-up mb-2">Eskalasi &amp; transfer (kondisi memburuk)</div>
-                        <div class="flex flex-wrap items-center gap-2 mb-3">
-                            @foreach ([
-                                ['UGD', 'pasien gawat darurat', 'entry'],
-                                ['Transfer ke Rawat Inap', 'biaya UGD ikut pindah', 'main'],
-                                ['Dirawat', 'pelayanan rawat inap', 'main'],
-                                ['Kasir RI', 'total (termasuk biaya UGD)', 'cash'],
-                                ['Pulang', '—', 'done'],
-                            ] as $i => [$judul, $ket, $tone])
-                                @if ($i > 0) {!! $arrow !!} @endif
-                                <span class="ds-card-outline" style="{{ $flowBox($tone) }}">
-                                    <span class="block text-sm font-semibold" style="color:var(--ink)">{{ $judul }}</span>
-                                    <span class="block text-xs" style="color:var(--muted)">{!! $ket !!}</span>
-                                </span>
-                            @endforeach
+                        <div class="ds-card-outline mb-8" style="padding:14px 18px; border-color:#059669">
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                💡 <strong>Yang penting: tagihan ikut pindah.</strong> Anggap saja seperti membawa
+                                <strong>keranjang belanja</strong> — isinya tidak berkurang saat pindah kasir. Jadi biaya
+                                poli &amp; UGD <strong>otomatis sudah termasuk</strong> saat pasien membayar di rawat inap.
+                                Tidak ada biaya yang tertinggal atau hilang.
+                            </span>
                         </div>
-                        <p class="ds-caption mb-8" style="color:var(--muted)">
-                            Pasien bisa <strong>RJ → UGD</strong> lalu <strong>UGD → Rawat Inap</strong>. Biaya dari tahap
-                            sebelumnya selalu <strong>ikut terbawa</strong> &amp; ditagih di tahap berikutnya (tidak hilang).
-                        </p>
 
-                        {{-- ===== FLOW 3: TITIK BATAL (REVERSE) ===== --}}
-                        <h2 class="ds-title-lg mb-3">Titik pembatalan (mundur)</h2>
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {{-- ===== 3. PEMBATALAN ===== --}}
+                        <h2 class="ds-title-lg mb-2">3. Kalau ada yang perlu dibatalkan</h2>
+                        <p class="ds-body-md mb-4" style="max-width:64ch">
+                            Kadang ada kekeliruan yang harus dikoreksi. Ada <strong>3 cara membatalkan</strong>,
+                            dipilih sesuai keadaan pasien:
+                        </p>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-4">
                             @foreach ([
-                                ['Batal Transaksi', 'Sudah bayar', 'Aktif lagi', 'Undo pembayaran — pasien kembali bisa diproses.', 'RJ · UGD · RI'],
-                                ['Batal (Kunjungan/Inap)', 'Aktif', 'Batal', 'Batalkan kunjungan/admisi — hanya bila BELUM ada transaksi apa pun.', 'RJ · UGD · RI'],
-                                ['Batal Transfer', 'Target dibatalkan', 'Sumber aktif lagi', 'Undo transfer — biaya dikembalikan ke asal; hanya bila target belum ada transaksi.', 'RJ→UGD · UGD→RI'],
-                            ] as [$judul, $dari, $ke, $ket, $jalur])
+                                ['Batal Pembayaran', 'Batal Transaksi', 'Pasien sudah terlanjur <strong>dibayar/dipulangkan</strong>, tapi mau dikoreksi. Pembayaran dibatalkan, status kembali seperti <strong>belum bayar</strong> (bisa diproses ulang).'],
+                                ['Batal Kunjungan', 'Batal Kunjungan / Inap', 'Pasien terlanjur <strong>didaftarkan</strong> tapi ternyata batal datang / salah input. Ditandai <strong>"Batal"</strong> — datanya <strong>tidak dihapus</strong>, cuma dicap batal (jejak tetap ada).'],
+                                ['Batal Perpindahan', 'Batal Transfer', 'Pemindahan (mis. UGD → rawat inap) ternyata keliru. Perpindahan dibatalkan, <strong>tagihan dikembalikan</strong> ke tempat asal, tempat asal aktif lagi.'],
+                            ] as [$tag, $judul, $ket])
                                 <div class="ds-card-outline" style="padding:16px 18px; border-color:#dc2626">
-                                    <div class="ds-title-sm mb-2" style="color:#dc2626">{{ $judul }}</div>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="ds-code" style="padding:2px 8px; border-radius:6px; background:var(--surface-card)">{{ $dari }}</span>
-                                        <span style="color:#dc2626; font-weight:700">→</span>
-                                        <span class="ds-code" style="padding:2px 8px; border-radius:6px; background:var(--surface-card)">{{ $ke }}</span>
+                                    <div class="ds-caption-up mb-1" style="color:#dc2626">{{ $tag }}</div>
+                                    <div class="ds-title-sm mb-2">{{ $judul }}</div>
+                                    <div class="ds-body-sm">{!! $ket !!}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <p class="ds-caption mb-8" style="color:var(--muted)">
+                            Kalau pasien sudah pulang lalu ingin dibatalkan total: <strong>batalkan pembayaran dulu</strong>
+                            (kembali aktif), <strong>baru batalkan kunjungannya</strong>. Untuk pasien hasil pindahan,
+                            gunakan <strong>Batal Perpindahan</strong>, bukan Batal Kunjungan.
+                        </p>
+
+                        {{-- ===== ATURAN MAIN (guards dalam bahasa awam) ===== --}}
+                        <h2 class="ds-title-lg mb-3">Aturan main biar data tetap rapi</h2>
+                        <div class="space-y-3 mb-4">
+                            @foreach ([
+                                ['🧪', 'Belum bisa dibayar/dipulangkan kalau hasil lab belum keluar.', 'Supaya tagihan pasti sudah lengkap sebelum pasien membayar. Berlaku di rawat jalan, UGD, maupun rawat inap.'],
+                                ['🧹', 'Membatalkan hanya boleh kalau BELUM ada tindakan, obat, atau pembayaran.', 'Kalau pasien sudah dilayani (ada obat/lab/tindakan), tak bisa asal dibatalkan — biar tidak ada biaya yang hilang begitu saja.'],
+                                ['📌', 'Membatalkan = memberi cap "Batal", bukan menghapus.', 'Datanya tetap tersimpan untuk audit. Laporan otomatis mengeluarkan data yang berstatus Batal, jadi tidak ikut dihitung.'],
+                                ['🔒', 'Yang boleh membatalkan hanya Admin / Supervisor TU.', 'Petugas biasa tidak bisa membatalkan transaksi — mencegah salah/sengaja hapus.'],
+                                ['📱', 'Batal antrean BPJS (di Mobile JKN) itu urusan terpisah.', 'Itu hanya untuk melapor ke BPJS, dan TIDAK mengubah tagihan/status di sistem kita. Dua hal yang berbeda.'],
+                            ] as [$emoji, $judul, $ket])
+                                <div class="ds-card-outline" style="padding:14px 18px">
+                                    <div class="flex items-start gap-3">
+                                        <span style="font-size:20px; line-height:1.2">{{ $emoji }}</span>
+                                        <div>
+                                            <div class="ds-title-sm mb-1">{{ $judul }}</div>
+                                            <div class="ds-body-sm">{{ $ket }}</div>
+                                        </div>
                                     </div>
-                                    <div class="ds-body-sm mb-1">{!! $ket !!}</div>
-                                    <div class="ds-caption" style="color:var(--muted)">Jalur: {{ $jalur }}</div>
                                 </div>
                             @endforeach
                         </div>
 
-                        <div class="ds-card-outline mt-6 mb-4" style="padding:16px 20px">
+                        <div class="ds-card-outline" style="padding:16px 20px; border-color:var(--primary)">
                             <span class="ds-spike" style="vertical-align:middle"></span>
                             <span class="ds-body-sm" style="color:var(--body-strong)">
-                                <strong>Kasus campur (sudah pulang lalu ingin batal total):</strong>
-                                {!! $arrow !!} Batal Transaksi (kembali aktif) {!! $arrow !!} Batal Kunjungan/Inap (jadi Batal).
-                                Pasien asal transfer {!! $arrow !!} pakai <strong>Batal Transfer</strong>, bukan Batal Kunjungan.
+                                Ingin tahu <strong>bagaimana ini dikerjakan di kode</strong> — nama tombol, tabel database,
+                                &amp; kode status? Semua ada di <strong>Sisi 2 — Coding</strong> (tombol di bagian atas halaman).
                             </span>
-                        </div>
-
-                        {{-- =================================================================== --}}
-                        {{-- ============ BAGIAN 2 · DETAIL TEKNIS (Coding) =================== --}}
-                        {{-- =================================================================== --}}
-                        <div class="mt-12 pt-8" style="border-top:2px solid var(--hairline)">
-                            <div class="ds-eyebrow mb-3" style="color:var(--muted)">Bagian 2 — Detail Teknis · Coding</div>
-                            <h2 class="ds-title-lg mb-3">Status &amp; guard per transisi</h2>
-                            <p class="ds-body-md mb-4" style="max-width:64ch">
-                                Kode status: <span class="ds-code">A</span> Aktif · <span class="ds-code">L</span> Lunas ·
-                                <span class="ds-code">I</span> Transfer/Dirawat · <span class="ds-code">P</span> Pulang ·
-                                <span class="ds-code">F</span> Batal. Guard yang <strong>benar-benar berjalan sekarang</strong>:
-                            </p>
-
-                            <div class="ds-card-outline mb-4" style="padding:0; overflow-x:auto">
-                                <table class="ds-table">
-                                    <thead><tr><th>Transisi</th><th>Yang terjadi</th><th>Guard aktif</th></tr></thead>
-                                    <tbody>
-                                        <tr><td class="ds-td-strong">Pelayanan → Penunjang</td><td class="ds-body-sm">order lab / radiologi</td><td class="ds-body-sm">Diagnosis &amp; Ket. Klinis wajib diisi</td></tr>
-                                        <tr><td class="ds-td-strong">Kasir → Pulang<br><span class="ds-caption" style="color:var(--muted)">postTransaksi · MAJU</span></td><td class="ds-body-sm">proses bayar &amp; pulang</td><td class="ds-body-sm">role <strong>Admin|Tu</strong> · <strong>lab tidak pending</strong> (RJ/UGD/RI) · tgl pulang diproses</td></tr>
-                                        <tr><td class="ds-td-strong">Transfer (create)<br><span class="ds-caption" style="color:var(--muted)">MAJU</span></td><td class="ds-body-sm">buat target + pindah biaya (<span class="ds-code">tempadmins</span>)</td><td class="ds-body-sm">sumber 'A' · <strong>lab tidak pending</strong> · belum pernah transfer · (UGD→RI: pilih room+bed) · anti-race · lockstatus</td></tr>
-                                        <tr><td class="ds-td-strong" style="color:#dc2626">Batal Transaksi<br><span class="ds-caption" style="color:var(--muted)">L→A / P→I · MUNDUR</span></td><td class="ds-body-sm">hapus payment (<span class="ds-code">*cashins</span>/<span class="ds-code">ripaymentpdtls</span>)</td><td class="ds-body-sm">role Admin|Sup.Tu · <span style="color:var(--primary)">lab-pending TIDAK memblok</span></td></tr>
-                                        <tr><td class="ds-td-strong" style="color:#dc2626">Batal Kunjungan / Inap<br><span class="ds-caption" style="color:var(--muted)">A→F / I→F · MUNDUR</span></td><td class="ds-body-sm">set <span class="ds-code">rj_status/ri_status='F'</span> (soft)</td><td class="ds-body-sm">role Admin|Sup.Tu · status aktif · bukan dari transfer · <strong>semua child table kosong</strong> (layanan+bayar) · <span style="color:var(--primary)">lab-pending TIDAK memblok</span></td></tr>
-                                        <tr><td class="ds-td-strong" style="color:#dc2626">Batal Transfer<br><span class="ds-caption" style="color:var(--muted)">target→F, sumber→A · MUNDUR</span></td><td class="ds-body-sm">soft-cancel target 'F', restore biaya ke sumber</td><td class="ds-body-sm">role Admin|Tu · lookup berlapis · target masih aktif · target belum ada transaksi · <span style="color:var(--primary)">lab-pending TIDAK memblok</span> · sumber 'I'</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p class="ds-caption mb-6" style="color:var(--muted)">
-                                <span style="color:var(--primary)">Hijau</span> = perilaku terbaru (guard lab-pending hanya di MAJU, dilepas dari MUNDUR).
-                                Rincian guard per-arah di bab <button type="button" class="hover:underline font-semibold"
-                                    style="color:var(--primary)" x-on:click="go('guard-transfer')">Guard &amp; Konsistensi Transfer</button>.
-                            </p>
-
-                            <div class="ds-card-outline" style="padding:16px 20px; border-color:var(--primary)">
-                                <span class="ds-spike" style="vertical-align:middle"></span>
-                                <span class="ds-body-sm" style="color:var(--body-strong)">
-                                    <strong>Kenapa lab-pending dilepas dari batal (MUNDUR)?</strong>
-                                    Guard <strong>MAJU</strong> (transfer &amp; proses pulang) sudah menjamin lab selesai sebelum finalisasi.
-                                    Jadi di alur normal, saat batal <strong>pasti tak ada lab pending</strong> — guard lab di batal jadi
-                                    <strong>redundant</strong>. Satu-satunya kondisi ia menyala = <strong>data anomali/lama</strong>
-                                    (transfer via Oracle Dev 6i yang bypass guard maju, atau lab yatim). Karena membatalkan tak menyentuh
-                                    lab (tetap <span class="ds-code">status_rjri</span> asal, <span class="ds-code">ref_no</span>, tetap bisa
-                                    diproses), melepasnya membuat transaksi/transfer yang <em>nyangkut</em> tetap bisa dibatalkan —
-                                    tanpa mengorbankan disiplin lab di jalur maju.
-                                </span>
-                            </div>
                         </div>
                     </section>
 
