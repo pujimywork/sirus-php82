@@ -20,6 +20,7 @@ Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti po
 | Editor rich text | `docs/tinymce-editor-pattern.md` |
 | List/lookup stabil (decouple dari filter) | `docs/stable-lookup-list-pattern.md` |
 | Trait untuk integrasi API eksternal (BPJS/iDRG/Sisrute dll.) | `docs/trait-template-api-eksternal.md` |
+| **SATUSEHAT** (FHIR R4 — model pengiriman, auth OAuth2, resolusi IHS, standarisasi per-resource, pemetaan kolom dashboard, coverage & backlog) | `docs/satusehat-api.md` |
 | Bridging iDRG (grouper, Stage 1/2, topup) | `docs/idrg-bridging.md` |
 | Diagnosa ICD-10 (master, LOV, EMR, SEP, iDRG) | `docs/diagnosa-architecture.md` (+ skill `diagnosa-flow`) |
 | Versioning teks klausul dokumen legal (consent/pernyataan; cetak ulang sesuai redaksi saat TTD) | `docs/clause-versioning.md` (+ skill `clause-versioning`) |
