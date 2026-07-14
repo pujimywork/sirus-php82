@@ -87,6 +87,19 @@ trait EmrRITrait
      *
      * @throws \RuntimeException jika row tidak ditemukan
      */
+    /**
+     * Cek apakah ada lab RI pending (checkup_status='P') untuk transaksi ini.
+     * Konsisten dgn checkLabPendingRJ / checkLabPendingUGD (guard operasi MAJU).
+     */
+    protected function checkLabPendingRI($riHdrNo): bool
+    {
+        return DB::table('lbtxn_checkuphdrs')
+            ->where('status_rjri', 'RI')
+            ->where('checkup_status', 'P')
+            ->where('ref_no', $riHdrNo)
+            ->exists();
+    }
+
     protected function lockRIRow($riHdrNo): void
     {
         $exists = DB::table('rstxn_rihdrs')

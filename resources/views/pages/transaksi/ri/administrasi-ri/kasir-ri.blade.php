@@ -452,6 +452,13 @@ new class extends Component {
             return;
         }
 
+        // Guard MAJU: lab RI harus selesai sebelum proses pulang (konsisten dgn RJ/UGD).
+        // Operasi MUNDUR (batal) tetap TIDAK diblok lab pending.
+        if ($this->checkLabPendingRI($this->riHdrNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat RI belum selesai, proses pulang tidak bisa dilakukan.');
+            return;
+        }
+
         // Cek perhitungan kamar sudah diproses
         if (!$this->tglPulangSudahDiproses) {
             $this->dispatch('toast', type: 'error', message: 'Data perhitungan kamar belum diproses. Klik "Proses Tgl Pulang" terlebih dahulu.');

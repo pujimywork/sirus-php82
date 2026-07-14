@@ -158,48 +158,86 @@ TXT,
     @php
         $snip = $this->snippets();
 
-        $menuGroups = [
-            'Mulai' => [
-                'pendahuluan' => 'Pendahuluan',
-                'status'      => 'Model Status Transaksi',
-                'biaya'       => 'Struktur Biaya & Total',
+        // Model 2 sisi: Sisi 1 = Konsep & Alur Visual, Sisi 2 = Coding.
+        $sides = [
+            'konsep' => [
+                'label' => 'Konsep & Alur',
+                'desc'  => 'Untuk siapa saja — konsep administrasi, status, biaya & alur visual',
+                'groups' => [
+                    'Pengantar' => [
+                        'pendahuluan' => 'Pendahuluan',
+                        'status'      => 'Model Status Transaksi',
+                        'biaya'       => 'Struktur Biaya & Total',
+                    ],
+                    'Alur Visual' => [
+                        'flow' => 'Alur Visual (Flow)',
+                    ],
+                ],
             ],
-            'Alur Visual' => [
-                'flow' => 'Alur Visual (Flow)',
-            ],
-            'Administrasi' => [
-                'kasir'  => 'Alur Kasir sampai Pulang',
-            ],
-            'Transfer & Batal' => [
-                'transfer'        => 'Transfer UGD → RI',
-                'batal-transfer'  => 'Batal Transfer',
-                'batal-transaksi' => 'Batal Transaksi (Pulang)',
-                'batal-inap'      => 'Batal Inap → F',
-                'matriks'         => 'Matriks Batal',
-            ],
-            'Referensi' => [
-                'ranjau'    => 'Ranjau Umum',
-                'glosarium' => 'Glosarium',
+            'coding' => [
+                'label' => 'Coding',
+                'desc'  => 'Untuk programmer — kasir, transfer, model batal & guard (kode nyata)',
+                'groups' => [
+                    'Administrasi' => [
+                        'kasir' => 'Alur Kasir sampai Pulang',
+                    ],
+                    'Transfer & Batal' => [
+                        'transfer'        => 'Transfer UGD → RI',
+                        'batal-transfer'  => 'Batal Transfer',
+                        'batal-transaksi' => 'Batal Transaksi (Pulang)',
+                        'batal-inap'      => 'Batal Inap → F',
+                        'matriks'         => 'Matriks Batal',
+                        'guard-transfer'  => 'Guard & Konsistensi Transfer',
+                    ],
+                    'Referensi' => [
+                        'ranjau'    => 'Ranjau Umum',
+                        'glosarium' => 'Glosarium',
+                    ],
+                ],
             ],
         ];
 
-        $labels = array_merge(...array_values($menuGroups));
+        // Turunan untuk Alpine.
+        $labels = [];
+        $sideKeys = [];       // { konsep: [key,...], coding: [key,...] } — urutan prev/next per sisi
+        $sectionSide = [];    // { key: side }
+        foreach ($sides as $sideKey => $side) {
+            $sideKeys[$sideKey] = [];
+            foreach ($side['groups'] as $items) {
+                foreach ($items as $k => $lbl) {
+                    $labels[$k] = $lbl;
+                    $sideKeys[$sideKey][] = $k;
+                    $sectionSide[$k] = $sideKey;
+                }
+            }
+        }
     @endphp
 
     <div class="ds" style="min-height:100vh"
         x-data='{
-            section: "pendahuluan",
-            order: @json(array_keys($labels)),
+            side: "konsep",
+            sides: @json($sideKeys),
             labels: @json($labels),
-            idx() { return this.order.indexOf(this.section) },
+            sectionSide: @json($sectionSide),
+            section: "pendahuluan",
+            curOrder() { return this.sides[this.side] || [] },
+            idx() { return this.curOrder().indexOf(this.section) },
             go(s) {
                 this.section = s;
+                this.side = this.sectionSide[s] || this.side;
                 history.replaceState(null, "", "#" + s);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            },
+            switchSide(sd) {
+                if (this.side === sd) return;
+                this.side = sd;
+                this.section = this.sides[sd][0];
+                history.replaceState(null, "", "#" + this.section);
                 window.scrollTo({ top: 0, behavior: "smooth" });
             },
             init() {
                 const h = window.location.hash.slice(1);
-                if (this.order.includes(h)) this.section = h;
+                if (this.labels[h]) { this.section = h; this.side = this.sectionSide[h] || "konsep"; }
             }
         }'>
         <div class="ds-section" style="padding-top:32px; padding-bottom:96px">
@@ -220,25 +258,49 @@ TXT,
                 </div>
             </div>
 
-            <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
+            {{-- ============ TOGGLE 2 SISI ============ --}}
+            <div class="mt-8">
+                <div class="inline-flex p-1 rounded-2xl" style="background:var(--surface-card); border:1px solid var(--hairline)">
+                    @foreach ($sides as $sideKey => $side)
+                        <button type="button" x-on:click="switchSide('{{ $sideKey }}')"
+                            class="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-colors"
+                            :class="side === '{{ $sideKey }}' ? 'font-semibold' : 'font-medium'"
+                            :style="side === '{{ $sideKey }}' ? 'background:var(--primary); color:#fff' : 'color:var(--body)'">
+                            <span class="text-xs font-bold" :style="side === '{{ $sideKey }}' ? 'opacity:.85' : 'opacity:.5'">Sisi {{ $loop->iteration }}</span>
+                            <span class="text-sm">{{ $side['label'] }}</span>
+                        </button>
+                    @endforeach
+                </div>
+                <div class="mt-2">
+                    @foreach ($sides as $sideKey => $side)
+                        <p class="ds-caption" style="color:var(--muted)" x-show="side === '{{ $sideKey }}'" x-cloak>{{ $side['desc'] }}</p>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
 
                 {{-- ============ SIDEBAR ============ --}}
                 <aside class="self-start lg:sticky lg:top-24">
-                    @foreach ($menuGroups as $group => $items)
-                        <div class="mb-6">
-                            <div class="ds-caption-up mb-2 px-3">{{ $group }}</div>
-                            <div class="space-y-0.5">
-                                @foreach ($items as $key => $label)
-                                    <button type="button" x-on:click="go('{{ $key }}')"
-                                        class="block w-full px-3 py-1.5 text-sm text-left rounded-lg transition-colors"
-                                        :class="section === '{{ $key }}' ? 'font-semibold' : 'font-normal'"
-                                        :style="section === '{{ $key }}'
-                                            ? 'background:var(--surface-card); color:var(--ink)'
-                                            : 'color:var(--body)'">
-                                        {{ $label }}
-                                    </button>
-                                @endforeach
-                            </div>
+                    @foreach ($sides as $sideKey => $side)
+                        <div x-show="side === '{{ $sideKey }}'" x-cloak>
+                            @foreach ($side['groups'] as $group => $items)
+                                <div class="mb-6">
+                                    <div class="ds-caption-up mb-2 px-3">{{ $group }}</div>
+                                    <div class="space-y-0.5">
+                                        @foreach ($items as $key => $label)
+                                            <button type="button" x-on:click="go('{{ $key }}')"
+                                                class="block w-full px-3 py-1.5 text-sm text-left rounded-lg transition-colors"
+                                                :class="section === '{{ $key }}' ? 'font-semibold' : 'font-normal'"
+                                                :style="section === '{{ $key }}'
+                                                    ? 'background:var(--surface-card); color:var(--ink)'
+                                                    : 'color:var(--body)'">
+                                                {{ $label }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     @endforeach
 
@@ -363,10 +425,14 @@ TXT,
                     <section x-show="section === 'flow'" x-cloak>
                         <div class="ds-eyebrow mb-3">04 — Alur Visual</div>
                         <h1 class="ds-display-md mb-4">Alur Visual (Flowchart)</h1>
-                        <p class="ds-body-md mb-6" style="max-width:64ch">
+                        <p class="ds-body-md mb-2" style="max-width:64ch">
                             Peta perjalanan pasien dari <strong>masuk sampai pulang</strong>, cabang penunjang
-                            (lab/radiologi) &amp; resep, skenario <strong>eskalasi/transfer</strong> (UGD → Rawat Inap),
-                            dan <strong>titik-titik pembatalan</strong>.
+                            (lab/radiologi) &amp; resep, skenario <strong>eskalasi/transfer</strong>, dan
+                            <strong>titik-titik pembatalan</strong>.
+                        </p>
+                        <p class="ds-caption mb-8" style="color:var(--muted)">
+                            <strong>Bagian 1 (Visual)</strong> di bawah ini untuk siapa saja — cukup gambar &amp; alur.
+                            <strong>Bagian 2 (Detail Teknis / Coding)</strong> di bagian bawah halaman untuk programmer.
                         </p>
 
                         @php
@@ -382,60 +448,62 @@ TXT,
                             $arrow = '<span class="ds-code" style="color:var(--primary); font-size:16px">▶</span>';
                         @endphp
 
+                        {{-- =================================================================== --}}
+                        {{-- ============ BAGIAN 1 · VISUAL (untuk siapa saja) ================ --}}
+                        {{-- =================================================================== --}}
+                        <div class="ds-eyebrow mb-3" style="color:var(--primary)">Bagian 1 — Visual</div>
+
                         {{-- ===== FLOW 1: ALUR NORMAL (MASUK → PULANG) ===== --}}
                         <div class="ds-caption-up mb-2">Alur normal — masuk sampai pulang (RJ / UGD)</div>
                         <div class="flex flex-wrap items-center gap-2 mb-3">
                             @foreach ([
-                                ['Pendaftaran', 'Daftar RJ / UGD — status Aktif (A)', 'entry'],
-                                ['Pelayanan / EMR', 'anamnesa → pemeriksaan → diagnosa → tindakan', 'main'],
-                                ['Penunjang', 'Lab / Radiologi — OPSIONAL', 'opt'],
-                                ['E-Resep → Apotek', 'obat diresepkan lalu dilayani apoteker', 'main'],
-                                ['Kasir', 'hitung total → input bayar → proses', 'cash'],
-                                ['Pulang', 'Lunas (L) / Bon (H)', 'done'],
+                                ['Pendaftaran', 'pasien didaftarkan', 'entry'],
+                                ['Pelayanan / EMR', 'diperiksa &amp; didiagnosa dokter', 'main'],
+                                ['Penunjang', 'Lab / Radiologi — bila perlu', 'opt'],
+                                ['E-Resep → Apotek', 'obat diresepkan &amp; dilayani', 'main'],
+                                ['Kasir', 'hitung total → bayar', 'cash'],
+                                ['Pulang', 'Lunas atau Bon', 'done'],
                             ] as $i => [$judul, $ket, $tone])
                                 @if ($i > 0) {!! $arrow !!} @endif
                                 <span class="ds-card-outline" style="{{ $flowBox($tone) }}">
                                     <span class="block text-sm font-semibold" style="color:var(--ink)">{{ $judul }}</span>
-                                    <span class="block text-xs" style="color:var(--muted)">{{ $ket }}</span>
+                                    <span class="block text-xs" style="color:var(--muted)">{!! $ket !!}</span>
                                 </span>
                             @endforeach
                         </div>
                         <p class="ds-caption mb-8" style="color:var(--muted)">
                             <span style="color:#d97706">▦ garis putus-putus</span> = langkah opsional (hanya bila pasien butuh penunjang / resep).
-                            RJ &amp; UGD polanya sama; RI billing per-item.
                         </p>
 
-                        {{-- ===== FLOW 2: ESKALASI / TRANSFER UGD → RI ===== --}}
-                        <div class="ds-caption-up mb-2">Skenario eskalasi &amp; transfer (UGD → Rawat Inap)</div>
-                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                        {{-- ===== FLOW 2: ESKALASI / TRANSFER ===== --}}
+                        <div class="ds-caption-up mb-2">Eskalasi &amp; transfer (kondisi memburuk)</div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
                             @foreach ([
-                                ['UGD', 'pasien gawat darurat — status Aktif (A)', 'entry'],
-                                ['Transfer ke RI', 'buat header RI + pindah biaya (ritempadmins)', 'main'],
-                                ['Rawat Inap', 'status Dirawat (I); UGD terkunci (I)', 'main'],
-                                ['Pelayanan RI', 'visit / obat / lab / OK — billing per-item', 'main'],
-                                ['Kasir RI', 'total (incl. biaya UGD) → bayar', 'cash'],
-                                ['Pulang', 'status Pulang (P)', 'done'],
+                                ['UGD', 'pasien gawat darurat', 'entry'],
+                                ['Transfer ke Rawat Inap', 'biaya UGD ikut pindah', 'main'],
+                                ['Dirawat', 'pelayanan rawat inap', 'main'],
+                                ['Kasir RI', 'total (termasuk biaya UGD)', 'cash'],
+                                ['Pulang', '—', 'done'],
                             ] as $i => [$judul, $ket, $tone])
                                 @if ($i > 0) {!! $arrow !!} @endif
                                 <span class="ds-card-outline" style="{{ $flowBox($tone) }}">
                                     <span class="block text-sm font-semibold" style="color:var(--ink)">{{ $judul }}</span>
-                                    <span class="block text-xs" style="color:var(--muted)">{{ $ket }}</span>
+                                    <span class="block text-xs" style="color:var(--muted)">{!! $ket !!}</span>
                                 </span>
                             @endforeach
                         </div>
                         <p class="ds-caption mb-8" style="color:var(--muted)">
-                            Pasien <strong>RJ</strong> yang perlu rawat inap umumnya lewat <strong>UGD</strong> lalu di-transfer,
-                            atau didaftar RI langsung. Transfer yang terimplementasi = <span class="ds-code">UGD → RI</span>
-                            (<span class="ds-code">transfer-ri-ugd</span>).
+                            Pasien bisa <strong>RJ → UGD</strong> lalu <strong>UGD → Rawat Inap</strong>. Biaya dari tahap
+                            sebelumnya selalu <strong>ikut terbawa</strong> &amp; ditagih di tahap berikutnya (tidak hilang).
                         </p>
 
                         {{-- ===== FLOW 3: TITIK BATAL (REVERSE) ===== --}}
-                        <h2 class="ds-title-lg mb-3">Titik pembatalan (reverse)</h2>
+                        <h2 class="ds-title-lg mb-3">Titik pembatalan (mundur)</h2>
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             @foreach ([
-                                ['Batal Transaksi', 'Pulang (P)', 'Dirawat (I)', 'Di kasir setelah bayar — hapus payment, buka kunci.', 'RJ · UGD · RI'],
-                                ['Batal Inap', 'Dirawat (I)', 'Batal (F)', 'Soft-cancel admisi; hanya bila belum ada transaksi &amp; bukan dari transfer.', 'RI'],
-                                ['Batal Transfer', 'RI dihapus', 'UGD → Aktif (A)', 'Kembalikan biaya ke UGD; hanya bila RI belum ada transaksi.', 'UGD → RI'],
+                                ['Batal Transaksi', 'Sudah bayar', 'Aktif lagi', 'Undo pembayaran — pasien kembali bisa diproses.', 'RJ · UGD · RI'],
+                                ['Batal (Kunjungan/Inap)', 'Aktif', 'Batal', 'Batalkan kunjungan/admisi — hanya bila BELUM ada transaksi apa pun.', 'RJ · UGD · RI'],
+                                ['Batal Transfer', 'Target dibatalkan', 'Sumber aktif lagi', 'Undo transfer — biaya dikembalikan ke asal; hanya bila target belum ada transaksi.', 'RJ→UGD · UGD→RI'],
                             ] as [$judul, $dari, $ke, $ket, $jalur])
                                 <div class="ds-card-outline" style="padding:16px 18px; border-color:#dc2626">
                                     <div class="ds-title-sm mb-2" style="color:#dc2626">{{ $judul }}</div>
@@ -450,14 +518,59 @@ TXT,
                             @endforeach
                         </div>
 
-                        <div class="ds-card-outline mt-6" style="padding:16px 20px">
+                        <div class="ds-card-outline mt-6 mb-4" style="padding:16px 20px">
                             <span class="ds-spike" style="vertical-align:middle"></span>
                             <span class="ds-body-sm" style="color:var(--body-strong)">
-                                <strong>Kasus campur (pulang lalu batal total):</strong>
-                                {!! $arrow !!} Batal Transaksi (P→I) {!! $arrow !!} Batal Inap (I→F).
-                                Pasien asal transfer UGD {!! $arrow !!} pakai Batal Transfer, bukan Batal Inap.
-                                Detail tiap batal ada di bab berikutnya.
+                                <strong>Kasus campur (sudah pulang lalu ingin batal total):</strong>
+                                {!! $arrow !!} Batal Transaksi (kembali aktif) {!! $arrow !!} Batal Kunjungan/Inap (jadi Batal).
+                                Pasien asal transfer {!! $arrow !!} pakai <strong>Batal Transfer</strong>, bukan Batal Kunjungan.
                             </span>
+                        </div>
+
+                        {{-- =================================================================== --}}
+                        {{-- ============ BAGIAN 2 · DETAIL TEKNIS (Coding) =================== --}}
+                        {{-- =================================================================== --}}
+                        <div class="mt-12 pt-8" style="border-top:2px solid var(--hairline)">
+                            <div class="ds-eyebrow mb-3" style="color:var(--muted)">Bagian 2 — Detail Teknis · Coding</div>
+                            <h2 class="ds-title-lg mb-3">Status &amp; guard per transisi</h2>
+                            <p class="ds-body-md mb-4" style="max-width:64ch">
+                                Kode status: <span class="ds-code">A</span> Aktif · <span class="ds-code">L</span> Lunas ·
+                                <span class="ds-code">I</span> Transfer/Dirawat · <span class="ds-code">P</span> Pulang ·
+                                <span class="ds-code">F</span> Batal. Guard yang <strong>benar-benar berjalan sekarang</strong>:
+                            </p>
+
+                            <div class="ds-card-outline mb-4" style="padding:0; overflow-x:auto">
+                                <table class="ds-table">
+                                    <thead><tr><th>Transisi</th><th>Yang terjadi</th><th>Guard aktif</th></tr></thead>
+                                    <tbody>
+                                        <tr><td class="ds-td-strong">Pelayanan → Penunjang</td><td class="ds-body-sm">order lab / radiologi</td><td class="ds-body-sm">Diagnosis &amp; Ket. Klinis wajib diisi</td></tr>
+                                        <tr><td class="ds-td-strong">Kasir → Pulang<br><span class="ds-caption" style="color:var(--muted)">postTransaksi · MAJU</span></td><td class="ds-body-sm">proses bayar &amp; pulang</td><td class="ds-body-sm">role <strong>Admin|Tu</strong> · <strong>lab tidak pending</strong> (RJ/UGD/RI) · tgl pulang diproses</td></tr>
+                                        <tr><td class="ds-td-strong">Transfer (create)<br><span class="ds-caption" style="color:var(--muted)">MAJU</span></td><td class="ds-body-sm">buat target + pindah biaya (<span class="ds-code">tempadmins</span>)</td><td class="ds-body-sm">sumber 'A' · <strong>lab tidak pending</strong> · belum pernah transfer · (UGD→RI: pilih room+bed) · anti-race · lockstatus</td></tr>
+                                        <tr><td class="ds-td-strong" style="color:#dc2626">Batal Transaksi<br><span class="ds-caption" style="color:var(--muted)">L→A / P→I · MUNDUR</span></td><td class="ds-body-sm">hapus payment (<span class="ds-code">*cashins</span>/<span class="ds-code">ripaymentpdtls</span>)</td><td class="ds-body-sm">role Admin|Sup.Tu · <span style="color:var(--primary)">lab-pending TIDAK memblok</span></td></tr>
+                                        <tr><td class="ds-td-strong" style="color:#dc2626">Batal Kunjungan / Inap<br><span class="ds-caption" style="color:var(--muted)">A→F / I→F · MUNDUR</span></td><td class="ds-body-sm">set <span class="ds-code">rj_status/ri_status='F'</span> (soft)</td><td class="ds-body-sm">role Admin|Sup.Tu · status aktif · bukan dari transfer · <strong>semua child table kosong</strong> (layanan+bayar) · <span style="color:var(--primary)">lab-pending TIDAK memblok</span></td></tr>
+                                        <tr><td class="ds-td-strong" style="color:#dc2626">Batal Transfer<br><span class="ds-caption" style="color:var(--muted)">target→F, sumber→A · MUNDUR</span></td><td class="ds-body-sm">soft-cancel target 'F', restore biaya ke sumber</td><td class="ds-body-sm">role Admin|Tu · lookup berlapis · target masih aktif · target belum ada transaksi · <span style="color:var(--primary)">lab-pending TIDAK memblok</span> · sumber 'I'</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="ds-caption mb-6" style="color:var(--muted)">
+                                <span style="color:var(--primary)">Hijau</span> = perilaku terbaru (guard lab-pending hanya di MAJU, dilepas dari MUNDUR).
+                                Rincian guard per-arah di bab <button type="button" class="hover:underline font-semibold"
+                                    style="color:var(--primary)" x-on:click="go('guard-transfer')">Guard &amp; Konsistensi Transfer</button>.
+                            </p>
+
+                            <div class="ds-card-outline" style="padding:16px 20px; border-color:var(--primary)">
+                                <span class="ds-spike" style="vertical-align:middle"></span>
+                                <span class="ds-body-sm" style="color:var(--body-strong)">
+                                    <strong>Kenapa lab-pending dilepas dari batal (MUNDUR)?</strong>
+                                    Guard <strong>MAJU</strong> (transfer &amp; proses pulang) sudah menjamin lab selesai sebelum finalisasi.
+                                    Jadi di alur normal, saat batal <strong>pasti tak ada lab pending</strong> — guard lab di batal jadi
+                                    <strong>redundant</strong>. Satu-satunya kondisi ia menyala = <strong>data anomali/lama</strong>
+                                    (transfer via Oracle Dev 6i yang bypass guard maju, atau lab yatim). Karena membatalkan tak menyentuh
+                                    lab (tetap <span class="ds-code">status_rjri</span> asal, <span class="ds-code">ref_no</span>, tetap bisa
+                                    diproses), melepasnya membuat transaksi/transfer yang <em>nyangkut</em> tetap bisa dibatalkan —
+                                    tanpa mengorbankan disiplin lab di jalur maju.
+                                </span>
+                            </div>
                         </div>
                     </section>
 
@@ -625,9 +738,84 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 11 RANJAU ====== --}}
+                    {{-- ====== 11 GUARD & KONSISTENSI TRANSFER ====== --}}
+                    <section x-show="section === 'guard-transfer'" x-cloak>
+                        <div class="ds-eyebrow mb-3">11 — Transfer &amp; Batal</div>
+                        <h1 class="ds-display-md mb-4">Guard &amp; Konsistensi Transfer</h1>
+                        <p class="ds-body-md mb-6" style="max-width:64ch">
+                            Checklist semua <strong>guard</strong> di dua alur transfer
+                            (<span class="ds-code">RJ→UGD</span> &amp; <span class="ds-code">UGD→RI</span>),
+                            saat <strong>create (maju)</strong> maupun <strong>batal (mundur)</strong>,
+                            plus status <strong>konsistensi</strong> antar-arah.
+                        </p>
+
+                        {{-- ===== GUARD CREATE ===== --}}
+                        <h2 class="ds-title-lg mb-3">A. Guard saat CREATE (maju)</h2>
+                        <div class="ds-card-outline mb-3" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead><tr><th>Guard</th><th>Pesan / arti</th><th>Berlaku</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ds-td-strong">rjNo ada</td><td class="ds-body-sm">"Data transaksi tidak ditemukan"</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Sumber status 'A'</td><td class="ds-body-sm">"sudah diproses, tidak bisa ditransfer"</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Lab tidak pending</td><td class="ds-body-sm">"Hasil Laborat belum selesai, transfer tidak bisa dilakukan"</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Belum pernah transfer</td><td class="ds-body-sm">idempoten (cek <span class="ds-code">*biayaselamadi*</span>) — "sudah pernah dilakukan"</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Anti-race</td><td class="ds-body-sm">"Data sudah diproses oleh user lain" (dalam transaksi)</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Data sumber ada</td><td class="ds-body-sm">"Data UGD/RJ tidak ditemukan" (dalam transaksi)</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Pasien lockstatus</td><td class="ds-body-sm">"Pasien sedang dalam status X, tidak bisa transfer" (cegah dobel jalur)</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Ruangan dipilih</td><td class="ds-body-sm">wajib pilih room</td><td class="ds-body-sm" style="color:var(--primary)">UGD→RI saja</td></tr>
+                                    <tr><td class="ds-td-strong">Bed dipilih</td><td class="ds-body-sm">"Pilih ruangan dan bed terlebih dahulu"</td><td class="ds-body-sm" style="color:var(--primary)">UGD→RI saja</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="ds-caption mb-8" style="color:var(--muted)">
+                            CREATE <strong>sudah konsisten</strong> di kedua arah — kecuali UGD→RI menambah pilih room/bed (memang butuh tempat tidur).
+                        </p>
+
+                        {{-- ===== GUARD BATAL ===== --}}
+                        <h2 class="ds-title-lg mb-3">B. Guard saat BATAL (mundur)</h2>
+                        <div class="ds-card-outline mb-3" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead><tr><th>Guard</th><th>Arti</th><th>Berlaku</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ds-td-strong">Role Admin | Tu</td><td class="ds-body-sm">hanya Admin/TU boleh batal transfer</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">rjNo ada</td><td class="ds-body-sm">data transaksi ditemukan</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Lookup target</td><td class="ds-body-sm">cari header hasil transfer</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Target bisa dibatalkan</td><td class="ds-body-sm">UGD→RI: RI harus 'I'; RJ→UGD: UGD harus 'A'</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Target belum ada transaksi</td><td class="ds-body-sm">obat/lab/rad/tindakan/jasa/lain-lain + pembayaran</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Sumber status 'I'</td><td class="ds-body-sm">memang tertransfer (dalam transaksi)</td><td class="ds-body-sm">keduanya</td></tr>
+                                    <tr><td class="ds-td-strong">Lab-pending DILEPAS</td><td class="ds-body-sm" style="color:var(--primary)">batal (mundur) TIDAK diblok lab pending</td><td class="ds-body-sm">keduanya ✅</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- ===== KONSISTENSI ===== --}}
+                        <h2 class="ds-title-lg mt-8 mb-3">C. Konsistensi antar-arah (batal)</h2>
+                        <div class="ds-card-outline" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead><tr><th>Aspek</th><th>UGD→RI (kuat)</th><th>RJ→UGD (tertinggal)</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ds-td-strong">Lookup transfer</td><td class="ds-body-sm" style="color:var(--primary)">berlapis (ritempadmins + fallback)</td><td class="ds-body-sm" style="color:#d97706">1 sumber (ugdbiayaselamadirjs) ⚠️</td></tr>
+                                    <tr><td class="ds-td-strong">Not-found → recovery</td><td class="ds-body-sm" style="color:var(--primary)">✅ UGD 'I'→'A'</td><td class="ds-body-sm" style="color:#dc2626">❌ tak ada — RJ bisa nyangkut 'I'</td></tr>
+                                    <tr><td class="ds-td-strong">Header target saat batal</td><td class="ds-body-sm" style="color:var(--primary)">soft ri_status='F'</td><td class="ds-body-sm" style="color:#d97706">hard delete ugdhdrs (rawan ORA-02292) ⚠️</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ds-card-outline mt-6" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>Verdict:</strong> guard CREATE &amp; guard inti BATAL sudah konsisten.
+                                Yang <strong>belum</strong>: batal <span class="ds-code">RJ→UGD</span> perlu (1) lookup berlapis via
+                                <span class="ds-code">ugdtempadmins</span> flag 'RJ', (2) recovery RJ 'I'→'A' saat data tak ketemu.
+                                Poin (3) hard-delete <strong>tak bisa 100% sama</strong> karena UGD tak punya status 'F' seperti RI —
+                                opsi: buat delete berpanduan child atau biarkan.
+                            </span>
+                        </div>
+                    </section>
+
+                    {{-- ====== 12 RANJAU ====== --}}
                     <section x-show="section === 'ranjau'" x-cloak>
-                        <div class="ds-eyebrow mb-3">11 — Referensi</div>
+                        <div class="ds-eyebrow mb-3">12 — Referensi</div>
                         <h1 class="ds-display-md mb-4">Ranjau Umum</h1>
                         <div class="space-y-3">
                             @foreach ([
@@ -651,9 +839,9 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 12 GLOSARIUM ====== --}}
+                    {{-- ====== 13 GLOSARIUM ====== --}}
                     <section x-show="section === 'glosarium'" x-cloak>
-                        <div class="ds-eyebrow mb-3">12 — Referensi</div>
+                        <div class="ds-eyebrow mb-3">13 — Referensi</div>
                         <h1 class="ds-display-md mb-4">Glosarium</h1>
                         <div class="ds-card-outline" style="padding:0; overflow-x:auto">
                             <table class="ds-table">
@@ -688,14 +876,20 @@ TXT,
                     <div class="flex items-center justify-between gap-3 mt-12 pt-6" style="border-top:1px solid var(--hairline)">
                         <button type="button" class="ds-btn ds-btn-secondary"
                             x-show="idx() > 0" x-cloak
-                            x-on:click="go(order[idx() - 1])">
-                            ← <span x-text="labels[order[idx() - 1]]"></span>
+                            x-on:click="go(curOrder()[idx() - 1])">
+                            ← <span x-text="labels[curOrder()[idx() - 1]]"></span>
                         </button>
                         <span x-show="idx() === 0"></span>
+                        {{-- di akhir sisi Konsep: ajak lanjut ke sisi Coding --}}
                         <button type="button" class="ds-btn ds-btn-primary"
-                            x-show="idx() < order.length - 1" x-cloak
-                            x-on:click="go(order[idx() + 1])">
-                            <span x-text="labels[order[idx() + 1]]"></span> →
+                            x-show="idx() < curOrder().length - 1" x-cloak
+                            x-on:click="go(curOrder()[idx() + 1])">
+                            <span x-text="labels[curOrder()[idx() + 1]]"></span> →
+                        </button>
+                        <button type="button" class="ds-btn ds-btn-primary"
+                            x-show="side === 'konsep' && idx() === curOrder().length - 1" x-cloak
+                            x-on:click="switchSide('coding')">
+                            Lanjut ke Sisi 2 — Coding →
                         </button>
                     </div>
 

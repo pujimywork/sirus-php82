@@ -393,6 +393,94 @@ new class extends Component {
     /* ===============================
      | BATAL TRANSFER UGD
      =============================== */
+    /* ===============================
+     | BATAL TRANSAKSI RJ → status 'F' (Aktif → Batal)
+     | Alur administrasi SENDIRI (standar A→F, seperti RI batalInap). Soft-cancel:
+     | record tetap, laporan mengecualikan 'F'. TERPISAH dari Task ID 99 (BPJS) —
+     | taskId99 hanya lapor batal ke antrean BPJS, tak menyentuh status transaksi ini.
+     =============================== */
+    public function batalKunjungan(): void
+    {
+        if (!auth()->user()->hasAnyRole(['Admin', 'Supervisor Tu'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin dan Supervisor TU yang dapat membatalkan.');
+            return;
+        }
+
+        if (!$this->rjNo) {
+            $this->dispatch('toast', type: 'error', message: 'Data transaksi tidak ditemukan.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockRJRow($this->rjNo);
+
+                $hdr = DB::table('rstxn_rjhdrs')
+                    ->select('reg_no', 'rj_status')
+                    ->where('rj_no', $this->rjNo)
+                    ->first();
+
+                if (!$hdr) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan.');
+                }
+
+                $status = $hdr->rj_status ?? 'A';
+                if ($status === 'F') {
+                    throw new \RuntimeException('Transaksi sudah berstatus Batal.');
+                }
+                if ($status === 'L') {
+                    throw new \RuntimeException('Sudah Lunas — batalkan pembayaran (Batal Transaksi) dulu.');
+                }
+                if ($status === 'I') {
+                    throw new \RuntimeException('Sedang transfer — gunakan Batal Transfer UGD.');
+                }
+                if ($status !== 'A') {
+                    throw new \RuntimeException('Status bukan Aktif, tidak bisa dibatalkan.');
+                }
+
+                // Guard: belum ada transaksi layanan (batal hanya untuk pendaftaran/kunjungan yang belum jalan).
+                $adaTransaksi =
+                    DB::table('rstxn_rjactemps')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_rjaccdocs')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_rjactparams')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_rjobats')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_rjlabs')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_rjrads')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_rjothers')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_rjcashins')->where('rj_no', $this->rjNo)->exists();
+
+                if ($adaTransaksi) {
+                    throw new \RuntimeException('Sudah ada transaksi layanan / pembayaran — batal tidak bisa dilakukan.');
+                }
+
+                // Set Batal (soft). Task ID 99 (BPJS) TIDAK disentuh.
+                DB::table('rstxn_rjhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update(['rj_status' => 'F', 'txn_status' => 'F']);
+
+                // Unlock pasien.
+                if ($hdr->reg_no) {
+                    DB::table('rsmst_pasiens')
+                        ->where('reg_no', $hdr->reg_no)
+                        ->update(['lockstatus' => null]);
+                }
+
+                $this->appendAdminLogRJ($this->rjNo, 'Batal Transaksi RJ (status F)');
+            });
+
+            $this->txnStatus = 'F';
+            $this->isFormLocked = true;
+            $this->hitungTotal();
+            $this->incrementVersion('kasir-rj');
+            $this->dispatch('toast', type: 'success', message: 'Transaksi RJ dibatalkan (status Batal).');
+            $this->dispatch('administrasi-rj.updated');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal batal: ' . $e->getMessage());
+        }
+    }
+
     public function batalTransferUGD(): void
     {
         if (!auth()->user()->hasAnyRole(['Admin', 'Tu'])) {
@@ -405,17 +493,53 @@ new class extends Component {
             return;
         }
 
-        // Cari data transfer
-        $transfer = DB::table('rstxn_ugdbiayaselamadirjs')
-            ->where('rj_no', $this->rjNo)
-            ->first();
+        // Cari UGD hasil transfer. Link UTAMA = baris rstxn_ugdtempadmins flag 'RJ'
+        // (tempadm_ref = rj_no RJ → rj_no = ugdRjNo). Fallback ke rstxn_ugdbiayaselamadirjs
+        // utk data transfer lama yang tak punya baris link ini.
+        $ugdRjNo = DB::table('rstxn_ugdtempadmins')
+            ->where('tempadm_flag', 'RJ')
+            ->where('tempadm_ref', $this->rjNo)
+            ->value('rj_no');
 
-        if (!$transfer) {
+        if (!$ugdRjNo) {
+            $ugdRjNo = DB::table('rstxn_ugdbiayaselamadirjs')
+                ->where('rj_no', $this->rjNo)
+                ->value('rj_no_rsugd');
+        }
+
+        if (!$ugdRjNo) {
+            // Data transfer UGD tak ditemukan (UGD sudah dihapus / anomali dual-system).
+            // RECOVERY: kalau RJ masih terkunci status 'I', kembalikan ke 'A' agar tak nyangkut.
+            $rjHdr = DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->first();
+
+            if ($rjHdr && $rjHdr->rj_status === 'I') {
+                DB::transaction(function () use ($rjHdr) {
+                    $this->lockRJRow($this->rjNo);
+                    DB::table('rstxn_rjhdrs')
+                        ->where('rj_no', $this->rjNo)
+                        ->update(['rj_status' => 'A', 'txn_status' => 'A']);
+
+                    if ($rjHdr->reg_no) {
+                        DB::table('rsmst_pasiens')
+                            ->where('reg_no', $rjHdr->reg_no)
+                            ->update(['lockstatus' => 'RJ']);
+                    }
+
+                    $this->appendAdminLogRJ($this->rjNo, 'Batal Transfer — data UGD tak ditemukan; status RJ dikembalikan ke Aktif');
+                });
+
+                $this->isFormLocked = false;
+                $this->txnStatus = 'A';
+                $this->hitungTotal();
+                $this->incrementVersion('kasir-rj');
+                $this->dispatch('toast', type: 'warning', message: 'Data transfer UGD tidak ditemukan — status RJ dikembalikan ke Aktif.');
+                $this->dispatch('administrasi-rj.updated');
+                return;
+            }
+
             $this->dispatch('toast', type: 'error', message: 'Tidak ada data transfer untuk RJ ini.');
             return;
         }
-
-        $ugdRjNo = $transfer->rj_no_rsugd;
 
         // Cek status UGD masih aktif
         $ugdHdr = DB::table('rstxn_ugdhdrs')->where('rj_no', $ugdRjNo)->first();
@@ -441,7 +565,7 @@ new class extends Component {
         }
 
         // CATATAN: lab pending TIDAK memblokir batal transfer (operasi MUNDUR).
-        // Undo transfer hanya mengembalikan pasien RJ↔RI; lab RJ tak tersentuh
+        // Undo transfer hanya mengembalikan pasien RJ↔UGD; lab RJ tak tersentuh
         // (tetap status_rjri='RJ', ref_no=rj_no) & tetap bisa diproses di RJ.
         // Guard lab-pending tetap ada di transfer (maju), bukan di sini.
 
@@ -454,12 +578,15 @@ new class extends Component {
                     throw new \RuntimeException('Status RJ bukan Transfer UGD, tidak bisa dibatalkan.');
                 }
 
-                // Hapus data transfer
+                // Hapus DETAIL transfer (biaya kembali ke RJ; link dibersihkan).
                 DB::table('rstxn_ugdbiayaselamadirjs')->where('rj_no', $this->rjNo)->delete();
                 DB::table('rstxn_ugdtempadmins')->where('tempadm_flag', 'RJ')->where('tempadm_ref', $this->rjNo)->delete();
 
-                // Hapus UGD header yang dibuat saat transfer
-                DB::table('rstxn_ugdhdrs')->where('rj_no', $ugdRjNo)->delete();
+                // Header UGD JANGAN di-delete (bisa ada child → ORA-02292) — soft-cancel:
+                // tandai Batal (rj_status='F'), KONSISTEN dgn UGD→RI (RI→'F'). Detail sudah dihapus di atas.
+                DB::table('rstxn_ugdhdrs')
+                    ->where('rj_no', $ugdRjNo)
+                    ->update(['rj_status' => 'F', 'txn_status' => 'F']);
 
                 // Kembalikan status RJ → 'A'
                 DB::table('rstxn_rjhdrs')
@@ -725,6 +852,23 @@ new class extends Component {
                 @endhasanyrole
 
             </div>
+
+            {{-- Batal Transaksi (Aktif → Batal 'F') — Admin, Supervisor Tu. Terpisah dari Task ID 99 (BPJS). --}}
+            @if ($txnStatus === 'A')
+                @hasanyrole(['Admin', 'Supervisor Tu'])
+                    <div class="pt-4 mt-4 border-t border-hairline dark:border-gray-700">
+                        <p class="mb-2 text-[11px] text-gray-500 dark:text-gray-400">
+                            Batalkan transaksi RJ (status jadi <span class="font-semibold">Batal/F</span>) —
+                            hanya bila belum ada transaksi layanan. Task ID 99 (BPJS) terpisah &amp; tak terpengaruh.
+                        </p>
+                        <x-confirm-button variant="danger" :action="'batalKunjungan()'" title="Batal Transaksi RJ"
+                            message="Batalkan transaksi RJ ini? Status akan menjadi BATAL (F). Hanya berhasil jika belum ada transaksi layanan apa pun."
+                            confirmText="Ya, batalkan" cancelText="Batal">
+                            Batal Transaksi
+                        </x-confirm-button>
+                    </div>
+                @endhasanyrole
+            @endif
 
             {{-- Kembalian / Kurang Bayar --}}
             @if ((int) ($bayar ?? 0) >= $rjSisa && $rjSisa > 0)

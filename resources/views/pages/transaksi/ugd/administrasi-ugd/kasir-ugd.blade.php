@@ -144,7 +144,16 @@ new class extends Component {
         }
 
         $costs = $this->calculateUGDCosts($this->rjNo);
-        $this->rjTotal = array_sum($costs);
+
+        // + biaya bawaan transfer RJ→UGD (rstxn_ugdtempadmins, pos "Transfer") — supaya kasir
+        //   konsisten dgn tampilan administrasi-ugd (sumTotalRJ) & pola RI. JANGAN dimasukkan ke
+        //   calculateUGDCosts karena fungsi itu dipakai transfer UGD→RI (biaya UGD sendiri saja).
+        $trfRj = (int) DB::table('rstxn_ugdtempadmins')
+            ->where('rj_no', $this->rjNo)
+            ->selectRaw('nvl(sum(rj_admin + poli_price + acte_price + actp_price + actd_price + obat + lab + rad + other + rs_admin), 0) as total')
+            ->value('total');
+
+        $this->rjTotal = array_sum($costs) + $trfRj;
 
         $this->recalcSisa();
     }
@@ -401,6 +410,93 @@ new class extends Component {
     /* ===============================
      | BATAL TRANSFER RI
      =============================== */
+    /* ===============================
+     | BATAL TRANSAKSI UGD → status 'F' (Aktif → Batal)
+     | Alur administrasi SENDIRI (standar A→F, seperti RI batalInap). Soft-cancel.
+     | TERPISAH dari Task ID 99 (BPJS) — taskId99 hanya lapor batal ke antrean BPJS.
+     =============================== */
+    public function batalKunjungan(): void
+    {
+        if (!auth()->user()->hasAnyRole(['Admin', 'Supervisor Tu'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin dan Supervisor TU yang dapat membatalkan.');
+            return;
+        }
+
+        if (!$this->rjNo) {
+            $this->dispatch('toast', type: 'error', message: 'Data transaksi tidak ditemukan.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockUGDRow($this->rjNo);
+
+                $hdr = DB::table('rstxn_ugdhdrs')
+                    ->select('reg_no', 'rj_status')
+                    ->where('rj_no', $this->rjNo)
+                    ->first();
+
+                if (!$hdr) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
+                }
+
+                $status = $hdr->rj_status ?? 'A';
+                if ($status === 'F') {
+                    throw new \RuntimeException('Transaksi sudah berstatus Batal.');
+                }
+                if ($status === 'L') {
+                    throw new \RuntimeException('Sudah Lunas — batalkan pembayaran (Batal Transaksi) dulu.');
+                }
+                if ($status === 'I') {
+                    throw new \RuntimeException('Sedang transfer — gunakan Batal Transfer RI.');
+                }
+                if ($status !== 'A') {
+                    throw new \RuntimeException('Status bukan Aktif, tidak bisa dibatalkan.');
+                }
+
+                // Guard: belum ada transaksi layanan.
+                $adaTransaksi =
+                    DB::table('rstxn_ugdactemps')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_ugdaccdocs')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_ugdactparams')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_ugdobats')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_ugdlabs')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_ugdrads')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_ugdothers')->where('rj_no', $this->rjNo)->exists()
+                    || DB::table('rstxn_ugdcashins')->where('rj_no', $this->rjNo)->exists();
+
+                if ($adaTransaksi) {
+                    throw new \RuntimeException('Sudah ada transaksi layanan / pembayaran — batal tidak bisa dilakukan.');
+                }
+
+                // Set Batal (soft). Task ID 99 (BPJS) TIDAK disentuh.
+                DB::table('rstxn_ugdhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update(['rj_status' => 'F', 'txn_status' => 'F']);
+
+                // Unlock pasien.
+                if ($hdr->reg_no) {
+                    DB::table('rsmst_pasiens')
+                        ->where('reg_no', $hdr->reg_no)
+                        ->update(['lockstatus' => null]);
+                }
+
+                $this->appendAdminLogUGD($this->rjNo, 'Batal Transaksi UGD (status F)');
+            });
+
+            $this->txnStatus = 'F';
+            $this->isFormLocked = true;
+            $this->hitungTotal();
+            $this->incrementVersion('kasir-ugd');
+            $this->dispatch('toast', type: 'success', message: 'Transaksi UGD dibatalkan (status Batal).');
+            $this->dispatch('administrasi-ugd.updated');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal batal: ' . $e->getMessage());
+        }
+    }
+
     public function batalTransferRI(): void
     {
         if (!auth()->user()->hasAnyRole(['Admin', 'Tu'])) {
@@ -781,6 +877,23 @@ new class extends Component {
                 </div>
 
             </div>
+
+            {{-- Batal Transaksi (Aktif → Batal 'F') — Admin, Supervisor Tu. Terpisah dari Task ID 99 (BPJS). --}}
+            @if ($txnStatus === 'A')
+                @hasanyrole(['Admin', 'Supervisor Tu'])
+                    <div class="pt-4 mt-4 border-t border-hairline dark:border-gray-700">
+                        <p class="mb-2 text-[11px] text-gray-500 dark:text-gray-400">
+                            Batalkan transaksi UGD (status jadi <span class="font-semibold">Batal/F</span>) —
+                            hanya bila belum ada transaksi layanan. Task ID 99 (BPJS) terpisah &amp; tak terpengaruh.
+                        </p>
+                        <x-confirm-button variant="danger" :action="'batalKunjungan()'" title="Batal Transaksi UGD"
+                            message="Batalkan transaksi UGD ini? Status akan menjadi BATAL (F). Hanya berhasil jika belum ada transaksi layanan apa pun."
+                            confirmText="Ya, batalkan" cancelText="Batal">
+                            Batal Transaksi
+                        </x-confirm-button>
+                    </div>
+                @endhasanyrole
+            @endif
 
             {{-- Kembalian / Kurang Bayar --}}
             @if ((int) ($bayar ?? 0) >= $rjSisa && $rjSisa > 0)
