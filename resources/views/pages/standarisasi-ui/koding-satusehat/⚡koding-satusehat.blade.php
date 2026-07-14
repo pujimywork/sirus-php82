@@ -385,6 +385,7 @@ TXT,
                 'urutan'    => 'Model & Urutan Kirim',
                 'checklist' => 'Checklist & Langkah Kirim',
                 'standar'   => 'Standarisasi per Resource',
+                'ri-ugd'    => 'Status per Modul (RJ/UGD/RI)',
             ],
             'Adopsi' => [
                 'dashboard'  => 'Peta Dashboard SATUSEHAT',
@@ -1049,6 +1050,72 @@ UI RJ (Livewire, satu tombol per-resource):
                                     <span class="ds-code">/master/master-obat</span>). Kalau kosong → item
                                     resep di-<strong>skip</strong>.
                                 </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- ====== 08b STATUS PER MODUL (RJ/UGD/RI) ====== --}}
+                    <section x-show="section === 'ri-ugd'" x-cloak>
+                        <div class="ds-eyebrow mb-3">08 — Pengiriman</div>
+                        <h1 class="ds-display-md mb-4">Status Pengiriman per Modul — RJ / UGD / RI</h1>
+                        <p class="ds-body-md mb-4" style="max-width:64ch">
+                            Alur kirim SATUSEHAT sudah tersedia di <strong>tiga modul</strong>. Tiap resource = 1 komponen
+                            <span class="ds-code">kirim-*.blade.php</span> di <span class="ds-code">transaksi/{modul}/satu-sehat/</span>,
+                            digabung di 1 modal <span class="ds-code">satu-sehat-{modul}-actions</span>, dipanggil dari Daftar {modul}.
+                            ID balikan SATUSEHAT disimpan di JSON record (<span class="ds-code">satusehat.*</span>) sebagai guard "sudah pernah dikirim".
+                        </p>
+
+                        <div class="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-3">
+                            <div class="ds-card-outline" style="padding:16px 20px">
+                                <div class="ds-title-sm mb-1">RJ — Rawat Jalan</div>
+                                <div class="ds-body-sm">Lengkap (11 resource). Ruang lingkup awal &amp; acuan pola.</div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:16px 20px">
+                                <div class="ds-title-sm mb-1">UGD</div>
+                                <div class="ds-body-sm">Lengkap + <strong>ChiefComplaint &amp; Allergy</strong> (LOV SNOMED ditambahkan di anamnesa keluhan utama &amp; alergi).</div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:16px 20px">
+                                <div class="ds-title-sm mb-1">RI — Rawat Inap</div>
+                                <div class="ds-body-sm"><strong>9 resource aktif</strong> + 2 digating (SNOMED). Encounter class <span class="ds-code">IMP</span>.</div>
+                            </div>
+                        </div>
+
+                        <h2 class="ds-title-lg mt-6 mb-3">Detail Resource RI (Rawat Inap)</h2>
+                        <div class="ds-card-outline" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead><tr><th>Resource</th><th>Sumber data RI</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ds-td-strong">Encounter (IMP)</td><td class="ds-body-sm"><span class="ds-code">rstxn_rihdrs</span> + lokasi <span class="ds-code">rsmst_rooms.room_uuid</span></td><td class="ds-body-sm">✅ aktif — dukung <strong>pindah kamar</strong> (location[] bertambah)</td></tr>
+                                    <tr><td class="ds-td-strong">Condition</td><td class="ds-body-sm"><span class="ds-code">rstxn_ridtls</span> ⋈ <span class="ds-code">rsmst_mstdiags</span> <strong>by diag_id</strong></td><td class="ds-body-sm">✅ aktif — aman 288 icdx kembar</td></tr>
+                                    <tr><td class="ds-td-strong">Procedure</td><td class="ds-body-sm">JSON <span class="ds-code">procedure[]</span> (procedureId=ICD-9)</td><td class="ds-body-sm">✅ aktif</td></tr>
+                                    <tr><td class="ds-td-strong">Observation (vital)</td><td class="ds-body-sm">JSON <span class="ds-code">observasi.observasiLanjutan.tandaVital[]</span></td><td class="ds-body-sm">✅ aktif — <strong>multi-entri</strong> (per waktu ukur)</td></tr>
+                                    <tr><td class="ds-td-strong">MedicationRequest</td><td class="ds-body-sm">JSON <span class="ds-code">eresepHdr[].eresep[]</span> → join <span class="ds-code">immst_products</span> (KFA)</td><td class="ds-body-sm">✅ aktif — <strong>racikan belum</strong>; item tanpa KFA di-skip</td></tr>
+                                    <tr><td class="ds-td-strong">ClinicalImpression</td><td class="ds-body-sm">JSON <span class="ds-code">cppt[]</span> (SOAP)</td><td class="ds-body-sm">✅ aktif — 1 entri = 1 CI; <strong>assessor = DPJP</strong> (fallback MVP); guard per <span class="ds-code">cpptId</span></td></tr>
+                                    <tr><td class="ds-td-strong">Penunjang Lab</td><td class="ds-body-sm"><span class="ds-code">lbtxn_checkuphdrs</span> <span class="ds-code">status_rjri='RI'</span> ⋈ <span class="ds-code">lbmst_clabitems.loinc_code</span></td><td class="ds-body-sm">✅ aktif — chain SR→Specimen→Obs→DR</td></tr>
+                                    <tr><td class="ds-td-strong">Penunjang Radiologi</td><td class="ds-body-sm"><span class="ds-code">rstxn_riradiologs</span> ⋈ <span class="ds-code">rsmst_radiologis.loinc_code</span></td><td class="ds-body-sm">✅ aktif — <strong>LOINC spesifik</strong> bila master terisi, else generik 18748-4; ImagingStudy dilewati</td></tr>
+                                    <tr><td class="ds-td-strong">NutritionOrder (Diet)</td><td class="ds-body-sm">JSON <span class="ds-code">pengkajianDokter.rencana.diet</span> (free-text)</td><td class="ds-body-sm">✅ aktif — <strong>text-only</strong> (tanpa coding SNOMED); trait baru <span class="ds-code">NutritionOrderTrait</span></td></tr>
+                                    <tr><td class="ds-td-strong">ChiefComplaint</td><td class="ds-body-sm">JSON <span class="ds-code">pengkajianDokter.anamnesa.keluhanUtama</span> + SNOMED</td><td class="ds-body-sm">⏸️ <strong>digating</strong> <span class="ds-code">@@if(false)</span> — aktifkan bareng LOV SNOMED</td></tr>
+                                    <tr><td class="ds-td-strong">AllergyIntolerance</td><td class="ds-body-sm">JSON <span class="ds-code">pengkajianDokter.anamnesa.jenisAlergi</span> + SNOMED</td><td class="ds-body-sm">⏸️ <strong>digating</strong> <span class="ds-code">@@if(false)</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ds-card-outline mt-4" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>Keputusan desain RI:</strong>
+                                <br>• <strong>Location kamar</strong>: kolom <span class="ds-code">rsmst_rooms.room_uuid</span> baru + tombol "Daftarkan Location" di <span class="ds-code">/master/kamar</span> (pola <span class="ds-code">poli_uuid</span>). Pindah kamar → entri <span class="ds-code">location[]</span> baru.
+                                <br>• <strong>SNOMED RI digating</strong> (<span class="ds-code">@@if(false)</span>) di <span class="ds-code">rm-pengkajian-dokter-ri-actions</span> (LOV) &amp; <span class="ds-code">satu-sehat-ri-actions</span> (sender). Backend utuh — aktifkan = ubah <span class="ds-code">false→true</span> di 3 titik.
+                                <br>• <strong>CPPT → ClinicalImpression</strong>: assessor = DPJP karena PPA non-dokter belum punya IHS.
+                                <br>• <strong>NutritionOrder</strong>: text-only — cek sandbox apakah profile wajib coding; kalau ya, perlu master diet ber-SNOMED.
+                            </span>
+                        </div>
+
+                        <div class="ds-card-outline mt-4" style="padding:16px 20px">
+                            <div class="ds-title-sm mb-1">Belum dikerjakan (pengayaan, non-wajib)</div>
+                            <div class="ds-body-sm">
+                                <strong>RI</strong>: MedicationDispense, SBAR (butuh Communication trait), Penilaian (risiko jatuh/gizi → Observation survey, butuh mapping kode), racikan obat, EpisodeOfCare. •
+                                <strong>Pengayaan UGD</strong>: Observation Risiko Jatuh / IMT Gizi, MedicationAdministration cairan.
                             </div>
                         </div>
                     </section>
