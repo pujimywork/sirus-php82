@@ -116,6 +116,8 @@ new class extends Component {
                         wire:key="ss-observation-ri-{{ $riHdrNo ?? 'none' }}" />
                     <livewire:pages::transaksi.ri.satu-sehat.kirim-medication-request :riHdrNo="$riHdrNo"
                         wire:key="ss-medication-request-ri-{{ $riHdrNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-medication-dispense :riHdrNo="$riHdrNo"
+                        wire:key="ss-medication-dispense-ri-{{ $riHdrNo ?? 'none' }}" />
                     <livewire:pages::transaksi.ri.satu-sehat.kirim-lab :riHdrNo="$riHdrNo"
                         wire:key="ss-lab-ri-{{ $riHdrNo ?? 'none' }}" />
                     <livewire:pages::transaksi.ri.satu-sehat.kirim-radiologi :riHdrNo="$riHdrNo"
