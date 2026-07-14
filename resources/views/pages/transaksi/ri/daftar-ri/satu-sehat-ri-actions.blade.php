@@ -108,6 +108,8 @@ new class extends Component {
                 <div class="max-w-4xl mx-auto space-y-3">
                     <livewire:pages::transaksi.ri.satu-sehat.kirim-encounter :riHdrNo="$riHdrNo"
                         wire:key="ss-encounter-ri-{{ $riHdrNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-episode :riHdrNo="$riHdrNo"
+                        wire:key="ss-episode-ri-{{ $riHdrNo ?? 'none' }}" />
                     <livewire:pages::transaksi.ri.satu-sehat.kirim-condition :riHdrNo="$riHdrNo"
                         wire:key="ss-condition-ri-{{ $riHdrNo ?? 'none' }}" />
                     <livewire:pages::transaksi.ri.satu-sehat.kirim-procedure :riHdrNo="$riHdrNo"
