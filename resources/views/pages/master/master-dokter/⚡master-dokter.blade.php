@@ -416,7 +416,6 @@ new class extends Component {
                             <tr class="text-left">
                                 <th class="px-6 py-3 text-xs font-semibold tracking-wide uppercase text-muted dark:text-gray-400 bg-surface-card dark:bg-gray-800">Dokter &amp; Poli</th>
                                 <th class="px-6 py-3 text-xs font-semibold tracking-wide uppercase text-muted dark:text-gray-400 bg-surface-card dark:bg-gray-800">Tarif &amp; Admin</th>
-                                <th class="px-6 py-3 text-xs font-semibold tracking-wide text-center uppercase text-muted dark:text-gray-400 bg-surface-card dark:bg-gray-800">Aksi</th>
                             </tr>
                         </thead>
 
@@ -484,7 +483,8 @@ new class extends Component {
                                                 <span class="text-muted dark:text-gray-300">Telepon:</span>
                                                 <span class="ml-1 font-mono text-ink dark:text-gray-100">{{ $row->dr_phone ?? '-' }}</span>
                                             </div>
-                                            <div class="max-w-xs">
+                                            {{-- Alamat disembunyikan --}}
+                                            <div class="hidden max-w-xs">
                                                 <span class="text-muted dark:text-gray-300">Alamat:</span>
                                                 <span class="ml-1 text-ink dark:text-gray-100" title="{{ $row->dr_address }}">{{ $row->dr_address ?? '-' }}</span>
                                             </div>
@@ -493,19 +493,33 @@ new class extends Component {
 
                                     {{-- TARIF & ADMIN: inline edit, auto-save saat blur.
                                          Track grid 7rem eksplisit — jangan andalkan w-* di komponen
-                                         (kalah vs w-full bawaan & kolaps di tabel sempit). --}}
-                                    <td class="px-6 py-4 align-top" wire:click.stop>
+                                         (kalah vs w-full bawaan & kolaps di tabel sempit).
+                                         CATATAN: .stop DIPINDAH dari <td> ke tiap input — supaya klik area
+                                         kolom (label/garis/padding) tetap memilih dokter & buka panel V&K,
+                                         sementara klik input tidak ikut re-select (edit inline aman). --}}
+                                    <td class="px-6 py-4 align-top">
+                                        {{-- Aksi (Edit/Hapus) di atas sendiri — kolom Tarif & Aksi digabung 1 --}}
+                                        <div class="flex justify-end gap-2 mb-3" wire:click.stop>
+                                            <x-action-edit wire:click="openEdit('{{ $row->dr_id }}')" />
+                                            <x-action-delete :action="'requestDelete(\'' . $row->dr_id . '\')'"
+                                                title="Hapus Dokter"
+                                                :message="'Yakin hapus dokter ' . $row->dr_name . '?'" />
+                                        </div>
+
                                         {{-- Gaji & Administrasi RS — garis tipis antar baris --}}
                                         <div class="grid grid-cols-[auto_7rem] gap-x-3 gap-y-1.5 text-sm items-center">
-                                            <span class="text-muted dark:text-gray-300 whitespace-nowrap">Gaji Pokok</span>
-                                            <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.basic_salary"
-                                                wire:key="hd-gaji-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
-
-                                            <div class="col-span-2 border-t border-hairline-soft dark:border-gray-800"></div>
+                                            {{-- Gaji Pokok disembunyikan (binding tetap ada) --}}
+                                            <span class="hidden text-muted dark:text-gray-300 whitespace-nowrap">Gaji Pokok</span>
+                                            <span class="hidden" wire:click.stop>
+                                                <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.basic_salary"
+                                                    wire:key="hd-gaji-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                            </span>
 
                                             <span class="text-muted dark:text-gray-300 whitespace-nowrap">Admin RS</span>
-                                            <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.rs_admin"
-                                                wire:key="hd-admin-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                            <span class="block" wire:click.stop>
+                                                <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.rs_admin"
+                                                    wire:key="hd-admin-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                            </span>
                                         </div>
 
                                         {{-- Tarif Poli & UGD — mini table bergaris; saat baris aktif header ikut tema hijau --}}
@@ -521,22 +535,22 @@ new class extends Component {
                                                 <tbody class="text-body divide-y divide-hairline-soft dark:divide-gray-800 dark:text-gray-400">
                                                     <tr>
                                                         <td class="px-2 py-1.5 whitespace-nowrap text-muted dark:text-gray-300">Tarif Poli</td>
-                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800">
+                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800" wire:click.stop>
                                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.poli_price"
                                                                 wire:key="hd-poli-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                                         </td>
-                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800">
+                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800" wire:click.stop>
                                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.poli_price_bpjs"
                                                                 wire:key="hd-polib-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                                         </td>
                                                     </tr>
                                                     <tr>
                                                         <td class="px-2 py-1.5 whitespace-nowrap text-muted dark:text-gray-300">Tarif UGD</td>
-                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800">
+                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800" wire:click.stop>
                                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.ugd_price"
                                                                 wire:key="hd-ugd-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                                         </td>
-                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800">
+                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800" wire:click.stop>
                                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.ugd_price_bpjs"
                                                                 wire:key="hd-ugdb-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                                         </td>
@@ -546,20 +560,10 @@ new class extends Component {
                                         </div>
                                     </td>
 
-                                    {{-- AKSI --}}
-                                    <td class="px-6 py-4 align-top" wire:click.stop>
-                                        <div class="flex justify-center gap-2">
-                                            <x-action-edit wire:click="openEdit('{{ $row->dr_id }}')" />
-
-                                            <x-action-delete :action="'requestDelete(\'' . $row->dr_id . '\')'"
-                                                title="Hapus Dokter"
-                                                :message="'Yakin hapus dokter ' . $row->dr_name . '?'" />
-                                        </div>
-                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-6 py-10 text-center text-muted dark:text-gray-400">
+                                    <td colspan="2" class="px-6 py-10 text-center text-muted dark:text-gray-400">
                                         Data belum ada.
                                     </td>
                                 </tr>
