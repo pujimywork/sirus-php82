@@ -136,9 +136,15 @@ new class extends Component {
         $this->dataDaftarRi['pengkajianDokter'] ??= [
             'anamnesa' => [
                 'keluhanUtama' => '',
+                'keluhanUtamaSnomedCode' => '',
+                'keluhanUtamaSnomedDisplayEn' => '',
+                'keluhanUtamaSnomedDisplayId' => '',
                 'keluhanTambahan' => '',
                 'riwayatPenyakit' => ['sekarang' => '', 'dahulu' => '', 'keluarga' => ''],
                 'jenisAlergi' => '',
+                'jenisAlergiSnomedCode' => '',
+                'jenisAlergiSnomedDisplayEn' => '',
+                'jenisAlergiSnomedDisplayId' => '',
                 'rekonsiliasiObat' => [],
             ],
             'fisik' => '',
@@ -258,6 +264,44 @@ new class extends Component {
             return;
         }
         $this->dispatch('emr-ri.eresep.open', riHdrNo: (int) $this->riHdrNo);
+    }
+
+    /* ===============================
+     | LOV SNOMED — Keluhan Utama (RI)
+     =============================== */
+    #[On('lov.selected.keluhanUtamaSnomedRi')]
+    public function onKeluhanUtamaSnomedRiSelected(string $target, array $payload): void
+    {
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedCode'] = $payload['snomed_code'] ?? '';
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedDisplayEn'] = $payload['display_en'] ?? '';
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedDisplayId'] = $payload['display_id'] ?? '';
+    }
+
+    #[On('lov.cleared.keluhanUtamaSnomedRi')]
+    public function onKeluhanUtamaSnomedRiCleared(string $target): void
+    {
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedCode'] = '';
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedDisplayEn'] = '';
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedDisplayId'] = '';
+    }
+
+    /* ===============================
+     | LOV SNOMED — Alergi (RI)
+     =============================== */
+    #[On('lov.selected.alergiSnomedRi')]
+    public function onAlergiSnomedRiSelected(string $target, array $payload): void
+    {
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedCode'] = $payload['snomed_code'] ?? '';
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedDisplayEn'] = $payload['display_en'] ?? '';
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedDisplayId'] = $payload['display_id'] ?? '';
+    }
+
+    #[On('lov.cleared.alergiSnomedRi')]
+    public function onAlergiSnomedRiCleared(string $target): void
+    {
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedCode'] = '';
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedDisplayEn'] = '';
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedDisplayId'] = '';
     }
 
     protected function resetForm(): void
@@ -380,6 +424,23 @@ new class extends Component {
                 <x-input-error :messages="$errors->get('dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama')" class="mt-1" />
             </div>
 
+            {{-- SNOMED CT — Keluhan Utama (untuk Satu Sehat) --}}
+            {{-- DINONAKTIFKAN SEMENTARA: aktifkan RI SNOMED dengan mengubah `false` → `true`.
+                 Sinkron dgn sender di satu-sehat-ri-actions (kirim-chief-complaint/allergy). --}}
+            @if (false)
+            <div>
+                <livewire:lov.snomed.lov-snomed
+                    target="keluhanUtamaSnomedRi"
+                    label="Kode SNOMED Keluhan Utama (Satu Sehat)"
+                    placeholder="Ketik keluhan dalam Bahasa Indonesia / Inggris..."
+                    valueSet="condition-code"
+                    :initialSnomedCode="$dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedCode'] ?? null"
+                    :disabled="$isFormLocked || $isReadOnlyByRole"
+                    wire:key="lov-snomed-keluhan-ri-{{ $riHdrNo ?? 'new' }}-{{ $renderVersions['modal-pengkajian-dokter-ri'] ?? 0 }}"
+                />
+            </div>
+            @endif
+
             <div>
                 <x-input-label value="Keluhan Tambahan" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.keluhanTambahan" class="w-full mt-1"
@@ -408,6 +469,21 @@ new class extends Component {
                 <x-input-label value="Jenis Alergi" />
                 <x-text-input wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.jenisAlergi" class="w-full mt-1"
                     :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Alergi obat / makanan..." />
+
+                {{-- SNOMED CT — Alergi (untuk Satu Sehat) — DINONAKTIFKAN SEMENTARA (false → true utk aktifkan) --}}
+                @if (false)
+                <div class="mt-3">
+                    <livewire:lov.snomed.lov-snomed
+                        target="alergiSnomedRi"
+                        label="Kode SNOMED Alergi (Satu Sehat)"
+                        placeholder="Ketik nama alergi / obat..."
+                        valueSet="substance-code"
+                        :initialSnomedCode="$dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedCode'] ?? null"
+                        :disabled="$isFormLocked || $isReadOnlyByRole"
+                        wire:key="lov-snomed-alergi-ri-{{ $riHdrNo ?? 'new' }}-{{ $renderVersions['modal-pengkajian-dokter-ri'] ?? 0 }}"
+                    />
+                </div>
+                @endif
             </div>
 
         </div>
