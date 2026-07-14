@@ -557,6 +557,25 @@ new class extends Component {
         $row->no_skdp_bpjs = $json['kontrol']['noSKDPBPJS'] ?? '-';
         $row->kontrol_detail = $json['kontrol'] ?? null;
 
+        // SATUSEHAT — status kirim PER-RESOURCE (blok json 'satusehat').
+        // Tiap resource punya penanda tersendiri; nilai bisa scalar (encounterId,
+        // allergyId, ...) atau array (conditionIds, observationIds, ...).
+        $ss = $json['satusehat'] ?? [];
+        $ssFilled = fn($v) => is_array($v) ? count($v) > 0 : !empty($v);
+        $row->satusehat_items = [
+            ['label' => 'Encounter',           'full' => 'Encounter (kunjungan)',            'sent' => $ssFilled($ss['encounterId'] ?? null)],
+            ['label' => 'Condition',           'full' => 'Condition (diagnosa ICD-10)',      'sent' => $ssFilled($ss['conditionIds'] ?? null)],
+            ['label' => 'Observation',         'full' => 'Observation (vital/lab)',          'sent' => $ssFilled($ss['observationIds'] ?? null)],
+            ['label' => 'Procedure',           'full' => 'Procedure (tindakan ICD-9)',       'sent' => $ssFilled($ss['procedureIds'] ?? null)],
+            ['label' => 'Medication Request',  'full' => 'Medication Request (resep)',       'sent' => $ssFilled($ss['medicationRequestIds'] ?? null)],
+            ['label' => 'Chief Complaint',     'full' => 'Chief Complaint (keluhan utama)',  'sent' => $ssFilled($ss['chiefComplaintId'] ?? null)],
+            ['label' => 'Allergy Intolerance', 'full' => 'Allergy Intolerance',             'sent' => $ssFilled($ss['allergyId'] ?? null)],
+            ['label' => 'Medication Dispense', 'full' => 'Medication Dispense (obat pulang)', 'sent' => $ssFilled($ss['medicationDispenseIds'] ?? null)],
+            ['label' => 'Penunjang Lab',       'full' => 'Penunjang Lab',                    'sent' => $ssFilled($ss['labServiceRequestIds'] ?? null) || $ssFilled($ss['labDiagnosticReportIds'] ?? null)],
+            ['label' => 'Penunjang Radiologi', 'full' => 'Penunjang Radiologi',             'sent' => $ssFilled($ss['radServiceRequestIds'] ?? null) || $ssFilled($ss['radDiagnosticReportIds'] ?? null)],
+            ['label' => 'Clinical Impression', 'full' => 'Clinical Impression',             'sent' => $ssFilled($ss['clinicalImpressionId'] ?? null)],
+        ];
+
         $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode('# ', array_column($json['diagnosis'], 'icdX')) : '-';
         $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
         $row->diagnosis_detail = $json['diagnosis'] ?? null;
@@ -1352,6 +1371,23 @@ new class extends Component {
                                                         </div>
                                                     </x-slot>
                                                 </x-dropdown>
+
+                                                {{-- SATU SEHAT — status kirim PER-RESOURCE, di kanan tombol titik-3.
+                                                     Abu-abu = belum dikirim, hijau/brand = sudah. Klik chip mana pun = buka modal Kirim Satu Sehat. --}}
+                                                @hasanyrole('Admin|Mr')
+                                                    <div class="flex flex-wrap items-center gap-1 max-w-[320px]">
+                                                        @foreach ($row->satusehat_items as $ssItem)
+                                                            <button type="button" wire:click="openSatuSehat('{{ $row->rj_no }}')"
+                                                                title="{{ $ssItem['full'] }} — {{ $ssItem['sent'] ? 'sudah dikirim' : 'belum dikirim' }} (klik untuk kelola)"
+                                                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-[9px] font-semibold leading-none transition {{ $ssItem['sent'] ? 'bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30' : 'bg-surface-soft text-muted-soft border-hairline hover:bg-surface-strong hover:text-body dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700 dark:hover:bg-gray-700' }}">
+                                                                @if ($ssItem['sent'])
+                                                                    <svg class="w-2 h-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                                @endif
+                                                                {{ $ssItem['label'] }}
+                                                            </button>
+                                                        @endforeach
+                                                    </div>
+                                                @endhasanyrole
                                                 </div>{{-- /baris atas tombol aksi sejajar --}}
 
                                                 {{-- Batal (Task ID 99) — baris bawah. Manager Medis/Umum (Admin otomatis via super-user).
