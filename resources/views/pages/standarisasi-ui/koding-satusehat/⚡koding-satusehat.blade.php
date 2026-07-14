@@ -967,7 +967,67 @@ UI RJ (Livewire, satu tombol per-resource):
                             <span class="ds-spike" style="vertical-align:middle"></span>
                             <span class="ds-body-sm" style="color:var(--body-strong)">
                                 <strong>ID disimpan</strong> (<span class="ds-code">satusehat.radServiceRequestIds / radDiagnosticReportIds</span>) = UUID balikan SATUSEHAT (guard "sudah pernah dikirim").
-                                <br><strong>⚠️ GAP (perlu perbaikan):</strong> <span class="ds-code">rsmst_radiologis</span> belum punya kode LOINC/ICD spesifik → semua order pakai kode generik <span class="ds-code">18748-4</span>. Hasil bacaan/PDF (<span class="ds-code">rsview_rads.rad_upload_pdf</span>) &amp; nilai terstruktur <strong>belum dikirim</strong>; DR masih laporan kosong.
+                                <br><strong>⚠️ GAP (perlu perbaikan):</strong> alur kirim masih pakai kode generik <span class="ds-code">18748-4</span> untuk semua order. Master <span class="ds-code">rsmst_radiologis</span> kini sudah punya kolom <span class="ds-code">loinc_code</span>/<span class="ds-code">loinc_display</span> (isi via <span class="ds-code">/master/radiologis</span>) — tinggal dipakai menggantikan kode generik. Hasil bacaan/PDF (<span class="ds-code">rsview_rads.rad_upload_pdf</span>) &amp; nilai terstruktur <strong>belum dikirim</strong>; DR masih laporan kosong.
+                            </span>
+                        </div>
+
+                        {{-- ===== DETAIL JALUR DICOM / ImagingStudy (ideal, belum aktif) ===== --}}
+                        <h2 class="ds-title-lg mt-8 mb-3">Detail — Jalur DICOM / ImagingStudy (ideal, belum aktif)</h2>
+                        <p class="ds-body-md mb-3" style="max-width:64ch">
+                            Ini jalur <strong>lengkap versi SATUSEHAT</strong> kalau RS punya <strong>PACS/modality</strong> ber-DICOM.
+                            Saat ini <strong>dilewati</strong> karena modul radiologi kita <em>upload-based</em> (hasil = PDF, tak ada
+                            <span class="ds-code">studyUid/seriesUid/sopUid</span>). Diagram di bawah = <strong>target</strong>, bukan yang berjalan sekarang.
+                        </p>
+
+                        <div class="ds-card-outline mb-4" style="padding:16px 20px">
+                            <div class="ds-title-sm mb-2">Rantai ideal per order radiologi (DICOM)</div>
+                            <div class="ds-body-sm" style="line-height:1.9">
+                                <span class="ds-code">ServiceRequest</span> (order, LOINC/ICD spesifik)
+                                → <span class="ds-code">ImagingStudy</span> (UID DICOM + modality DCM: CR/CT/MR/US)
+                                → <span class="ds-code">Observation</span> <em>(opsional — temuan terstruktur)</em>
+                                → <span class="ds-code">DiagnosticReport</span> (basedOn SR, <span class="ds-code">imagingStudy</span> ref, conclusion bacaan + <span class="ds-code">presentedForm</span> PDF).
+                            </div>
+                        </div>
+
+                        <div class="ds-card-outline" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead><tr><th>Langkah</th><th>Butuh (sumber · field)</th><th>Aturan</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ds-td-strong">Ambil order + kode</td><td class="ds-body-sm"><span class="ds-code">rstxn_rjrads/ugdrads</span> ⋈ <span class="ds-code">rsmst_radiologis</span>: <span class="ds-code">loinc_code</span>/<span class="ds-code">loinc_display</span>, ICD-9</td><td class="ds-body-sm">Pakai kode spesifik per tindakan (bukan generik 18748-4).</td><td class="ds-body-sm">🟡 kolom LOINC <strong>ada</strong>, alur kirim belum pakai</td></tr>
+                                    <tr><td class="ds-td-strong">Dapatkan UID DICOM</td><td class="ds-body-sm"><span class="ds-code">studyUid</span> · <span class="ds-code">seriesUid</span> · <span class="ds-code">sopUid</span> dari PACS / modality worklist</td><td class="ds-body-sm">Format <span class="ds-code">urn:oid:{OID}</span>. Tanpa PACS → generate OID stabil sendiri.</td><td class="ds-body-sm">🔴 GAP — UID tak tersimpan</td></tr>
+                                    <tr><td class="ds-td-strong">ImagingStudy</td><td class="ds-body-sm"><span class="ds-code">POST /ImagingStudy</span>: identifier <span class="ds-code">urn:dicom:uid</span>, modality DCM, numberOfSeries/Instances, procedureCode</td><td class="ds-body-sm">Referensi ke <span class="ds-code">Encounter</span> + <span class="ds-code">Patient</span>; started = tgl periksa.</td><td class="ds-body-sm">🟡 trait <span class="ds-code">createImagingStudy()</span> siap, belum di-wire</td></tr>
+                                    <tr><td class="ds-td-strong">Observation <em>(opsional)</em></td><td class="ds-body-sm">temuan terstruktur ber-LOINC</td><td class="ds-body-sm">Boleh dilewati — banyak radiologi cuma narasi.</td><td class="ds-body-sm">🔴 belum ada capture terstruktur</td></tr>
+                                    <tr><td class="ds-td-strong">DiagnosticReport</td><td class="ds-body-sm">basedOn = SR, <span class="ds-code">imagingStudy</span> = [ref], conclusion = bacaan, <span class="ds-code">presentedForm</span> = PDF base64 (<span class="ds-code">rsview_rads.rad_upload_pdf</span>)</td><td class="ds-body-sm">Lengkap (beda dari DR minimal sekarang).</td><td class="ds-body-sm">🔴 sekarang DR tanpa bacaan/PDF</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Jalur SEKARANG (aktif)</div>
+                                <ul class="ds-body-sm space-y-1.5" style="list-style:disc; padding-left:18px">
+                                    <li><span class="ds-code">ServiceRequest</span> + <span class="ds-code">DiagnosticReport</span> minimal</li>
+                                    <li>Kode generik LOINC <span class="ds-code">18748-4</span></li>
+                                    <li>Tanpa ImagingStudy · tanpa PDF · tanpa Observation</li>
+                                </ul>
+                            </div>
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Jalur IDEAL (DICOM)</div>
+                                <ul class="ds-body-sm space-y-1.5" style="list-style:disc; padding-left:18px">
+                                    <li>SR + <strong>ImagingStudy</strong> + (Observation) + DR lengkap</li>
+                                    <li>Kode LOINC/ICD spesifik per modalitas</li>
+                                    <li>Bacaan (conclusion) + PDF (<span class="ds-code">presentedForm</span>)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="ds-card-outline mt-4" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>Cara menutup gap (3 langkah, bisa bertahap):</strong>
+                                <br><strong>1)</strong> Isi <span class="ds-code">loinc_code</span> tindakan di <span class="ds-code">/master/radiologis</span> → ganti kode generik 18748-4.
+                                <br><strong>2)</strong> <strong>Tanpa PACS:</strong> <em>generate OID stabil</em> (mis. <span class="ds-code">urn:oid:{root}.{rjNo}.{rad_dtl}</span>) + kirim ImagingStudy minimal (started + modality + procedureCode), lampirkan PDF di <span class="ds-code">DiagnosticReport.presentedForm</span>.
+                                <br><strong>3)</strong> <strong>Dengan PACS:</strong> ambil UID DICOM asli dari modality worklist → ImagingStudy penuh (series/instances). Paling akurat, butuh integrasi.
                             </span>
                         </div>
 
