@@ -6,9 +6,10 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\SATUSEHAT\PractitionerTrait;
 
 new class extends Component {
-    use WithRenderVersioningTrait;
+    use WithRenderVersioningTrait, PractitionerTrait;
 
     public string $formMode = 'create'; // create | edit
 
@@ -171,6 +172,60 @@ new class extends Component {
     /* ===============================
      | SAVE
      =============================== */
+    /**
+     * Ambil/generate UUID dokter dari SATUSEHAT berdasarkan NIK (Practitioner).
+     * Catatan: Practitioner TIDAK bisa di-create via API SATUSEHAT — dokter
+     * harus sudah terdaftar/onboard di masterindex nasional. Jadi search-only.
+     */
+    public function UpdateDoctorUuid(string $nik = ''): void
+    {
+        $nik = trim($nik);
+        if ($nik === '') {
+            $this->dispatch('toast', type: 'warning', message: 'NIK dokter wajib diisi terlebih dahulu.');
+            return;
+        }
+        if (strlen($nik) !== 16) {
+            $this->dispatch('toast', type: 'warning', message: 'NIK harus 16 digit.');
+            return;
+        }
+
+        try {
+            $this->initializeSatuSehat();
+
+            $searchResult = $this->searchPractitioner(['nik' => $nik]);
+            $entries = collect($searchResult['entry'] ?? []);
+
+            if ($entries->isEmpty()) {
+                $this->dispatch('toast', type: 'warning', message: "Tidak ada dokter di SATUSEHAT dengan NIK: {$nik}. Pastikan dokter sudah terdaftar/onboard.");
+                return;
+            }
+
+            $newUuid = $entries->pluck('resource.id')->first();
+            $currentUuid = $this->drUuid;
+
+            if (empty($currentUuid)) {
+                $this->drUuid = $newUuid;
+                $this->dispatch('toast', type: 'success', message: "UUID dokter di-set ke {$newUuid}");
+                return;
+            }
+            if ($currentUuid === $newUuid) {
+                $this->dispatch('toast', type: 'info', message: 'UUID dokter sudah sesuai dengan data SATUSEHAT.');
+                return;
+            }
+
+            // UUID tersimpan berbeda — cek apakah yang lama masih valid di hasil
+            if ($entries->pluck('resource.id')->contains($currentUuid)) {
+                $this->dispatch('toast', type: 'success', message: "UUID lama ({$currentUuid}) masih valid di SATUSEHAT.");
+            } else {
+                $this->drUuid = $newUuid;
+                $this->dispatch('toast', type: 'warning', message: "UUID lama tidak ditemukan; di-update ke UUID baru: {$newUuid}");
+            }
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Error saat memproses UUID dokter: ' . $e->getMessage());
+            \Log::error('Error UpdateDoctorUuid: ' . $e->getMessage());
+        }
+    }
+
     public function save(): void
     {
         $data = $this->validate();
@@ -387,11 +442,22 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('kdDrBpjs')" class="mt-1" />
                                 </div>
 
-                                {{-- UUID --}}
+                                {{-- UUID + tombol ambil dari SATUSEHAT (via NIK) --}}
                                 <div>
                                     <x-input-label value="UUID" class="mb-1" />
-                                    <x-text-input wire:model.live="drUuid" x-ref="inputDrUuid" :error="$errors->has('drUuid')"
-                                        class="w-full" x-on:keydown.enter.prevent="$refs.inputDrNik?.focus()" />
+                                    <div class="flex gap-1">
+                                        <x-text-input wire:model.live="drUuid" x-ref="inputDrUuid" :error="$errors->has('drUuid')"
+                                            class="w-full" x-on:keydown.enter.prevent="$refs.inputDrNik?.focus()" />
+                                        <x-primary-button type="button"
+                                            wire:click.prevent="UpdateDoctorUuid('{{ $drNik }}')"
+                                            wire:loading.attr="disabled" wire:target="UpdateDoctorUuid"
+                                            title="Ambil UUID Satusehat dari NIK" class="!px-3 shrink-0">
+                                            <span wire:loading.remove wire:target="UpdateDoctorUuid">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                            </span>
+                                            <span wire:loading wire:target="UpdateDoctorUuid"><x-loading /></span>
+                                        </x-primary-button>
+                                    </div>
                                     <x-input-error :messages="$errors->get('drUuid')" class="mt-1" />
                                 </div>
 
