@@ -885,14 +885,90 @@ UI RJ (Livewire, satu tombol per-resource):
                                     <tr><td class="ds-td-strong">Condition (keluhan)</td><td class="ds-td-class">createChiefComplaint</td><td class="ds-body-sm"><strong>SNOMED</strong> snomed.info/sct</td><td class="ds-body-sm">keluhanUtama + keluhanUtamaSnomedCode</td></tr>
                                     <tr><td class="ds-td-strong">Observation (vital)</td><td class="ds-td-class">ObservationTrait</td><td class="ds-body-sm"><strong>LOINC</strong> + UCUM</td><td class="ds-body-sm">tandaVital: sistole/diastole/nadi/suhu/rr</td></tr>
                                     <tr><td class="ds-td-strong">Procedure</td><td class="ds-td-class">ProcedureTrait</td><td class="ds-body-sm"><strong>ICD-9-CM</strong></td><td class="ds-body-sm">tindakanList, kodeIcd9/icd9</td></tr>
-                                    <tr><td class="ds-td-strong">AllergyIntolerance</td><td class="ds-td-class">AllergyIntoleranceTrait</td><td class="ds-body-sm"><strong>SNOMED</strong></td><td class="ds-body-sm">(belum di-wire UI)</td></tr>
+                                    <tr><td class="ds-td-strong">AllergyIntolerance</td><td class="ds-td-class">AllergyIntoleranceTrait</td><td class="ds-body-sm"><strong>SNOMED</strong></td><td class="ds-body-sm">riwayat alergi (anamnesa) + SNOMED; dr_uuid — <strong>wired (kartu 7)</strong></td></tr>
                                     <tr><td class="ds-td-strong">MedicationRequest</td><td class="ds-td-class">MedicationRequestTrait</td><td class="ds-body-sm"><strong>KFA</strong> sys-ids.kemkes/kfa</td><td class="ds-body-sm">eresep; KFA dari master product_id_satusehat</td></tr>
-                                    <tr><td class="ds-td-strong">MedicationDispense</td><td class="ds-td-class">MedicationDispenseTrait</td><td class="ds-body-sm"><strong>KFA</strong></td><td class="ds-body-sm">(belum di-wire UI)</td></tr>
-                                    <tr><td class="ds-td-strong">ServiceRequest</td><td class="ds-td-class">ServiceRequestTrait</td><td class="ds-body-sm">generik (dimaksud LOINC)</td><td class="ds-body-sm">(belum di-wire UI)</td></tr>
-                                    <tr><td class="ds-td-strong">Specimen</td><td class="ds-td-class">SpecimenTrait</td><td class="ds-body-sm">generik</td><td class="ds-body-sm">(belum di-wire UI)</td></tr>
-                                    <tr><td class="ds-td-strong">DiagnosticReport</td><td class="ds-td-class">DiagnosticReportTrait</td><td class="ds-body-sm"><strong>LOINC</strong> (kategori default MB)</td><td class="ds-body-sm">(belum di-wire UI)</td></tr>
+                                    <tr><td class="ds-td-strong">MedicationDispense</td><td class="ds-td-class">MedicationDispenseTrait</td><td class="ds-body-sm"><strong>KFA</strong></td><td class="ds-body-sm">eresep + KFA; butuh Resep terkirim dulu — <strong>wired (kartu 8)</strong></td></tr>
+                                    <tr><td class="ds-td-strong">ServiceRequest</td><td class="ds-td-class">ServiceRequestTrait</td><td class="ds-body-sm"><strong>LOINC</strong> 26436-6 (panel)</td><td class="ds-body-sm"><span class="ds-code">lbtxn_checkuphdrs/dtls</span> + <span class="ds-code">lbmst_clabitems.loinc_code</span> — <strong>wired (kartu 9 Lab)</strong></td></tr>
+                                    <tr><td class="ds-td-strong">Specimen</td><td class="ds-td-class">SpecimenTrait</td><td class="ds-body-sm">SNOMED (darah/venipuncture)</td><td class="ds-body-sm">1 per paket checkup — <strong>wired (kartu 9 Lab)</strong></td></tr>
+                                    <tr><td class="ds-td-strong">DiagnosticReport</td><td class="ds-td-class">DiagnosticReportTrait</td><td class="ds-body-sm"><strong>LOINC</strong> (kategori LAB)</td><td class="ds-body-sm">merangkum paket lab (<span class="ds-code">lbtxn_checkup*</span>) — <strong>wired (kartu 9 Lab)</strong></td></tr>
+                                    <tr><td class="ds-td-strong">DiagnosticReport (radiologi)</td><td class="ds-td-class">DiagnosticReportTrait</td><td class="ds-body-sm">LOINC (kategori RAD)</td><td class="ds-body-sm">order radiologi + dr_uuid; ImagingStudy dilewati (no DICOM) — <strong>wired (kartu 10)</strong></td></tr>
+                                    <tr><td class="ds-td-strong">ClinicalImpression</td><td class="ds-td-class">ClinicalImpressionTrait</td><td class="ds-body-sm">— (ringkasan diagnosa)</td><td class="ds-body-sm">diagnosa (Condition) + dr_uuid — <strong>wired (kartu 11)</strong></td></tr>
                                 </tbody>
                             </table>
+                        </div>
+
+                        {{-- ===== DETAIL PENGIRIMAN LAB (kartu 9) ===== --}}
+                        <h2 class="ds-title-lg mt-8 mb-3">Detail — Pengiriman Penunjang Lab (kartu 9)</h2>
+                        <p class="ds-body-md mb-3" style="max-width:64ch">
+                            Sumber <strong>dari DB lab internal</strong> (bukan JSON EMR). Tiap <strong>paket checkup</strong> yang
+                            sudah selesai menghasilkan rantai 4 resource. Sama untuk RJ &amp; UGD — beda hanya
+                            <span class="ds-code">status_rjri</span> ('RJ' vs 'UGD').
+                        </p>
+
+                        <div class="ds-card-outline mb-4" style="padding:16px 20px">
+                            <div class="ds-title-sm mb-2">Rantai per paket checkup</div>
+                            <div class="ds-body-sm" style="line-height:1.9">
+                                <span class="ds-code">ServiceRequest</span> (order, LOINC panel 26436-6)
+                                → <span class="ds-code">Specimen</span> (darah/venipuncture)
+                                → <span class="ds-code">Observation</span> <strong>× per item ber-LOINC</strong> (kategori laboratory)
+                                → <span class="ds-code">DiagnosticReport</span> (merangkum paket).
+                            </div>
+                        </div>
+
+                        <div class="ds-card-outline" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead><tr><th>Langkah</th><th>Sumber (tabel · kolom)</th><th>Aturan</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ds-td-strong">Pilih paket</td><td class="ds-body-sm"><span class="ds-code">lbtxn_checkuphdrs</span>: <span class="ds-code">ref_no</span>=rj_no · <span class="ds-code">status_rjri</span>='RJ'/'UGD' · <span class="ds-code">checkup_status &lt;&gt; 'P'</span></td><td class="ds-body-sm">Hanya paket <strong>selesai</strong> (bukan Pending). Tak ada → gagal (toast).</td></tr>
+                                    <tr><td class="ds-td-strong">Ambil item</td><td class="ds-body-sm"><span class="ds-code">lbtxn_checkupdtls</span> ⋈ <span class="ds-code">lbmst_clabitems</span>: <span class="ds-code">loinc_code</span>, <span class="ds-code">loinc_display</span>, <span class="ds-code">unit_desc</span>, <span class="ds-code">lab_result</span></td><td class="ds-body-sm">Buang <span class="ds-code">hidden_status≠'N'</span> &amp; header grup (<span class="ds-code">is_group='Y'</span>).</td></tr>
+                                    <tr><td class="ds-td-strong">Observation</td><td class="ds-body-sm"><span class="ds-code">loinc_code</span> → code · <span class="ds-code">lab_result</span> → nilai · <span class="ds-code">unit_desc</span> → UCUM</td><td class="ds-body-sm">Item <strong>tanpa LOINC di-skip</strong>; hasil numerik → <span class="ds-code">valueQuantity</span>, selain itu <span class="ds-code">valueString</span>; hasil kosong dilewati.</td></tr>
+                                    <tr><td class="ds-td-strong">DiagnosticReport</td><td class="ds-body-sm">identifier <span class="ds-code">{rjNo}-{checkup_no}</span>, category LAB, code 26436-6</td><td class="ds-body-sm">result = semua Observation paket; basedOn = ServiceRequest; performer = <span class="ds-code">dr_uuid</span> DPJP.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ds-card-outline mt-4" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>ID yang disimpan</strong> (<span class="ds-code">satusehat.labServiceRequestIds / labSpecimenIds / labObservationIds / labDiagnosticReportIds</span>)
+                                = <strong>UUID balikan SATUSEHAT</strong> dari respons POST tiap resource — bukan dari DB. Dipakai untuk badge hijau &amp; guard "sudah pernah dikirim".
+                                <br><strong>⚠️ Asumsi MVP (perlu validasi sandbox):</strong> panel SR/DR pakai LOINC generik <span class="ds-code">26436-6</span> &amp; Specimen default <strong>darah/venipuncture</strong> untuk semua paket — belum tepat untuk lab non-darah (urin/feses).
+                            </span>
+                        </div>
+
+                        {{-- ===== DETAIL PENGIRIMAN RADIOLOGI (kartu 10) ===== --}}
+                        <h2 class="ds-title-lg mt-8 mb-3">Detail — Pengiriman Penunjang Radiologi (kartu 10)</h2>
+                        <p class="ds-body-md mb-3" style="max-width:64ch">
+                            Lebih ringkas dari lab: tiap <strong>order radiologi</strong> hanya menghasilkan 2 resource.
+                            <strong>ImagingStudy dilewati</strong> (master tanpa kode standar, hasil = PDF, tak ada DICOM).
+                            Sama untuk RJ &amp; UGD — beda hanya tabel order.
+                        </p>
+
+                        <div class="ds-card-outline mb-4" style="padding:16px 20px">
+                            <div class="ds-title-sm mb-2">Rantai per order radiologi</div>
+                            <div class="ds-body-sm" style="line-height:1.9">
+                                <span class="ds-code">ServiceRequest</span> (order, LOINC generik 18748-4 · SNOMED 363679005 Imaging)
+                                → <span class="ds-code">DiagnosticReport</span> (laporan minimal, kategori RAD, <strong>tanpa Observation/ImagingStudy</strong>).
+                            </div>
+                        </div>
+
+                        <div class="ds-card-outline" style="padding:0; overflow-x:auto">
+                            <table class="ds-table">
+                                <thead><tr><th>Langkah</th><th>Sumber (tabel · kolom)</th><th>Aturan</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ds-td-strong">Ambil order</td><td class="ds-body-sm"><span class="ds-code">rstxn_rjrads</span>/<span class="ds-code">rstxn_ugdrads</span> ⋈ <span class="ds-code">rsmst_radiologis</span>: <span class="ds-code">rad_dtl</span>, <span class="ds-code">rad_id</span>, <span class="ds-code">rad_desc</span> · where <span class="ds-code">rj_no</span></td><td class="ds-body-sm"><strong>Semua order</strong> dikirim (tak difilter status/hasil — beda dari lab). Tak ada order → gagal.</td></tr>
+                                    <tr><td class="ds-td-strong">ServiceRequest</td><td class="ds-body-sm">identifier <span class="ds-code">rad-{rjNo}-{rad_dtl}</span> · display = <span class="ds-code">rad_desc</span></td><td class="ds-body-sm">code generik LOINC 18748-4; requester = <span class="ds-code">dr_uuid</span> DPJP.</td></tr>
+                                    <tr><td class="ds-td-strong">DiagnosticReport</td><td class="ds-body-sm">category RAD, code 18748-4, basedOn = SR</td><td class="ds-body-sm"><strong>Minimal</strong>: tanpa Observation &amp; tanpa lampiran PDF; ImagingStudy dilewati (no DICOM).</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ds-card-outline mt-4" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>ID disimpan</strong> (<span class="ds-code">satusehat.radServiceRequestIds / radDiagnosticReportIds</span>) = UUID balikan SATUSEHAT (guard "sudah pernah dikirim").
+                                <br><strong>⚠️ GAP (perlu perbaikan):</strong> <span class="ds-code">rsmst_radiologis</span> belum punya kode LOINC/ICD spesifik → semua order pakai kode generik <span class="ds-code">18748-4</span>. Hasil bacaan/PDF (<span class="ds-code">rsview_rads.rad_upload_pdf</span>) &amp; nilai terstruktur <strong>belum dikirim</strong>; DR masih laporan kosong.
+                            </span>
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-2">
@@ -936,14 +1012,14 @@ UI RJ (Livewire, satu tombol per-resource):
                                     <tr><td class="ds-td-strong">Observasi (Observation)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol</td><td class="ds-body-sm">LOINC</td></tr>
                                     <tr><td class="ds-td-strong">Tindakan (Procedure)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol</td><td class="ds-body-sm">ICD-9-CM</td></tr>
                                     <tr><td class="ds-td-strong">Peresepan Obat (MedicationRequest)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol</td><td class="ds-body-sm">KFA</td></tr>
-                                    <tr><td class="ds-td-strong">Obat Dibawa Pulang (MedicationDispense)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm">⚠️ trait saja</td><td class="ds-body-sm">KFA</td></tr>
-                                    <tr><td class="ds-td-strong">Layanan Penunjang (ServiceRequest)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm">⚠️ trait saja</td><td class="ds-body-sm">LOINC</td></tr>
-                                    <tr><td class="ds-td-strong">Laboratorium (Specimen)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm">⚠️ trait saja</td><td class="ds-body-sm">—</td></tr>
-                                    <tr><td class="ds-td-strong">Pelaporan Diagnostik (DiagnosticReport)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm">⚠️ trait saja</td><td class="ds-body-sm">LOINC</td></tr>
-                                    <tr><td class="ds-td-strong">Intoleransi Alergi (AllergyIntolerance)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm">⚠️ trait saja</td><td class="ds-body-sm">SNOMED</td></tr>
+                                    <tr><td class="ds-td-strong">Obat Dibawa Pulang (MedicationDispense)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol (kartu 8)</td><td class="ds-body-sm">KFA</td></tr>
+                                    <tr><td class="ds-td-strong">Layanan Penunjang (ServiceRequest)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol (kartu 9 Lab)</td><td class="ds-body-sm">LOINC</td></tr>
+                                    <tr><td class="ds-td-strong">Laboratorium (Specimen)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol (kartu 9 Lab)</td><td class="ds-body-sm">SNOMED</td></tr>
+                                    <tr><td class="ds-td-strong">Pelaporan Diagnostik (DiagnosticReport)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol (Lab kartu 9 + Radiologi kartu 10)</td><td class="ds-body-sm">LOINC</td></tr>
+                                    <tr><td class="ds-td-strong">Intoleransi Alergi (AllergyIntolerance)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol (kartu 7)</td><td class="ds-body-sm">SNOMED</td></tr>
+                                    <tr><td class="ds-td-strong">Impresi Klinik (ClinicalImpression)</td><td class="ds-body-sm">✅</td><td class="ds-body-sm" style="color:var(--primary)">✅ tombol (kartu 11)</td><td class="ds-body-sm">—</td></tr>
                                     <tr><td class="ds-td-strong">Diet (Composition)</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">—</td></tr>
-                                    <tr><td class="ds-td-strong">Impresi Klinik (ClinicalImpression)</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">—</td></tr>
-                                    <tr><td class="ds-td-strong">Radiologi (ImagingStudy)</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">—</td></tr>
+                                    <tr><td class="ds-td-strong">Radiologi (ImagingStudy)</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">➖ ImagingStudy dilewati (no DICOM); radiologi dikirim via SR+DR (kartu 10)</td><td class="ds-body-sm">LOINC</td></tr>
                                     <tr><td class="ds-td-strong">Imunisasi (Immunization)</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">—</td></tr>
                                     <tr><td class="ds-td-strong">Episode Perawatan (EpisodeOfCare)</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">—</td></tr>
                                     <tr><td class="ds-td-strong">Instruksi Gizi (NutritionOrder)</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">❌</td><td class="ds-body-sm">—</td></tr>
@@ -953,16 +1029,16 @@ UI RJ (Livewire, satu tombol per-resource):
 
                         <div class="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-3">
                             <div class="ds-card" style="padding:20px">
-                                <div class="ds-display-sm mb-1" style="color:var(--primary)">5</div>
-                                <div class="ds-body-sm">resource <strong>terkirim penuh</strong> (Encounter, Condition, Observation, Procedure, MedicationRequest)</div>
+                                <div class="ds-display-sm mb-1" style="color:var(--primary)">11</div>
+                                <div class="ds-body-sm">kartu <strong>ter-wire tombol Kirim</strong> di RJ (Encounter, Condition, Observation, Procedure, MedicationRequest, Chief Complaint, Allergy, Medication Dispense, Lab, Radiologi, Clinical Impression). <strong>UGD = 9</strong> (tanpa Chief Complaint &amp; Allergy).</div>
                             </div>
                             <div class="ds-card" style="padding:20px">
-                                <div class="ds-display-sm mb-1">5</div>
-                                <div class="ds-body-sm">sudah ada trait, <strong>perlu di-wire</strong> ke UI (Dispense, ServiceRequest, Specimen, DiagnosticReport, Allergy)</div>
+                                <div class="ds-display-sm mb-1">4</div>
+                                <div class="ds-body-sm"><strong>belum dibuat</strong> (Composition/Diet, Immunization, EpisodeOfCare, NutritionOrder)</div>
                             </div>
                             <div class="ds-card" style="padding:20px">
-                                <div class="ds-display-sm mb-1">6</div>
-                                <div class="ds-body-sm"><strong>belum dibuat</strong> sama sekali (Composition, ClinicalImpression, ImagingStudy, Immunization, EpisodeOfCare, NutritionOrder)</div>
+                                <div class="ds-display-sm mb-1">1</div>
+                                <div class="ds-body-sm"><strong>sengaja dilewati</strong>: ImagingStudy (no DICOM) — radiologi tetap terkirim via ServiceRequest + DiagnosticReport.</div>
                             </div>
                         </div>
                     </section>
