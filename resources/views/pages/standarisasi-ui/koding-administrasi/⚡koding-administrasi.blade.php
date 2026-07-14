@@ -164,6 +164,9 @@ TXT,
                 'status'      => 'Model Status Transaksi',
                 'biaya'       => 'Struktur Biaya & Total',
             ],
+            'Alur Visual' => [
+                'flow' => 'Alur Visual (Flow)',
+            ],
             'Administrasi' => [
                 'kasir'  => 'Alur Kasir sampai Pulang',
             ],
@@ -356,9 +359,111 @@ TXT,
                         </div>
                     </section>
 
-                    {{-- ====== 04 KASIR ====== --}}
+                    {{-- ====== 04 ALUR VISUAL (FLOW) ====== --}}
+                    <section x-show="section === 'flow'" x-cloak>
+                        <div class="ds-eyebrow mb-3">04 — Alur Visual</div>
+                        <h1 class="ds-display-md mb-4">Alur Visual (Flowchart)</h1>
+                        <p class="ds-body-md mb-6" style="max-width:64ch">
+                            Peta perjalanan pasien dari <strong>masuk sampai pulang</strong>, cabang penunjang
+                            (lab/radiologi) &amp; resep, skenario <strong>eskalasi/transfer</strong> (UGD → Rawat Inap),
+                            dan <strong>titik-titik pembatalan</strong>.
+                        </p>
+
+                        @php
+                            $flowBox = function ($tone) {
+                                return match ($tone) {
+                                    'entry' => 'padding:10px 14px; border-color:var(--primary)',
+                                    'opt'   => 'padding:10px 14px; border-style:dashed; border-color:#d97706',
+                                    'cash'  => 'padding:10px 14px; border-color:#059669',
+                                    'done'  => 'padding:10px 14px; border-color:#059669; background:rgba(5,150,105,0.06)',
+                                    default => 'padding:10px 14px',
+                                };
+                            };
+                            $arrow = '<span class="ds-code" style="color:var(--primary); font-size:16px">▶</span>';
+                        @endphp
+
+                        {{-- ===== FLOW 1: ALUR NORMAL (MASUK → PULANG) ===== --}}
+                        <div class="ds-caption-up mb-2">Alur normal — masuk sampai pulang (RJ / UGD)</div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            @foreach ([
+                                ['Pendaftaran', 'Daftar RJ / UGD — status Aktif (A)', 'entry'],
+                                ['Pelayanan / EMR', 'anamnesa → pemeriksaan → diagnosa → tindakan', 'main'],
+                                ['Penunjang', 'Lab / Radiologi — OPSIONAL', 'opt'],
+                                ['E-Resep → Apotek', 'obat diresepkan lalu dilayani apoteker', 'main'],
+                                ['Kasir', 'hitung total → input bayar → proses', 'cash'],
+                                ['Pulang', 'Lunas (L) / Bon (H)', 'done'],
+                            ] as $i => [$judul, $ket, $tone])
+                                @if ($i > 0) {!! $arrow !!} @endif
+                                <span class="ds-card-outline" style="{{ $flowBox($tone) }}">
+                                    <span class="block text-sm font-semibold" style="color:var(--ink)">{{ $judul }}</span>
+                                    <span class="block text-xs" style="color:var(--muted)">{{ $ket }}</span>
+                                </span>
+                            @endforeach
+                        </div>
+                        <p class="ds-caption mb-8" style="color:var(--muted)">
+                            <span style="color:#d97706">▦ garis putus-putus</span> = langkah opsional (hanya bila pasien butuh penunjang / resep).
+                            RJ &amp; UGD polanya sama; RI billing per-item.
+                        </p>
+
+                        {{-- ===== FLOW 2: ESKALASI / TRANSFER UGD → RI ===== --}}
+                        <div class="ds-caption-up mb-2">Skenario eskalasi &amp; transfer (UGD → Rawat Inap)</div>
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            @foreach ([
+                                ['UGD', 'pasien gawat darurat — status Aktif (A)', 'entry'],
+                                ['Transfer ke RI', 'buat header RI + pindah biaya (ritempadmins)', 'main'],
+                                ['Rawat Inap', 'status Dirawat (I); UGD terkunci (I)', 'main'],
+                                ['Pelayanan RI', 'visit / obat / lab / OK — billing per-item', 'main'],
+                                ['Kasir RI', 'total (incl. biaya UGD) → bayar', 'cash'],
+                                ['Pulang', 'status Pulang (P)', 'done'],
+                            ] as $i => [$judul, $ket, $tone])
+                                @if ($i > 0) {!! $arrow !!} @endif
+                                <span class="ds-card-outline" style="{{ $flowBox($tone) }}">
+                                    <span class="block text-sm font-semibold" style="color:var(--ink)">{{ $judul }}</span>
+                                    <span class="block text-xs" style="color:var(--muted)">{{ $ket }}</span>
+                                </span>
+                            @endforeach
+                        </div>
+                        <p class="ds-caption mb-8" style="color:var(--muted)">
+                            Pasien <strong>RJ</strong> yang perlu rawat inap umumnya lewat <strong>UGD</strong> lalu di-transfer,
+                            atau didaftar RI langsung. Transfer yang terimplementasi = <span class="ds-code">UGD → RI</span>
+                            (<span class="ds-code">transfer-ri-ugd</span>).
+                        </p>
+
+                        {{-- ===== FLOW 3: TITIK BATAL (REVERSE) ===== --}}
+                        <h2 class="ds-title-lg mb-3">Titik pembatalan (reverse)</h2>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            @foreach ([
+                                ['Batal Transaksi', 'Pulang (P)', 'Dirawat (I)', 'Di kasir setelah bayar — hapus payment, buka kunci.', 'RJ · UGD · RI'],
+                                ['Batal Inap', 'Dirawat (I)', 'Batal (F)', 'Soft-cancel admisi; hanya bila belum ada transaksi &amp; bukan dari transfer.', 'RI'],
+                                ['Batal Transfer', 'RI dihapus', 'UGD → Aktif (A)', 'Kembalikan biaya ke UGD; hanya bila RI belum ada transaksi.', 'UGD → RI'],
+                            ] as [$judul, $dari, $ke, $ket, $jalur])
+                                <div class="ds-card-outline" style="padding:16px 18px; border-color:#dc2626">
+                                    <div class="ds-title-sm mb-2" style="color:#dc2626">{{ $judul }}</div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="ds-code" style="padding:2px 8px; border-radius:6px; background:var(--surface-card)">{{ $dari }}</span>
+                                        <span style="color:#dc2626; font-weight:700">→</span>
+                                        <span class="ds-code" style="padding:2px 8px; border-radius:6px; background:var(--surface-card)">{{ $ke }}</span>
+                                    </div>
+                                    <div class="ds-body-sm mb-1">{!! $ket !!}</div>
+                                    <div class="ds-caption" style="color:var(--muted)">Jalur: {{ $jalur }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="ds-card-outline mt-6" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>Kasus campur (pulang lalu batal total):</strong>
+                                {!! $arrow !!} Batal Transaksi (P→I) {!! $arrow !!} Batal Inap (I→F).
+                                Pasien asal transfer UGD {!! $arrow !!} pakai Batal Transfer, bukan Batal Inap.
+                                Detail tiap batal ada di bab berikutnya.
+                            </span>
+                        </div>
+                    </section>
+
+                    {{-- ====== 05 KASIR ====== --}}
                     <section x-show="section === 'kasir'" x-cloak>
-                        <div class="ds-eyebrow mb-3">04 — Administrasi</div>
+                        <div class="ds-eyebrow mb-3">05 — Administrasi</div>
                         <h1 class="ds-display-md mb-4">Alur Kasir sampai Pasien Pulang</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Urutan baku administrasi: set tanggal pulang → input bayar → proses pulang.
@@ -386,7 +491,7 @@ TXT,
 
                     {{-- ====== 06 TRANSFER ====== --}}
                     <section x-show="section === 'transfer'" x-cloak>
-                        <div class="ds-eyebrow mb-3">05 — Transfer &amp; Batal</div>
+                        <div class="ds-eyebrow mb-3">06 — Transfer &amp; Batal</div>
                         <h1 class="ds-display-md mb-4">Transfer UGD → RI</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Pasien UGD yang perlu dirawat inap di-<em>transfer</em>: sistem membuat header RI baru,
@@ -413,7 +518,7 @@ TXT,
 
                     {{-- ====== 07 BATAL TRANSFER ====== --}}
                     <section x-show="section === 'batal-transfer'" x-cloak>
-                        <div class="ds-eyebrow mb-3">06 — Transfer &amp; Batal</div>
+                        <div class="ds-eyebrow mb-3">07 — Transfer &amp; Batal</div>
                         <h1 class="ds-display-md mb-4">Batal Transfer</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Membatalkan transfer UGD→RI: menghapus RI yang baru dibuat &amp; mengembalikan UGD ke Aktif.
@@ -440,7 +545,7 @@ TXT,
 
                     {{-- ====== 08 BATAL TRANSAKSI ====== --}}
                     <section x-show="section === 'batal-transaksi'" x-cloak>
-                        <div class="ds-eyebrow mb-3">07 — Transfer &amp; Batal</div>
+                        <div class="ds-eyebrow mb-3">08 — Transfer &amp; Batal</div>
                         <h1 class="ds-display-md mb-4">Batal Transaksi (Pembayaran / Pulang)</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Membatalkan <strong>pembayaran</strong>, bukan admisi. Menghapus payment &amp; mengembalikan
@@ -465,7 +570,7 @@ TXT,
 
                     {{-- ====== 09 BATAL INAP ====== --}}
                     <section x-show="section === 'batal-inap'" x-cloak>
-                        <div class="ds-eyebrow mb-3">08 — Transfer &amp; Batal</div>
+                        <div class="ds-eyebrow mb-3">09 — Transfer &amp; Batal</div>
                         <h1 class="ds-display-md mb-4">Batal Inap → status F</h1>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Membatalkan <strong>pendaftaran inap</strong> yang salah/tak jadi. Bersifat
@@ -492,7 +597,7 @@ TXT,
 
                     {{-- ====== 10 MATRIKS ====== --}}
                     <section x-show="section === 'matriks'" x-cloak>
-                        <div class="ds-eyebrow mb-3">09 — Transfer &amp; Batal</div>
+                        <div class="ds-eyebrow mb-3">10 — Transfer &amp; Batal</div>
                         <h1 class="ds-display-md mb-4">Matriks Model Batal</h1>
                         <p class="ds-body-md mb-6" style="max-width:62ch">
                             Tiga model batal sering tertukar. Bedakan dari <strong>apa yang dibatalkan</strong> &amp;
@@ -522,7 +627,7 @@ TXT,
 
                     {{-- ====== 11 RANJAU ====== --}}
                     <section x-show="section === 'ranjau'" x-cloak>
-                        <div class="ds-eyebrow mb-3">10 — Referensi</div>
+                        <div class="ds-eyebrow mb-3">11 — Referensi</div>
                         <h1 class="ds-display-md mb-4">Ranjau Umum</h1>
                         <div class="space-y-3">
                             @foreach ([
@@ -548,7 +653,7 @@ TXT,
 
                     {{-- ====== 12 GLOSARIUM ====== --}}
                     <section x-show="section === 'glosarium'" x-cloak>
-                        <div class="ds-eyebrow mb-3">11 — Referensi</div>
+                        <div class="ds-eyebrow mb-3">12 — Referensi</div>
                         <h1 class="ds-display-md mb-4">Glosarium</h1>
                         <div class="ds-card-outline" style="padding:0; overflow-x:auto">
                             <table class="ds-table">
