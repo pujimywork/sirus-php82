@@ -116,6 +116,22 @@ new class extends Component {
                         wire:key="ss-observation-ri-{{ $riHdrNo ?? 'none' }}" />
                     <livewire:pages::transaksi.ri.satu-sehat.kirim-medication-request :riHdrNo="$riHdrNo"
                         wire:key="ss-medication-request-ri-{{ $riHdrNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-lab :riHdrNo="$riHdrNo"
+                        wire:key="ss-lab-ri-{{ $riHdrNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-radiologi :riHdrNo="$riHdrNo"
+                        wire:key="ss-radiologi-ri-{{ $riHdrNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-cppt :riHdrNo="$riHdrNo"
+                        wire:key="ss-cppt-ri-{{ $riHdrNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-diet :riHdrNo="$riHdrNo"
+                        wire:key="ss-diet-ri-{{ $riHdrNo ?? 'none' }}" />
+                    {{-- ChiefComplaint & Allergy RI butuh SNOMED (dinonaktifkan sementara).
+                         Aktifkan bersama LOV SNOMED di rm-pengkajian-dokter-ri-actions (false → true). --}}
+                    @if (false)
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-chief-complaint :riHdrNo="$riHdrNo"
+                        wire:key="ss-chief-complaint-ri-{{ $riHdrNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-allergy :riHdrNo="$riHdrNo"
+                        wire:key="ss-allergy-ri-{{ $riHdrNo ?? 'none' }}" />
+                    @endif
 
                     {{-- Lab & Radiologi (cabang status_rjri='RI') menyusul. --}}
                 </div>
