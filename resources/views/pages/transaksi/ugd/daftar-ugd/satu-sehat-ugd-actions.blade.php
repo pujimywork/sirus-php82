@@ -122,6 +122,10 @@ new class extends Component {
                         wire:key="ss-radiologi-ugd-{{ $rjNo ?? 'none' }}" />
                     <livewire:pages::transaksi.ugd.satu-sehat.kirim-clinical-impression :rjNo="$rjNo"
                         wire:key="ss-clinical-impression-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-chief-complaint :rjNo="$rjNo"
+                        wire:key="ss-chief-complaint-ugd-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ugd.satu-sehat.kirim-allergy :rjNo="$rjNo"
+                        wire:key="ss-allergy-ugd-{{ $rjNo ?? 'none' }}" />
                 </div>
             </div>
         </div>

@@ -363,7 +363,7 @@ new class extends Component {
                 'saranaTransportasiOptions' => [['saranaTransportasiId' => '1', 'saranaTransportasiDesc' => 'Ambulans'], ['saranaTransportasiId' => '2', 'saranaTransportasiDesc' => 'Mobil'], ['saranaTransportasiId' => '3', 'saranaTransportasiDesc' => 'Motor'], ['saranaTransportasiId' => '4', 'saranaTransportasiDesc' => 'Lain-lain']],
             ],
             'keluhanUtamaTab' => 'Keluhan Utama',
-            'keluhanUtama' => ['keluhanUtama' => ''],
+            'keluhanUtama' => ['keluhanUtama' => '', 'snomedCode' => '', 'snomedDisplayEn' => '', 'snomedDisplayId' => ''],
 
             'anamnesaDiperolehTab' => 'Anamnesa Diperoleh',
             'anamnesaDiperoleh' => ['autoanamnesa' => [], 'allonanamnesa' => [], 'anamnesaDiperolehDari' => ''],
@@ -375,7 +375,7 @@ new class extends Component {
             'riwayatPenyakitDahulu' => ['riwayatPenyakitDahulu' => ''],
 
             'alergiTab' => 'Alergi',
-            'alergi' => ['alergi' => ''],
+            'alergi' => ['alergi' => '', 'snomedCode' => '', 'snomedDisplayEn' => '', 'snomedDisplayId' => ''],
 
             'rekonsiliasiObatTab' => 'Riwayat Pemakaian Obat',
             'rekonsiliasiObat' => [],
@@ -414,6 +414,44 @@ new class extends Component {
                 'keteranganPembesaranGetahBening' => '',
             ],
         ];
+    }
+
+    /* ===============================
+     | LOV SNOMED — Keluhan Utama
+     =============================== */
+    #[On('lov.selected.keluhanUtamaSnomed')]
+    public function onKeluhanUtamaSnomedSelected(string $target, array $payload): void
+    {
+        $this->dataDaftarUGD['anamnesa']['keluhanUtama']['snomedCode'] = $payload['snomed_code'] ?? '';
+        $this->dataDaftarUGD['anamnesa']['keluhanUtama']['snomedDisplayEn'] = $payload['display_en'] ?? '';
+        $this->dataDaftarUGD['anamnesa']['keluhanUtama']['snomedDisplayId'] = $payload['display_id'] ?? '';
+    }
+
+    #[On('lov.cleared.keluhanUtamaSnomed')]
+    public function onKeluhanUtamaSnomedCleared(string $target): void
+    {
+        $this->dataDaftarUGD['anamnesa']['keluhanUtama']['snomedCode'] = '';
+        $this->dataDaftarUGD['anamnesa']['keluhanUtama']['snomedDisplayEn'] = '';
+        $this->dataDaftarUGD['anamnesa']['keluhanUtama']['snomedDisplayId'] = '';
+    }
+
+    /* ===============================
+     | LOV SNOMED — Alergi
+     =============================== */
+    #[On('lov.selected.alergiSnomed')]
+    public function onAlergiSnomedSelected(string $target, array $payload): void
+    {
+        $this->dataDaftarUGD['anamnesa']['alergi']['snomedCode'] = $payload['snomed_code'] ?? '';
+        $this->dataDaftarUGD['anamnesa']['alergi']['snomedDisplayEn'] = $payload['display_en'] ?? '';
+        $this->dataDaftarUGD['anamnesa']['alergi']['snomedDisplayId'] = $payload['display_id'] ?? '';
+    }
+
+    #[On('lov.cleared.alergiSnomed')]
+    public function onAlergiSnomedCleared(string $target): void
+    {
+        $this->dataDaftarUGD['anamnesa']['alergi']['snomedCode'] = '';
+        $this->dataDaftarUGD['anamnesa']['alergi']['snomedDisplayEn'] = '';
+        $this->dataDaftarUGD['anamnesa']['alergi']['snomedDisplayId'] = '';
     }
 
     /* ===============================

@@ -20,5 +20,18 @@
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.alergi.alergi')" class="mt-1" />
         </div>
 
+        {{-- SNOMED CT — Alergi (untuk Satu Sehat) --}}
+        <div>
+            <livewire:lov.snomed.lov-snomed
+                target="alergiSnomed"
+                label="Kode SNOMED Alergi (Satu Sehat)"
+                placeholder="Ketik nama alergi / obat..."
+                valueSet="substance-code"
+                :initialSnomedCode="$dataDaftarUGD['anamnesa']['alergi']['snomedCode'] ?? null"
+                :disabled="$isFormLocked"
+                wire:key="lov-snomed-alergi-ugd-{{ $rjNo ?? 'new' }}-{{ $renderVersions['modal-anamnesa-ugd'] ?? 0 }}"
+            />
+        </div>
+
     </div>
 </x-border-form>

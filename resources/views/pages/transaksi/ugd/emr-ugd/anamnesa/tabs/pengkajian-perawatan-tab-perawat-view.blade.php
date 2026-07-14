@@ -108,5 +108,18 @@
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.keluhanUtama.keluhanUtama')" class="mt-1" />
         </div>
 
+        {{-- SNOMED CT — Keluhan Utama (untuk Satu Sehat) --}}
+        <div>
+            <livewire:lov.snomed.lov-snomed
+                target="keluhanUtamaSnomed"
+                label="Kode SNOMED Keluhan Utama (Satu Sehat)"
+                placeholder="Ketik keluhan dalam Bahasa Indonesia / Inggris..."
+                valueSet="condition-code"
+                :initialSnomedCode="$dataDaftarUGD['anamnesa']['keluhanUtama']['snomedCode'] ?? null"
+                :disabled="$isFormLocked"
+                wire:key="lov-snomed-keluhan-ugd-{{ $rjNo ?? 'new' }}-{{ $renderVersions['modal-anamnesa-ugd'] ?? 0 }}"
+            />
+        </div>
+
     </div>
 </x-border-form>
