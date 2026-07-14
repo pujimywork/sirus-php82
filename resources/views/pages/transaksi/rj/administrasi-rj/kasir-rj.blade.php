@@ -333,11 +333,10 @@ new class extends Component {
             return;
         }
 
-        // Cek lab pending sebelum batal
-        if ($this->checkLabPendingRJ($this->rjNo)) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat belum selesai, transaksi tidak bisa dibatalkan.');
-            return;
-        }
+        // CATATAN: lab pending TIDAK memblokir batal (operasi MUNDUR).
+        // Membatalkan pembayaran tak menyentuh lab RJ (tetap status_rjri='RJ',
+        // ref_no=rj_no, tetap bisa diproses). Guard lab-pending hanya untuk operasi
+        // MAJU (postTransaksi / transfer), bukan untuk membatalkan.
 
         try {
             DB::transaction(function () {
@@ -441,11 +440,10 @@ new class extends Component {
             return;
         }
 
-        // Cek lab pending di RJ
-        if ($this->checkLabPendingRJ($this->rjNo)) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat RJ belum selesai, batal transfer tidak bisa dilakukan.');
-            return;
-        }
+        // CATATAN: lab pending TIDAK memblokir batal transfer (operasi MUNDUR).
+        // Undo transfer hanya mengembalikan pasien RJ↔RI; lab RJ tak tersentuh
+        // (tetap status_rjri='RJ', ref_no=rj_no) & tetap bisa diproses di RJ.
+        // Guard lab-pending tetap ada di transfer (maju), bukan di sini.
 
         try {
             DB::transaction(function () use ($ugdRjNo) {

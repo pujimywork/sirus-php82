@@ -344,11 +344,10 @@ new class extends Component {
             return;
         }
 
-        // Cek lab pending sebelum batal
-        if ($this->checkLabPendingUGD($this->rjNo)) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat belum selesai, transaksi tidak bisa dibatalkan.');
-            return;
-        }
+        // CATATAN: lab pending TIDAK memblokir batal (operasi MUNDUR).
+        // Membatalkan pembayaran tak menyentuh lab UGD (tetap status_rjri='UGD',
+        // ref_no=rj_no, tetap bisa diproses). Guard lab-pending hanya untuk operasi
+        // MAJU (postTransaksi / transfer), bukan untuk membatalkan.
 
         $hdr = DB::table('rstxn_ugdhdrs')->select('rj_status', 'txn_status', 'reg_no')->where('rj_no', $this->rjNo)->first();
 
@@ -429,6 +428,35 @@ new class extends Component {
         }
 
         if (!$riHdrNo) {
+            // Data transfer RI tak ditemukan (RI sudah dihapus / anomali dual-system).
+            // RECOVERY: kalau UGD masih terkunci status 'I', kembalikan ke 'A' agar tak nyangkut.
+            $ugdHdr = DB::table('rstxn_ugdhdrs')->where('rj_no', $this->rjNo)->first();
+
+            if ($ugdHdr && $ugdHdr->rj_status === 'I') {
+                DB::transaction(function () use ($ugdHdr) {
+                    $this->lockUGDRow($this->rjNo);
+                    DB::table('rstxn_ugdhdrs')
+                        ->where('rj_no', $this->rjNo)
+                        ->update(['rj_status' => 'A', 'txn_status' => 'A']);
+
+                    if ($ugdHdr->reg_no) {
+                        DB::table('rsmst_pasiens')
+                            ->where('reg_no', $ugdHdr->reg_no)
+                            ->update(['lockstatus' => 'UGD']);
+                    }
+
+                    $this->appendAdminLogUGD($this->rjNo, 'Batal Transfer — data RI tak ditemukan; status UGD dikembalikan ke Aktif');
+                });
+
+                $this->isFormLocked = false;
+                $this->txnStatus = 'A';
+                $this->hitungTotal();
+                $this->incrementVersion('kasir-ugd');
+                $this->dispatch('toast', type: 'warning', message: 'Data transfer RI tidak ditemukan — status UGD dikembalikan ke Aktif.');
+                $this->dispatch('administrasi-ugd.updated');
+                return;
+            }
+
             $this->dispatch('toast', type: 'error', message: 'Tidak ada data transfer untuk UGD ini.');
             return;
         }
@@ -458,11 +486,10 @@ new class extends Component {
             return;
         }
 
-        // Cek lab UGD pending
-        if ($this->checkLabPendingUGD($this->rjNo)) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat UGD belum selesai, batal transfer tidak bisa dilakukan.');
-            return;
-        }
+        // CATATAN: lab pending TIDAK memblokir batal transfer (operasi MUNDUR).
+        // Undo transfer hanya mengembalikan pasien UGD↔RI; lab UGD tak tersentuh
+        // (tetap status_rjri='UGD', ref_no=rj_no) & tetap bisa diproses di UGD.
+        // Guard lab-pending tetap ada di transfer (maju), bukan di sini.
 
         try {
             DB::transaction(function () use ($riHdrNo) {
@@ -500,11 +527,16 @@ new class extends Component {
                     ]);
                 }
 
-                // Hapus data RI
+                // Hapus DETAIL RI (biaya dikembalikan ke UGD di atas; bebaskan bed & link).
                 DB::table('rstxn_ritempadmins')->where('rihdr_no', $riHdrNo)->delete();
                 DB::table('rsmst_trfrooms')->where('rihdr_no', $riHdrNo)->delete();
                 DB::table('rstxn_ribiayaselamadugds')->where('rj_no', $this->rjNo)->delete();
-                DB::table('rstxn_rihdrs')->where('rihdr_no', $riHdrNo)->delete();
+
+                // Header RI JANGAN di-delete (ada child record → ORA-02292) — soft-cancel:
+                // tandai Batal (ri_status='F'). Record tetap ada utk audit; laporan mengecualikan 'F'.
+                DB::table('rstxn_rihdrs')
+                    ->where('rihdr_no', $riHdrNo)
+                    ->update(['ri_status' => 'F']);
 
                 // Kembalikan status UGD → 'A'
                 DB::table('rstxn_ugdhdrs')
