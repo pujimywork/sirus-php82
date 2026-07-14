@@ -27,6 +27,10 @@ new class extends Component {
     // Informasi Waktu (JD = Jam Dokter, JM = Jam Mulai?)
     public ?string $radJd = null;
     public ?string $radJm = null;
+
+    // LOINC (Satu Sehat)
+    public string $loincCode = '';
+    public string $loincDisplay = '';
         public function mount(): void
     {
         $this->registerAreas(['modal']);
@@ -73,7 +77,7 @@ new class extends Component {
     // ==================== RESET FORM FIELDS ====================
     protected function resetFormFields(): void
     {
-        $this->reset(['radId', 'radDesc', 'radPrice', 'radJd', 'radJm']);
+        $this->reset(['radId', 'radDesc', 'radPrice', 'radJd', 'radJm', 'loincCode', 'loincDisplay']);
         $this->activeStatus = '1'; // default aktif
         $this->resetVersion();
     }
@@ -87,6 +91,8 @@ new class extends Component {
         $this->activeStatus = (string) ($row->active_status ?? '1');
         $this->radJd = $row->rad_jd;
         $this->radJm = $row->rad_jm;
+        $this->loincCode = (string) ($row->loinc_code ?? '');
+        $this->loincDisplay = (string) ($row->loinc_display ?? '');
     }
 
     // ==================== LOAD DROPDOWN OPTIONS ====================
@@ -108,6 +114,8 @@ new class extends Component {
             'activeStatus' => ['required', Rule::in(['0', '1'])],
             'radJd' => ['nullable', 'string', 'max:50'],
             'radJm' => ['nullable', 'string', 'max:50'],
+            'loincCode' => ['nullable', 'string', 'max:20'],
+            'loincDisplay' => ['nullable', 'string', 'max:200'],
         ];
     }
 
@@ -144,6 +152,8 @@ new class extends Component {
             'activeStatus' => 'Status Aktif',
             'radJd' => 'Jam Dokter',
             'radJm' => 'Jam Mulai',
+            'loincCode' => 'Kode LOINC',
+            'loincDisplay' => 'Nama LOINC',
         ];
     }
 
@@ -158,6 +168,8 @@ new class extends Component {
             'active_status' => $data['activeStatus'],
             'rad_jd' => $data['radJd'],
             'rad_jm' => $data['radJm'],
+            'loinc_code' => $data['loincCode'] ?: null,
+            'loinc_display' => $data['loincDisplay'] ?: null,
         ];
 
         try {
@@ -177,6 +189,23 @@ new class extends Component {
         } catch (QueryException $e) {
             $this->dispatch('toast', type: 'error', message: 'Terjadi kesalahan database: ' . $e->getMessage());
         }
+    }
+
+    /* =========================
+     | LOV — LOINC (Satu Sehat)
+     * ========================= */
+    #[On('lov.selected.loincRad')]
+    public function onLoincRadSelected(string $target, ?array $payload): void
+    {
+        $this->loincCode = $payload['loinc_code'] ?? '';
+        $this->loincDisplay = $payload['display'] ?? '';
+    }
+
+    #[On('lov.cleared.loincRad')]
+    public function onLoincRadCleared(string $target): void
+    {
+        $this->loincCode = '';
+        $this->loincDisplay = '';
     }
 
     // ==================== TOGGLE STATUS AKTIF ====================
@@ -338,6 +367,16 @@ new class extends Component {
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('radJm')" class="mt-1" />
                                 </div>
+                            </div>
+
+                            {{-- Kode LOINC (Satu Sehat) --}}
+                            <div>
+                                <livewire:lov.loinc.lov-loinc target="loincRad" label="Kode LOINC (Satu Sehat)"
+                                    placeholder="Ketik nama pemeriksaan / kode LOINC..." :initialLoincCode="$loincCode ?: null"
+                                    :disabled="false" wire:key="lov-loinc-rad-{{ $renderVersions['modal'] ?? 0 }}" />
+                                <x-input-error :messages="$errors->get('loincCode')" class="mt-1" />
+                                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Cari kode LOINC dari database
+                                    lokal atau FHIR server. Dipakai untuk kirim ke Satu Sehat.</p>
                             </div>
                         </div>
                     </x-border-form>

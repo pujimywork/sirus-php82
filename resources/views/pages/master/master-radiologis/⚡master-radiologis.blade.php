@@ -87,7 +87,7 @@ new class extends Component {
     {
         $searchKeyword = trim($this->searchKeyword);
 
-        $queryBuilder = DB::table('rsmst_radiologis')->select('rad_id', 'rad_desc', 'rad_price', 'active_status', 'rad_jd', 'rad_jm')->orderBy('rad_desc', 'asc');
+        $queryBuilder = DB::table('rsmst_radiologis')->select('rad_id', 'rad_desc', 'rad_price', 'active_status', 'rad_jd', 'rad_jm', 'loinc_code', 'loinc_display')->orderBy('rad_desc', 'asc');
 
         if ($searchKeyword !== '') {
             $uppercaseKeyword = mb_strtoupper($searchKeyword);
@@ -101,7 +101,9 @@ new class extends Component {
                 $subQuery
                     ->orWhereRaw('UPPER(rad_desc) LIKE ?', ["%{$uppercaseKeyword}%"])
                     ->orWhereRaw('UPPER(rad_jd) LIKE ?', ["%{$uppercaseKeyword}%"])
-                    ->orWhereRaw('UPPER(rad_jm) LIKE ?', ["%{$uppercaseKeyword}%"]);
+                    ->orWhereRaw('UPPER(rad_jm) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(loinc_code) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(loinc_display) LIKE ?', ["%{$uppercaseKeyword}%"]);
             });
         }
 
@@ -184,6 +186,7 @@ new class extends Component {
                                 <th>Status</th>
                                 <th>Rad JD</th>
                                 <th>Rad JM</th>
+                                <th>LOINC</th>
                                 <th class="ds-c">Aksi</th>
                             </tr>
                         </thead>
@@ -202,6 +205,15 @@ new class extends Component {
                                     </td>
                                     <td class="px-6 py-4">{{ $row->rad_jd ?? '-' }}</td>
                                     <td class="px-6 py-4">{{ $row->rad_jm ?? '-' }}</td>
+                                    <td class="px-6 py-4">
+                                        @if (!empty($row->loinc_code))
+                                            <x-badge variant="success" title="{{ $row->loinc_display }}">
+                                                {{ $row->loinc_code }}
+                                            </x-badge>
+                                        @else
+                                            <span class="text-xs" style="color:var(--muted)">Belum dipetakan</span>
+                                        @endif
+                                    </td>
                                     <td class="ds-c px-6 py-4">
                                         <div class="flex justify-center gap-2">
                                             <x-action-edit wire:click="openEdit('{{ $row->rad_id }}')" />
@@ -213,7 +225,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-10 text-center" style="color:var(--muted)">
+                                    <td colspan="8" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         <div class="flex flex-col items-center justify-center">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-gray-400"
                                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
