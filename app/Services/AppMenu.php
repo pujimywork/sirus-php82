@@ -183,6 +183,10 @@ class AppMenu
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 5, 'route' => 'database-monitor.user-online', 'title' => 'User Online', 'desc' => 'Daftar user yang sedang aktif login (last_seen_at < threshold menit)', 'roles' => ['admin'], 'badge' => 'ONL']),
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 6, 'route' => 'database-monitor.log-bpjs', 'title' => 'Log BPJS / E-Klaim API', 'desc' => 'Riwayat pemanggilan V-Claim, Antrean, Aplicares, I-Care, SIRS, iDRG/INACBG', 'roles' => ['admin'], 'badge' => 'LOG']),
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 7, 'route' => 'standarisasi-ui', 'title' => 'Standarisasi UI', 'desc' => 'Acuan design system internal — warna, tipografi & komponen', 'roles' => ['admin'], 'badge' => 'UI']),
+            $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 8, 'route' => 'standarisasi-ui.koding-master', 'title' => 'Tutorial Koding Master', 'desc' => 'Panduan membangun modul master (2-file, event, LOV, CRUD)', 'roles' => ['admin'], 'badge' => 'DOC']),
+            $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 9, 'route' => 'standarisasi-ui.koding-transaksi', 'title' => 'Tutorial Koding Transaksi', 'desc' => 'Pola modul transaksi RJ/UGD/RI — JSON CLOB, EMR, dokumen, administrasi', 'roles' => ['admin'], 'badge' => 'DOC']),
+            $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 10, 'route' => 'standarisasi-ui.koding-satusehat', 'title' => 'Tutorial Koding SATUSEHAT', 'desc' => 'Kirim data FHIR R4 ke SATUSEHAT — resource, kode, checklist kolom wajib', 'roles' => ['admin'], 'badge' => 'DOC']),
+            $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 11, 'route' => 'standarisasi-ui.koding-administrasi', 'title' => 'Tutorial Koding Administrasi', 'desc' => 'Konsep administrasi/kasir RJ/UGD/RI sampai pulang + transfer & model batal', 'roles' => ['admin'], 'badge' => 'DOC']),
         ];
     }
 }

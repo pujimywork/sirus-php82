@@ -44,6 +44,10 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/standarisasi-ui/koding-satusehat', 'pages::standarisasi-ui.koding-satusehat.koding-satusehat')
         ->name('standarisasi-ui.koding-satusehat');
 
+    // Tutorial konsep administrasi/kasir RJ/UGD/RI sampai pulang + transfer & model batal
+    Route::livewire('/standarisasi-ui/koding-administrasi', 'pages::standarisasi-ui.koding-administrasi.koding-administrasi')
+        ->name('standarisasi-ui.koding-administrasi');
+
     Route::livewire('/master/poli', 'pages::master.master-poli.master-poli')
         ->name('master.poli');
 

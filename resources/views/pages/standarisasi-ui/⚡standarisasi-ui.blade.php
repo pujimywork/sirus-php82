@@ -123,6 +123,10 @@ new class extends Component {
                                 class="ds-btn ds-btn-secondary">Tutorial Koding Master →</a>
                             <a href="{{ route('standarisasi-ui.koding-transaksi') }}" wire:navigate
                                 class="ds-btn ds-btn-secondary">Tutorial Koding Transaksi →</a>
+                            <a href="{{ route('standarisasi-ui.koding-satusehat') }}" wire:navigate
+                                class="ds-btn ds-btn-secondary">Tutorial Koding SATUSEHAT →</a>
+                            <a href="{{ route('standarisasi-ui.koding-administrasi') }}" wire:navigate
+                                class="ds-btn ds-btn-secondary">Tutorial Koding Administrasi →</a>
                         </div>
                     </div>
 

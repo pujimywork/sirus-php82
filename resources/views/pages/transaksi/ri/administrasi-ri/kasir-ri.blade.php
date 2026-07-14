@@ -659,6 +659,105 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Gagal membatalkan: ' . $e->getMessage());
         }
     }
+
+    /* ===============================
+     | BATAL INAP → status 'F' (Batal)
+     | Soft-cancel admisi RI: record TETAP ada (laporan SIRS/manajemen sudah
+     | mengecualikan 'F'), hanya boleh bila BELUM ada transaksi & BUKAN dari transfer.
+     =============================== */
+    public function batalInap(): void
+    {
+        if (!auth()->user()->hasAnyRole(['Admin', 'Supervisor Tu'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin dan Supervisor TU yang dapat membatalkan inap.');
+            return;
+        }
+
+        if (!$this->riHdrNo) {
+            $this->dispatch('toast', type: 'error', message: 'Data transaksi tidak ditemukan.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockRIRow($this->riHdrNo);
+
+                $hdr = DB::table('rstxn_rihdrs')
+                    ->select('reg_no', 'ri_status')
+                    ->where('rihdr_no', $this->riHdrNo)
+                    ->first();
+
+                if (!$hdr) {
+                    throw new \RuntimeException('Data RI tidak ditemukan.');
+                }
+
+                $status = $hdr->ri_status ?? 'I';
+                if ($status === 'F') {
+                    throw new \RuntimeException('Inap ini sudah berstatus Batal.');
+                }
+                if ($status !== 'I') {
+                    throw new \RuntimeException('Status bukan Dirawat. Batalkan transaksi pulang lebih dulu.');
+                }
+
+                // Tidak boleh untuk RI hasil transfer UGD/RJ — gunakan Batal Transfer di kasir asal.
+                $dariTransfer = DB::table('rstxn_ritempadmins')
+                    ->where('rihdr_no', $this->riHdrNo)
+                    ->whereIn('tempadm_flag', ['UGD', 'RJ'])
+                    ->exists();
+                if ($dariTransfer) {
+                    throw new \RuntimeException('RI ini berasal dari transfer UGD/RJ. Gunakan "Batal Transfer" di kasir asal.');
+                }
+
+                // Guard integritas billing: belum ada transaksi apa pun.
+                $adaTransaksi =
+                    DB::table('rstxn_rivisits')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_rikonsuls')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_riactparams')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_riactdocs')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_rilabs')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_riradiologs')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_rioks')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_riobats')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_riothers')->where('rihdr_no', $this->riHdrNo)->exists()
+                    || DB::table('rstxn_ripaymentdtls')->where('rihdr_no', $this->riHdrNo)->exists();
+
+                if ($adaTransaksi) {
+                    throw new \RuntimeException('RI sudah ada transaksi (visit/obat/lab/dll). Batal inap tidak bisa dilakukan.');
+                }
+
+                // Set status Batal (soft).
+                DB::table('rstxn_rihdrs')
+                    ->where('rihdr_no', $this->riHdrNo)
+                    ->update(['ri_status' => 'F']);
+
+                // Bebaskan bed: tutup end_date kamar terakhir.
+                $maxTrfrNo = $this->getMaxTrfrNo($this->riHdrNo);
+                if ($maxTrfrNo) {
+                    DB::table('rsmst_trfrooms')
+                        ->where('trfr_no', $maxTrfrNo)
+                        ->update(['end_date' => DB::raw('SYSDATE')]);
+                }
+
+                // Unlock pasien (kembali tersedia).
+                if ($hdr->reg_no) {
+                    DB::table('rsmst_pasiens')
+                        ->where('reg_no', $hdr->reg_no)
+                        ->update(['lockstatus' => '1']);
+                }
+
+                $this->appendAdminLogRI($this->riHdrNo, 'Batal Inap (status F)');
+            });
+
+            $this->riStatus     = 'F';
+            $this->isFormLocked = true;
+            $this->incrementVersion('kasir-ri');
+            $this->dispatch('toast', type: 'success', message: 'Inap berhasil dibatalkan (status Batal).');
+            $this->dispatch('administrasi-ri.updated');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal batal inap: ' . $e->getMessage());
+        }
+    }
 };
 ?>
 
@@ -894,6 +993,23 @@ new class extends Component {
                     </x-primary-button>
                 </div>
                 @endhasanyrole
+
+                {{-- Batal Inap (status F) — hanya saat Dirawat & belum ada transaksi. Admin, Supervisor Tu --}}
+                @if ($riStatus === 'I')
+                    @hasanyrole(['Admin', 'Supervisor Tu'])
+                        <div class="pt-4 mt-4 border-t border-hairline dark:border-gray-700">
+                            <p class="mb-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                Batalkan pendaftaran inap (status jadi <span class="font-semibold">Batal/F</span>).
+                                Hanya bila belum ada transaksi &amp; bukan dari transfer.
+                            </p>
+                            <x-confirm-button variant="danger" :action="'batalInap()'" title="Batal Inap"
+                                message="Batalkan pendaftaran inap ini? Status akan menjadi BATAL (F). Aksi hanya berhasil jika RI belum punya transaksi apa pun."
+                                confirmText="Ya, batal inap" cancelText="Batal">
+                                Batal Inap
+                            </x-confirm-button>
+                        </div>
+                    @endhasanyrole
+                @endif
 
             </div>
 

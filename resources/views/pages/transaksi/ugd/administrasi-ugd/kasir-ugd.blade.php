@@ -414,16 +414,24 @@ new class extends Component {
             return;
         }
 
-        $transfer = DB::table('rstxn_ribiayaselamadugds')
-            ->where('rj_no', $this->rjNo)
-            ->first();
+        // Cari RI hasil transfer. Link UTAMA = baris rstxn_ritempadmins flag 'UGD'
+        // (tempadm_ref = rj_no UGD → rihdr_no), ditulis saat transfer. Fallback ke
+        // rstxn_ribiayaselamadugds utk data transfer lama yang tak punya baris link ini.
+        $riHdrNo = DB::table('rstxn_ritempadmins')
+            ->where('tempadm_flag', 'UGD')
+            ->where('tempadm_ref', $this->rjNo)
+            ->value('rihdr_no');
 
-        if (!$transfer) {
+        if (!$riHdrNo) {
+            $riHdrNo = DB::table('rstxn_ribiayaselamadugds')
+                ->where('rj_no', $this->rjNo)
+                ->value('ugd_no_rsri');
+        }
+
+        if (!$riHdrNo) {
             $this->dispatch('toast', type: 'error', message: 'Tidak ada data transfer untuk UGD ini.');
             return;
         }
-
-        $riHdrNo = $transfer->ugd_no_rsri;
 
         // Cek status RI masih aktif
         $riHdr = DB::table('rstxn_rihdrs')->where('rihdr_no', $riHdrNo)->first();
