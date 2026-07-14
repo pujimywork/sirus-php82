@@ -206,7 +206,7 @@ new class extends Component {
             ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
             ->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')
             ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-            ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
+            ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', DB::raw("to_char(r.tgl_bacaan,'dd/mm/yyyy hh24:mi:ss') as tgl_bacaan"), 'h.rj_status as hdr_status']));
     }
 
     private function baseQueryUGD(array $pasienCols)
@@ -215,7 +215,7 @@ new class extends Component {
             ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
             ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
             ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-            ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
+            ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', DB::raw("to_char(r.tgl_bacaan,'dd/mm/yyyy hh24:mi:ss') as tgl_bacaan"), 'h.rj_status as hdr_status']));
     }
 
     private function baseQueryRI(array $pasienCols)
@@ -224,7 +224,7 @@ new class extends Component {
             ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
             ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
             ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-            ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', 'h.ri_status as hdr_status']));
+            ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('DBMS_LOB.GETLENGTH(r.hasil_bacaan) as hasil_bacaan'), 'r.waktu_entry', DB::raw("to_char(r.tgl_bacaan,'dd/mm/yyyy hh24:mi:ss') as tgl_bacaan"), 'h.ri_status as hdr_status']));
     }
 
     /* ===============================
@@ -233,6 +233,64 @@ new class extends Component {
     public function updateKeterangan(string $source, int $dtlNo, int $refNo, string $value): void
     {
         $this->updateRadColumn($source, $dtlNo, $refNo, 'keterangan', $value, 'Keterangan');
+    }
+
+    /* ===============================
+     | UPDATE TGL BACAAN — inline edit per row (teks dd/mm/yyyy HH:mm:ss).
+     | Kolom DATE → payload harus TO_DATE (bukan string biasa) di Oracle.
+     =============================== */
+    public function updateTglBacaan(string $source, int $dtlNo, int $refNo, string $value): void
+    {
+        $value = trim($value);
+        try {
+            $payload = null;
+            if ($value !== '') {
+                $dt = null;
+                foreach (['d/m/Y H:i:s', 'd/m/Y H:i', 'd/m/Y'] as $fmt) {
+                    try {
+                        $dt = \Carbon\Carbon::createFromFormat($fmt, $value);
+                        break;
+                    } catch (\Throwable) {
+                    }
+                }
+                if (!$dt) {
+                    $this->dispatch('toast', type: 'error', message: 'Format Tgl Bacaan tidak valid (dd/mm/yyyy HH:mm:ss).');
+                    return;
+                }
+                $payload = DB::raw("TO_DATE('" . $dt->format('Y-m-d H:i:s') . "','YYYY-MM-DD HH24:MI:SS')");
+            }
+            $this->storeTglBacaan($source, $dtlNo, $refNo, $payload);
+            $this->dispatch('toast', type: 'success', message: 'Tgl Bacaan disimpan.');
+            unset($this->rows);
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
+        }
+    }
+
+    /* Tombol "Sekarang": set Tgl Bacaan ke SYSDATE (detik presisi) server-side. */
+    public function setTglBacaanNow(string $source, int $dtlNo, int $refNo): void
+    {
+        try {
+            $this->storeTglBacaan($source, $dtlNo, $refNo, DB::raw('SYSDATE'));
+            $this->dispatch('toast', type: 'success', message: 'Tgl Bacaan diset ke sekarang.');
+            unset($this->rows);
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
+        }
+    }
+
+    private function storeTglBacaan(string $source, int $dtlNo, int $refNo, $payload): void
+    {
+        DB::transaction(function () use ($source, $dtlNo, $refNo, $payload) {
+            if ($source === 'RJ') {
+                DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['tgl_bacaan' => $payload]);
+            } elseif ($source === 'UGD') {
+                DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['tgl_bacaan' => $payload]);
+            } elseif ($source === 'RI') {
+                DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->update(['tgl_bacaan' => $payload]);
+            }
+            $this->logEditKeParent($source, $refNo, 'Ubah Tgl Bacaan Radiologi #' . $dtlNo);
+        });
     }
 
     /* ===============================
@@ -752,6 +810,17 @@ new class extends Component {
                                             <x-text-input :value="$row->keterangan"
                                                 wire:change="updateKeterangan('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }}, $event.target.value)"
                                                 placeholder="contoh: AP/lateral, sebelum kontras" class="mt-1" />
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Tgl Bacaan" class="text-xs" />
+                                            <div class="mt-1 flex items-center gap-1.5">
+                                                <x-text-input :value="$row->tgl_bacaan"
+                                                    wire:change="updateTglBacaan('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }}, $event.target.value)"
+                                                    placeholder="dd/mm/yyyy HH:mm:ss" class="flex-1" />
+                                                <x-now-button
+                                                    wire:click="setTglBacaanNow('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }})"
+                                                    title="Set Tgl Bacaan ke sekarang" />
+                                            </div>
                                         </div>
                                     </td>
 

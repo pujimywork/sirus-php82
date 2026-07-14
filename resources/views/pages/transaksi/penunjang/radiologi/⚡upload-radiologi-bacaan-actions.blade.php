@@ -120,6 +120,16 @@ new class extends Component {
         $this->hasilBacaan = $row && !empty($row->hasil_bacaan) ? (string) $row->hasil_bacaan : '';
         $this->drRadiologi = $row && !empty($row->dr_radiologi) ? (string) $row->dr_radiologi : null;
 
+        // Auto-generate dokter radiolog yang betul: kalau belum terisi & hanya
+        // ada 1 radiolog aktif, default ke dia (kasus RS 1 radiolog) supaya hasil
+        // langsung memuat dokter yang benar tanpa harus dipilih manual.
+        if (empty($this->drRadiologi)) {
+            $opts = $this->dokterRadiologOptions;
+            if ($opts->count() === 1) {
+                $this->drRadiologi = (string) $opts->first()->dr_id;
+            }
+        }
+
         $this->dispatch('open-modal', name: 'rad-generate');
     }
 
@@ -253,13 +263,13 @@ new class extends Component {
     private function buildPrintHeader(): ?object
     {
         if ($this->selectedSource === 'RJ') {
-            return DB::table('rstxn_rjrads as r')->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')->where('r.rad_dtl', $this->selectedDtl)->where('r.rj_no', $this->selectedRefNo)->select('p.reg_no', 'p.reg_name', 'p.sex', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'p.birth_place', 'p.address', 'm.rad_desc', 'r.dr_pengirim', 'r.dr_radiologi', 'r.keterangan', 'r.waktu_entry')->first();
+            return DB::table('rstxn_rjrads as r')->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')->where('r.rad_dtl', $this->selectedDtl)->where('r.rj_no', $this->selectedRefNo)->select('p.reg_no', 'p.reg_name', 'p.sex', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'p.birth_place', 'p.address', 'm.rad_desc', 'r.dr_pengirim', 'r.dr_radiologi', 'r.keterangan', 'r.waktu_entry', DB::raw("to_char(r.tgl_bacaan,'dd/mm/yyyy hh24:mi:ss') as tgl_bacaan"))->first();
         }
         if ($this->selectedSource === 'UGD') {
-            return DB::table('rstxn_ugdrads as r')->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')->where('r.rad_dtl', $this->selectedDtl)->where('r.rj_no', $this->selectedRefNo)->select('p.reg_no', 'p.reg_name', 'p.sex', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'p.birth_place', 'p.address', 'm.rad_desc', 'r.dr_pengirim', 'r.dr_radiologi', 'r.keterangan', 'r.waktu_entry')->first();
+            return DB::table('rstxn_ugdrads as r')->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')->where('r.rad_dtl', $this->selectedDtl)->where('r.rj_no', $this->selectedRefNo)->select('p.reg_no', 'p.reg_name', 'p.sex', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'p.birth_place', 'p.address', 'm.rad_desc', 'r.dr_pengirim', 'r.dr_radiologi', 'r.keterangan', 'r.waktu_entry', DB::raw("to_char(r.tgl_bacaan,'dd/mm/yyyy hh24:mi:ss') as tgl_bacaan"))->first();
         }
         if ($this->selectedSource === 'RI') {
-            return DB::table('rstxn_riradiologs as r')->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')->where('r.rirad_no', $this->selectedDtl)->where('r.rihdr_no', $this->selectedRefNo)->select('p.reg_no', 'p.reg_name', 'p.sex', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'p.birth_place', 'p.address', 'm.rad_desc', 'r.dr_pengirim', 'r.dr_radiologi', 'r.keterangan', 'r.waktu_entry')->first();
+            return DB::table('rstxn_riradiologs as r')->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')->where('r.rirad_no', $this->selectedDtl)->where('r.rihdr_no', $this->selectedRefNo)->select('p.reg_no', 'p.reg_name', 'p.sex', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'p.birth_place', 'p.address', 'm.rad_desc', 'r.dr_pengirim', 'r.dr_radiologi', 'r.keterangan', 'r.waktu_entry', DB::raw("to_char(r.tgl_bacaan,'dd/mm/yyyy hh24:mi:ss') as tgl_bacaan"))->first();
         }
         return null;
     }
