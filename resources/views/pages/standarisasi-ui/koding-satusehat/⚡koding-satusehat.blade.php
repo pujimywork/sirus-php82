@@ -1076,7 +1076,7 @@ UI RJ (Livewire, satu tombol per-resource):
                             </div>
                             <div class="ds-card-outline" style="padding:16px 20px">
                                 <div class="ds-title-sm mb-1">RI — Rawat Inap</div>
-                                <div class="ds-body-sm"><strong>9 resource aktif</strong> + 2 digating (SNOMED). Encounter class <span class="ds-code">IMP</span>.</div>
+                                <div class="ds-body-sm"><strong>11 resource aktif</strong> + 2 digating (SNOMED). Encounter class <span class="ds-code">IMP</span>.</div>
                             </div>
                         </div>
 
@@ -1086,10 +1086,12 @@ UI RJ (Livewire, satu tombol per-resource):
                                 <thead><tr><th>Resource</th><th>Sumber data RI</th><th>Status</th></tr></thead>
                                 <tbody>
                                     <tr><td class="ds-td-strong">Encounter (IMP)</td><td class="ds-body-sm"><span class="ds-code">rstxn_rihdrs</span> + lokasi <span class="ds-code">rsmst_rooms.room_uuid</span></td><td class="ds-body-sm">✅ aktif — dukung <strong>pindah kamar</strong> (location[] bertambah)</td></tr>
+                                    <tr><td class="ds-td-strong">EpisodeOfCare</td><td class="ds-body-sm"><span class="ds-code">rstxn_rihdrs</span> (episodeNo=rihdr_no, careManager=DPJP)</td><td class="ds-body-sm">✅ aktif — 1 RI = 1 episode; link Encounter; Finish saat pulang</td></tr>
                                     <tr><td class="ds-td-strong">Condition</td><td class="ds-body-sm"><span class="ds-code">rstxn_ridtls</span> ⋈ <span class="ds-code">rsmst_mstdiags</span> <strong>by diag_id</strong></td><td class="ds-body-sm">✅ aktif — aman 288 icdx kembar</td></tr>
                                     <tr><td class="ds-td-strong">Procedure</td><td class="ds-body-sm">JSON <span class="ds-code">procedure[]</span> (procedureId=ICD-9)</td><td class="ds-body-sm">✅ aktif</td></tr>
                                     <tr><td class="ds-td-strong">Observation (vital)</td><td class="ds-body-sm">JSON <span class="ds-code">observasi.observasiLanjutan.tandaVital[]</span></td><td class="ds-body-sm">✅ aktif — <strong>multi-entri</strong> (per waktu ukur)</td></tr>
                                     <tr><td class="ds-td-strong">MedicationRequest</td><td class="ds-body-sm">JSON <span class="ds-code">eresepHdr[].eresep[]</span> → join <span class="ds-code">immst_products</span> (KFA)</td><td class="ds-body-sm">✅ aktif — <strong>racikan belum</strong>; item tanpa KFA di-skip</td></tr>
+                                    <tr><td class="ds-td-strong">MedicationDispense</td><td class="ds-body-sm">sda (obatList identik) — pairing 1:1 dgn medicationRequestIds</td><td class="ds-body-sm">✅ aktif — butuh MedicationRequest dulu; authorizingPrescription</td></tr>
                                     <tr><td class="ds-td-strong">ClinicalImpression</td><td class="ds-body-sm">JSON <span class="ds-code">cppt[]</span> (SOAP)</td><td class="ds-body-sm">✅ aktif — 1 entri = 1 CI; <strong>assessor = DPJP</strong> (fallback MVP); guard per <span class="ds-code">cpptId</span></td></tr>
                                     <tr><td class="ds-td-strong">Penunjang Lab</td><td class="ds-body-sm"><span class="ds-code">lbtxn_checkuphdrs</span> <span class="ds-code">status_rjri='RI'</span> ⋈ <span class="ds-code">lbmst_clabitems.loinc_code</span></td><td class="ds-body-sm">✅ aktif — chain SR→Specimen→Obs→DR</td></tr>
                                     <tr><td class="ds-td-strong">Penunjang Radiologi</td><td class="ds-body-sm"><span class="ds-code">rstxn_riradiologs</span> ⋈ <span class="ds-code">rsmst_radiologis.loinc_code</span></td><td class="ds-body-sm">✅ aktif — <strong>LOINC spesifik</strong> bila master terisi, else generik 18748-4; ImagingStudy dilewati</td></tr>
@@ -1114,7 +1116,7 @@ UI RJ (Livewire, satu tombol per-resource):
                         <div class="ds-card-outline mt-4" style="padding:16px 20px">
                             <div class="ds-title-sm mb-1">Belum dikerjakan (pengayaan, non-wajib)</div>
                             <div class="ds-body-sm">
-                                <strong>RI</strong>: MedicationDispense, SBAR (butuh Communication trait), Penilaian (risiko jatuh/gizi → Observation survey, butuh mapping kode), racikan obat, EpisodeOfCare. •
+                                <strong>RI</strong>: SBAR (butuh Communication trait), Penilaian (risiko jatuh/gizi → Observation survey, butuh mapping kode), racikan obat, Composition (ringkasan pulang), ImagingStudy (gap DICOM). •
                                 <strong>Pengayaan UGD</strong>: Observation Risiko Jatuh / IMT Gizi, MedicationAdministration cairan.
                             </div>
                         </div>
