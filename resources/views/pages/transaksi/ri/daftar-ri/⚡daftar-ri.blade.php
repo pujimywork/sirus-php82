@@ -95,6 +95,10 @@ new class extends Component {
     {
         $this->dispatch('daftar-ri.idrg.open', riHdrNo: $riHdrNo);
     }
+    public function openSatuSehat(string $riHdrNo): void
+    {
+        $this->dispatch('daftar-ri.satu-sehat.open', riHdrNo: $riHdrNo);
+    }
     public function openBerkasBpjs(int $rihdrNo): void
     {
         $this->dispatch('berkas-bpjs.open', rjNo: $rihdrNo);
@@ -882,6 +886,27 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
+                                                            {{-- Kirim Satu Sehat — Admin, Mr --}}
+                                                            @hasanyrole('Admin|Mr')
+                                                                <x-dropdown-link href="#"
+                                                                    wire:click.prevent="openSatuSehat('{{ $row->rihdr_no }}')"
+                                                                    class="px-3 py-2 text-sm rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40">
+                                                                    <div class="flex items-start gap-2">
+                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0 text-teal-600 dark:text-teal-400"
+                                                                            fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                        </svg>
+                                                                        <span>
+                                                                            Kirim Satu Sehat<br>
+                                                                            <span class="text-xs font-normal opacity-80">Encounter RI (IMP) &amp; resource</span>
+                                                                        </span>
+                                                                    </div>
+                                                                </x-dropdown-link>
+                                                            @endhasanyrole
+
                                                         </div>
 
                                                         <div
@@ -946,6 +971,7 @@ new class extends Component {
 
             {{-- iDRG/INACBG Modal (sibling, listen ke event daftar-ri.idrg.open) --}}
             <livewire:pages::transaksi.ri.daftar-ri.idrg-ri-actions wire:key="idrg-ri-actions" />
+            <livewire:pages::transaksi.ri.daftar-ri.satu-sehat-ri-actions wire:key="satu-sehat-ri-actions" />
             <livewire:pages::transaksi.ri.daftar-ri-bulanan.berkas-bpjs-ri-actions wire:key="berkas-bpjs-ri-actions" />
 
             <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.modul-dokumen-ri wire:key="modul-dokumen-ri" />

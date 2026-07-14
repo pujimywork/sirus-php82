@@ -7,9 +7,10 @@ use Illuminate\Database\QueryException;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\BPJS\AplicaresTrait;
 use App\Http\Traits\SIRS\SirsTrait;
+use App\Http\Traits\SATUSEHAT\LocationTrait;
 
 new class extends Component {
-    use WithRenderVersioningTrait, AplicaresTrait, SirsTrait;
+    use WithRenderVersioningTrait, AplicaresTrait, SirsTrait, LocationTrait;
 
     /**
      * Mapping id_tt → jenis tempat tidur SIRS Kemenkes (referensi resmi).
@@ -71,6 +72,7 @@ new class extends Component {
         'perawatan_price' => '0',
         'common_service'  => '0',
         'active_status'   => '1',
+        'room_uuid'       => '', // UUID Location SATUSEHAT (lokasi Encounter RI)
     ];
 
     public array $kelasList = [];
@@ -138,6 +140,7 @@ new class extends Component {
             'perawatan_price' => (string) ($row->perawatan_price ?? '0'),
             'common_service'  => (string) ($row->common_service ?? '0'),
             'active_status'   => (string) ($row->active_status ?? '1'),
+            'room_uuid'       => (string) ($row->room_uuid ?? ''),
         ];
 
         $jumlahBed       = DB::table('rsmst_beds')->where('room_id', $roomId)->count();
@@ -222,6 +225,7 @@ new class extends Component {
                 'formKamar.perawatan_price' => 'nullable|integer|min:0',
                 'formKamar.common_service'  => 'nullable|integer|min:0',
                 'formKamar.active_status'   => 'required|string|max:3',
+                'formKamar.room_uuid'       => 'nullable|string|max:100',
             ],
             [],
             [
@@ -250,6 +254,7 @@ new class extends Component {
             'perawatan_price' => (int) ($this->formKamar['perawatan_price'] ?: 0),
             'common_service'  => (int) ($this->formKamar['common_service'] ?: 0),
             'active_status'   => $this->formKamar['active_status'],
+            'room_uuid'       => $this->formKamar['room_uuid'] ?: null,
         ];
 
         if ($this->formMode === 'create') {
@@ -261,6 +266,62 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: 'Data kamar berhasil disimpan.');
         $this->closeModal();
         $this->dispatch('master.kamar.saved', entity: 'kamar');
+    }
+
+    // ─── SATUSEHAT Location (room_uuid) ───────────────────────
+    /**
+     * Daftarkan kamar sebagai Location di SATUSEHAT → dapat room_uuid.
+     * Idempoten: cari dulu by identifier bisnis (room_id); kalau belum ada baru createLocation.
+     * room_uuid ini dipakai sebagai lokasi Encounter Rawat Inap (analog poli_uuid di RJ/UGD).
+     */
+    public function daftarkanUuidKamar(): void
+    {
+        $roomId   = trim((string) ($this->formKamar['room_id'] ?? ''));
+        $roomName = trim((string) ($this->formKamar['room_name'] ?? ''));
+
+        if ($roomId === '' || $roomName === '') {
+            $this->dispatch('toast', type: 'warning', message: 'Isi ID & Nama Kamar dulu sebelum daftarkan UUID.');
+            return;
+        }
+
+        try {
+            $this->initializeSatuSehat();
+            $orgId = $this->organizationId ?: env('SATUSEHAT_ORGANIZATION_ID');
+
+            // 1. Cari Location existing (idempoten) by identifier bisnis = room_id.
+            $search    = $this->searchLocation(['identifier' => "http://sys-ids.kemkes.go.id/location/{$orgId}|{$roomId}"]);
+            $foundUuid = collect($search['entry'] ?? [])->pluck('resource.id')->first();
+
+            $uuid = $foundUuid;
+            if (empty($uuid)) {
+                // 2. Belum ada → buat Location baru (physical type: bed).
+                $res = $this->createLocation([
+                    'name'                  => $roomName,
+                    'description'           => 'Kamar Rawat Inap ' . $roomName,
+                    'identifier'            => $roomId,
+                    'physical_type_code'    => 'bd',
+                    'physical_type_display' => 'Bed',
+                    'organization_id'       => $orgId,
+                ]);
+                $uuid = $res['id'] ?? null;
+            }
+
+            if (empty($uuid)) {
+                $this->dispatch('toast', type: 'error', message: 'Gagal mendapatkan UUID Location dari SATUSEHAT.');
+                return;
+            }
+
+            // 3. Set ke form; kalau kamar sudah tersimpan (edit) langsung persist ke DB.
+            $this->formKamar['room_uuid'] = $uuid;
+            if ($this->formMode === 'edit') {
+                DB::table('rsmst_rooms')->where('room_id', $roomId)->update(['room_uuid' => $uuid]);
+            }
+
+            $this->dispatch('toast', type: 'success',
+                message: ($foundUuid ? 'UUID Location ditemukan' : 'Location baru dibuat') . ": {$uuid}");
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Daftar UUID Kamar gagal: ' . $e->getMessage());
+        }
     }
 
     // ─── Aplicares ────────────────────────────────────────────
@@ -623,6 +684,31 @@ new class extends Component {
                                             <x-text-input-number wire:model="formKamar.common_service" class="mt-1 w-full" x-ref="inputCommon" />
                                             <x-input-error :messages="$errors->get('formKamar.common_service')" class="mt-1" />
                                         </div>
+                                    </div>
+
+                                    {{-- ── SATUSEHAT Location (room_uuid) ── --}}
+                                    <div class="border-t border-hairline-soft dark:border-gray-700 pt-4">
+                                        <p class="text-xs font-semibold text-muted-soft dark:text-gray-500 uppercase tracking-wide mb-1">
+                                            Location SATUSEHAT
+                                        </p>
+                                        <p class="text-[11px] text-muted-soft dark:text-gray-500 mb-2">
+                                            Opsional — daftarkan kamar sebagai <span class="font-mono">Location</span> di SATUSEHAT.
+                                            UUID ini dipakai sebagai lokasi <span class="font-mono">Encounter</span> Rawat Inap.
+                                        </p>
+                                        <x-input-label value="Room UUID (Location)" />
+                                        <div class="flex gap-2 mt-1">
+                                            <x-text-input wire:model="formKamar.room_uuid"
+                                                class="w-full font-mono text-xs bg-surface-soft dark:bg-gray-800/60"
+                                                placeholder="Belum terdaftar…" readonly />
+                                            <x-outline-button type="button" wire:click="daftarkanUuidKamar"
+                                                wire:loading.attr="disabled" wire:target="daftarkanUuidKamar" class="shrink-0"
+                                                title="Daftarkan kamar sebagai Location SATUSEHAT">
+                                                <x-loading size="xs" wire:loading wire:target="daftarkanUuidKamar" />
+                                                <span wire:loading.remove wire:target="daftarkanUuidKamar">Daftarkan</span>
+                                                <span wire:loading wire:target="daftarkanUuidKamar">Memproses…</span>
+                                            </x-outline-button>
+                                        </div>
+                                        <x-input-error :messages="$errors->get('formKamar.room_uuid')" class="mt-1" />
                                     </div>
                                 </div>
 
