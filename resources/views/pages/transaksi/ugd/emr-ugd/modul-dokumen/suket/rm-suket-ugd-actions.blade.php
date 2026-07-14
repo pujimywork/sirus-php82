@@ -14,6 +14,10 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $dataDaftarUGD = [];
 
+    // Tab aktif (Suket Sehat / Suket Istirahat) — di-entangle ke Alpine supaya
+    // tidak balik ke default saat re-render (incrementVersion) sesudah Simpan.
+    public string $suketActiveTab = 'Suket Sehat';
+
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-suket-ugd'];
 
@@ -292,7 +296,7 @@ new class extends Component {
 
                 @if (isset($dataDaftarUGD['suket']))
                     <div class="w-full">
-                        <div x-data="{ activeTab: '{{ $dataDaftarUGD['suket']['suketSehatTab'] ?? 'Suket Sehat' }}' }" class="w-full">
+                        <div x-data="{ activeTab: @entangle('suketActiveTab') }" class="w-full">
 
                             {{-- TAB NAVIGATION --}}
                             <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
