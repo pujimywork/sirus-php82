@@ -1214,8 +1214,8 @@ new class extends Component {
                                         @else
                                             <div class="flex flex-col items-start gap-2">
 
-                                                {{-- Baris atas: tombol aksi sejajar (Batal ditaruh di baris bawah) --}}
-                                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                                                {{-- Baris atas: kebab (titik-3) di kiri, chip Satu Sehat mengisi sisa ke kanan --}}
+                                                <div class="flex items-start gap-2 w-full">
 
                                                 {{-- Etiket & Scan Wajah dipindah ke footer modal Daftar RJ
                                                      (⚡daftar-rj-actions.blade.php), di sebelah tombol Master Pasien. --}}
@@ -1375,7 +1375,9 @@ new class extends Component {
                                                 {{-- SATU SEHAT — status kirim PER-RESOURCE, di kanan tombol titik-3.
                                                      Abu-abu = belum dikirim, hijau/brand = sudah. Klik chip mana pun = buka modal Kirim Satu Sehat. --}}
                                                 @hasanyrole('Admin|Mr')
-                                                    <div class="flex flex-wrap items-center gap-1 max-w-[320px]">
+                                                    <div class="flex-1 min-w-0">
+                                                        <x-input-label value="Satu Sehat" class="mb-1 text-[10px] uppercase tracking-wide text-muted" />
+                                                    <div class="flex flex-wrap items-center gap-1">
                                                         @foreach ($row->satusehat_items as $ssItem)
                                                             <button type="button" wire:click="openSatuSehat('{{ $row->rj_no }}')"
                                                                 title="{{ $ssItem['full'] }} — {{ $ssItem['sent'] ? 'sudah dikirim' : 'belum dikirim' }} (klik untuk kelola)"
@@ -1386,6 +1388,7 @@ new class extends Component {
                                                                 {{ $ssItem['label'] }}
                                                             </button>
                                                         @endforeach
+                                                    </div>
                                                     </div>
                                                 @endhasanyrole
                                                 </div>{{-- /baris atas tombol aksi sejajar --}}
