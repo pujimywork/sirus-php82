@@ -9,6 +9,7 @@ use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use App\Support\SuratKematianClause;
+use App\Support\NomorSuratKematian;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -66,6 +67,7 @@ new class extends Component {
         // menimpa koreksi manual dokter pada surat yang sudah dibuat.
         if (!$this->sudahAda) {
             $this->newForm['tanggalMeninggal'] = $this->screening['waktuMeninggal'] ?? '';
+            $this->newForm['nomorSurat'] = NomorSuratKematian::generate();
         }
     }
 
@@ -413,9 +415,11 @@ new class extends Component {
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <x-input-label value="Nomor Surat" :required="true" />
-                        <x-text-input wire:model.blur="newForm.nomorSurat" placeholder="mis. 012/SKK/RSIM/VII/2026"
-                            :disabled="$isFormLocked" :error="$errors->has('newForm.nomorSurat')" class="w-full mt-1" />
+                        <x-input-label value="Nomor Surat" />
+                        <x-text-input :value="$newForm['nomorSurat'] ?? ''" disabled class="w-full mt-1" />
+                        <p class="mt-1 text-sm text-muted dark:text-gray-400">
+                            Dibuat otomatis (stempel waktu). Tetap sama setelah surat disimpan.
+                        </p>
                         <x-input-error :messages="$errors->get('newForm.nomorSurat')" class="mt-1" />
                     </div>
 

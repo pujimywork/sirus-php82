@@ -11,6 +11,7 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Str;
 use App\Support\DischargePlanningOptions;
 use App\Support\DischargeDisposition;
+use App\Support\NomorSuratKematian;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
@@ -96,6 +97,17 @@ new class extends Component {
         if ($opt) {
             $this->dataDaftarRi['perencanaan']['tindakLanjut']['tindakLanjutKode'] = $opt['tindakLanjutKode'];
             $this->dataDaftarRi['perencanaan']['tindakLanjut']['statusPulang'] = $opt['tindakLanjutKodeBpjs'];
+
+            // Meninggal (statusPulang BPJS 4): No. Surat Meninggal WAJIB saat update pulang
+            // SEP (VclaimTrait: required_if statusPulang=4|min:5), tapi kenyataannya sering
+            // dibiarkan kosong. Isi otomatis dgn stempel waktu — pola yyyymmddhh24miss yang
+            // sama dgn Surat Kematian UGD, tak butuh sequence/DDL & tak mungkin bentrok.
+            //
+            // JANGAN timpa yang sudah terisi: bisa nomor manual RS yang sudah terlanjur
+            // dilaporkan/dicetak. Field tetap bisa diedit petugas — ini default, bukan kunci.
+            if ((string) $opt['tindakLanjutKodeBpjs'] === '4' && trim((string) ($this->dataDaftarRi['perencanaan']['tindakLanjut']['noSuratMeninggal'] ?? '')) === '') {
+                $this->dataDaftarRi['perencanaan']['tindakLanjut']['noSuratMeninggal'] = NomorSuratKematian::generate();
+            }
         }
         $this->store();
     }
@@ -449,6 +461,10 @@ new class extends Component {
                         <x-input-label value="No. Surat Keterangan Meninggal *" />
                         <x-text-input wire:model.live="dataDaftarRi.perencanaan.tindakLanjut.noSuratMeninggal"
                             class="w-full mt-1" :disabled="$isFormLocked" placeholder="Wajib diisi jika meninggal" />
+                        <p class="mt-1 text-sm text-muted dark:text-gray-400">
+                            Terisi otomatis (stempel waktu) saat status Meninggal dipilih. Boleh diganti bila RS
+                            memakai nomor sendiri. Dikirim ke BPJS saat update pulang SEP.
+                        </p>
                     </div>
                     <div>
                         <x-input-label value="Tanggal Meninggal *" />
