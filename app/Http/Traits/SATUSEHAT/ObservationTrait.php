@@ -19,6 +19,7 @@ trait ObservationTrait
      *   - code            (array)   ['system'=>..., 'code'=>..., 'display'=>...] required
      *   - valueQuantity   (array)   ['value'=>float|int,'unit'=>string,'system'=>string,'code'=>string]
      *   - valueString     (string)  optional
+     *   - valueCodeableConcept (array) ['system'=>...,'code'=>...,'display'=>...] optional
      *   - components      (array)   list of buildVitalSignComponent(...) items
      *
      * @return array  decoded JSON response
@@ -69,6 +70,17 @@ trait ObservationTrait
         // ...or a simple string
         elseif (isset($data['valueString'])) {
             $payload['valueString'] = $data['valueString'];
+        }
+        // ...or a coded answer (mis. LOINC answer list LA* untuk skala survey)
+        elseif (!empty($data['valueCodeableConcept']) && is_array($data['valueCodeableConcept'])) {
+            $payload['valueCodeableConcept'] = [
+                'coding' => [[
+                    'system'  => $data['valueCodeableConcept']['system'],
+                    'code'    => $data['valueCodeableConcept']['code'],
+                    'display' => $data['valueCodeableConcept']['display'],
+                ]],
+                'text' => $data['valueCodeableConcept']['display'],
+            ];
         }
         // ...or multiple components
         elseif (!empty($data['components']) && is_array($data['components'])) {

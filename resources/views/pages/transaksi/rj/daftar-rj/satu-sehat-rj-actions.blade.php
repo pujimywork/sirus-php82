@@ -124,6 +124,8 @@ new class extends Component {
                         wire:key="ss-radiologi-rj-{{ $rjNo ?? 'none' }}" />
                     <livewire:pages::transaksi.rj.satu-sehat.kirim-clinical-impression :rjNo="$rjNo"
                         wire:key="ss-clinical-impression-rj-{{ $rjNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.rj.satu-sehat.kirim-penilaian :rjNo="$rjNo"
+                        wire:key="ss-penilaian-rj-{{ $rjNo ?? 'none' }}" />
                 </div>
             </div>
         </div>
