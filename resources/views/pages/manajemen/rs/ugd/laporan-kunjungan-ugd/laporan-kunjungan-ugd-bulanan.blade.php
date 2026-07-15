@@ -169,7 +169,7 @@ new class extends Component {
                         <th class="px-2 py-3 text-right text-red-700 dark:text-red-300" title="Triase P1 — Kritis (Merah)">P1</th>
                         <th class="px-2 py-3 text-right text-yellow-700 dark:text-yellow-400" title="Triase P2 — Urgent (Kuning)">P2</th>
                         <th class="px-2 py-3 text-right text-green-700 dark:text-green-400" title="Triase P3 — Minor (Hijau)">P3</th>
-                        <th class="px-2 py-3 text-right text-muted dark:text-gray-400" title="Triase P4 — Non-darurat">P4</th>
+                        <th class="px-2 py-3 text-right text-muted dark:text-gray-400" title="Triase P0 — Meninggal">P0</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -189,7 +189,7 @@ new class extends Component {
                             <td class="px-2 py-2.5 text-right tabular-nums text-red-700 dark:text-red-300">{{ number_format($r['p1']) }}</td>
                             <td class="px-2 py-2.5 text-right tabular-nums text-yellow-700 dark:text-yellow-400">{{ number_format($r['p2']) }}</td>
                             <td class="px-2 py-2.5 text-right tabular-nums text-green-700 dark:text-green-400">{{ number_format($r['p3']) }}</td>
-                            <td class="px-2 py-2.5 text-right tabular-nums text-muted dark:text-gray-400">{{ number_format($r['p4']) }}</td>
+                            <td class="px-2 py-2.5 text-right tabular-nums text-muted dark:text-gray-400">{{ number_format($r['p0']) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -209,7 +209,7 @@ new class extends Component {
                         <td class="px-2 py-3 text-right tabular-nums text-red-800 dark:text-red-200">{{ number_format($tot['p1']) }}</td>
                         <td class="px-2 py-3 text-right tabular-nums text-yellow-800 dark:text-yellow-300">{{ number_format($tot['p2']) }}</td>
                         <td class="px-2 py-3 text-right tabular-nums text-green-800 dark:text-green-300">{{ number_format($tot['p3']) }}</td>
-                        <td class="px-2 py-3 text-right tabular-nums text-body dark:text-gray-300">{{ number_format($tot['p4']) }}</td>
+                        <td class="px-2 py-3 text-right tabular-nums text-body dark:text-gray-300">{{ number_format($tot['p0']) }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -236,12 +236,12 @@ new class extends Component {
 
     {{-- BREAKDOWN TRIASE --}}
     @php
-        $totalTriase = $tot['p1'] + $tot['p2'] + $tot['p3'] + $tot['p4'];
+        $totalTriase = $tot['p1'] + $tot['p2'] + $tot['p3'] + $tot['p0'];
         $triaseRows = [
             ['code' => 'P1', 'label' => 'Kritis (Merah)',  'count' => $tot['p1'], 'cls' => 'bg-red-500 dark:bg-red-400',         'text' => 'text-red-700 dark:text-red-300'],
             ['code' => 'P2', 'label' => 'Urgent (Kuning)', 'count' => $tot['p2'], 'cls' => 'bg-yellow-400 dark:bg-yellow-300',   'text' => 'text-yellow-700 dark:text-yellow-300'],
             ['code' => 'P3', 'label' => 'Minor (Hijau)',   'count' => $tot['p3'], 'cls' => 'bg-green-500 dark:bg-green-400',     'text' => 'text-green-700 dark:text-green-300'],
-            ['code' => 'P4', 'label' => 'Non-darurat',     'count' => $tot['p4'], 'cls' => 'bg-gray-400 dark:bg-gray-500',       'text' => 'text-body dark:text-gray-300'],
+            ['code' => 'P0', 'label' => 'Meninggal',       'count' => $tot['p0'], 'cls' => 'bg-gray-700 dark:bg-gray-500',       'text' => 'text-body dark:text-gray-300'],
         ];
     @endphp
     <div class="mt-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">

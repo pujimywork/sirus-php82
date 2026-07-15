@@ -23,11 +23,25 @@ trait KunjunganUGDTrait
      */
     protected function buildKunjunganUGDAggregate($start, $end, string $groupSql)
     {
-        // Catatan: Oracle DB di lingkungan ini tidak punya JSON_VALUE (versi <12c
-        // atau JSON option tidak aktif). Pakai INSTR untuk pattern-match string
-        // JSON. JSON di-encode oleh PHP json_encode tanpa pretty-print, format
-        // selalu kompak: "tingkatKegawatan":"P1" — aman untuk INSTR.
-        $triaseInstr = fn(string $p) => "INSTR(h.datadaftarugd_json, '\"tingkatKegawatan\":\"{$p}\"')";
+        // Oracle di lingkungan ini tak punya JSON_VALUE (ORA-00904) → pattern-match INSTR.
+        //
+        // ⚠️  Pola '"tingkatKegawatan":"P1"' SAJA TIDAK CUKUP — itu bug lama (diperbaiki
+        //     2026-07-15). Daftar opsi ikut tersimpan di JSON tiap record:
+        //       "tingkatKegawatan":"P0","tingkatKegawatanOption":[{"tingkatKegawatan":"P1"},
+        //        {"tingkatKegawatan":"P2"},{"tingkatKegawatan":"P3"},{"tingkatKegawatan":"P0"}]
+        //     Jadi polanya cocok di ENTRI OPSI, bukan nilai terpilih → tiap record terhitung
+        //     P1 DAN P2 DAN P3 DAN P0 sekaligus. Terukur atas 35.794 record ber-JSON:
+        //       P1: terhitung 24.462, sebenarnya   437
+        //       P2: terhitung 24.525, sebenarnya 8.232
+        //       P3: terhitung 24.567, sebenarnya 15.683
+        //       P0: terhitung 24.461, sebenarnya    69
+        //
+        //     Pembedanya: nilai TERPILIH selalu diikuti ,"tingkatKegawatanOption" —
+        //     entri di dalam array opsi tidak. Itu yang di-anchor di sini.
+        //     (Urutan key dijamin json_encode: mengikuti urutan getDefaultUGDTemplate.)
+        //     Bandingkan RL33Trait yang me-loop di PHP → di sana pakai json_decode+data_get;
+        //     di sini agregasinya di SQL, jadi anchor INSTR.
+        $triaseInstr = fn(string $p) => "INSTR(h.datadaftarugd_json, '\"tingkatKegawatan\":\"{$p}\",\"tingkatKegawatanOption\"')";
 
         return DB::table('rstxn_ugdhdrs as h')
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
@@ -43,11 +57,13 @@ trait KunjunganUGDTrait
                 DB::raw("SUM(CASE WHEN h.rj_status='F' THEN 1 ELSE 0 END) as batal"),
                 DB::raw("SUM(CASE WHEN h.rj_status='I' THEN 1 ELSE 0 END) as transfer_ri"),
                 DB::raw("SUM(CASE WHEN h.rj_status='A' OR h.rj_status IS NULL THEN 1 ELSE 0 END) as antrian"),
-                // Triase (P1-P4) — INSTR pattern match
+                // Triase — P0/P1/P2/P3 sesuai opsi yang benar-benar ada di form Anamnesa
+                // (tingkatKegawatanOption). P4 DIHAPUS: tak pernah ada di daftar opsi, jadi
+                // kolomnya permanen 0 dan malah bikin P0 (Meninggal) terhitung 'triase kosong'.
                 DB::raw("SUM(CASE WHEN {$triaseInstr('P1')} > 0 THEN 1 ELSE 0 END) as p1"),
                 DB::raw("SUM(CASE WHEN {$triaseInstr('P2')} > 0 THEN 1 ELSE 0 END) as p2"),
                 DB::raw("SUM(CASE WHEN {$triaseInstr('P3')} > 0 THEN 1 ELSE 0 END) as p3"),
-                DB::raw("SUM(CASE WHEN {$triaseInstr('P4')} > 0 THEN 1 ELSE 0 END) as p4"),
+                DB::raw("SUM(CASE WHEN {$triaseInstr('P0')} > 0 THEN 1 ELSE 0 END) as p0"),
             ])
             ->whereBetween('h.rj_date', [$start, $end])
             ->where('h.klaim_id', '!=', 'KR')
@@ -91,7 +107,7 @@ trait KunjunganUGDTrait
         $p1 = (int) ($r->p1 ?? 0);
         $p2 = (int) ($r->p2 ?? 0);
         $p3 = (int) ($r->p3 ?? 0);
-        $p4 = (int) ($r->p4 ?? 0);
+        $p0 = (int) ($r->p0 ?? 0);
 
         return [
             'periode_label' => $label,
@@ -109,9 +125,9 @@ trait KunjunganUGDTrait
             'p1'            => $p1,
             'p2'            => $p2,
             'p3'            => $p3,
-            'p4'            => $p4,
+            'p0'            => $p0,
             // Triase kosong = total - jumlah yang punya label triase
-            'triase_kosong' => max(0, $total - ($p1 + $p2 + $p3 + $p4)),
+            'triase_kosong' => max(0, $total - ($p1 + $p2 + $p3 + $p0)),
         ];
     }
 
@@ -132,7 +148,7 @@ trait KunjunganUGDTrait
             'p1'            => $sum('p1'),
             'p2'            => $sum('p2'),
             'p3'            => $sum('p3'),
-            'p4'            => $sum('p4'),
+            'p0'            => $sum('p0'),
             'triase_kosong' => $sum('triase_kosong'),
         ];
     }
