@@ -375,6 +375,32 @@ new class extends Component {
         $this->openRekamMedis($riHdrNo, 'RI');
     }
 
+    /**
+     * Surat Kematian langsung dari baris riwayat — supaya tak perlu buka Resume Medis
+     * lalu masuk tab Modul Dokumen dulu. Event ber-suffix "riwayat" karena instance
+     * cetak di modul-dokumen hidup bersamaan di halaman Pelayanan UGD (lihat catatan
+     * di surat-kematian-riwayat-ugd.blade.php).
+     */
+    public function lihatSuratKematianUgd($rjNo): void
+    {
+        $this->dispatch('surat-kematian-riwayat.lihat', rjNo: (int) $rjNo);
+    }
+
+    public function cetakSuratKematianUgd($rjNo): void
+    {
+        $this->dispatch('surat-kematian-riwayat.cetak', rjNo: (int) $rjNo);
+    }
+
+    public function lihatSuratKematianRi($riHdrNo): void
+    {
+        $this->dispatch('surat-kematian-riwayat-ri.lihat', riHdrNo: (string) $riHdrNo);
+    }
+
+    public function cetakSuratKematianRi($riHdrNo): void
+    {
+        $this->dispatch('surat-kematian-riwayat-ri.cetak', riHdrNo: (string) $riHdrNo);
+    }
+
     public function OpenRekamMedisUgd($rjNo): void
     {
         $this->openRekamMedis($rjNo, 'UGD');
@@ -850,6 +876,15 @@ new class extends Component {
                                                                 @endif
 
                                                                 @if ($isUGD)
+                                                                    @php
+                                                                        // Pintasan Surat Kematian: hanya bila kunjungan ini P0 DAN suratnya
+                                                                        // sudah tersimpan — kalau belum ada, tak ada yg bisa dilihat/dicetak.
+                                                                        $skP0 =
+                                                                            ($datadaftar_json['screening']['triaseSaran'] ?? '') === 'P0';
+                                                                        $skSurat = $datadaftar_json['suratKematianUGD'] ?? [];
+                                                                        $skTampil = $skP0 && !empty($skSurat);
+                                                                        $skFinal = !empty($skSurat['isFinal']);
+                                                                    @endphp
                                                                     <div class="flex flex-wrap gap-2">
                                                                         <x-info-button type="button"
                                                                             wire:click="OpenRekamMedisUgd('{{ $myQData->txn_no }}')"
@@ -875,6 +910,48 @@ new class extends Component {
                                                                                 Memuat...
                                                                             </span>
                                                                         </x-info-button>
+
+                                                                        {{-- Pintasan Surat Kematian (pasien P0) --}}
+                                                                        @if ($skTampil)
+                                                                            <x-secondary-button type="button"
+                                                                                wire:click="lihatSuratKematianUgd('{{ $myQData->txn_no }}')"
+                                                                                wire:loading.attr="disabled"
+                                                                                wire:target="lihatSuratKematianUgd('{{ $myQData->txn_no }}')"
+                                                                                class="gap-1">
+                                                                                <svg class="w-4 h-4" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24"
+                                                                                    stroke-width="2">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                                </svg>
+                                                                                Surat Kematian
+                                                                                @unless ($skFinal)
+                                                                                    <x-badge variant="warning"
+                                                                                        class="text-[10px] px-1.5 py-0">Draft</x-badge>
+                                                                                @endunless
+                                                                            </x-secondary-button>
+
+                                                                            <x-secondary-button type="button"
+                                                                                wire:click="cetakSuratKematianUgd('{{ $myQData->txn_no }}')"
+                                                                                wire:loading.attr="disabled"
+                                                                                wire:target="cetakSuratKematianUgd('{{ $myQData->txn_no }}')"
+                                                                                class="gap-1">
+                                                                                <svg class="w-4 h-4" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24"
+                                                                                    stroke-width="2">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                                                </svg>
+                                                                                Cetak
+                                                                            </x-secondary-button>
+                                                                        @endif
 
                                                                         @if ($contextRI)
                                                                             @hasanyrole('Perawat|Admin')
@@ -955,6 +1032,59 @@ new class extends Component {
                                                                             </svg>
                                                                             Resume Medis
                                                                         </x-info-button>
+
+                                                                        {{-- Pintasan Surat Kematian RI. Gate RI ≠ UGD: tak ada
+                                                                             triase P0 di rawat inap, penandanya status pulang
+                                                                             BPJS 4 (Meninggal) di Perencanaan. --}}
+                                                                        @php
+                                                                            $skRiMeninggal =
+                                                                                (string) data_get(
+                                                                                    $datadaftar_json,
+                                                                                    'perencanaan.tindakLanjut.statusPulang',
+                                                                                    '',
+                                                                                ) === '4';
+                                                                            $skRiSurat = $datadaftar_json['suratKematianRI'] ?? [];
+                                                                            $skRiTampil = $skRiMeninggal && !empty($skRiSurat);
+                                                                            $skRiFinal = !empty($skRiSurat['isFinal']);
+                                                                        @endphp
+                                                                        @if ($skRiTampil)
+                                                                            <x-secondary-button type="button"
+                                                                                wire:click="lihatSuratKematianRi('{{ $myQData->txn_no }}')"
+                                                                                wire:loading.attr="disabled"
+                                                                                wire:target="lihatSuratKematianRi('{{ $myQData->txn_no }}')"
+                                                                                class="gap-1">
+                                                                                <svg class="w-4 h-4" fill="none"
+                                                                                    stroke="currentColor" viewBox="0 0 24 24"
+                                                                                    stroke-width="2">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                                </svg>
+                                                                                Surat Kematian
+                                                                                @unless ($skRiFinal)
+                                                                                    <x-badge variant="warning"
+                                                                                        class="text-[10px] px-1.5 py-0">Draft</x-badge>
+                                                                                @endunless
+                                                                            </x-secondary-button>
+
+                                                                            <x-secondary-button type="button"
+                                                                                wire:click="cetakSuratKematianRi('{{ $myQData->txn_no }}')"
+                                                                                wire:loading.attr="disabled"
+                                                                                wire:target="cetakSuratKematianRi('{{ $myQData->txn_no }}')"
+                                                                                class="gap-1">
+                                                                                <svg class="w-4 h-4" fill="none"
+                                                                                    stroke="currentColor" viewBox="0 0 24 24"
+                                                                                    stroke-width="2">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                                                </svg>
+                                                                                Cetak
+                                                                            </x-secondary-button>
+                                                                        @endif
                                                                     </div>
                                                                 @endif
 
@@ -1057,4 +1187,11 @@ new class extends Component {
 
     <livewire:pages::components.rekam-medis.r-i.cetak-rekam-medis.cetak-rekam-medis-open
         wire:key="r-i.rekam-medis.cetak-rekam-medis-open" />
+
+    {{-- Surat Kematian — viewer pintasan dari baris riwayat (Lihat + Cetak) --}}
+    <livewire:pages::components.rekam-medis.u-g-d.dokumen-view.surat-kematian-riwayat-ugd
+        wire:key="u-g-d.rekam-medis.surat-kematian-riwayat" />
+
+    <livewire:pages::components.rekam-medis.r-i.dokumen-view.surat-kematian-riwayat-ri
+        wire:key="r-i.rekam-medis.surat-kematian-riwayat" />
 </div>

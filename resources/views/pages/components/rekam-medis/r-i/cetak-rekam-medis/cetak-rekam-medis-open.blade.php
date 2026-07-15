@@ -393,6 +393,13 @@ new class extends Component {
                     <livewire:pages::components.rekam-medis.r-i.dokumen-view.inform-consent-view-ri :riHdrNo="(string) $riHdrNo"
                         :entries="$ri['informConsentPasienRI'] ?? []" wire:key="rm-view-ic-ri-{{ $riHdrNo }}" />
 
+                    {{-- ── Surat Keterangan Kematian — viewer; hanya bila status pulang Meninggal
+                         (statusPulang BPJS 4), supaya tak muncul di rekam medis pasien yg pulang hidup ── --}}
+                    @if ((string) ($ri['perencanaan']['tindakLanjut']['statusPulang'] ?? '') === '4')
+                        <livewire:pages::components.rekam-medis.r-i.dokumen-view.surat-kematian-view-ri :riHdrNo="(string) $riHdrNo"
+                            :surat="$ri['suratKematianRI'] ?? []" wire:key="rm-view-sk-ri-{{ $riHdrNo }}" />
+                    @endif
+
                     {{-- ── Case Manager (MPP) — pola tampilan sama dgn tab MPP di CPPT ── --}}
                     {{-- Form A dikelompokkan; Form B miliknya jadi accordion tabel. --}}
                     @php

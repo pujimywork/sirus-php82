@@ -760,6 +760,13 @@ new class extends Component {
                     {{-- ── Form Penjaminan & Orientasi Kamar — viewer (Lihat + Cetak dalam modal) ── --}}
                     <livewire:pages::components.rekam-medis.u-g-d.dokumen-view.form-penjaminan-view-ugd :rjNo="$rjNo"
                         :entries="$txn['formPenjaminanOrientasiKamar'] ?? []" wire:key="rm-view-penjaminan-ugd-{{ $rjNo }}" />
+
+                    {{-- ── Surat Keterangan Kematian — viewer; hanya untuk pasien P0, supaya tak
+                         muncul kartu "belum ada" di rekam medis tiap pasien yang pulang sehat ── --}}
+                    @if (($txn['screening']['triaseSaran'] ?? '') === 'P0')
+                        <livewire:pages::components.rekam-medis.u-g-d.dokumen-view.surat-kematian-view-ugd :rjNo="$rjNo"
+                            :surat="$txn['suratKematianUGD'] ?? []" wire:key="rm-view-sk-ugd-{{ $rjNo }}" />
+                    @endif
                 </div>
 
                 {{-- ════ TAB: HASIL PENUNJANG (lab / radiologi / upload — view-only) ════ --}}

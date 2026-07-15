@@ -195,8 +195,37 @@ new class extends Component {
                             VK / Kebidanan
                         </x-tab>
 
+                        {{-- Surat Kematian — tab hanya muncul bila status pulang di Perencanaan
+                             adalah Meninggal (statusPulang BPJS 4), supaya tak jadi tab permanen. --}}
+                        @if ((string) ($dataDaftarRi['perencanaan']['tindakLanjut']['statusPulang'] ?? '') === '4')
+                            <x-tab variant="underline" active-expr="activeTab === 'suratKematian'"
+                                x-on:click="activeTab = 'suratKematian'" class="inline-flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Surat Kematian
+                                @if (!empty($dataDaftarRi['suratKematianRI']['isFinal']))
+                                    <x-badge variant="success" class="text-[10px] px-1.5 py-0">TTD</x-badge>
+                                @else
+                                    <x-badge variant="danger" class="text-[10px] px-1.5 py-0">!</x-badge>
+                                @endif
+                            </x-tab>
+                        @endif
+
                     </div>
                 </div>
+
+                {{-- TAB: SURAT KEMATIAN --}}
+                @if ((string) ($dataDaftarRi['perencanaan']['tindakLanjut']['statusPulang'] ?? '') === '4')
+                    <div x-show="activeTab === 'suratKematian'" x-transition.opacity.duration.200ms
+                        style="display:none">
+                        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.surat-kematian-ri.rm-surat-kematian-ri-actions
+                            :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
+                            wire:key="surat-kematian-ri-{{ $riHdrNo ?? 'init' }}" />
+                    </div>
+                @endif
 
                 {{-- TAB: INFORM CONSENT --}}
                 <div x-show="activeTab === 'informConsent'" x-transition.opacity.duration.200ms style="display:none">

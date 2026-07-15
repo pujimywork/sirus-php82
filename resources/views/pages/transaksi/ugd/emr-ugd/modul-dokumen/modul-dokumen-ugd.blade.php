@@ -201,6 +201,25 @@ new class extends Component {
                                         @endif
                                     </x-tab>
 
+                                    {{-- Surat Keterangan Kematian — tab hanya muncul bila Screening UGD
+                                         menyimpulkan P0, supaya tak jadi tab permanen di tiap pasien. --}}
+                                    @if (($dataDaftarUGD['screening']['triaseSaran'] ?? '') === 'P0')
+                                        <x-tab variant="underline" active-expr="activeTab === 'surat-kematian'"
+                                            x-on:click="activeTab = 'surat-kematian'"
+                                            class="inline-flex items-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            Surat Kematian
+                                            @if (!empty($dataDaftarUGD['suratKematianUGD']['isFinal']))
+                                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">TTD</x-badge>
+                                            @else
+                                                <x-badge variant="danger" class="text-[10px] px-1.5 py-0">P0</x-badge>
+                                            @endif
+                                        </x-tab>
+                                    @endif
+
                                 </div>
                             </div>
 
@@ -242,6 +261,15 @@ new class extends Component {
                                     :rjNo="$rjNo" :disabled="$isFormLocked"
                                     wire:key="penundaan-pelayanan-ugd-{{ $rjNo ?? 'init' }}" />
                             </div>
+
+                            {{-- Panel: Surat Keterangan Kematian --}}
+                            @if (($dataDaftarUGD['screening']['triaseSaran'] ?? '') === 'P0')
+                                <div x-show="activeTab === 'surat-kematian'" x-transition.opacity.duration.300ms>
+                                    <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.surat-kematian.rm-surat-kematian-actions
+                                        :rjNo="$rjNo" :disabled="$isFormLocked"
+                                        wire:key="surat-kematian-ugd-{{ $rjNo ?? 'init' }}" />
+                                </div>
+                            @endif
 
                         </div>
 
