@@ -347,7 +347,10 @@ new class extends Component {
                                     ['label' => 'Bon Resep',    'value' => $sumRiBonResep],
                                     ['label' => 'Obat Pinjam',  'value' => $sumRiObatPinjam],
                                     ['label' => 'Trf UGD/RJ',   'value' => $sumRiTrfUgdRj],
-                                    ['label' => 'Admin',        'value' => $sumAdminAge + $sumAdminStatus],
+                                    // Dijabarkan (lihat kasir-ri): dua tarif berbeda di master —
+                                    // par_id=2 "ADMIN STATUS RI" & par_id=3 "ADMIN USIA 14+".
+                                    ['label' => 'Admin RI',     'value' => $sumAdminStatus],
+                                    ['label' => 'Admin Usia 14+', 'value' => $sumAdminAge],
                                     ['label' => 'Rtn Obat (-)', 'value' => $sumRiRtnObat],
                                 ] as $item)
                                     <div class="px-2.5 py-1.5 bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700">

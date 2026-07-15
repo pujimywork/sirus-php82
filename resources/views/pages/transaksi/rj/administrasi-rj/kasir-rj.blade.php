@@ -58,7 +58,7 @@ new class extends Component {
         }
     }
 
-    /* Setelah Transfer ke UGD berhasil (komponen transfer-rj-ugd-actions) → kunci form kasir RJ. */
+    /* Setelah Transfer ke UGD berhasil (komponen transfer-rj-ke-ugd-actions) → kunci form kasir RJ. */
     #[On('rj-transferred-to-ugd')]
     public function onRjTransferredToUgd(int $rjNo): void
     {

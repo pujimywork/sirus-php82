@@ -871,7 +871,7 @@ new class extends Component {
                                                             @hasanyrole('Admin|Tu|Perawat')
                                                                 @if ($row->rj_status === 'A')
                                                                     <x-dropdown-link href="#"
-                                                                        wire:click.prevent="$dispatch('open-transfer-ri-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                                        wire:click.prevent="$dispatch('open-transfer-ugd-ke-ri', { rjNo: {{ $row->rj_no }} })"
                                                                         class="px-3 py-2 text-sm rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20">
                                                                         <div class="flex items-start gap-2">
                                                                             <svg class="w-5 h-5 mt-0.5 shrink-0"
@@ -942,7 +942,7 @@ new class extends Component {
             {{-- Child components — pelayanan-only: EMR + Modul Dokumen + Administrasi + Cetak Etiket --}}
             <livewire:pages::transaksi.ugd.emr-ugd.erm-ugd wire:key="emr-ugd-actions" />
             <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
-            <livewire:pages::transaksi.ugd.administrasi-ugd.transfer-ri-ugd-actions wire:key="transfer-ri-ugd-actions" />
+            <livewire:pages::transaksi.ugd.administrasi-ugd.transfer-ugd-ke-ri-actions wire:key="transfer-ugd-ke-ri-actions" />
             <livewire:pages::transaksi.ugd.pelayanan-ugd.cek-peserta-bpjs-ugd-actions wire:key="cek-peserta-bpjs-ugd-actions" />
             <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.modul-dokumen-ugd wire:key="modul-dokumen-ugd" />
             <livewire:pages::transaksi.ugd.emr-ugd.log-aktivitas.log-aktivitas-ugd wire:key="log-aktivitas-ugd" />

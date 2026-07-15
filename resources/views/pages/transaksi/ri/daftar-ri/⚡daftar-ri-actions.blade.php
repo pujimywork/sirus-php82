@@ -248,9 +248,22 @@ new class extends Component {
             'ri_status' => $this->dataDaftarRi['riStatus'] ?? 'I',
             'erm_status' => $this->dataDaftarRi['ermStatus'] ?? 'A',
 
-            // ── Admin Usia ────────────────────────────────────────────────
-            // ADMIN_STATUS: '1' = kenakan biaya admin usia, '0' = tidak
-            'admin_status' => $this->statusAdminAge ? '1' : '0',
+            // ── Admin RI ──────────────────────────────────────────────────
+            // ⚠️  admin_status BUKAN flag — itu NOMINAL "Admin Status RI"
+            //     (rsmst_parameters par_id=2 = 50.000). Dijumlahkan sebagai uang di
+            //     kasir-ri (sumAdminStatus) dan PendapatanRsTrait
+            //     (NVL(h.admin_age,0) + NVL(h.admin_status,0) + ...).
+            //
+            //     Dulu ditulis '1'/'0' seolah flag & diikatkan ke toggle admin USIA —
+            //     dua tarif berbeda dikendalikan satu toggle. Akibatnya: toggle OFF →
+            //     admin RS 50.000 hilang dari tagihan & laporan pendapatan (65 record
+            //     ber-admin_status=0 per 2026-07); toggle ON → RS menagih Rp 1.
+            //     Riwayat kolom membuktikan ia tarif: 20.000 (s/d 2012) → 30.000
+            //     (s/d 2018) → 50.000 (35.643 record). Nilai '1' tak pernah ada.
+            //
+            //     admin_status selalu dikenakan; yang bergantung usia adalah admin_age
+            //     (par_id=3 "ADMIN USIA 14+" = 25.000) lewat toggle $statusAdminAge.
+            'admin_status' => (int) (DB::table('rsmst_parameters')->where('par_id', 2)->value('par_value') ?? 0),
             'admin_age' => $this->dataDaftarRi['adminAge'] ?? 0,
 
             // ── Kasus Polisi ──────────────────────────────────────────────
@@ -981,8 +994,11 @@ new class extends Component {
 
                         {{-- Toggle: Admin Usia (par_id=3 dari rsmst_parameters) --}}
                         <div class="p-3 border rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700 space-y-2">
-                            <x-toggle wire:model.live="statusAdminAge" label="Kenakan Biaya Admin Usia"
-                                :disabled="$isFormLocked" />
+                            {{-- :trueValue/:falseValue WAJIB utk properti bool — default komponen 'Y'/'N'
+                                 bikin toggle nyangkut ON: $set(...,'N') → string tak kosong →
+                                 dicast bool = true, jadi tak bisa dimatikan lagi. --}}
+                            <x-toggle wire:model.live="statusAdminAge" :trueValue="true" :falseValue="false"
+                                label="Kenakan Biaya Admin Usia (14+)" :disabled="$isFormLocked" />
                             @if ($statusAdminAge)
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs text-muted">Nominal:</span>
@@ -998,7 +1014,8 @@ new class extends Component {
 
                         {{-- Toggle: Kasus Polisi / Medikolegal --}}
                         <div class="p-3 border rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
-                            <x-toggle wire:model.live="kasusPolisi" label="Kasus Polisi / Medikolegal"
+                            <x-toggle wire:model.live="kasusPolisi" :trueValue="true" :falseValue="false"
+                                label="Kasus Polisi / Medikolegal"
                                 :disabled="$isFormLocked" />
                             @if ($kasusPolisi)
                                 <p class="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium">

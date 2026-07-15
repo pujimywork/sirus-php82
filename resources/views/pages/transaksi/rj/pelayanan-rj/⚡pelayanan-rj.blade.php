@@ -1080,7 +1080,7 @@ new class extends Component {
                                                                             : 'opacity-50 cursor-not-allowed pointer-events-none bg-surface-soft dark:bg-gray-800 text-muted-soft';
                                                                     @endphp
                                                                     <x-dropdown-link href="#"
-                                                                        wire:click.prevent="$dispatch('open-transfer-rj-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                                        wire:click.prevent="$dispatch('open-transfer-rj-ke-ugd', { rjNo: {{ $row->rj_no }} })"
                                                                         title="{{ $canTransferUgd ? 'Transfer pasien ke UGD' : 'Hanya bisa saat status Antrian' }}"
                                                                         class="px-3 py-2 text-sm rounded-lg {{ $trfUgdClass }}">
                                                                         <div class="flex items-start gap-2">
@@ -1143,7 +1143,7 @@ new class extends Component {
             <livewire:pages::transaksi.rj.emr-rj.modul-dokumen.modul-dokumen-rj wire:key="modul-dokumen-rj" />
             <livewire:pages::transaksi.rj.emr-rj.log-aktivitas.log-aktivitas-rj wire:key="log-aktivitas-rj" />
             <livewire:pages::transaksi.rj.administrasi-rj.administrasi-rj wire:key="administrasi-rj-actions" />
-            <livewire:pages::transaksi.rj.administrasi-rj.transfer-rj-ugd-actions wire:key="transfer-rj-ugd-actions" />
+            <livewire:pages::transaksi.rj.administrasi-rj.transfer-rj-ke-ugd-actions wire:key="transfer-rj-ke-ugd-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
             <livewire:pages::transaksi.rj.daftar-rj.info-kelengkapan-emr wire:key="info-kelengkapan-emr-rj" />

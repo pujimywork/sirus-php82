@@ -59,7 +59,7 @@ new class extends Component {
     }
 
     /**
-     * Setelah Transfer ke RI berhasil (komponen transfer-ri-ugd-actions),
+     * Setelah Transfer ke RI berhasil (komponen transfer-ugd-ke-ri-actions),
      * reload penuh agar kasir terkunci & status transaksi ('I') tersinkron.
      */
     #[On('ugd-transferred-to-ri')]

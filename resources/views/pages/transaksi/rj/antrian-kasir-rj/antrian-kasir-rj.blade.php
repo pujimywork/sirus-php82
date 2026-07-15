@@ -661,7 +661,7 @@ new class extends Component {
                                                 @hasanyrole('Admin|Tu')
                                                     <x-secondary-button type="button"
                                                         :disabled="$row->rj_status !== 'A'"
-                                                        wire:click="$dispatch('open-transfer-rj-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                        wire:click="$dispatch('open-transfer-rj-ke-ugd', { rjNo: {{ $row->rj_no }} })"
                                                         title="{{ $row->rj_status === 'A' ? 'Transfer pasien ke UGD' : 'Hanya bisa saat status Antrian' }}"
                                                         class="text-xs whitespace-nowrap justify-center !bg-teal-600 !text-white !border-teal-700 hover:!bg-teal-700 dark:!bg-teal-600 dark:!text-white dark:!border-teal-700 dark:hover:!bg-teal-700">
                                                         <svg class="w-3.5 h-3.5 mr-1" fill="none"
@@ -710,7 +710,7 @@ new class extends Component {
 
         <livewire:pages::transaksi.rj.emr-rj.log-aktivitas.log-aktivitas-rj wire:key="log-aktivitas-rj" />
         <livewire:pages::transaksi.rj.administrasi-rj.administrasi-rj wire:key="administrasi-rj-actions" />
-        <livewire:pages::transaksi.rj.administrasi-rj.transfer-rj-ugd-actions wire:key="transfer-rj-ugd-actions" />
+        <livewire:pages::transaksi.rj.administrasi-rj.transfer-rj-ke-ugd-actions wire:key="transfer-rj-ke-ugd-actions" />
 
     </div>
 </div>

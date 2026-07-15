@@ -1,9 +1,9 @@
 <?php
-// resources/views/pages/transaksi/ugd/administrasi-ugd/transfer-ri-ugd-actions.blade.php
+// resources/views/pages/transaksi/ugd/administrasi-ugd/transfer-ugd-ke-ri-actions.blade.php
 //
 // Komponen TERSENDIRI untuk memproses "Transfer ke RI" (rawat inap) dari kasir UGD.
 // Dibuka via x-modal (pola sama seperti buka EMR UGD): tombol di kasir-ugd men-dispatch
-// 'open-transfer-ri-ugd' → komponen ini membuka modal 'transfer-ri-ugd'.
+// 'open-transfer-ugd-ke-ri' → komponen ini membuka modal 'transfer-ugd-ke-ri'.
 
 use Livewire\Component;
 use Livewire\Attributes\On;
@@ -29,6 +29,24 @@ new class extends Component {
     public string $transferEntryId = '7'; // default MELALUI IGD
     public array $transferEntryOptions = [];
 
+    // ── Admin Usia (par_id=3 "ADMIN USIA 14+") ──
+    // Toggle manual seperti Daftar RI. Admin Status RI (par_id=2) TIDAK ikut toggle —
+    // ia selalu dikenakan (lihat catatan di transferKeRI).
+    public bool $statusAdminAge = false;
+    public int $adminAge = 0;
+
+    // ── Dokter Penerima RI ──
+    // rstxn_rihdrs.dr_id = dokter PENERIMA, BUKAN DPJP — lihat ⚡daftar-ri yang
+    // menampilkannya sebagai "Penerima:", sementara "DPJP:" diambil dari
+    // pengkajianAwalPasienRawatInap.levelingDokter (diisi belakangan di EMR,
+    // berlevel Utama/RawatGabung, bisa lebih dari satu dokter).
+    //
+    // Dulu dr_id RI disalin mentah dari dr_id UGD tanpa bisa dipilih. Sekarang bisa;
+    // default tetap dokter UGD supaya perilaku lama tak berubah diam-diam kalau
+    // petugas tak memilih apa-apa.
+    public ?string $transferDrId = null;
+    public ?string $transferDrName = null;
+
     // ── Jenis Klaim RI (wajib dipilih saat transfer; default = klaim UGD) ──
     public string $transferKlaimId = 'UM';
     public array $klaimOptions = [['klaimId' => 'UM', 'klaimDesc' => 'UMUM'], ['klaimId' => 'JM', 'klaimDesc' => 'BPJS'], ['klaimId' => 'JR', 'klaimDesc' => 'JASA RAHARJA'], ['klaimId' => 'JML', 'klaimDesc' => 'Asuransi Lain'], ['klaimId' => 'KR', 'klaimDesc' => 'Kronis']];
@@ -39,7 +57,7 @@ new class extends Component {
     public int $totalBiayaUGD = 0;   // total lengkap = biaya UGD sendiri + Transfer (sama dgn sumTotalRJ kasir)
 
     public array $renderVersions = [];
-    protected array $renderAreas = ['modal-transfer-ri-ugd'];
+    protected array $renderAreas = ['modal-transfer-ugd-ke-ri'];
 
     public function mount(): void
     {
@@ -49,7 +67,7 @@ new class extends Component {
     /* ===============================
      | OPEN — dipicu dari kasir UGD
      =============================== */
-    #[On('open-transfer-ri-ugd')]
+    #[On('open-transfer-ugd-ke-ri')]
     public function openTransfer(int $rjNo): void
     {
         if (empty($rjNo)) {
@@ -75,11 +93,16 @@ new class extends Component {
         // Nama pasien + klaim UGD (dipakai sbg default pilihan klaim RI)
         $hdr = DB::table('rstxn_ugdhdrs as h')
             ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
+            ->leftJoin('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')
             ->where('h.rj_no', $rjNo)
-            ->select('p.reg_name', 'h.klaim_id')
+            ->select('p.reg_name', 'h.klaim_id', 'h.dr_id', 'd.dr_name')
             ->first();
         $this->regName = $hdr->reg_name ?? null;
         $this->transferKlaimId = $hdr->klaim_id ?: 'UM';
+
+        // Default DPJP = dokter UGD (perilaku lama), tapi kini bisa diganti lewat LOV.
+        $this->transferDrId = $hdr->dr_id ?? null;
+        $this->transferDrName = $hdr->dr_name ?? null;
 
         // Rincian biaya UGD (yang akan dipindahkan ke RI)
         $this->biayaUGD = $this->calculateUGDCosts($rjNo);
@@ -101,8 +124,8 @@ new class extends Component {
             ->map(fn($e) => ['entryId' => (string) $e->entry_id, 'entryDesc' => $e->entry_desc])
             ->toArray();
 
-        $this->incrementVersion('modal-transfer-ri-ugd');
-        $this->dispatch('open-modal', name: 'transfer-ri-ugd');
+        $this->incrementVersion('modal-transfer-ugd-ke-ri');
+        $this->dispatch('open-modal', name: 'transfer-ugd-ke-ri');
     }
 
     private function resetTransferState(): void
@@ -113,11 +136,38 @@ new class extends Component {
         $this->availableBeds = [];
         $this->forceOccupiedBed = false;
         $this->transferEntryId = '7';
+        // Wajib ikut di-reset: tanpa ini DPJP pasien sebelumnya terbawa ke pasien
+        // berikutnya (komponen ini di-mount sekali per halaman, dipakai berulang).
+        $this->transferDrId = null;
+        $this->transferDrName = null;
+        $this->statusAdminAge = false;
+        $this->adminAge = 0;
     }
 
     /* ===============================
      | LOV ROOM
      =============================== */
+    /** Toggle Admin Usia — pola sama dgn ⚡daftar-ri-actions: ON → par_id=3, OFF → 0. */
+    public function updatedStatusAdminAge(): void
+    {
+        $this->adminAge = $this->statusAdminAge ? (int) (DB::table('rsmst_parameters')->where('par_id', 3)->value('par_value') ?? 0) : 0;
+    }
+
+    /** LOV DPJP RI — payload dari livewire/lov/dokter/lov-dokter. */
+    #[On('lov.selected.dokter-transfer-ugd-ke-ri')]
+    public function onDokterTransferRI(string $target, ?array $payload): void
+    {
+        $this->transferDrId = $payload['dr_id'] ?? null;
+        $this->transferDrName = $payload['dr_name'] ?? null;
+    }
+
+    #[On('lov.cleared.dokter-transfer-ugd-ke-ri')]
+    public function onDokterTransferRICleared(string $target): void
+    {
+        $this->transferDrId = null;
+        $this->transferDrName = null;
+    }
+
     #[On('lov.selected.room-transfer-ri')]
     public function onRoomTransferRI(string $target, ?array $payload): void
     {
@@ -271,7 +321,8 @@ new class extends Component {
                     'reg_no'      => $ugdHdr->reg_no,
                     'entry_date'  => DB::raw('SYSDATE'),
                     'entry_id'    => $this->transferEntryId ?: '7', // Cara Masuk RI (default MELALUI IGD)
-                    'dr_id'       => $ugdHdr->dr_id,
+                    // DPJP pilihan; fallback dokter UGD kalau LOV tak disentuh.
+                    'dr_id'       => $this->transferDrId ?: $ugdHdr->dr_id,
                     'room_id'     => $this->transferRoomId,
                     'bed_no'      => $this->transferBedNo,
                     'klaim_id'    => $this->transferKlaimId ?: 'UM', // klaim dipilih di modal (default = klaim UGD)
@@ -282,8 +333,15 @@ new class extends Component {
                     'ri_diskon'   => 0,
                     'ri_bayar'    => 0,
                     'ri_titip'    => 0,
-                    'admin_status' => '0',
-                    'admin_age'   => 0,
+                    // ⚠️  admin_status BUKAN flag — itu NOMINAL "Admin Status RI"
+                    //     (rsmst_parameters par_id=2 = 50.000), dijumlahkan sebagai uang
+                    //     di kasir-ri & PendapatanRsTrait. Dulu di-hardcode '0' di sini,
+                    //     jadi tiap pasien masuk RI lewat IGD kehilangan admin RS 50.000
+                    //     dari tagihan DAN laporan pendapatan. Selalu dikenakan, sama
+                    //     seperti pendaftaran RI langsung (data: 50.000 di 35.643 record).
+                    'admin_status' => (int) (DB::table('rsmst_parameters')->where('par_id', 2)->value('par_value') ?? 0),
+                    // Yang bergantung usia hanya ini (par_id=3 "ADMIN USIA 14+"), lewat toggle.
+                    'admin_age'   => $this->adminAge,
                     'police_case' => '0',
                     'trf_gudang_status' => '0',
                     'push_antrian_bpjs_status' => '0',
@@ -384,7 +442,7 @@ new class extends Component {
             });
 
             // Tutup modal + refresh: kasir (lock), sibling admin, & list pelayanan
-            $this->dispatch('close-modal', name: 'transfer-ri-ugd');
+            $this->dispatch('close-modal', name: 'transfer-ugd-ke-ri');
             $this->dispatch('ugd-transferred-to-ri', rjNo: $this->rjNo);
             $this->dispatch('administrasi-ugd.updated');
             $this->dispatch('refresh-after-ugd.saved');   // list pelayanan UGD
@@ -400,8 +458,8 @@ new class extends Component {
 ?>
 
 <div>
-    <x-modal name="transfer-ri-ugd" size="full" height="full" focusable>
-        <div class="flex flex-col h-full" wire:key="{{ $this->renderKey('modal-transfer-ri-ugd', [$rjNo ?? 'new']) }}">
+    <x-modal name="transfer-ugd-ke-ri" size="full" height="full" focusable>
+        <div class="flex flex-col h-full" wire:key="{{ $this->renderKey('modal-transfer-ugd-ke-ri', [$rjNo ?? 'new']) }}">
 
             {{-- ═══════════ HEADER — identitas pasien (gaya EMR UGD) ═══════════ --}}
             <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
@@ -418,7 +476,7 @@ new class extends Component {
                                 wire:key="transfer-ri-display-pasien-{{ $rjNo }}" />
                         @endif
                     </div>
-                    <x-icon-button color="gray" type="button" x-on:click="$dispatch('close-modal', { name: 'transfer-ri-ugd' })"
+                    <x-icon-button color="gray" type="button" x-on:click="$dispatch('close-modal', { name: 'transfer-ugd-ke-ri' })"
                         class="shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -518,11 +576,63 @@ new class extends Component {
                             </div>
                         </div>
 
-                        {{-- 3) Cari Ruangan (bawah sendiri) --}}
+                        {{-- 3) Dokter Penerima — istilah mengikuti ⚡daftar-ri (baris "Penerima:").
+                             BUKAN DPJP: DPJP diisi belakangan di EMR RI → Pengkajian Awal
+                             (levelingDokter, berlevel Utama/RawatGabung & bisa lebih dari satu). --}}
+                        <div class="w-full">
+                            <label class="mb-1 block text-xs font-semibold text-muted dark:text-gray-400">Dokter
+                                Penerima</label>
+                            <livewire:lov.dokter.lov-dokter target="dokter-transfer-ugd-ke-ri"
+                                :initialDrId="$transferDrId" label="Cari Dokter Penerima"
+                                placeholder="Ketik nama/kode dokter..."
+                                wire:key="lov-dokter-transfer-ugd-ke-ri-{{ $rjNo }}-{{ $renderVersions['modal-transfer-ugd-ke-ri'] ?? 0 }}" />
+                            <p class="mt-1 text-xs text-muted dark:text-gray-400">
+                                Dokter yang menerima pasien di rawat inap. Default = dokter jaga UGD
+                                @if ($transferDrName)
+                                    (<span class="font-medium">{{ $transferDrName }}</span>)
+                                @endif
+                                . <span class="text-muted-soft">DPJP ditetapkan terpisah di EMR &rsaquo; Pengkajian
+                                    Awal.</span>
+                            </p>
+                        </div>
+
+                        {{-- 4) Admin RI — samakan dengan Daftar RI --}}
+                        <div class="w-full">
+                            <label class="mb-1 block text-xs font-semibold text-muted dark:text-gray-400">Admin Rawat
+                                Inap</label>
+                            @php
+                                $adminStatusRI = (int) (\Illuminate\Support\Facades\DB::table('rsmst_parameters')->where('par_id', 2)->value('par_value') ?? 0);
+                            @endphp
+                            <div
+                                class="px-3 py-2.5 space-y-2 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
+                                <div class="flex flex-wrap items-center gap-x-2">
+                                    <span class="text-xs text-muted dark:text-gray-400">Admin Status RI:</span>
+                                    <span class="text-sm font-semibold text-teal-700 dark:text-teal-300">
+                                        Rp {{ number_format($adminStatusRI) }}
+                                    </span>
+                                    <span class="text-xs text-muted-soft">(selalu dikenakan)</span>
+                                </div>
+
+                                {{-- :trueValue/:falseValue WAJIB utk properti bool (lihat catatan komponen) --}}
+                                <x-toggle wire:model.live="statusAdminAge" :trueValue="true" :falseValue="false"
+                                    label="Kenakan Biaya Admin Usia (14+)" />
+
+                                @if ($statusAdminAge)
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-muted">Nominal:</span>
+                                        <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                            Rp {{ number_format($adminAge) }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- 5) Cari Ruangan (bawah sendiri) --}}
                         <div class="w-full">
                             <label class="mb-1 block text-xs font-semibold text-muted dark:text-gray-400">Ruangan</label>
                             <livewire:lov.room.lov-room target="room-transfer-ri"
-                                wire:key="lov-room-transfer-ri-{{ $rjNo }}-{{ $renderVersions['modal-transfer-ri-ugd'] ?? 0 }}" />
+                                wire:key="lov-room-transfer-ri-{{ $rjNo }}-{{ $renderVersions['modal-transfer-ugd-ke-ri'] ?? 0 }}" />
                         </div>
 
                         {{-- Pilih Bed --}}
@@ -585,7 +695,7 @@ new class extends Component {
                     @endif
                 </div>
                 <div class="flex items-center gap-3">
-                    <x-secondary-button type="button" x-on:click="$dispatch('close-modal', { name: 'transfer-ri-ugd' })">
+                    <x-secondary-button type="button" x-on:click="$dispatch('close-modal', { name: 'transfer-ugd-ke-ri' })">
                         Batal
                     </x-secondary-button>
                     @if ($transferRoomId && $transferBedNo)

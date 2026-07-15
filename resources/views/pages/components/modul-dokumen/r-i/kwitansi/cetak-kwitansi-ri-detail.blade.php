@@ -149,8 +149,15 @@ new class extends Component {
         if (($nilai = (int) $costs['commonService']) > 0) {
             $bItems->push((object) ['desc' => 'PELAYANAN UMUM', 'qty' => null, 'total' => $nilai]);
         }
-        if (($nilai = (int) $costs['adminAge'] + (int) $costs['adminStatus']) > 0) {
+        // Dijabarkan: dulu keduanya digabung jadi satu baris "ADMINISTRASI RAWAT INAP",
+        // jadi pasien tak bisa menelusuri asal angkanya. Dua tarif berbeda di master
+        // (rsmst_parameters par_id=2 "ADMIN STATUS RI" & par_id=3 "ADMIN USIA 14+"),
+        // dan admin usia hanya dikenakan pada sebagian pasien.
+        if (($nilai = (int) $costs['adminStatus']) > 0) {
             $bItems->push((object) ['desc' => 'ADMINISTRASI RAWAT INAP', 'qty' => null, 'total' => $nilai]);
+        }
+        if (($nilai = (int) $costs['adminAge']) > 0) {
+            $bItems->push((object) ['desc' => 'ADMINISTRASI USIA 14+', 'qty' => null, 'total' => $nilai]);
         }
         $bTotal = (int) $bItems->sum('total');
 

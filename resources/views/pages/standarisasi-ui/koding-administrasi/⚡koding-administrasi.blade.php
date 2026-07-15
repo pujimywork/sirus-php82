@@ -66,7 +66,7 @@ TXT,
 TXT,
 
 'transfer' => <<<'TXT'
-// TRANSFER UGD → RI (transfer-ri-ugd-actions). SATU transaksi:
+// TRANSFER UGD → RI (transfer-ugd-ke-ri-actions). SATU transaksi:
 DB::transaction(function () {
     // 1. Buat header RI (rstxn_rihdrs, ri_status 'I') + kamar (rsmst_trfrooms)
     // 2. Biaya UGD sendiri → rstxn_ritempadmins
@@ -627,7 +627,7 @@ TXT,
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Pasien UGD yang perlu dirawat inap di-<em>transfer</em>: sistem membuat header RI baru,
                             memindahkan biaya UGD/RJ ke RI, dan mengunci UGD. Komponen:
-                            <span class="ds-code">transfer-ri-ugd-actions</span>.
+                            <span class="ds-code">transfer-ugd-ke-ri-actions</span>.
                         </p>
 
                         <div class="ds-card-dark mt-2" style="padding:0; overflow:hidden">
