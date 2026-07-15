@@ -223,6 +223,82 @@ new class extends Component {
                     </div>
                 </div>
 
+                {{-- SCREENING UGD --}}
+                @php
+                    $scr = $txn['screening'] ?? [];
+                    $scrNyeriDada = $scr['nyeriDada'] ?? '';
+                    if ($scrNyeriDada === 'Ada' && !empty($scr['nyeriDadaTingkat'])) {
+                        $scrNyeriDada .= ' — ' . $scr['nyeriDadaTingkat'];
+                    }
+                    $scrTriase = $scr['triaseSaran'] ?? '';
+                    $scrTriaseLabel = match ($scrTriase) {
+                        'P0' => 'P0 — Meninggal',
+                        'P1' => 'P1 — Kritis',
+                        'P2' => 'P2 — Urgent',
+                        'P3' => 'P3 — Minor',
+                        default => '-',
+                    };
+                    // Gerbang blok P0 — sama persis dgn aturan di form Screening UGD.
+                    $scrHentiJantungNafas = ($scr['pernafasan'] ?? '') === 'Henti Nafas' && ($scr['nadi'] ?? '') === 'Tidak Teraba';
+                @endphp
+                <x-border-form title="Screening UGD" class="mb-4">
+                    <div class="grid grid-cols-2 gap-x-6">
+                        <div class="space-y-2.5">
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Keluhan Utama :</span><span
+                                    class="text-body dark:text-gray-300">{{ $scr['keluhanUtama'] ?? '-' }}</span>
+                            </p>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Pernafasan :</span><span
+                                    class="text-body dark:text-gray-300">{{ ($scr['pernafasan'] ?? '') ?: '-' }}</span>
+                            </p>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Kesadaran :</span><span
+                                    class="text-body dark:text-gray-300">{{ ($scr['kesadaran'] ?? '') ?: '-' }}</span>
+                            </p>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Nadi :</span><span
+                                    class="text-body dark:text-gray-300">{{ ($scr['nadi'] ?? '') ?: '-' }}</span>
+                            </p>
+                        </div>
+                        <div class="space-y-2.5">
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Nyeri Dada :</span><span
+                                    class="text-body dark:text-gray-300">{{ $scrNyeriDada ?: '-' }}</span>
+                            </p>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Prioritas Pelayanan :</span><span
+                                    class="text-body dark:text-gray-300">{{ ($scr['prioritasPelayanan'] ?? '') ?: '-' }}</span>
+                            </p>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Saran Triase :</span><span
+                                    class="text-body dark:text-gray-300">{{ $scrTriaseLabel }}</span>
+                            </p>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Petugas :</span><span
+                                    class="text-body dark:text-gray-300">{{ ($scr['petugasPelayanan'] ?? '') ?: '-' }}{{ !empty($scr['tanggalPelayanan']) ? ' — ' . $scr['tanggalPelayanan'] : '' }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Pernyataan meninggal — hanya tampil bila ada tanda henti jantung-nafas --}}
+                    @if ($scrHentiJantungNafas)
+                        <div class="p-3 mt-4 border rounded-lg border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/40">
+                            <div class="mb-2 text-base font-bold text-ink dark:text-gray-100">Penilaian Henti Jantung-Nafas (P0)</div>
+                            <div class="grid grid-cols-2 gap-x-6">
+                                <div class="space-y-2.5">
+                                    <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Tanda Kematian Pasti :</span><span
+                                            class="text-body dark:text-gray-300">{{ ($scr['tandaKematianPasti'] ?? '') ?: '-' }}{{ !empty($scr['tandaKematianKeterangan']) ? ' — ' . $scr['tandaKematianKeterangan'] : '' }}</span>
+                                    </p>
+                                    <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Tindakan Resusitasi :</span><span
+                                            class="text-body dark:text-gray-300">{{ ($scr['tindakanResusitasi'] ?? '') ?: '-' }}</span>
+                                    </p>
+                                </div>
+                                <div class="space-y-2.5">
+                                    <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Dinyatakan Meninggal :</span><span
+                                            class="text-body dark:text-gray-300">{{ ($scr['dinyatakanMeninggal'] ?? '') ?: '-' }}{{ !empty($scr['waktuMeninggal']) ? ' — ' . $scr['waktuMeninggal'] : '' }}</span>
+                                    </p>
+                                    <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Dokter yang Menyatakan :</span><span
+                                            class="text-body dark:text-gray-300">{{ ($scr['dokterPenyataMeninggal'] ?? '') ?: '-' }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </x-border-form>
+
                 {{-- PERAWAT --}}
                 <x-border-form title="Perawat" class="mb-4">
                     @php

@@ -18,9 +18,15 @@ new class extends Component {
     // Radio properties — sync terpisah seperti klaimId
     public string $pernafasan = '';
     public string $kesadaran = '';
+    public string $nadi = '';
     public string $nyeriDada = '';
     public string $nyeriDadaTingkat = '';
     public string $prioritasPelayanan = '';
+
+    // Radio properties penilaian P0 — hanya relevan saat tanda henti jantung-nafas
+    public string $tandaKematianPasti = '';
+    public string $tindakanResusitasi = '';
+    public string $dinyatakanMeninggal = '';
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-screening-ugd'];
@@ -73,9 +79,13 @@ new class extends Component {
         $sc = $this->dataDaftarUGD['screening'];
         $this->pernafasan = $sc['pernafasan'] ?? '';
         $this->kesadaran = $sc['kesadaran'] ?? '';
+        $this->nadi = $sc['nadi'] ?? '';
         $this->nyeriDada = $sc['nyeriDada'] ?? '';
         $this->nyeriDadaTingkat = $sc['nyeriDadaTingkat'] ?? '';
         $this->prioritasPelayanan = $sc['prioritasPelayanan'] ?? '';
+        $this->tandaKematianPasti = $sc['tandaKematianPasti'] ?? '';
+        $this->tindakanResusitasi = $sc['tindakanResusitasi'] ?? '';
+        $this->dinyatakanMeninggal = $sc['dinyatakanMeninggal'] ?? '';
 
         $this->incrementVersion('modal-screening-ugd');
         $this->dispatch('open-modal', name: 'rm-screening-ugd-actions');
@@ -92,17 +102,118 @@ new class extends Component {
     }
 
     /* ===============================
+     | TRIASE
+     =============================== */
+
+    /**
+     * Tanda henti jantung-nafas: pasien tak bernafas DAN nadi tak teraba.
+     * Ini gerbang penilaian P0 — selama false, seluruh blok P0 tak relevan.
+     */
+    public function isHentiJantungNafas(): bool
+    {
+        return $this->pernafasan === 'Henti Nafas' && $this->nadi === 'Tidak Teraba';
+    }
+
+    /**
+     * Rencana sinkronisasi hasil P0 ke konsumen di luar screening.
+     *
+     * Prinsipnya: screening hanya boleh MENCABUT apa yang dipasangnya sendiri. Perawat
+     * bisa menetapkan P0 manual di Anamnesa tanpa lewat screening — kalau screening
+     * main timpa, triase perawat itu hilang diam-diam. Karena itu pencabutan hanya
+     * terjadi bila screening tersimpan sebelumnya memang ber-P0 ($triaseTersimpan).
+     *
+     * @param  string      $triaseTersimpan Nilai screening.triaseSaran yang ada di DB (sebelum save ini)
+     * @param  string|null $triaseSaran     Hasil hitungTriase() sekarang
+     * @param  string      $triaseAnamnesa  Nilai anamnesa...tingkatKegawatan yang ada di DB
+     * @return array{setTriaseAnamnesa: ?string, setDeathStatus: ?bool} null = jangan sentuh
+     */
+    public function rencanaSinkronisasiP0(string $triaseTersimpan, ?string $triaseSaran, string $triaseAnamnesa): array
+    {
+        $isP0 = $triaseSaran === 'P0';
+        $p0Pasangan = $triaseTersimpan === 'P0';
+
+        if ($isP0) {
+            return ['setTriaseAnamnesa' => 'P0', 'setDeathStatus' => true];
+        }
+
+        if ($p0Pasangan) {
+            return [
+                // Kosongkan hanya bila yang terpasang memang P0 kami; kalau perawat sudah
+                // menggantinya ke P1/P2/P3, biarkan pilihan perawat itu berdiri.
+                'setTriaseAnamnesa' => $triaseAnamnesa === 'P0' ? '' : null,
+                'setDeathStatus' => false,
+            ];
+        }
+
+        return ['setTriaseAnamnesa' => null, 'setDeathStatus' => null];
+    }
+
+    /**
+     * Saran triase. P0 TIDAK PERNAH disimpulkan otomatis dari tanda vital —
+     * menyatakan pasien meninggal adalah keputusan dokter, bukan hasil match().
+     * Henti jantung-nafas menyarankan P1 (resusitasi); P0 hanya muncul setelah
+     * dokter mencentang "Dinyatakan Meninggal".
+     */
+    public function hitungTriase(): ?string
+    {
+        if ($this->isHentiJantungNafas() && $this->dinyatakanMeninggal === 'Ya') {
+            return 'P0';
+        }
+
+        return match (true) {
+            $this->isHentiJantungNafas(),
+            $this->kesadaran === 'Tidak Ada Respons',
+            $this->kesadaran === 'Bicara Tidak Jelas',
+            $this->pernafasan === 'Tampak Sesak',
+            $this->nyeriDada === 'Ada' && $this->nyeriDadaTingkat === 'Berat'
+                => 'P1',
+
+            $this->kesadaran === 'Gelisah',
+            $this->nyeriDada === 'Ada' && $this->nyeriDadaTingkat === 'Sedang'
+                => 'P2',
+
+            $this->kesadaran === 'Tampak Mengantuk',
+            $this->nyeriDada === 'Ada' && $this->nyeriDadaTingkat === 'Ringan'
+                => 'P3',
+
+            $this->kesadaran === 'Sadar Penuh' && $this->pernafasan === 'Nafas Normal' && $this->nyeriDada === 'Tidak Ada'
+                => 'P3',
+
+            default => null,
+        };
+    }
+
+    /* ===============================
      | VALIDATION
      =============================== */
     protected function rules(): array
     {
-        return [
+        $rules = [
             'dataDaftarUGD.screening.keluhanUtama' => 'required',
             'dataDaftarUGD.screening.pernafasan' => 'required',
             'dataDaftarUGD.screening.kesadaran' => 'required',
+            'dataDaftarUGD.screening.nadi' => 'required',
             'dataDaftarUGD.screening.nyeriDada' => 'required',
             'dataDaftarUGD.screening.prioritasPelayanan' => 'required',
         ];
+
+        // Gerbang P0 bergantung dua field sekaligus — required_if tak cukup, jadi dibranch di sini.
+        if ($this->isHentiJantungNafas()) {
+            $rules['dataDaftarUGD.screening.tandaKematianPasti'] = 'required';
+            $rules['dataDaftarUGD.screening.tindakanResusitasi'] = 'required';
+            $rules['dataDaftarUGD.screening.dinyatakanMeninggal'] = 'required';
+
+            if ($this->tandaKematianPasti === 'Ada') {
+                $rules['dataDaftarUGD.screening.tandaKematianKeterangan'] = 'required';
+            }
+
+            if ($this->dinyatakanMeninggal === 'Ya') {
+                $rules['dataDaftarUGD.screening.waktuMeninggal'] = 'required';
+                $rules['dataDaftarUGD.screening.dokterPenyataMeninggal'] = 'required';
+            }
+        }
+
+        return $rules;
     }
 
     protected function messages(): array
@@ -116,8 +227,15 @@ new class extends Component {
             'dataDaftarUGD.screening.keluhanUtama' => 'Keluhan Utama',
             'dataDaftarUGD.screening.pernafasan' => 'Pernafasan',
             'dataDaftarUGD.screening.kesadaran' => 'Kesadaran',
+            'dataDaftarUGD.screening.nadi' => 'Nadi',
             'dataDaftarUGD.screening.nyeriDada' => 'Nyeri Dada',
             'dataDaftarUGD.screening.prioritasPelayanan' => 'Prioritas Pelayanan',
+            'dataDaftarUGD.screening.tandaKematianPasti' => 'Tanda Kematian Pasti',
+            'dataDaftarUGD.screening.tandaKematianKeterangan' => 'Keterangan Tanda Kematian',
+            'dataDaftarUGD.screening.tindakanResusitasi' => 'Tindakan Resusitasi',
+            'dataDaftarUGD.screening.dinyatakanMeninggal' => 'Dinyatakan Meninggal',
+            'dataDaftarUGD.screening.waktuMeninggal' => 'Waktu Meninggal',
+            'dataDaftarUGD.screening.dokterPenyataMeninggal' => 'Dokter yang Menyatakan',
         ];
     }
 
@@ -148,15 +266,46 @@ new class extends Component {
                 // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
                 $isBaru = empty($data['screening']);
 
+                // Nilai tersimpan SEBELUM di-patch — dipakai membedakan "P0 ini pasangan kami"
+                // dari triase P0 yang diketik perawat sendiri di Anamnesa (lihat sinkronisasi).
+                $triaseTersimpan = $data['screening']['triaseSaran'] ?? '';
+
                 // 3. Patch hanya key screening
                 $data['screening'] = $this->dataDaftarUGD['screening'] ?? [];
 
+                // Saran triase ikut disimpan — sebelumnya dihitung di blade lalu hilang saat
+                // modal ditutup, sehingga cetakan & laporan tak pernah tahu hasil screening.
+                $triaseSaran = $this->hitungTriase();
+                $data['screening']['triaseSaran'] = $triaseSaran ?? '';
+
+                // 3b. Sinkronisasi P0 ke dua konsumen di luar screening: triase persisted
+                //     (dibaca daftar/pelayanan/cetak/RL 3.3) dan penanda Mati IGD di header.
+                $isP0 = $triaseSaran === 'P0';
+                $sinkron = $this->rencanaSinkronisasiP0($triaseTersimpan, $triaseSaran, $data['anamnesa']['pengkajianPerawatan']['tingkatKegawatan'] ?? '');
+
+                if ($sinkron['setTriaseAnamnesa'] !== null) {
+                    $data['anamnesa']['pengkajianPerawatan']['tingkatKegawatan'] = $sinkron['setTriaseAnamnesa'];
+                }
+
                 $this->updateJsonUGD($this->rjNo, $data);
+
+                // BELUM TERSAMBUNG: kolom rstxn_ugdhdrs.death_on_igd_status (dibaca RL 3.3 utk
+                // Mati IGD & DOA) masih tak punya penulis 'Y' mana pun, jadi laporan itu tetap
+                // nol. $sinkron['setDeathStatus'] sudah menyediakan keputusannya — tinggal
+                // dipasang penulisnya bila konsep ini disetujui.
                 // Simpan hanya slice screening (lihat catatan di openScreening).
                 $this->dataDaftarUGD = ['screening' => $data['screening']];
 
-                // 4. Audit log
-                $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Screening UGD — prioritas ' . ($data['screening']['prioritasPelayanan'] ?? '-'), 'MR');
+                // 4. Audit log — penetapan MAUPUN pencabutan P0 dicatat eksplisit.
+                $logText = ($isBaru ? 'Buat' : 'Update') . ' Screening UGD — prioritas ' . ($data['screening']['prioritasPelayanan'] ?? '-') . ' — saran triase ' . ($triaseSaran ?? '-');
+
+                if ($isP0) {
+                    $logText .= ' (MENINGGAL — dinyatakan oleh ' . ($data['screening']['dokterPenyataMeninggal'] ?: '-') . ' pukul ' . ($data['screening']['waktuMeninggal'] ?: '-') . '; triase Anamnesa di-set P0)';
+                } elseif ($sinkron['setDeathStatus'] === false) {
+                    $logText .= ' (P0 DICABUT)';
+                }
+
+                $this->appendAdminLogUGD((int) $this->rjNo, $logText, 'MR');
             });
 
             // 5. Notify + increment — di luar transaksi
@@ -192,6 +341,15 @@ new class extends Component {
         $this->dataDaftarUGD['screening']['tanggalPelayanan'] = now()->format('d/m/Y H:i:s');
     }
 
+    public function setWaktuMeninggal(): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        $this->dataDaftarUGD['screening']['waktuMeninggal'] = now()->format('d/m/Y H:i:s');
+    }
+
     /* ===============================
      | UPDATED HOOKS
      =============================== */
@@ -200,11 +358,27 @@ new class extends Component {
         match ($name) {
             'pernafasan' => ($this->dataDaftarUGD['screening']['pernafasan'] = $value),
             'kesadaran' => ($this->dataDaftarUGD['screening']['kesadaran'] = $value),
+            'nadi' => ($this->dataDaftarUGD['screening']['nadi'] = $value),
             'nyeriDada' => ($this->dataDaftarUGD['screening']['nyeriDada'] = $value),
             'nyeriDadaTingkat' => ($this->dataDaftarUGD['screening']['nyeriDadaTingkat'] = $value),
             'prioritasPelayanan' => ($this->dataDaftarUGD['screening']['prioritasPelayanan'] = $value),
+            'tandaKematianPasti' => ($this->dataDaftarUGD['screening']['tandaKematianPasti'] = $value),
+            'tindakanResusitasi' => ($this->dataDaftarUGD['screening']['tindakanResusitasi'] = $value),
+            'dinyatakanMeninggal' => ($this->dataDaftarUGD['screening']['dinyatakanMeninggal'] = $value),
             default => null,
         };
+
+        // Gerbang P0 tertutup (mis. nadi dikoreksi jadi Teraba) → buang jawaban P0 yang sudah
+        // tak berlaku, supaya tak ada record "dinyatakan meninggal" nyangkut di pasien hidup.
+        if (in_array($name, ['pernafasan', 'nadi'], true) && !$this->isHentiJantungNafas()) {
+            $this->resetPenilaianP0();
+        }
+
+        // Nyeri dada dikembalikan ke "Tidak Ada" → tingkat nyeri ikut gugur.
+        if ($name === 'nyeriDada' && $value !== 'Ada') {
+            $this->nyeriDadaTingkat = '';
+            $this->dataDaftarUGD['screening']['nyeriDadaTingkat'] = '';
+        }
     }
 
     /* ===============================
@@ -215,15 +389,30 @@ new class extends Component {
         return [
             'keluhanUtama' => '',
             'pernafasan' => '',
-            'pernafasanOptions' => [['pernafasan' => 'Nafas Normal'], ['pernafasan' => 'Tampak Sesak']],
+            'pernafasanOptions' => [['pernafasan' => 'Nafas Normal'], ['pernafasan' => 'Tampak Sesak'], ['pernafasan' => 'Henti Nafas']],
             'kesadaran' => '',
-            'kesadaranOptions' => [['kesadaran' => 'Sadar Penuh'], ['kesadaran' => 'Tampak Mengantuk'], ['kesadaran' => 'Gelisah'], ['kesadaran' => 'Bicara Tidak Jelas']],
+            'kesadaranOptions' => [['kesadaran' => 'Sadar Penuh'], ['kesadaran' => 'Tampak Mengantuk'], ['kesadaran' => 'Gelisah'], ['kesadaran' => 'Bicara Tidak Jelas'], ['kesadaran' => 'Tidak Ada Respons']],
+            'nadi' => '',
+            'nadiOptions' => [['nadi' => 'Teraba'], ['nadi' => 'Tidak Teraba']],
             'nyeriDada' => '',
             'nyeriDadaOptions' => [['nyeriDada' => 'Tidak Ada'], ['nyeriDada' => 'Ada']],
             'nyeriDadaTingkat' => '',
             'nyeriDadaTingkatOptions' => [['nyeriDadaTingkat' => 'Ringan'], ['nyeriDadaTingkat' => 'Sedang'], ['nyeriDadaTingkat' => 'Berat']],
             'prioritasPelayanan' => '',
             'prioritasPelayananOptions' => [['prioritasPelayanan' => 'Preventif'], ['prioritasPelayanan' => 'Paliatif'], ['prioritasPelayanan' => 'Kuratif'], ['prioritasPelayanan' => 'Rehabilitatif']],
+
+            // Penilaian P0 — terisi hanya bila ada tanda henti jantung-nafas
+            'tandaKematianPasti' => '',
+            'tandaKematianPastiOptions' => [['tandaKematianPasti' => 'Tidak Ada'], ['tandaKematianPasti' => 'Ada']],
+            'tandaKematianKeterangan' => '',
+            'tindakanResusitasi' => '',
+            'tindakanResusitasiOptions' => [['tindakanResusitasi' => 'Dilakukan'], ['tindakanResusitasi' => 'Dihentikan'], ['tindakanResusitasi' => 'Tidak Dilakukan']],
+            'dinyatakanMeninggal' => '',
+            'dinyatakanMeninggalOptions' => [['dinyatakanMeninggal' => 'Tidak'], ['dinyatakanMeninggal' => 'Ya']],
+            'waktuMeninggal' => '',
+            'dokterPenyataMeninggal' => '',
+
+            'triaseSaran' => '',
             'tanggalPelayanan' => '',
             'petugasPelayanan' => '',
             'petugasPelayananCode' => '',
@@ -240,9 +429,25 @@ new class extends Component {
         $this->dataDaftarUGD = [];
         $this->pernafasan = '';
         $this->kesadaran = '';
+        $this->nadi = '';
         $this->nyeriDada = '';
         $this->nyeriDadaTingkat = '';
         $this->prioritasPelayanan = '';
+        $this->tandaKematianPasti = '';
+        $this->tindakanResusitasi = '';
+        $this->dinyatakanMeninggal = '';
+    }
+
+    /** Kosongkan seluruh jawaban blok P0, di properti scalar maupun di array yang akan disimpan. */
+    protected function resetPenilaianP0(): void
+    {
+        $this->tandaKematianPasti = '';
+        $this->tindakanResusitasi = '';
+        $this->dinyatakanMeninggal = '';
+
+        foreach (['tandaKematianPasti', 'tandaKematianKeterangan', 'tindakanResusitasi', 'dinyatakanMeninggal', 'waktuMeninggal', 'dokterPenyataMeninggal'] as $key) {
+            $this->dataDaftarUGD['screening'][$key] = '';
+        }
     }
 };
 ?>
@@ -351,15 +556,6 @@ new class extends Component {
                                         <x-input-error :messages="$errors->get('dataDaftarUGD.screening.prioritasPelayanan')" class="mt-1" />
                                     </div>
 
-                                    {{-- TTD Petugas --}}
-                                    <x-signature.ttd-petugas :framed="false" :allowClear="false"
-                                        :ttd="$dataDaftarUGD['screening']['petugasPelayanan'] ?? ''"
-                                        :date="$dataDaftarUGD['screening']['tanggalPelayanan'] ?? ''"
-                                        :code="$dataDaftarUGD['screening']['petugasPelayananCode'] ?? ''"
-                                        :locked="$isFormLocked"
-                                        :canSign="auth()->user()?->hasAnyRole(['Perawat', 'Dokter', 'Admin'])"
-                                        sign="setPetugasPelayanan" signLabel="TTD-E Petugas" />
-
                                 </div>
 
                                 {{-- KOLOM KANAN --}}
@@ -389,29 +585,135 @@ new class extends Component {
                                         <x-input-error :messages="$errors->get('dataDaftarUGD.screening.kesadaran')" class="mt-1" />
                                     </div>
 
-                                    {{-- Scoring Triage --}}
-                                    <div class="pt-2">
-                                        <x-input-label value="Indikator Triage" />
-                                        @php
-                                            $triageScore = match (true) {
-                                                $kesadaran === 'Bicara Tidak Jelas' ||
-                                                    $pernafasan === 'Tampak Sesak' ||
-                                                    ($nyeriDada === 'Ada' && $nyeriDadaTingkat === 'Berat')
-                                                    => 'P1',
-                                                $kesadaran === 'Gelisah' ||
-                                                    ($nyeriDada === 'Ada' && $nyeriDadaTingkat === 'Sedang')
-                                                    => 'P2',
-                                                $kesadaran === 'Tampak Mengantuk' ||
-                                                    ($nyeriDada === 'Ada' && $nyeriDadaTingkat === 'Ringan')
-                                                    => 'P3',
-                                                $kesadaran === 'Sadar Penuh' &&
-                                                    $pernafasan === 'Nafas Normal' &&
-                                                    $nyeriDada === 'Tidak Ada'
-                                                    => 'P3',
-                                                default => null,
-                                            };
-                                        @endphp
-                                        <div class="grid grid-cols-4 gap-2 mt-2">
+                                    {{-- Nadi --}}
+                                    <div>
+                                        <x-input-label value="Nadi" :required="true" />
+                                        <div class="flex flex-wrap gap-2 mt-1">
+                                            @foreach ($dataDaftarUGD['screening']['nadiOptions'] ?? [] as $opt)
+                                                <x-radio-button :label="$opt['nadi']" :value="$opt['nadi']" name="nadi"
+                                                    wire:model.live="nadi" :disabled="$isFormLocked" />
+                                            @endforeach
+                                        </div>
+                                        <x-input-error :messages="$errors->get('dataDaftarUGD.screening.nadi')" class="mt-1" />
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </x-border-form>
+
+                    {{-- PENILAIAN P0 — hanya saat pernafasan "Henti Nafas" DAN nadi "Tidak Teraba" --}}
+                    @if ($this->isHentiJantungNafas())
+                        <div class="mt-4">
+                            <x-border-form :title="__('Penilaian Henti Jantung-Nafas (P0)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
+                                <div class="mt-4">
+
+                                    <div
+                                        class="px-3 py-2 mb-4 text-base border rounded-lg bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
+                                        Terdapat tanda henti jantung-nafas. Selama pasien belum dinyatakan meninggal oleh
+                                        dokter, triase tetap <strong>P1 (resusitasi)</strong>. P0 hanya berlaku setelah
+                                        pernyataan meninggal diisi di bawah.
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-6">
+
+                                        {{-- KOLOM KIRI --}}
+                                        <div class="space-y-4">
+
+                                            {{-- Tanda Kematian Pasti --}}
+                                            <div>
+                                                <x-input-label value="Tanda Kematian Pasti" :required="true" />
+                                                <div class="flex flex-wrap gap-2 mt-1">
+                                                    @foreach ($dataDaftarUGD['screening']['tandaKematianPastiOptions'] ?? [] as $opt)
+                                                        <x-radio-button :label="$opt['tandaKematianPasti']" :value="$opt['tandaKematianPasti']"
+                                                            name="tandaKematianPasti" wire:model.live="tandaKematianPasti"
+                                                            :disabled="$isFormLocked" />
+                                                    @endforeach
+                                                </div>
+                                                <x-input-error :messages="$errors->get('dataDaftarUGD.screening.tandaKematianPasti')" class="mt-1" />
+                                            </div>
+
+                                            @if ($tandaKematianPasti === 'Ada')
+                                                <div>
+                                                    <x-input-label value="Keterangan Tanda Kematian" :required="true" />
+                                                    <x-textarea wire:model.live="dataDaftarUGD.screening.tandaKematianKeterangan"
+                                                        placeholder="mis. lebam mayat, kaku mayat, pupil midriasis total non-reaktif, cedera fatal tidak survivable..."
+                                                        :disabled="$isFormLocked" rows="3" class="w-full mt-1" />
+                                                    <x-input-error :messages="$errors->get('dataDaftarUGD.screening.tandaKematianKeterangan')" class="mt-1" />
+                                                </div>
+                                            @endif
+
+                                            {{-- Tindakan Resusitasi --}}
+                                            <div>
+                                                <x-input-label value="Tindakan Resusitasi" :required="true" />
+                                                <div class="flex flex-wrap gap-2 mt-1">
+                                                    @foreach ($dataDaftarUGD['screening']['tindakanResusitasiOptions'] ?? [] as $opt)
+                                                        <x-radio-button :label="$opt['tindakanResusitasi']" :value="$opt['tindakanResusitasi']"
+                                                            name="tindakanResusitasi" wire:model.live="tindakanResusitasi"
+                                                            :disabled="$isFormLocked" />
+                                                    @endforeach
+                                                </div>
+                                                <x-input-error :messages="$errors->get('dataDaftarUGD.screening.tindakanResusitasi')" class="mt-1" />
+                                            </div>
+
+                                        </div>
+
+                                        {{-- KOLOM KANAN --}}
+                                        <div class="space-y-4">
+
+                                            {{-- Dinyatakan Meninggal --}}
+                                            <div>
+                                                <x-input-label value="Dinyatakan Meninggal" :required="true" />
+                                                <div class="flex flex-wrap gap-2 mt-1">
+                                                    @foreach ($dataDaftarUGD['screening']['dinyatakanMeninggalOptions'] ?? [] as $opt)
+                                                        <x-radio-button :label="$opt['dinyatakanMeninggal']" :value="$opt['dinyatakanMeninggal']"
+                                                            name="dinyatakanMeninggal" wire:model.live="dinyatakanMeninggal"
+                                                            :disabled="$isFormLocked" />
+                                                    @endforeach
+                                                </div>
+                                                <x-input-error :messages="$errors->get('dataDaftarUGD.screening.dinyatakanMeninggal')" class="mt-1" />
+                                            </div>
+
+                                            @if ($dinyatakanMeninggal === 'Ya')
+                                                {{-- Waktu Meninggal --}}
+                                                <div>
+                                                    <x-input-label value="Waktu Meninggal" :required="true" />
+                                                    <div class="flex items-center gap-2 mt-1">
+                                                        <x-text-input wire:model.live="dataDaftarUGD.screening.waktuMeninggal"
+                                                            placeholder="dd/mm/yyyy hh:mm:ss" :disabled="$isFormLocked" class="w-full" />
+                                                        <x-now-button wire:click="setWaktuMeninggal" :disabled="$isFormLocked" />
+                                                    </div>
+                                                    <x-input-error :messages="$errors->get('dataDaftarUGD.screening.waktuMeninggal')" class="mt-1" />
+                                                </div>
+
+                                                {{-- Dokter yang Menyatakan --}}
+                                                <div>
+                                                    <x-input-label value="Dokter yang Menyatakan" :required="true" />
+                                                    <div class="mt-1">
+                                                        <x-ppa-combobox wireModel="dataDaftarUGD.screening.dokterPenyataMeninggal"
+                                                            :disabled="$isFormLocked"
+                                                            placeholder="Nama dokter — pilih dari daftar atau ketik" />
+                                                    </div>
+                                                    <x-input-error :messages="$errors->get('dataDaftarUGD.screening.dokterPenyataMeninggal')" class="mt-1" />
+                                                </div>
+                                            @endif
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </x-border-form>
+                        </div>
+                    @endif
+
+
+                    {{-- INDIKATOR TRIAGE — di bawah sendiri: hasil dari seluruh penilaian di atas --}}
+                    <div class="mt-4">
+                        <x-border-form :title="__('Indikator Triage')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
+                            <div class="mt-4">
+                                @php
+                                    $triageScore = $this->hitungTriase();
+                                @endphp
+                                <div class="grid grid-cols-4 gap-2 mt-2">
                                             @foreach ([
         'P1' => ['bg' => 'bg-red-500', 'ring' => 'ring-red-400', 'label' => 'Kritis'],
         'P2' => ['bg' => 'bg-yellow-400', 'ring' => 'ring-yellow-300', 'label' => 'Urgent'],
@@ -433,6 +735,7 @@ new class extends Component {
                                             <div
                                                 class="mt-3 px-3 py-2 rounded-lg text-base font-medium border
                                                 {{ match ($triageScore) {
+                                                    'P0' => 'bg-gray-100 border-gray-300 text-gray-800 dark:bg-gray-800/40 dark:border-gray-600 dark:text-gray-200',
                                                     'P1' => 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300',
                                                     'P2'
                                                         => 'bg-yellow-50 border-yellow-200 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300',
@@ -443,6 +746,7 @@ new class extends Component {
                                                 Saran Triase: <strong>{{ $triageScore }}</strong>
                                                 &mdash;
                                                 {{ match ($triageScore) {
+                                                    'P0' => 'Pasien dinyatakan meninggal, tidak dilakukan/dihentikan resusitasi',
                                                     'P1' => 'Penanganan segera, kondisi mengancam jiwa',
                                                     'P2' => 'Penanganan cepat, kondisi gawat tidak darurat',
                                                     'P3' => 'Penanganan dapat ditunda, kondisi minor',
@@ -450,12 +754,24 @@ new class extends Component {
                                                 } }}
                                             </div>
                                         @endif
-                                    </div>
-
-                                </div>
                             </div>
-                        </div>
-                    </x-border-form>
+                        </x-border-form>
+                    </div>
+                    {{-- TTD Petugas — paling akhir: ditandatangani setelah seluruh penilaian
+                         (termasuk blok P0 di atas) terisi, bukan di tengah alur field. --}}
+                    <div class="mt-4">
+                        <x-border-form :title="__('Tanda Tangan Petugas')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
+                            <div class="mt-4">
+                                <x-signature.ttd-petugas :framed="false" :allowClear="false"
+                                    :ttd="$dataDaftarUGD['screening']['petugasPelayanan'] ?? ''"
+                                    :date="$dataDaftarUGD['screening']['tanggalPelayanan'] ?? ''"
+                                    :code="$dataDaftarUGD['screening']['petugasPelayananCode'] ?? ''"
+                                    :locked="$isFormLocked"
+                                    :canSign="auth()->user()?->hasAnyRole(['Perawat', 'Dokter', 'Admin'])"
+                                    sign="setPetugasPelayanan" signLabel="TTD-E Petugas" />
+                            </div>
+                        </x-border-form>
+                    </div>
                 @else
                     <div class="flex flex-col items-center justify-center py-24 text-gray-300 dark:text-gray-600">
                         <p class="text-base font-medium">Data UGD belum dimuat</p>
