@@ -147,6 +147,7 @@ use Livewire\Attributes\On;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
+use App\Support\DischargeDisposition;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 
 new class extends Component {
@@ -353,23 +354,19 @@ new class extends Component {
         if ($alergiLain !== '')    $alergiParts[] = 'Lain: ' . e($alergiLain);
         $alergi = implode('; ', $alergiParts);
 
-        // ── 9) Kondisi Saat Pulang ← perencanaan.tindakLanjut.tindakLanjut (SNOMED code!) ─
-        // Field tindakLanjut.tindakLanjut menyimpan SNOMED code (mis. '371828006'),
-        // bukan label. Mapping SNOMED → Resume Medis label:
-        $snomedToLabel = [
-            '371827001' => 'Sembuh',                          // Pulang Sehat
-            '266707007' => 'Pulang Atas Permintaan Sendiri',  // Pulang dgn Permintaan Sendiri
-            '306206005' => 'Pulang Pindah / Rujuk',           // Pulang Pindah / Rujuk
-            '371828006' => 'Perbaikan',                       // Pulang Tanpa Perbaikan
-            '419099009' => 'Meninggal',                       // Meninggal
-            '74964007'  => 'Lain-lain',                       // Lain-lain
-        ];
+        // ── 9) Kondisi Saat Pulang ← perencanaan.tindakLanjut.tindakLanjut ─
+        // `tindakLanjut` menyimpan KUNCI INTERNAL (bentuknya mirip SNOMED tapi 2 di antaranya
+        // salah arti — lihat App\Support\DischargeDisposition). Label diambil dari SUMBER
+        // TUNGGAL di helper itu: dulu file ini punya peta sendiri yang menulis '371828006'
+        // = "Perbaikan", padahal form menyebutnya "Pulang Tanpa Perbaikan" — makna TERBALIK
+        // (komentar di peta lama pun sudah menulis "Pulang Tanpa Perbaikan" di sebelahnya).
+        // Cetak ringkasan pulang bahkan menulis "Membaik": satu kode, empat arti berbeda.
         $tindakLanjutCode = trim((string) data_get($dataRI, 'perencanaan.tindakLanjut.tindakLanjut', ''));
         $tglPulang = (string) data_get($dataRI, 'perencanaan.tindakLanjut.tglPulang', '');
         $tglMeninggal = (string) data_get($dataRI, 'perencanaan.tindakLanjut.tglMeninggal', '');
         $ketTindakLanjut = trim((string) data_get($dataRI, 'perencanaan.tindakLanjut.keterangan', ''));
 
-        $kondisiPulang = $snomedToLabel[$tindakLanjutCode] ?? '';
+        $kondisiPulang = DischargeDisposition::label($tindakLanjutCode);
         if ($kondisiPulang === 'Meninggal' && $tglMeninggal !== '') {
             $kondisiPulang .= ' (' . $tglMeninggal . ')';
         }

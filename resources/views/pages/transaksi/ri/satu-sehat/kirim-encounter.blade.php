@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\SATUSEHAT\EncounterTrait;
+use App\Support\DischargeDisposition;
 
 new class extends Component {
     use EmrRITrait, EncounterTrait;
@@ -179,6 +180,23 @@ new class extends Component {
                 'period' => ['start' => $startDate->toIso8601String(), 'end' => $endDate->toIso8601String()],
             ];
             $existing['period']['end'] = $endDate->toIso8601String();
+
+            // Status pulang → hospitalization.dischargeDisposition (SNOMED, sudah tersimpan di EMR).
+            // Kode tak dikenal → field TIDAK diisi, jangan menebak.
+            $disposisi = DischargeDisposition::fromKode(
+                $dataRI['perencanaan']['tindakLanjut']['tindakLanjutKode'] ?? null
+            );
+            if ($disposisi !== null) {
+                $existing['hospitalization']['dischargeDisposition'] = [
+                    'coding' => [[
+                        'system'  => 'http://snomed.info/sct',
+                        'code'    => $disposisi['code'],
+                        'display' => $disposisi['display'],
+                    ]],
+                    'text' => $disposisi['display'],
+                ];
+            }
+
             $this->makeRequest('put', "Encounter/{$ss['encounterId']}", $existing);
             $ss['encounterFinished'] = true;
 
