@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\SATUSEHAT\MedicationRequestTrait;
+use App\Support\EresepJson;
 
 new class extends Component {
     use EmrUGDTrait, MedicationRequestTrait;
@@ -15,6 +16,7 @@ new class extends Component {
     public ?string $rjNo = null;
     public bool $hasEncounter = false;
     public int $count = 0;
+    public int $racikanSkipped = 0; // grup racikan yang belum didukung (compound)
 
     public function mount(?string $rjNo = null): void
     {
@@ -43,6 +45,9 @@ new class extends Component {
         $ss = $data['satusehat'] ?? [];
         $this->hasEncounter = !empty($ss['encounterId']);
         $this->count = count($ss['medicationRequestIds'] ?? []);
+        // Racikan belum didukung (compound). Dihitung & ditampilkan supaya tidak
+        // hilang diam-diam — sebelumnya UGD sama sekali tak menyadarinya.
+        $this->racikanSkipped = EresepJson::jumlahRacikan($data);
     }
 
     public function kirimForCurrent(): void
@@ -145,7 +150,12 @@ new class extends Component {
         </div>
         <div>
             <div class="font-semibold text-ink dark:text-gray-100">Medication Request</div>
-            <div class="text-xs text-muted dark:text-gray-400">Resep obat.</div>
+            <div class="text-xs text-muted dark:text-gray-400">
+                Resep obat (KFA). Non-racikan.
+                @if ($racikanSkipped > 0)
+                    <span class="text-amber-600 dark:text-amber-400">{{ $racikanSkipped }} racikan belum didukung.</span>
+                @endif
+            </div>
             @if ($count > 0)
                 <div class="mt-1 font-mono text-xs text-success dark:text-success">
                     {{ $count }} terkirim

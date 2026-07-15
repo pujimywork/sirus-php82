@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\SATUSEHAT\MedicationRequestTrait;
+use App\Support\EresepJson;
 
 new class extends Component {
     use EmrRITrait, MedicationRequestTrait;
@@ -50,11 +51,9 @@ new class extends Component {
         $this->hasEncounter = !empty($ss['encounterId']);
         $this->count = count($ss['medicationRequestIds'] ?? []);
 
-        // hitung racikan (informasi ke user bahwa MVP belum kirim racikan)
-        $racikan = 0;
-        foreach ($data['eresepHdr'] ?? [] as $hdr) {
-            $racikan += count($hdr['eresepRacikan'] ?? []);
-        }
+        // Racikan belum didukung (compound). Dihitung per GRUP noRacikan (= jumlah obat
+        // racikan), bukan per baris bahan — sebelumnya keliru menghitung baris.
+        $racikan = EresepJson::jumlahRacikan($data);
         $this->racikanSkipped = $racikan;
     }
 
