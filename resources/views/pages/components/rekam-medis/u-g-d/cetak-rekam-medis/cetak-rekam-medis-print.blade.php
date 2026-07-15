@@ -159,7 +159,7 @@
                 @endif
                 <span class="font-bold">Riwayat Penyakit Sekarang :</span> {!! nl2br(e($txn['anamnesa']['riwayatPenyakitSekarangUmum']['riwayatPenyakitSekarangUmum'] ?? '-')) !!}<br>
                 <span class="font-bold">Riwayat Penyakit Dahulu :</span> {!! nl2br(e($txn['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] ?? '-')) !!}<br>
-                <span class="font-bold">Alergi :</span> {!! nl2br(e($txn['anamnesa']['alergi']['alergi'] ?? '-')) !!}<br>
+                <span class="font-bold">Alergi :</span> {!! nl2br(e(\App\Support\AlergiSnomed::untukCetak($txn['anamnesa']['alergi'] ?? []))) !!}<br>
                 <span class="font-bold">Riwayat Pemakaian Obat :</span>
                 <table class="w-full border-collapse mt-0.5 text-[10px]">
                     <thead>

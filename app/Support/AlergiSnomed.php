@@ -153,6 +153,61 @@ class AlergiSnomed
     }
 
     /**
+     * Teks alergi untuk DISPLAY / CETAK (read-only) — RJ/UGD.
+     *
+     * Cetakan membedakan keadaan; sebelumnya semuanya jadi "-" sehingga pembaca tak bisa
+     * tahu pasien memang tak punya alergi ATAU perawat lupa mengisi:
+     *   1. dikaji, tidak ada alergi   -> "Tidak ada alergi"
+     *   2. dikaji, ada alergi         -> teksnya
+     *   3. dikaji "Ya" tapi tak dirinci -> "Ada (belum dirinci)"
+     *   4. record lama, teks terisi   -> teksnya apa adanya (JANGAN ditafsir)
+     *   5. record lama, KOSONG        -> "Tidak ada alergi"
+     *
+     * Keadaan 5 = keputusan user 2026-07-15 atas dasar KONVENSI LAMA: di sistem lama,
+     * alergi kosong memang DIPERSEPSIKAN "tidak ada alergi" — perawat sudah bertanya lalu
+     * mengosongkannya. Jadi menulis "Belum dikaji" justru salah ke arah sebaliknya
+     * (seolah tak pernah ditanyakan).
+     *
+     * ⚠️ Risiko yang disadari: kalau ternyata ada record yang benar-benar terlewat, ia akan
+     * tercetak "Tidak ada alergi" — klaim yang tak pernah dibuat siapa pun. Sinyal yang
+     * berlawanan dgn konvensi itu: dari 397 record RJ, 294 MENGETIK "tidak ada"/"disangkal"
+     * secara eksplisit sementara 90 dibiarkan kosong — kalau kosong sudah berarti "tidak
+     * ada", 294 orang itu tak perlu repot mengetik. Bila kelak diputuskan sebaliknya, ganti
+     * fallback ini ke 'Belum dikaji' (satu baris, di bawah).
+     */
+    public static function untukCetak(array $node): string
+    {
+        return self::teksCetak($node, self::KEYS_RJ_UGD);
+    }
+
+    /** Idem untuk RI (`pengkajianDokter.anamnesa`, key datar `jenisAlergi`). */
+    public static function untukCetakRi(array $anamnesa): string
+    {
+        return self::teksCetak($anamnesa, self::KEYS_RI);
+    }
+
+    /** @param array<string,string> $k */
+    private static function teksCetak(array $node, array $k): string
+    {
+        $teks = trim((string) ($node[$k['teks']] ?? ''));
+        $ada = trim((string) ($node[$k['ada']] ?? ''));
+
+        if ($ada === 'Tidak') {
+            return self::TIDAK_ADA['alergi'];
+        }
+
+        if ($ada === 'Ya') {
+            return $teks !== '' ? $teks : 'Ada (belum dirinci)';
+        }
+
+        // Record lama (belum ada jawaban Ya/Tidak). Teks lama ditampilkan APA ADANYA —
+        // jangan dinormalkan: cetakan harus memperlihatkan yang benar-benar dicatat waktu
+        // itu, bukan tafsiran kita. Kosong -> "Tidak ada alergi" mengikuti konvensi lama
+        // (lihat catatan keadaan 5 di docblock).
+        return $teks !== '' ? $teks : self::TIDAK_ADA['alergi'];
+    }
+
+    /**
      * Petakan konstanta (berkey RJ/UGD) ke nama key modul tujuan.
      *
      * @param  array<string,string> $k

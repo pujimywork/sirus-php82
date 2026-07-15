@@ -326,7 +326,7 @@ new class extends Component {
                                     class="text-body dark:text-gray-300">{{ $txn['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] ?? '-' }}</span>
                             </p>
                             <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Alergi :</span><span
-                                    class="text-body dark:text-gray-300">{{ $txn['anamnesa']['alergi']['alergi'] ?? '-' }}</span>
+                                    class="text-body dark:text-gray-300">{{ \App\Support\AlergiSnomed::untukCetak($txn['anamnesa']['alergi'] ?? []) }}</span>
                             </p>
                             <div>
                                 <p class="mb-1.5 text-base text-muted">Riwayat Pemakaian Obat :</p>
