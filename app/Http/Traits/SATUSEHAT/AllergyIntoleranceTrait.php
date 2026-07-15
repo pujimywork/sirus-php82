@@ -43,9 +43,6 @@ trait AllergyIntoleranceTrait
                     "code"   => "confirmed"
                 ]]
             ],
-            "type"               => "allergy",
-            "category"           => [$data['category'] ?? 'medication'],
-            "criticality"        => $data['criticality'] ?? 'low',
             "code"               => [
                 "coding" => [[
                     "system"  => "http://snomed.info/sct",
@@ -68,6 +65,24 @@ trait AllergyIntoleranceTrait
             "onsetDateTime"      => $data['onset']   ?? now()->toIso8601String(),
             "note"               => [["text" => $data['note']  ?? '']],
         ];
+
+        // type/category/criticality SENGAJA opsional — kirim null utk MENGHILANGKANNYA.
+        // Wajib dihilangkan untuk pernyataan "no known allergy" (mis. SNOMED 716186003):
+        // ketiganya atribut alergi yang ADA. category='medication' bersama 716186003 malah
+        // kontradiktif — "tidak ada alergi obat" punya kode sendiri (409137002). Pola ini
+        // mengikuti contoh "no known allergies" (code + clinicalStatus + verificationStatus
+        // saja, tanpa category/criticality/reaction).
+        // Dulu ketiganya di-HARDCODE ('allergy'/'medication'/'low') sehingga setiap kiriman
+        // "tidak ada alergi" membawa klaim kategori yang tak pernah dibuat siapa pun.
+        if (array_key_exists('type', $data) ? $data['type'] !== null : true) {
+            $payload['type'] = $data['type'] ?? 'allergy';
+        }
+        if (array_key_exists('category', $data) ? $data['category'] !== null : true) {
+            $payload['category'] = [$data['category'] ?? 'medication'];
+        }
+        if (array_key_exists('criticality', $data) ? $data['criticality'] !== null : true) {
+            $payload['criticality'] = $data['criticality'] ?? 'low';
+        }
 
         return $this->makeRequest('post', '/AllergyIntolerance', $payload);
     }

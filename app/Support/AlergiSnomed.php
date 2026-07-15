@@ -66,6 +66,29 @@ class AlergiSnomed
         'disangkal', 'nihil', 'none', '-',
     ];
 
+    /**
+     * Apakah kode ini pernyataan "tidak ada alergi" (bukan zat penyebab)?
+     *
+     * Dipakai sender SATUSEHAT: AllergyIntolerance untuk "no known allergy" TIDAK boleh
+     * membawa `category`/`criticality`/`type` — itu atribut alergi yang ADA. Mengirim
+     * category='medication' bersama 716186003 malah kontradiktif: "tidak ada alergi obat"
+     * punya kodenya sendiri (409137002), bukan 716186003.
+     */
+    public static function adalahTidakAdaAlergi(?string $kode): bool
+    {
+        $k = trim((string) $kode);
+        if ($k === '') {
+            return false;
+        }
+
+        return in_array($k, [
+            self::TIDAK_ADA['snomedCode'],
+            self::TIDAK_ADA_OBAT['snomedCode'],
+            self::TIDAK_ADA_MAKANAN['snomedCode'],
+            self::TIDAK_ADA_LINGKUNGAN['snomedCode'],
+        ], true);
+    }
+
     /** Normalkan teks bebas: huruf kecil, buang spasi & tanda baca. */
     private static function norm(string $s): string
     {

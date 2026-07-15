@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\SATUSEHAT\AllergyIntoleranceTrait;
+use App\Support\AlergiSnomed;
 
 new class extends Component {
     use EmrRITrait, AllergyIntoleranceTrait;
@@ -77,7 +78,10 @@ new class extends Component {
             $alergiText = trim((string) ($an['jenisAlergi'] ?? ''));
             $snomedCode = trim((string) ($an['jenisAlergiSnomedCode'] ?? ''));
 
-            if ($alergiText === '') { $this->dispatch('toast', type: 'error', message: 'Data alergi belum diisi di Pengkajian Dokter.'); return; }
+            $tidakAdaAlergi = AlergiSnomed::adalahTidakAdaAlergi($snomedCode);
+            // Teks boleh kosong SELAMA kodenya pernyataan "tidak ada alergi" — di situ
+            // kode-nya yang bermakna, bukan teksnya.
+            if ($alergiText === '' && !$tidakAdaAlergi) { $this->dispatch('toast', type: 'error', message: 'Data alergi belum diisi di Pengkajian Dokter.'); return; }
             if ($snomedCode === '') { $this->dispatch('toast', type: 'error', message: 'Kode SNOMED Alergi belum diisi di Pengkajian Dokter (wajib utk Satu Sehat).'); return; }
 
             $res = $this->createAllergyIntolerance([
@@ -86,8 +90,12 @@ new class extends Component {
                 'recorderId'  => $recorderId,
                 'code'        => $snomedCode,
                 'display'     => $an['jenisAlergiSnomedDisplayEn'] ?? ($an['jenisAlergiSnomedDisplayId'] ?? $alergiText),
-                'category'    => 'medication',
-                'criticality' => 'low',
+                // "Tidak ada alergi" (mis. 716186003) = pernyataan TIADA alergi -> type/category/
+                // criticality DIHILANGKAN (null). Mengirim category='medication' bersamanya
+                // kontradiktif: "tidak ada alergi obat" punya kode sendiri (409137002).
+                'type'        => $tidakAdaAlergi ? null : 'allergy',
+                'category'    => $tidakAdaAlergi ? null : 'medication',
+                'criticality' => $tidakAdaAlergi ? null : 'low',
                 'note'        => $alergiText,
                 'onset'       => $this->parseDate($dataRI['entryDate'] ?? '')->toIso8601String(),
             ]);
