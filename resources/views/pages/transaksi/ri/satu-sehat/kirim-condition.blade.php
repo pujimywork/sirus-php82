@@ -1,6 +1,6 @@
 <?php
 // resources/views/pages/transaksi/ri/satu-sehat/kirim-condition.blade.php
-// Step 2 (RI): Kirim Diagnosa ICD-10.
+// Step 3 (RI): Kirim Diagnosa ICD-10.
 //
 // Sumber diagnosa RI = rstxn_ridtls (diag_id) JOIN rsmst_mstdiags BY diag_id.
 // Lookup by diag_id (PK unik) → AMAN dari jebakan 288 icdx kembar (lihat skill diagnosa-flow).
@@ -147,7 +147,7 @@ new class extends Component {
     <div class="flex items-center gap-3">
         <div
             class="flex items-center justify-center w-8 h-8 rounded-full {{ $count > 0 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
-            <span class="text-sm font-bold">2</span>
+            <span class="text-sm font-bold">3</span>
         </div>
         <div>
             <div class="font-semibold text-ink dark:text-gray-100">Condition</div>
