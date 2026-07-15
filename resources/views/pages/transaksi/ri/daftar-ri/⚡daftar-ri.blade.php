@@ -361,7 +361,15 @@ new class extends Component {
                 }
             }
 
-            if ($this->isDokterOrPerawat()) {
+            // Batal (ri_status='F') dinilai DULUAN & lepas dari peran: dokter/perawat pun
+            // tak boleh masuk EMR record batal. Sebelumnya 'F' tak ada di statusMap → tampil
+            // badge abu-abu "RI", tak bisa dibedakan dari record hidup, tombol tetap aktif.
+            $row->is_batal = ($row->ri_status ?? '') === 'F';
+
+            if ($row->is_batal) {
+                $row->status_text = 'Batal';
+                $row->status_variant = 'danger';
+            } elseif ($this->isDokterOrPerawat()) {
                 $statusMap = ['A' => 'Belum Dilayani', 'L' => 'Selesai'];
                 $statusVariant = ['A' => 'warning', 'L' => 'success'];
                 $row->status_text = $statusMap[$row->erm_status] ?? 'Pelayanan';
@@ -441,6 +449,9 @@ new class extends Component {
                             <option value="">Semua</option>
                             <option value="I">Dirawat</option>
                             <option value="P">Pulang</option>
+                            {{-- Batal (F) tak punya opsi sendiri sebelumnya, padahal ikut terbawa
+                                 di "Semua" — jadi record batal muncul tanpa bisa dicari sengaja. --}}
+                            <option value="F">Batal</option>
                         </x-select-input>
                     </div>
 
@@ -701,6 +712,27 @@ new class extends Component {
 
                                     {{-- ACTION --}}
                                     <td class="px-6 py-6 align-top">
+                                        @if ($row->is_batal)
+                                            {{-- Batal: actions tidak diakses, konfirmasi ke Pendaftaran.
+                                                 Pola sama dgn ⚡pelayanan-rj / ⚡pelayanan-ugd — mencegah petugas
+                                                 salah entry (administrasi/EMR) ke record yang sudah dibatalkan. --}}
+                                            <div class="flex flex-col items-center gap-2 text-center">
+                                                <div class="text-red-500 dark:text-red-400">
+                                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="1.5"
+                                                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                                <span class="text-xs font-semibold text-red-600 dark:text-red-400">
+                                                    Pasien Batal
+                                                </span>
+                                                <span class="text-xs text-muted dark:text-gray-400">
+                                                    Konfirmasi ke<br>Pendaftaran
+                                                </span>
+                                            </div>
+                                        @else
                                         <div class="flex items-center gap-3">
 
                                             <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
@@ -936,6 +968,7 @@ new class extends Component {
                                             </x-dropdown>
 
                                         </div>
+                                        @endif
                                     </td>
 
                                 </tr>

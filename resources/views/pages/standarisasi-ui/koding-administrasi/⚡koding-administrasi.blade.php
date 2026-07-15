@@ -83,6 +83,49 @@ DB::transaction(function () {
 //   (Oracle Dev 6i / dual-system) → jangan jadikan satu-satunya sumber.
 TXT,
 
+'transfer-rj-ugd' => <<<'TXT'
+// TRANSFER RJ → UGD (transfer-rj-ke-ugd-actions). Pola sama, arah beda:
+// 1. Buat header UGD (rstxn_ugdhdrs, rj_status 'A')
+// 2. Biaya RJ → rstxn_ugdtempadmins (tempadm_flag='RJ', tempadm_ref=rj_no RJ)
+// 3. Link: rstxn_ugdbiayaselamadirjs
+// Beda dari UGD→RI: cara masuk dari rsmst_entryugds, TIDAK ada ruangan/bed.
+//
+// PENAMAAN — konvensi lama BERLAWANAN padahal bentuknya sama (transfer-X-Y):
+//   transfer-ri-ugd = UGD→RI (tujuan-asal) | transfer-rj-ugd = RJ→UGD (asal-tujuan)
+// Sejak 2026-07 dipakai kata "ke": transfer-ugd-ke-ri, transfer-rj-ke-ugd.
+TXT,
+
+'transfer-dokter-tarif' => <<<'TXT'
+// DOKTER & TARIF SAAT TRANSFER — jangan salin mentah dari kunjungan asal.
+//
+// 1) DOKTER dipilih lewat <livewire:lov.dokter.lov-dokter target="...">;
+//    default = dokter asal + fallback saat insert ($pilih ?: $hdr->dr_id).
+//    resetTransferState() WAJIB mereset dokter: komponen di-mount sekali per
+//    halaman & dipakai berulang → tanpa itu dokter pasien sebelumnya terbawa.
+//
+// 2) rstxn_rihdrs.dr_id = dokter PENERIMA, BUKAN DPJP.
+//    ⚡daftar-ri menampilkannya sebagai "Penerima:"; "DPJP:" diambil dari
+//    pengkajianAwalPasienRawatInap.levelingDokter (diisi di EMR, berlevel
+//    Utama/RawatGabung, BISA >1 dokter). Satu kolom dr_id tak menampung itu.
+//
+// 3) TARIF ikut dokter & klaim TERPILIH, bukan disalin:
+//    rstxn_ugdhdrs.poli_price NAMANYA menyesatkan → isinya TARIF UGD
+//      (rsmst_doctors.ugd_price / ugd_price_bpjs). Daftar RJ mengisi kolom
+//      senama dari poli_price. Aturan resmi: recomputeAdminPrices()
+//      ⚡daftar-ugd-actions (Kronis → 0).
+//    Tampilkan tarif di modal pakai method YANG SAMA dgn saat insert, supaya
+//      angka di layar tak pernah beda dgn yang tersimpan.
+//    rj_admin = 0 saat transfer: admin OB sudah dibayar di kunjungan asal.
+//
+// 4) rstxn_rihdrs.admin_status BUKAN FLAG — itu NOMINAL:
+//      rsmst_parameters par_id=2 "ADMIN STATUS RI" (50.000) → SELALU dikenakan
+//      rsmst_parameters par_id=3 "ADMIN USIA 14+" (25.000) → admin_age, via toggle
+//    Keduanya dijumlahkan sebagai UANG di kasir-ri & PendapatanRsTrait
+//      (NVL(admin_age,0) + NVL(admin_status,0) + ...).
+//    Riwayat kolom = tarif: 20.000 → 30.000 → 50.000. Menulis '1'/'0' di situ
+//      membuat RS menagih Rp 1 / kehilangan 50.000.
+TXT,
+
 'batal-transfer' => <<<'TXT'
 // BATAL TRANSFER (kasir-ugd::batalTransferRI). Cari RI hasil transfer BERLAPIS:
 $riHdrNo = DB::table('rstxn_ritempadmins')                 // 1) link UTAMA
@@ -623,7 +666,14 @@ TXT,
                     {{-- ====== 06 TRANSFER ====== --}}
                     <section x-show="section === 'transfer'" x-cloak>
                         <div class="ds-eyebrow mb-3">06 — Transfer &amp; Batal</div>
-                        <h1 class="ds-display-md mb-4">Transfer UGD → RI</h1>
+                        <h1 class="ds-display-md mb-4">Transfer antar-layanan</h1>
+                        <p class="ds-body-md mb-4" style="max-width:62ch">
+                            Dua arah: <strong>RJ → UGD</strong> dan <strong>UGD → RI</strong>. Polanya sama —
+                            buat header tujuan, pindahkan biaya asal lewat tabel <span class="ds-code">tempadmins</span>,
+                            kunci kunjungan asal.
+                        </p>
+
+                        <h2 class="ds-title-md mt-6 mb-3">Transfer UGD → RI</h2>
                         <p class="ds-body-md mb-4" style="max-width:62ch">
                             Pasien UGD yang perlu dirawat inap di-<em>transfer</em>: sistem membuat header RI baru,
                             memindahkan biaya UGD/RJ ke RI, dan mengunci UGD. Komponen:
@@ -635,6 +685,54 @@ TXT,
                                 <span class="ds-caption-up" style="color:var(--on-dark-soft)">Transfer — tabel & tautan yang ditulis</span>
                             </div>
                             <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['transfer'] }}</pre>
+                        </div>
+
+                        <h2 class="ds-title-md mt-8 mb-3">Transfer RJ → UGD</h2>
+                        <p class="ds-body-md mb-4" style="max-width:62ch">
+                            Arah sebaliknya, pola sama. Komponen:
+                            <span class="ds-code">transfer-rj-ke-ugd-actions</span>.
+                        </p>
+                        <div class="ds-card-dark mt-2" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">RJ → UGD &amp; penamaan komponen</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['transfer-rj-ugd'] }}</pre>
+                        </div>
+
+                        <h2 class="ds-title-md mt-8 mb-3">Dokter &amp; tarif saat transfer</h2>
+                        <p class="ds-body-md mb-4" style="max-width:62ch">
+                            Bagian yang paling sering salah: dokter &amp; tarif <strong>tidak boleh disalin mentah</strong>
+                            dari kunjungan asal. Tiga jebakan di bawah semuanya pernah terjadi di produksi.
+                        </p>
+                        <div class="ds-card-dark mt-2" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Aturan dokter, tarif &amp; admin</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['transfer-dokter-tarif'] }}</pre>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-3">
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Penerima ≠ DPJP</div>
+                                <div class="ds-body-sm">
+                                    <span class="ds-code">rihdr.dr_id</span> = dokter <strong>Penerima</strong>.
+                                    DPJP ada di <span class="ds-code">levelingDokter</span> (EMR, bisa lebih dari satu).
+                                </div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">poli_price = tarif UGD</div>
+                                <div class="ds-body-sm">
+                                    Di <span class="ds-code">rstxn_ugdhdrs</span> kolom itu diisi dari
+                                    <span class="ds-code">ugd_price</span>, bukan tarif poli. Nama kolom menyesatkan.
+                                </div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">admin_status = nominal</div>
+                                <div class="ds-body-sm">
+                                    Bukan flag. <span class="ds-code">par_id=2</span> = 50.000, dijumlahkan sebagai uang.
+                                    Menulis <span class="ds-code">'1'</span> = menagih Rp 1.
+                                </div>
+                            </div>
                         </div>
 
                         <div class="ds-card-outline mt-6" style="padding:16px 20px">
