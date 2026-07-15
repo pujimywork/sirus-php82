@@ -82,6 +82,24 @@ trait ObservationTrait
                 'text' => $data['valueCodeableConcept']['display'],
             ];
         }
+        // ...or a range (mis. dosis oksigen "3-4 L/menit" — rentang pilihan, BUKAN hasil ukur;
+        // jangan dipaksa jadi angka tunggal karena itu mengarang presisi yang tak pernah diukur)
+        elseif (!empty($data['valueRange']) && is_array($data['valueRange'])) {
+            $range = [];
+            foreach (['low', 'high'] as $sisi) {
+                if (isset($data['valueRange'][$sisi])) {
+                    $range[$sisi] = [
+                        'value'  => $data['valueRange'][$sisi]['value'],
+                        'unit'   => $data['valueRange'][$sisi]['unit'],
+                        'system' => 'http://unitsofmeasure.org',
+                        'code'   => $data['valueRange'][$sisi]['code'],
+                    ];
+                }
+            }
+            if ($range !== []) {
+                $payload['valueRange'] = $range;
+            }
+        }
         // ...or multiple components
         elseif (!empty($data['components']) && is_array($data['components'])) {
             $payload['component'] = $data['components'];

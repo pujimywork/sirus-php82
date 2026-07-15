@@ -130,6 +130,8 @@ new class extends Component {
                         wire:key="ss-diet-ri-{{ $riHdrNo ?? 'none' }}" />
                     <livewire:pages::transaksi.ri.satu-sehat.kirim-penilaian :riHdrNo="$riHdrNo"
                         wire:key="ss-penilaian-ri-{{ $riHdrNo ?? 'none' }}" />
+                    <livewire:pages::transaksi.ri.satu-sehat.kirim-observasi-lanjutan :riHdrNo="$riHdrNo"
+                        wire:key="ss-observasi-lanjutan-ri-{{ $riHdrNo ?? 'none' }}" />
                     {{-- ChiefComplaint & Allergy RI butuh SNOMED (dinonaktifkan sementara).
                          Aktifkan bersama LOV SNOMED di rm-pengkajian-dokter-ri-actions (false → true). --}}
                     @if (false)
