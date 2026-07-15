@@ -344,15 +344,29 @@ new class extends Component {
             $tindakanHtml = '<li>&nbsp;&nbsp;<em>ICD-9CM:</em> </li><li>&nbsp;&nbsp;<em>ICD-9CM:</em> </li>';
         }
 
-        // ── 8) Riwayat Alergi ───────────────────────────────
-        $alergiObat = trim((string) data_get($dataRI, 'pengkajianAwalPasienRawatInap.bagian2RiwayatAlergi.alergiObat.desc', ''));
-        $alergiMakanan = trim((string) data_get($dataRI, 'pengkajianAwalPasienRawatInap.bagian2RiwayatAlergi.alergiMakanan.desc', ''));
-        $alergiLain = trim((string) data_get($dataRI, 'pengkajianAwalPasienRawatInap.bagian2RiwayatAlergi.alergiLain.desc', ''));
-        $alergiParts = [];
-        if ($alergiObat !== '')    $alergiParts[] = 'Obat: ' . e($alergiObat);
-        if ($alergiMakanan !== '') $alergiParts[] = 'Makanan: ' . e($alergiMakanan);
-        if ($alergiLain !== '')    $alergiParts[] = 'Lain: ' . e($alergiLain);
-        $alergi = implode('; ', $alergiParts);
+        // ── 8) Riwayat Alergi ← pengkajianDokter.anamnesa.jenisAlergi ───────
+        // DULU membaca `pengkajianAwalPasienRawatInap.bagian2RiwayatAlergi.{alergiObat,
+        // alergiMakanan, alergiLain}.desc` — node itu TIDAK PERNAH DITULIS siapa pun
+        // (0 dari 61.446 record; satu-satunya penyebutnya adalah pembaca ini sendiri),
+        // sehingga Riwayat Alergi di Resume Medis SELALU KOSONG. Sumber yang benar =
+        // Pengkajian Dokter RI (2.039 record terisi), sejalan dgn RJ/UGD.
+        $alergi = e(trim((string) data_get($dataRI, 'pengkajianDokter.anamnesa.jenisAlergi', '')));
+
+        // Fallback: node lama, kalau suatu saat form pengkajian awal benar-benar mengisinya.
+        if ($alergi === '') {
+            $alergiParts = [];
+            foreach ([
+                'Obat' => 'alergiObat',
+                'Makanan' => 'alergiMakanan',
+                'Lain' => 'alergiLain',
+            ] as $label => $key) {
+                $v = trim((string) data_get($dataRI, "pengkajianAwalPasienRawatInap.bagian2RiwayatAlergi.{$key}.desc", ''));
+                if ($v !== '') {
+                    $alergiParts[] = $label . ': ' . e($v);
+                }
+            }
+            $alergi = implode('; ', $alergiParts);
+        }
 
         // ── 9) Kondisi Saat Pulang ← perencanaan.tindakLanjut.tindakLanjut ─
         // `tindakLanjut` menyimpan KUNCI INTERNAL (bentuknya mirip SNOMED tapi 2 di antaranya
