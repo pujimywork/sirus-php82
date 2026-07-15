@@ -9,9 +9,11 @@ use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
+use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
+use App\Support\AlergiSnomed;
 
 new class extends Component {
-    use EmrRITrait, EmrUGDTrait, WithRenderVersioningTrait, WithValidationToastTrait;
+    use EmrRITrait, EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public bool $isReadOnlyByRole = false; // true jika user bukan Dokter/Admin — perawat boleh lihat tapi tidak edit/simpan
@@ -95,9 +97,19 @@ new class extends Component {
         $pd['anamnesa']['riwayatPenyakit']['dahulu'] ??= '';
         $fill($pd['anamnesa']['riwayatPenyakit']['dahulu'], (string) data_get($ugd, 'anamnesa.riwayatPenyakitDahulu.riwayatPenyakitDahulu', ''));
 
-        // 4) Jenis Alergi
+        // 4) Jenis Alergi — teks + KODE SNOMED + jawaban Ya/Tidak.
+        // Kode wajib ikut: sejak UGD punya default "Tidak ada alergi" (716186003), menyalin
+        // teksnya saja membuat kode hilang di RI. Kode hanya ikut kalau teksnya juga ikut
+        // (fill-only), supaya kode tak menempel ke alergi lain yang sudah ada di RI.
         $pd['anamnesa']['jenisAlergi'] ??= '';
+        $alergiKosong = trim($pd['anamnesa']['jenisAlergi']) === '';
         $fill($pd['anamnesa']['jenisAlergi'], (string) data_get($ugd, 'anamnesa.alergi.alergi', ''));
+        if ($alergiKosong && trim((string) $pd['anamnesa']['jenisAlergi']) !== '') {
+            $pd['anamnesa']['jenisAlergiSnomedCode'] = (string) data_get($ugd, 'anamnesa.alergi.snomedCode', '');
+            $pd['anamnesa']['jenisAlergiSnomedDisplayEn'] = (string) data_get($ugd, 'anamnesa.alergi.snomedDisplayEn', '');
+            $pd['anamnesa']['jenisAlergiSnomedDisplayId'] = (string) data_get($ugd, 'anamnesa.alergi.snomedDisplayId', '');
+            $pd['anamnesa']['adaAlergi'] = (string) data_get($ugd, 'anamnesa.alergi.adaAlergi', '');
+        }
 
         // 5) Pemeriksaan Fisik
         $pd['fisik'] ??= '';
@@ -141,6 +153,7 @@ new class extends Component {
                 'keluhanUtamaSnomedDisplayId' => '',
                 'keluhanTambahan' => '',
                 'riwayatPenyakit' => ['sekarang' => '', 'dahulu' => '', 'keluarga' => ''],
+                'adaAlergi' => '', // diturunkan normalisasiRi() dari teks — JANGAN preset 'Tidak'
                 'jenisAlergi' => '',
                 'jenisAlergiSnomedCode' => '',
                 'jenisAlergiSnomedDisplayEn' => '',
@@ -159,12 +172,43 @@ new class extends Component {
             'tandaTanganDokter' => ['dokterPengkaji' => '', 'dokterPengkajiCode' => '', 'jamDokterPengkaji' => ''],
         ];
 
+        // Prefill alergi dari MASTER PASIEN (pola sama RJ/UGD) — dokter tak perlu isi ulang
+        // tiap kunjungan. Fill-only: yang sudah terisi di RI TIDAK ditimpa. Kode SNOMED hanya
+        // ikut kalau teksnya juga ikut, supaya kode tak menempel ke alergi lain.
+        $pasienData = $this->findDataMasterPasien($this->dataDaftarRi['regNo'] ?? '');
+        $pdAnamnesa = &$this->dataDaftarRi['pengkajianDokter']['anamnesa'];
+        if (trim((string) ($pdAnamnesa['jenisAlergi'] ?? '')) === '' && !empty($pasienData['pasien']['alergi'])) {
+            $pdAnamnesa['jenisAlergi'] = $pasienData['pasien']['alergi'];
+            if (!empty($pasienData['pasien']['alergiSnomedCode'])) {
+                $pdAnamnesa['jenisAlergiSnomedCode'] = $pasienData['pasien']['alergiSnomedCode'];
+                $pdAnamnesa['jenisAlergiSnomedDisplayEn'] = $pasienData['pasien']['alergiSnomedDisplayEn'] ?? '';
+                $pdAnamnesa['jenisAlergiSnomedDisplayId'] = $pasienData['pasien']['alergiSnomedDisplayId'] ?? '';
+            }
+        }
+        unset($pdAnamnesa);
+
+        // Seragamkan alergi + turunkan radio "Ada alergi?" (default Tidak -> SNOMED
+        // 716186003), pola sama RJ/UGD. RI menyimpannya dgn key BEDA (jenisAlergi*, datar)
+        // sehingga dipakai normalisasiRi(); logikanya tetap satu sumber. Record lama tak
+        // punya adaAlergi -> diturunkan dari teksnya, jadi tak perlu migrasi data.
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa'] = AlergiSnomed::normalisasiRi(
+            $this->dataDaftarRi['pengkajianDokter']['anamnesa'] ?? [],
+        );
+
         $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo); // ← trait
 
         // Lock untuk role bukan Dokter/Admin: Perawat boleh lihat tapi tidak edit/simpan
         $this->isReadOnlyByRole = !auth()->user()->hasAnyRole(['Dokter', 'Admin']);
 
         $this->incrementVersion('modal-pengkajian-dokter-ri');
+    }
+
+    /** Radio "Ada alergi?" diubah -> seragamkan lewat sumber tunggal. */
+    public function updatedDataDaftarRiPengkajianDokterAnamnesaAdaAlergi(): void
+    {
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa'] = AlergiSnomed::normalisasiRi(
+            $this->dataDaftarRi['pengkajianDokter']['anamnesa'] ?? [],
+        );
     }
 
     #[On('save-rm-pengkajian-dokter-ri')]
@@ -193,6 +237,10 @@ new class extends Component {
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
 
+                // Side effect: sync alergi + kode SNOMED ke master pasien (pola sama RJ/UGD)
+                // supaya kunjungan berikutnya — di modul mana pun — sudah terisi.
+                $this->syncAlergiKeMasterPasien();
+
                 $this->appendAdminLogRI((int) $this->riHdrNo, $logKeterangan ?? (($isBaru ? 'Buat' : 'Update') . ' Pengkajian Dokter RI'), 'MR');
             });
             $this->afterSave('Pengkajian Dokter berhasil disimpan.');
@@ -201,6 +249,34 @@ new class extends Component {
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Sync alergi + kode SNOMED ke master pasien. Kode SELALU ditimpa bersama teksnya
+     * (termasuk jadi kosong) supaya kode lama tak menempel pada alergi yang sudah diganti —
+     * mis. teks jadi "allopurinol" tapi kode tertinggal 716186003 ("No known allergy"),
+     * yang berarti melapor pasien TIDAK alergi padahal alergi.
+     */
+    private function syncAlergiKeMasterPasien(): void
+    {
+        $regNo = $this->dataDaftarRi['regNo'] ?? null;
+        if (!$regNo) {
+            return;
+        }
+
+        $an = $this->dataDaftarRi['pengkajianDokter']['anamnesa'] ?? [];
+        $alergi = trim((string) ($an['jenisAlergi'] ?? ''));
+        if ($alergi === '') {
+            return;
+        }
+
+        $pasienData = $this->findDataMasterPasien($regNo);
+        $pasienData['pasien']['alergi'] = $alergi;
+        $pasienData['pasien']['alergiSnomedCode'] = $an['jenisAlergiSnomedCode'] ?? '';
+        $pasienData['pasien']['alergiSnomedDisplayEn'] = $an['jenisAlergiSnomedDisplayEn'] ?? '';
+        $pasienData['pasien']['alergiSnomedDisplayId'] = $an['jenisAlergiSnomedDisplayId'] ?? '';
+        $pasienData['pasien']['regNo'] = $regNo;
+        $this->updateJsonMasterPasien($regNo, $pasienData);
     }
 
     public function setDokterPengkaji(): void
@@ -465,26 +541,50 @@ new class extends Component {
                 </div>
             </div>
 
+            {{-- Ada alergi? — pola sama RJ/UGD. Default "Tidak" -> SNOMED 716186003 diisi di
+                 server (bukan lewat LOV zat: 716186003 konsep *situation*, bukan zat, jadi
+                 ditolak substance-code). Lihat App\Support\AlergiSnomed. --}}
             <div>
-                <x-input-label value="Jenis Alergi" />
-                <x-text-input wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.jenisAlergi" class="w-full mt-1"
-                    :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Alergi obat / makanan..." />
-
-                {{-- SNOMED CT — Alergi (untuk Satu Sehat) — DINONAKTIFKAN SEMENTARA (false → true utk aktifkan) --}}
-                @if (false)
-                <div class="mt-3">
-                    <livewire:lov.snomed.lov-snomed
-                        target="alergiSnomedRi"
-                        label="Kode SNOMED Alergi (Satu Sehat)"
-                        placeholder="Ketik nama alergi / obat..."
-                        valueSet="substance-code"
-                        :initialSnomedCode="$dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedCode'] ?? null"
-                        :disabled="$isFormLocked || $isReadOnlyByRole"
-                        wire:key="lov-snomed-alergi-ri-{{ $riHdrNo ?? 'new' }}-{{ $renderVersions['modal-pengkajian-dokter-ri'] ?? 0 }}"
-                    />
+                <x-input-label value="Ada Alergi?" />
+                <div class="flex gap-4 mt-2">
+                    @foreach (['Ya', 'Tidak'] as $opt)
+                        <x-radio-button :label="$opt" :value="$opt" name="adaAlergiRi"
+                            wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.adaAlergi" :disabled="$isFormLocked || $isReadOnlyByRole" />
+                    @endforeach
                 </div>
-                @endif
             </div>
+
+            @php $adaAlergiRi = ($dataDaftarRi['pengkajianDokter']['anamnesa']['adaAlergi'] ?? 'Tidak') === 'Ya'; @endphp
+
+            @if ($adaAlergiRi)
+                <div>
+                    {{-- Label/komponen/placeholder DISAMAKAN dgn RJ/UGD (dulu: label "Jenis
+                         Alergi", x-text-input 1 baris, placeholder beda). Key JSON tetap
+                         `jenisAlergi` — itu data, mengubahnya merusak record lama. --}}
+                    <x-input-label value="Alergi" :required="false" />
+                    <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.jenisAlergi"
+                        placeholder="Jenis Alergi — Makanan / Obat / Udara" :disabled="$isFormLocked || $isReadOnlyByRole" :rows="3"
+                        class="w-full mt-1" />
+
+                    {{-- SNOMED CT — ZAT penyebab alergi (Satu Sehat). DINONAKTIFKAN SEMENTARA
+                         (false → true utk aktifkan, bareng LOV keluhan utama di atas). --}}
+                    @if (false)
+                        <div class="mt-3">
+                            <livewire:lov.snomed.lov-snomed target="alergiSnomedRi"
+                                label="Kode SNOMED Zat Penyebab Alergi (Satu Sehat)"
+                                placeholder="Ketik nama zat / obat penyebab..." valueSet="substance-code"
+                                :initialSnomedCode="$dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedCode'] ?? null"
+                                :disabled="$isFormLocked || $isReadOnlyByRole"
+                                wire:key="lov-snomed-alergi-ri-{{ $riHdrNo ?? 'new' }}-{{ $renderVersions['modal-pengkajian-dokter-ri'] ?? 0 }}" />
+                        </div>
+                    @endif
+                </div>
+            @else
+                <div class="text-xs text-muted dark:text-gray-400">
+                    Terekam sebagai <span class="font-semibold text-ink dark:text-gray-100">Tidak ada alergi</span>
+                    <span class="font-mono text-[10px] text-muted-soft">716186003</span> untuk Satu Sehat.
+                </div>
+            @endif
 
         </div>
     </x-border-form>

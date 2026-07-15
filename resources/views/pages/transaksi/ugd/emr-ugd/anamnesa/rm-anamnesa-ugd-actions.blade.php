@@ -105,15 +105,22 @@ new class extends Component {
             $this->dataDaftarUGD['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] = $pasienData['pasien']['riwayatPenyakitDahulu'];
         }
 
-        // Default "Tidak ada alergi" (SNOMED 716186003) bila alergi MASIH KOSONG setelah
-        // prefill master pasien — dipasang saat form DIBUKA, bukan diam-diam saat simpan.
-        // Lihat App\Support\AlergiSnomed untuk alasan & risikonya.
-        $this->dataDaftarUGD['anamnesa']['alergi'] = AlergiSnomed::defaultBilaKosong(
+        // Seragamkan node alergi + turunkan radio "Ada alergi?" (default Tidak -> 716186003).
+        // Record lama tak punya key adaAlergi -> diturunkan dari teksnya. Lihat AlergiSnomed.
+        $this->dataDaftarUGD['anamnesa']['alergi'] = AlergiSnomed::normalisasi(
             $this->dataDaftarUGD['anamnesa']['alergi'] ?? [],
         );
 
         $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
         $this->incrementVersion('modal-anamnesa-ugd');
+    }
+
+    /** Radio "Ada alergi?" diubah -> seragamkan node lewat sumber tunggal. */
+    public function updatedDataDaftarUgdAnamnesaAlergiAdaAlergi(): void
+    {
+        $this->dataDaftarUGD['anamnesa']['alergi'] = AlergiSnomed::normalisasi(
+            $this->dataDaftarUGD['anamnesa']['alergi'] ?? [],
+        );
     }
 
     /* ===============================
@@ -395,7 +402,7 @@ new class extends Component {
             'riwayatPenyakitDahulu' => ['riwayatPenyakitDahulu' => ''],
 
             'alergiTab' => 'Alergi',
-            'alergi' => ['alergi' => '', 'snomedCode' => '', 'snomedDisplayEn' => '', 'snomedDisplayId' => ''],
+            'alergi' => ['adaAlergi' => '', 'alergi' => '', 'snomedCode' => '', 'snomedDisplayEn' => '', 'snomedDisplayId' => ''],
 
             'rekonsiliasiObatTab' => 'Riwayat Pemakaian Obat',
             'rekonsiliasiObat' => [],

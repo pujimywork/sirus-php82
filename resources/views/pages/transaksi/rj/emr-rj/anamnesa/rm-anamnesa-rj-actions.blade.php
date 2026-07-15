@@ -73,11 +73,10 @@ new class extends Component {
             $this->dataDaftarPoliRJ['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] = $pasienData['pasien']['riwayatPenyakitDahulu'];
         }
 
-        // ✅ Default "Tidak ada alergi" (SNOMED 716186003) bila alergi MASIH KOSONG setelah
-        // prefill master pasien. Dipasang saat form DIBUKA supaya dokter melihat & bisa
-        // mengubah — bukan disisipkan diam-diam saat simpan. Lihat App\Support\AlergiSnomed
-        // untuk alasan & risikonya.
-        $this->dataDaftarPoliRJ['anamnesa']['alergi'] = AlergiSnomed::defaultBilaKosong(
+        // ✅ Seragamkan node alergi + turunkan radio "Ada alergi?" (default Tidak -> SNOMED
+        // 716186003). Record lama tak punya key adaAlergi -> diturunkan dari teksnya, jadi
+        // tak perlu migrasi data. Lihat App\Support\AlergiSnomed.
+        $this->dataDaftarPoliRJ['anamnesa']['alergi'] = AlergiSnomed::normalisasi(
             $this->dataDaftarPoliRJ['anamnesa']['alergi'] ?? [],
         );
 
@@ -88,6 +87,18 @@ new class extends Component {
         if ($this->checkEmrRJStatus($rjNo)) {
             $this->isFormLocked = true;
         }
+    }
+
+    /**
+     * Radio "Ada alergi?" diubah -> seragamkan node lewat sumber tunggal.
+     * 'Tidak' membuang teks & kode zat lalu memasang 716186003; 'Ya' mengosongkan
+     * supaya petugas mengisi zat sebenarnya.
+     */
+    public function updatedDataDaftarPoliRjAnamnesaAlergiAdaAlergi(): void
+    {
+        $this->dataDaftarPoliRJ['anamnesa']['alergi'] = AlergiSnomed::normalisasi(
+            $this->dataDaftarPoliRJ['anamnesa']['alergi'] ?? [],
+        );
     }
 
     /* ===============================
@@ -129,6 +140,7 @@ new class extends Component {
 
             'alergiTab' => 'Alergi',
             'alergi' => [
+                'adaAlergi' => '', // diturunkan normalisasi() dari teks — JANGAN preset 'Tidak'
                 'alergi' => '',
                 'snomedCode' => '',
                 'snomedDisplayEn' => '',

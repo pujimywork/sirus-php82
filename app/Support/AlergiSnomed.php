@@ -56,18 +56,115 @@ class AlergiSnomed
     ];
 
     /**
-     * Isi node alergi dengan default "Tidak ada alergi" HANYA bila teksnya masih kosong.
-     * Node yang sudah terisi (dari master pasien / input dokter) TIDAK disentuh.
+     * Ejaan "tidak ada alergi" yang ditemukan di data lama (397 record RJ) — dipakai untuk
+     * menurunkan `adaAlergi` pada record yang belum punya key itu, supaya tak perlu migrasi
+     * data. Dicocokkan atas teks ternormalkan (huruf kecil, tanpa spasi/tanda baca).
+     */
+    private const TEKS_TIDAK_ADA = [
+        'tidakada', 'tidakadaalergi', 'tidakadaalergiyangdiketahui',
+        'tidaka', 'tidakda', 'tridakada', 'tdkada', 'tidak',
+        'disangkal', 'nihil', 'none', '-',
+    ];
+
+    /** Normalkan teks bebas: huruf kecil, buang spasi & tanda baca. */
+    private static function norm(string $s): string
+    {
+        return preg_replace('/[^a-z0-9]+/', '', mb_strtolower(trim($s))) ?? '';
+    }
+
+    /**
+     * Nama key per modul — RJ/UGD dan RI menyimpan alergi dengan bentuk BERBEDA
+     * (lihat [[feedback_ugd_rj_struktur_beda]]), tapi logikanya sama sehingga tetap
+     * satu sumber. `ada` sengaja sama supaya UI-nya seragam.
+     */
+    private const KEYS_RJ_UGD = [
+        'ada' => 'adaAlergi', 'teks' => 'alergi',
+        'code' => 'snomedCode', 'en' => 'snomedDisplayEn', 'id' => 'snomedDisplayId',
+    ];
+
+    private const KEYS_RI = [
+        'ada' => 'adaAlergi', 'teks' => 'jenisAlergi',
+        'code' => 'jenisAlergiSnomedCode', 'en' => 'jenisAlergiSnomedDisplayEn', 'id' => 'jenisAlergiSnomedDisplayId',
+    ];
+
+    /**
+     * Seragamkan node alergi RJ/UGD (`anamnesa.alergi`) + turunkan `adaAlergi`.
      *
      * @param  array $node  node anamnesa.alergi
-     * @return array        node (mungkin) sudah ber-default
      */
-    public static function defaultBilaKosong(array $node): array
+    public static function normalisasi(array $node): array
     {
-        if (trim((string) ($node['alergi'] ?? '')) !== '') {
-            return $node;
+        return self::terapkan($node, self::KEYS_RJ_UGD);
+    }
+
+    /**
+     * Seragamkan alergi RI (`pengkajianDokter.anamnesa`) — key-nya datar (`jenisAlergi`),
+     * bukan node tersendiri, jadi HANYA key alergi yang disentuh; sisanya utuh.
+     *
+     * @param  array $anamnesa  node pengkajianDokter.anamnesa
+     */
+    public static function normalisasiRi(array $anamnesa): array
+    {
+        return self::terapkan($anamnesa, self::KEYS_RI);
+    }
+
+    /**
+     * Inti logika (dipakai ketiga modul). Dipanggil saat form DIBUKA & saat radio diubah.
+     *
+     *   - Sudah punya `adaAlergi` -> hormati apa adanya (jawaban petugas).
+     *     ⚠️ Karena itu struktur DEFAULT modul TIDAK BOLEH preset `adaAlergi => 'Tidak'`:
+     *     nilai itu tak bisa dibedakan dari jawaban asli, sehingga akan MENGHAPUS alergi
+     *     yang baru di-prefill dari master pasien (mis. "allopurinol" jadi "Tidak ada
+     *     alergi"). Biarkan kosong — biar diturunkan dari teks. Jebakan yang sama pernah
+     *     terjadi pada resikoJatuh='Tidak' (lihat PenilaianObservationMap).
+     *   - Belum punya (record lama / pasien baru) -> turunkan dari teks:
+     *       teks kosong / salah satu ejaan "tidak ada" -> 'Tidak'
+     *       teks lain (mis. "allopurinol")            -> 'Ya'
+     *   - 'Tidak' -> teks & kode dipaksa ke TIDAK_ADA (716186003), kode zat dibuang.
+     *   - 'Ya'    -> teks & kode zat dibiarkan; kalau teksnya masih berbunyi "tidak ada",
+     *                dikosongkan supaya petugas mengisi zat yang sebenarnya.
+     *
+     * CATATAN: 716186003 adalah konsep SNOMED *situation*, BUKAN zat — jadi ia TIDAK
+     * boleh masuk LOV `substance-code` (terbukti ditolak $validate-code). Karena itu saat
+     * 'Tidak' LOV zat disembunyikan & dikosongkan, dan kodenya diisi di sini.
+     *
+     * @param  array<string,string> $k  peta nama key modul terkait
+     */
+    private static function terapkan(array $node, array $k): array
+    {
+        $teks = trim((string) ($node[$k['teks']] ?? ''));
+        $ada = trim((string) ($node[$k['ada']] ?? ''));
+
+        if ($ada !== 'Ya' && $ada !== 'Tidak') {
+            $ada = ($teks === '' || in_array(self::norm($teks), self::TEKS_TIDAK_ADA, true)) ? 'Tidak' : 'Ya';
         }
 
-        return [...$node, ...self::TIDAK_ADA];
+        if ($ada === 'Tidak') {
+            return [...$node, ...self::sebagai(self::TIDAK_ADA, $k), $k['ada'] => 'Tidak'];
+        }
+
+        // 'Ya' tapi teksnya masih "tidak ada" (mis. petugas baru mengubah radio) -> kosongkan
+        // supaya tak ada kontradiksi "ada alergi = tidak ada alergi".
+        if ($teks === '' || in_array(self::norm($teks), self::TEKS_TIDAK_ADA, true)) {
+            return [...$node, $k['ada'] => 'Ya', $k['teks'] => '', $k['code'] => '', $k['en'] => '', $k['id'] => ''];
+        }
+
+        return [...$node, $k['ada'] => 'Ya'];
+    }
+
+    /**
+     * Petakan konstanta (berkey RJ/UGD) ke nama key modul tujuan.
+     *
+     * @param  array<string,string> $k
+     * @return array<string,string>
+     */
+    private static function sebagai(array $preset, array $k): array
+    {
+        return [
+            $k['teks'] => $preset['alergi'],
+            $k['code'] => $preset['snomedCode'],
+            $k['en'] => $preset['snomedDisplayEn'],
+            $k['id'] => $preset['snomedDisplayId'],
+        ];
     }
 }
