@@ -8,16 +8,27 @@ use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
+use Illuminate\Support\Str;
+use App\Support\DischargePlanningOptions;
+use App\Support\DischargeDisposition;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public bool $isBPJS = false;
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
 
-    public array $tindakLanjutOptions = [['tindakLanjut' => 'Pulang Sehat', 'tindakLanjutKode' => '371827001', 'tindakLanjutKodeBpjs' => 1], ['tindakLanjut' => 'Pulang dengan Permintaan Sendiri', 'tindakLanjutKode' => '266707007', 'tindakLanjutKodeBpjs' => 3], ['tindakLanjut' => 'Pulang Pindah / Rujuk', 'tindakLanjutKode' => '306206005', 'tindakLanjutKodeBpjs' => 5], ['tindakLanjut' => 'Pulang Tanpa Perbaikan', 'tindakLanjutKode' => '371828006', 'tindakLanjutKodeBpjs' => 5], ['tindakLanjut' => 'Meninggal', 'tindakLanjutKode' => '419099009', 'tindakLanjutKodeBpjs' => 4], ['tindakLanjut' => 'Lain-lain', 'tindakLanjutKode' => '74964007', 'tindakLanjutKodeBpjs' => 5]];
+    // Form entri Discharge Planning (multi-entri). Ditambahkan ke array in-memory,
+    // dipersist saat store() — sama pola dengan field perencanaan lain di form ini.
+    public array $formPelayanan = [];
+    public array $formAlat = [];
+
+    // Opsi status pulang = SUMBER TUNGGAL di App\Support\DischargeDisposition::OPTIONS
+    // (dipakai bareng cetak ringkasan pulang). Diisi saat mount().
+    public array $tindakLanjutOptions = [];
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-perencanaan-ri'];
@@ -25,6 +36,7 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas(['modal-perencanaan-ri']);
+        $this->tindakLanjutOptions = DischargeDisposition::OPTIONS;
     }
 
     #[On('open-rm-perencanaan-ri')]
@@ -88,6 +100,126 @@ new class extends Component {
         $this->store();
     }
 
+    /** @return array<string, string> */
+    private function defaultFormPelayanan(): array
+    {
+        return ['jenisPelayanan' => '', 'ketJenis' => '', 'tempatFasyankes' => '', 'tglRencana' => ''];
+    }
+
+    /** @return array<string, string> */
+    private function defaultFormAlat(): array
+    {
+        return ['jenisAlat' => '', 'ketAlat' => '', 'durasi' => '', 'sumberAlat' => ''];
+    }
+
+    /**
+     * Tambah entri pelayanan berkelanjutan.
+     * snomedCode disimpan PER ENTRI (bukan dicari saat kirim) supaya record lama tetap
+     * memakai kode saat dicatat, walau daftar opsi berubah kemudian.
+     */
+    public function tambahPelayanan(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+        // validate() DULU, sebelum guard lain — kalau di-guard duluan, field wajib
+        // tak pernah dapat border merah.
+        $this->validateWithToast([
+            'formPelayanan.jenisPelayanan' => 'required',
+            'formPelayanan.tglRencana' => 'nullable|date_format:d/m/Y',
+            'formPelayanan.ketJenis' => 'required_if:formPelayanan.jenisPelayanan,Lainnya',
+        ], [
+            'formPelayanan.jenisPelayanan.required' => 'Jenis pelayanan wajib dipilih.',
+            'formPelayanan.tglRencana.date_format' => 'Tanggal rencana harus dd/mm/yyyy.',
+            'formPelayanan.ketJenis.required_if' => 'Keterangan wajib diisi bila memilih Lainnya.',
+        ]);
+
+        $jenis = trim((string) $this->formPelayanan['jenisPelayanan']);
+        $snomed = DischargePlanningOptions::pelayanan($jenis);
+
+        $this->dataDaftarRi['perencanaan']['dischargePlanning']['pelayananBerkelanjutan']['pelayananBerkelanjutanData'][] = [
+            'id'              => (string) Str::uuid(),
+            'jenisPelayanan'  => $jenis,
+            'ketJenis'        => trim((string) ($this->formPelayanan['ketJenis'] ?? '')),
+            'tempatFasyankes' => trim((string) ($this->formPelayanan['tempatFasyankes'] ?? '')),
+            'tglRencana'      => trim((string) ($this->formPelayanan['tglRencana'] ?? '')),
+            'snomedCode'      => $snomed['code'] ?? '',
+            'snomedDisplay'   => $snomed['display'] ?? '',
+            'petugas'         => auth()->user()->myuser_name ?? '',
+            'petugasCode'     => auth()->user()->myuser_code ?? '',
+            'tglPencatatan'   => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+        ];
+        $this->formPelayanan = $this->defaultFormPelayanan();
+        $this->store('Tambah pelayanan berkelanjutan — ' . $jenis);
+    }
+
+    public function hapusPelayanan(int $index): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+        $rows = $this->dataDaftarRi['perencanaan']['dischargePlanning']['pelayananBerkelanjutan']['pelayananBerkelanjutanData'] ?? [];
+        if (!isset($rows[$index])) {
+            return;
+        }
+        $jenis = $rows[$index]['jenisPelayanan'] ?? '-';
+        unset($rows[$index]);
+        $this->dataDaftarRi['perencanaan']['dischargePlanning']['pelayananBerkelanjutan']['pelayananBerkelanjutanData'] = array_values($rows);
+        $this->store('Hapus pelayanan berkelanjutan — ' . $jenis);
+    }
+
+    /** Tambah entri alat bantu. snomedCode disimpan per entri (alasan sama seperti pelayanan). */
+    public function tambahAlat(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+        $this->validateWithToast([
+            'formAlat.jenisAlat' => 'required',
+            'formAlat.ketAlat' => 'required_if:formAlat.jenisAlat,Lainnya',
+        ], [
+            'formAlat.jenisAlat.required' => 'Jenis alat bantu wajib dipilih.',
+            'formAlat.ketAlat.required_if' => 'Keterangan wajib diisi bila memilih Lainnya.',
+        ]);
+
+        $jenis = trim((string) $this->formAlat['jenisAlat']);
+        $snomed = DischargePlanningOptions::alatBantu($jenis);
+
+        $this->dataDaftarRi['perencanaan']['dischargePlanning']['penggunaanAlatBantu']['penggunaanAlatBantuData'][] = [
+            'id'            => (string) Str::uuid(),
+            'jenisAlat'     => $jenis,
+            'ketAlat'       => trim((string) ($this->formAlat['ketAlat'] ?? '')),
+            'durasi'        => trim((string) ($this->formAlat['durasi'] ?? '')),
+            'sumberAlat'    => trim((string) ($this->formAlat['sumberAlat'] ?? '')),
+            'snomedCode'    => $snomed['code'] ?? '',
+            'snomedDisplay' => $snomed['display'] ?? '',
+            'petugas'       => auth()->user()->myuser_name ?? '',
+            'petugasCode'   => auth()->user()->myuser_code ?? '',
+            'tglPencatatan' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+        ];
+        $this->formAlat = $this->defaultFormAlat();
+        $this->store('Tambah alat bantu — ' . $jenis);
+    }
+
+    public function hapusAlat(int $index): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+        $rows = $this->dataDaftarRi['perencanaan']['dischargePlanning']['penggunaanAlatBantu']['penggunaanAlatBantuData'] ?? [];
+        if (!isset($rows[$index])) {
+            return;
+        }
+        $jenis = $rows[$index]['jenisAlat'] ?? '-';
+        unset($rows[$index]);
+        $this->dataDaftarRi['perencanaan']['dischargePlanning']['penggunaanAlatBantu']['penggunaanAlatBantuData'] = array_values($rows);
+        $this->store('Hapus alat bantu — ' . $jenis);
+    }
+
     #[On('save-rm-perencanaan-ri')]
     public function store(?string $logKeterangan = null): void
     {
@@ -130,6 +262,11 @@ new class extends Component {
     public function setTglMeninggal(): void
     {
         $this->dataDaftarRi['perencanaan']['tindakLanjut']['tglMeninggal'] = Carbon::now(config('app.timezone'))->format('d/m/Y');
+    }
+
+    public function setTglRencana(): void
+    {
+        $this->formPelayanan['tglRencana'] = Carbon::now(config('app.timezone'))->format('d/m/Y');
     }
 
     public function updateTglPulangBPJS(): void
@@ -216,6 +353,8 @@ new class extends Component {
     {
         $this->resetVersion();
         $this->isFormLocked = false;
+        $this->formPelayanan = $this->defaultFormPelayanan();
+        $this->formAlat = $this->defaultFormAlat();
     }
 
 };
@@ -386,10 +525,103 @@ new class extends Component {
                 @if (
                     ($dataDaftarRi['perencanaan']['dischargePlanning']['pelayananBerkelanjutan']['pelayananBerkelanjutan'] ?? '') ===
                         'Ada')
-                    <x-textarea
-                        wire:model.live="dataDaftarRi.perencanaan.dischargePlanning.pelayananBerkelanjutan.ketPelayananBerkelanjutan"
-                        class="w-full mt-2" rows="2" :disabled="$isFormLocked"
-                        placeholder="Keterangan pelayanan berkelanjutan..." />
+                    {{-- Entri terstruktur: tiap baris membawa kode SNOMED-nya sendiri (untuk CarePlan). --}}
+                    <div class="mt-3 space-y-2 rounded-lg border border-hairline p-3 dark:border-gray-700">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <x-input-label value="Jenis Pelayanan *" />
+                                <x-select-input wire:model="formPelayanan.jenisPelayanan" class="mt-1 w-full"
+                                    :error="$errors->has('formPelayanan.jenisPelayanan')" :disabled="$isFormLocked">
+                                    <option value="">-- pilih --</option>
+                                    @foreach (\App\Support\DischargePlanningOptions::PELAYANAN as $opt)
+                                        <option value="{{ $opt['label'] }}">{{ $opt['label'] }}</option>
+                                    @endforeach
+                                </x-select-input>
+                                <x-input-error :messages="$errors->get('formPelayanan.jenisPelayanan')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Tanggal Rencana" />
+                                <div class="mt-1 flex gap-2">
+                                    <x-text-input wire:model="formPelayanan.tglRencana" class="flex-1"
+                                        :error="$errors->has('formPelayanan.tglRencana')" placeholder="dd/mm/yyyy"
+                                        :disabled="$isFormLocked" />
+                                    @if (!$isFormLocked)
+                                        <x-now-button wire:click="setTglRencana" />
+                                    @endif
+                                </div>
+                                <x-input-error :messages="$errors->get('formPelayanan.tglRencana')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Tempat / Fasyankes" />
+                                <x-text-input wire:model="formPelayanan.tempatFasyankes" class="mt-1 w-full"
+                                    placeholder="mis. Puskesmas Ngunut" :disabled="$isFormLocked" />
+                            </div>
+                            <div>
+                                <x-input-label value="Keterangan" />
+                                <x-text-input wire:model="formPelayanan.ketJenis" class="mt-1 w-full"
+                                    :error="$errors->has('formPelayanan.ketJenis')" placeholder="wajib diisi bila Lainnya"
+                                    :disabled="$isFormLocked" />
+                                <x-input-error :messages="$errors->get('formPelayanan.ketJenis')" class="mt-1" />
+                            </div>
+                        </div>
+                        <x-ghost-button type="button" wire:click="tambahPelayanan" wire:loading.attr="disabled"
+                            :disabled="$isFormLocked" class="text-xs">+ Tambah Pelayanan</x-ghost-button>
+                    </div>
+
+                    @php
+                        $rowsPelayanan =
+                            $dataDaftarRi['perencanaan']['dischargePlanning']['pelayananBerkelanjutan'][
+                                'pelayananBerkelanjutanData'
+                            ] ?? [];
+                    @endphp
+                    @if (count($rowsPelayanan) > 0)
+                        <div class="mt-2 overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                            <table class="ds-table">
+                                <thead>
+                                    <tr class="text-left">
+                                        <th class="min-w-[10rem]">Jenis Pelayanan</th>
+                                        <th class="min-w-[11rem]">Tempat / Tgl Rencana</th>
+                                        <th class="min-w-[8rem]">Keterangan</th>
+                                        <th class="ds-c">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($rowsPelayanan as $i => $row)
+                                        <tr>
+                                            <td>
+                                                <div class="ds-td-strong">{{ $row['jenisPelayanan'] ?? '-' }}</div>
+                                                @if (!empty($row['snomedCode']))
+                                                    <div class="ds-td-meta">{{ $row['snomedCode'] }}</div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div>{{ $row['tempatFasyankes'] ?: '-' }}</div>
+                                                @if (!empty($row['tglRencana']))
+                                                    <div class="ds-td-meta">{{ $row['tglRencana'] }}</div>
+                                                @endif
+                                            </td>
+                                            <td>{{ $row['ketJenis'] ?: '-' }}</td>
+                                            <td class="ds-c">
+                                                @if (!$isFormLocked)
+                                                    <x-confirm-button variant="danger-soft" :action="'hapusPelayanan(' . $i . ')'"
+                                                        title="Hapus Pelayanan"
+                                                        :message="'Yakin hapus ' . ($row['jenisPelayanan'] ?? 'entri ini') . '?'"
+                                                        confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </x-confirm-button>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 @endif
             </div>
             <div>
@@ -402,9 +634,98 @@ new class extends Component {
                     @endforeach
                 </div>
                 @if (($dataDaftarRi['perencanaan']['dischargePlanning']['penggunaanAlatBantu']['penggunaanAlatBantu'] ?? '') === 'Ada')
-                    <x-textarea
-                        wire:model.live="dataDaftarRi.perencanaan.dischargePlanning.penggunaanAlatBantu.ketPenggunaanAlatBantu"
-                        class="w-full mt-2" rows="2" :disabled="$isFormLocked" placeholder="Keterangan alat bantu..." />
+                    {{-- Entri terstruktur: tiap baris membawa kode SNOMED-nya sendiri (untuk CarePlan). --}}
+                    <div class="mt-3 space-y-2 rounded-lg border border-hairline p-3 dark:border-gray-700">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <x-input-label value="Jenis Alat Bantu *" />
+                                <x-select-input wire:model="formAlat.jenisAlat" class="mt-1 w-full"
+                                    :error="$errors->has('formAlat.jenisAlat')" :disabled="$isFormLocked">
+                                    <option value="">-- pilih --</option>
+                                    @foreach (\App\Support\DischargePlanningOptions::ALAT_BANTU as $opt)
+                                        <option value="{{ $opt['label'] }}">{{ $opt['label'] }}</option>
+                                    @endforeach
+                                </x-select-input>
+                                <x-input-error :messages="$errors->get('formAlat.jenisAlat')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Sumber Alat" />
+                                <x-select-input wire:model="formAlat.sumberAlat" class="mt-1 w-full"
+                                    :disabled="$isFormLocked">
+                                    <option value="">-- pilih --</option>
+                                    @foreach (\App\Support\DischargePlanningOptions::SUMBER_ALAT as $opt)
+                                        <option value="{{ $opt }}">{{ $opt }}</option>
+                                    @endforeach
+                                </x-select-input>
+                            </div>
+                            <div>
+                                <x-input-label value="Durasi Penggunaan" />
+                                <x-text-input wire:model="formAlat.durasi" class="mt-1 w-full"
+                                    placeholder="mis. 2 minggu / seterusnya" :disabled="$isFormLocked" />
+                            </div>
+                            <div>
+                                <x-input-label value="Keterangan" />
+                                <x-text-input wire:model="formAlat.ketAlat" class="mt-1 w-full"
+                                    :error="$errors->has('formAlat.ketAlat')" placeholder="wajib diisi bila Lainnya"
+                                    :disabled="$isFormLocked" />
+                                <x-input-error :messages="$errors->get('formAlat.ketAlat')" class="mt-1" />
+                            </div>
+                        </div>
+                        <x-ghost-button type="button" wire:click="tambahAlat" wire:loading.attr="disabled"
+                            :disabled="$isFormLocked" class="text-xs">+ Tambah Alat Bantu</x-ghost-button>
+                    </div>
+
+                    @php
+                        $rowsAlat =
+                            $dataDaftarRi['perencanaan']['dischargePlanning']['penggunaanAlatBantu'][
+                                'penggunaanAlatBantuData'
+                            ] ?? [];
+                    @endphp
+                    @if (count($rowsAlat) > 0)
+                        <div class="mt-2 overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                            <table class="ds-table">
+                                <thead>
+                                    <tr class="text-left">
+                                        <th class="min-w-[10rem]">Jenis Alat Bantu</th>
+                                        <th class="min-w-[8rem]">Sumber Alat</th>
+                                        <th class="min-w-[7rem]">Durasi</th>
+                                        <th class="min-w-[8rem]">Keterangan</th>
+                                        <th class="ds-c">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($rowsAlat as $i => $row)
+                                        <tr>
+                                            <td>
+                                                <div class="ds-td-strong">{{ $row['jenisAlat'] ?? '-' }}</div>
+                                                @if (!empty($row['snomedCode']))
+                                                    <div class="ds-td-meta">{{ $row['snomedCode'] }}</div>
+                                                @endif
+                                            </td>
+                                            <td>{{ $row['sumberAlat'] ?: '-' }}</td>
+                                            <td>{{ $row['durasi'] ?: '-' }}</td>
+                                            <td>{{ $row['ketAlat'] ?: '-' }}</td>
+                                            <td class="ds-c">
+                                                @if (!$isFormLocked)
+                                                    <x-confirm-button variant="danger-soft" :action="'hapusAlat(' . $i . ')'"
+                                                        title="Hapus Alat Bantu"
+                                                        :message="'Yakin hapus ' . ($row['jenisAlat'] ?? 'entri ini') . '?'"
+                                                        confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </x-confirm-button>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>

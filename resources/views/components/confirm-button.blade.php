@@ -1,5 +1,5 @@
 @props([
-    'variant' => 'danger', // danger|primary|secondary|outline
+    'variant' => 'danger', // danger|danger-soft|primary|secondary|outline
     'action', // contoh: "delete(10)" atau "delete('10')"
     'title' => 'Konfirmasi',
     'message' => 'Apakah Anda yakin?',
@@ -22,6 +22,11 @@
             => $base . ' text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700',
         'outline'
             => $base . ' text-brand-green bg-brand-green/10 border border-brand-green/30 hover:bg-brand-green hover:text-white hover:border-brand-green focus:outline-none focus:ring-4 focus:ring-brand-green/20 dark:text-brand-lime dark:bg-brand-lime/10 dark:border-brand-lime/30 dark:hover:bg-brand-lime dark:hover:text-gray-900',
+        // Merah bertint (bukan solid) — tampilan tombol hapus ikon di dalam tabel/form,
+        // seperti di e-resep. Dibuat jadi VARIAN supaya pemakai tak perlu override
+        // `!important` (dilarang Aturan Umum standar-ui-komponen.md).
+        'danger-soft'
+            => $base . ' text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 hover:text-red-700 hover:border-red-300 focus:outline-none focus:ring-4 focus:ring-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800/30 dark:hover:bg-red-900/30 dark:hover:text-red-300 dark:focus:ring-red-900',
         default
             => $base . ' text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900',
     };

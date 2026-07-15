@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
+use App\Support\DischargeDisposition;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 
 new class extends Component {
@@ -144,16 +145,10 @@ new class extends Component {
                 . '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
         }
 
-        // Kondisi pulang ← SNOMED tindak lanjut
-        $snomed = [
-            '371827001' => 'Sembuh',
-            '266707007' => 'Pulang Atas Permintaan Sendiri',
-            '306206005' => 'Pulang Pindah / Rujuk',
-            '371828006' => 'Membaik',
-            '419099009' => 'Meninggal',
-            '74964007' => 'Lain-lain',
-        ];
-        $kondisiPulang = e($snomed[trim((string) data_get($dataRI, 'perencanaan.tindakLanjut.tindakLanjut', ''))] ?? '');
+        // Kondisi pulang ← kunci internal status pulang. Label diambil dari SUMBER TUNGGAL
+        // (App\Support\DischargeDisposition) — dulu file ini punya peta sendiri yang
+        // BERTENTANGAN dgn form ('371828006' ditulis "Membaik", form: "Pulang Tanpa Perbaikan").
+        $kondisiPulang = e(DischargeDisposition::label((string) data_get($dataRI, 'perencanaan.tindakLanjut.tindakLanjut', '')));
 
         // Kontrol ← surat kontrol (SKDP) di datadaftarri_json.kontrol
         $kontrol = (array) data_get($dataRI, 'kontrol', []);
@@ -185,6 +180,54 @@ new class extends Component {
             . '<th>Frekuensi</th><th>Jam</th><th>Petunjuk Khusus</th>'
             . '</tr></thead><tbody>' . $obatRows . '</tbody></table>';
 
+        // Discharge Planning ← entri terstruktur perencanaan.dischargePlanning.
+        // Record lama tak punya entri (array-nya dulu tak pernah bisa diisi form) → jatuh ke
+        // teks keterangan lama supaya isinya tidak hilang dari cetakan.
+        $dp = (array) data_get($dataRI, 'perencanaan.dischargePlanning', []);
+
+        $dpBlok = function (string $node, string $flagKey, string $ketKey, string $dataKey, callable $baris) use ($dp) {
+            $n = (array) data_get($dp, $node, []);
+            $flag = trim((string) data_get($n, $flagKey, ''));
+            if ($flag !== '' && strcasecmp($flag, 'Ada') !== 0) {
+                return e($flag); // "Tidak Ada"
+            }
+            $items = collect((array) data_get($n, $dataKey, []))->map($baris)->filter()->values();
+            if ($items->isNotEmpty()) {
+                return $items->map(fn($t, $i) => ($i + 1) . ') ' . $t)->implode('<br>');
+            }
+            return e(trim((string) data_get($n, $ketKey, ''))); // fallback teks lama
+        };
+
+        $pelayananCell = $dpBlok(
+            'pelayananBerkelanjutan', 'pelayananBerkelanjutan', 'ketPelayananBerkelanjutan', 'pelayananBerkelanjutanData',
+            function ($r) {
+                $t = trim((string) data_get($r, 'jenisPelayanan', ''));
+                if ($t === '') return null;
+                $tempat = trim((string) data_get($r, 'tempatFasyankes', ''));
+                $tgl = trim((string) data_get($r, 'tglRencana', ''));
+                $ket = trim((string) data_get($r, 'ketJenis', ''));
+                if ($tempat !== '') $t .= ' — ' . $tempat;
+                if ($tgl !== '') $t .= ' (' . $tgl . ')';
+                if ($ket !== '') $t .= ': ' . $ket;
+                return e($t);
+            },
+        );
+
+        $alatBantuCell = $dpBlok(
+            'penggunaanAlatBantu', 'penggunaanAlatBantu', 'ketPenggunaanAlatBantu', 'penggunaanAlatBantuData',
+            function ($r) {
+                $t = trim((string) data_get($r, 'jenisAlat', ''));
+                if ($t === '') return null;
+                $sumber = trim((string) data_get($r, 'sumberAlat', ''));
+                $durasi = trim((string) data_get($r, 'durasi', ''));
+                $ket = trim((string) data_get($r, 'ketAlat', ''));
+                $extra = array_filter([$sumber, $durasi]);
+                if ($extra) $t .= ' — ' . implode(', ', $extra);
+                if ($ket !== '') $t .= ': ' . $ket;
+                return e($t);
+            },
+        );
+
         $dokumenCell = '1) Hasil Lab: ___ Lbr<br>2) Foto Rontgen / CT Scan / MRI: ___ Lbr<br>3) USG / ECG: ___ Lbr<br>'
             . '4) Surat Asuransi: Ya / Tidak<br>5) Surat Ket. Sakit/Opname/Istirahat: Ya / Tidak<br>'
             . '6) Surat Kematian: Ya / Tidak<br>7) Surat Ket. Kelahiran: Ya / Tidak<br>8) Lain-lain: ';
@@ -204,6 +247,8 @@ new class extends Component {
             $row('Keadaan Pasien Saat Pulang', $kondisiPulang),
             $row('Kontrol Ulang — Hari, Tanggal', $kontrolHariTgl),
             $row('Tempat Kontrol', $tempatKontrol),
+            $row('Pelayanan Berkelanjutan', $pelayananCell),
+            $row('Alat Bantu Yang Digunakan', $alatBantuCell),
             $row('Pendidikan Kesehatan', ''),
             $row('Diit', ''),
             $row('Catatan Khusus Untuk Pasien', ''),
