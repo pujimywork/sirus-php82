@@ -1,8 +1,13 @@
 <?php
 // resources/views/pages/components/rekam-medis/r-i/cetak-rekam-medis/cetak-rekam-medis-open.blade.php
 //
-// Preview Resume Medis RI (read-only) — buka via event:
+// Preview dokumen kepulangan RI (read-only) — buka via event:
 //   $dispatch('cetak-rekam-medis-ri.open', { riHdrNo: <int> })
+//
+// Tab pertama memuat DUA dokumen kepulangan yang berpasangan:
+//   - Resume Medis (dokter)
+//   - Ringkasan Pemulangan Pasien (perawat/bidan)
+// Masing-masing punya tombol cetak sendiri di footer.
 //
 // Pola mirror UGD/RJ `cetak-rekam-medis-open` — bukan editor TinyMCE,
 // tapi preview formatted untuk view history dari rekam-medis-display.
@@ -90,6 +95,32 @@ new class extends Component {
         )->setPaper('A4');
 
         return response()->streamDownload(fn() => print $pdf->output(), 'resume-medis-ri-' . $regNo . '.pdf');
+    }
+
+    /**
+     * Cetak Ringkasan Pemulangan Pasien (diisi perawat/bidan) — dokumen kepulangan
+     * kedua di samping Resume Medis (dokter). Pakai template print yang sama dengan
+     * editornya supaya output PDF konsisten.
+     */
+    public function cetakPdfRingkasanPulang(): mixed
+    {
+        if (empty($this->dataDaftarRi) || empty($this->dataPasien)) {
+            $this->dispatch('toast', type: 'error', message: 'Tidak ada data untuk dicetak.');
+            return null;
+        }
+
+        $regNo = $this->dataDaftarRi['regNo'] ?? $this->riHdrNo;
+
+        $pdf = Pdf::loadView(
+            'pages.components.rekam-medis.r-i.ringkasan-pulang-ri.ringkasan-pulang-ri-print',
+            [
+                'dataDaftarRi' => $this->dataDaftarRi,
+                'dataPasien' => $this->dataPasien,
+                'ringkasanPulang' => (string) ($this->dataDaftarRi['ringkasanPulang'] ?? ''),
+            ],
+        )->setPaper('A4');
+
+        return response()->streamDownload(fn() => print $pdf->output(), 'ringkasan-pulang-ri-' . $regNo . '.pdf');
     }
 
     /* ═══════════════════════════════════════
@@ -217,6 +248,9 @@ new class extends Component {
 
             $resumeHtml = (string) data_get($ri, 'resumeMedis', '');
             $hasResume = trim(strip_tags($resumeHtml)) !== '';
+            // Ringkasan Pemulangan Pasien (perawat/bidan) — dokumen kepulangan kedua.
+            $ringkasanPulangHtml = (string) data_get($ri, 'ringkasanPulang', '');
+            $hasRingkasanPulang = trim(strip_tags($ringkasanPulangHtml)) !== '';
         @endphp
 
         <div class="flex flex-col min-h-[calc(100vh-4rem)]" wire:key="preview-rekam-medis-ri-{{ $riHdrNo }}"
@@ -245,20 +279,20 @@ new class extends Component {
             </div>
 
             {{-- ── TAB NAV ── --}}
-            <div class="px-6 border-b bg-canvas border-hairline shrink-0 dark:bg-gray-900 dark:border-gray-700">
+            <div class="px-6 border-b bg-canvas border-hairline shrink-0 overflow-x-auto dark:bg-gray-900 dark:border-gray-700">
                 <nav class="flex gap-1 -mb-px">
                     <button type="button" x-on:click="tab = 'resume'"
                         :class="tab === 'resume' ? 'border-brand-green text-brand-green' :
                             'border-transparent text-muted hover:text-ink'"
-                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Resume Medis</button>
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2 whitespace-nowrap">Resume Medis &amp; Ringkasan Pemulangan Pasien</button>
                     <button type="button" x-on:click="tab = 'dokumen'"
                         :class="tab === 'dokumen' ? 'border-brand-green text-brand-green' :
                             'border-transparent text-muted hover:text-ink'"
-                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Modul Dokumen</button>
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2 whitespace-nowrap">Modul Dokumen</button>
                     <button type="button" x-on:click="tab = 'penunjang'"
                         :class="tab === 'penunjang' ? 'border-brand-green text-brand-green' :
                             'border-transparent text-muted hover:text-ink'"
-                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Hasil Penunjang</button>
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2 whitespace-nowrap">Hasil Penunjang</button>
                 </nav>
             </div>
 
@@ -307,6 +341,22 @@ new class extends Component {
                     @else
                         <p class="text-sm italic text-muted-soft py-4 text-center">
                             Resume Medis belum dibuat untuk kunjungan ini.
+                        </p>
+                    @endif
+                </x-border-form>
+
+                {{-- RINGKASAN PEMULANGAN PASIEN (perawat/bidan) — dokumen kepulangan kedua,
+                     ditaruh di tab yang sama karena satu konteks dgn Resume Medis (dokter).
+                     Gaya tabel meniru .resume-medis-preview supaya konsisten. --}}
+                <x-border-form title="Ringkasan Pemulangan Pasien" class="mb-4">
+                    @if ($hasRingkasanPulang)
+                        <div class="resume-medis-preview text-base leading-relaxed text-ink dark:text-gray-200"
+                            style="overflow-x:auto;">
+                            {!! $ringkasanPulangHtml !!}
+                        </div>
+                    @else
+                        <p class="text-sm italic text-muted-soft py-4 text-center">
+                            Ringkasan Pemulangan Pasien belum dibuat untuk kunjungan ini.
                         </p>
                     @endif
                 </x-border-form>
@@ -537,6 +587,23 @@ new class extends Component {
                     <x-rm.record-nav :pos="$navPos" :total="$navTotal" />
                     <div class="flex items-center gap-2">
                     <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
+                    {{-- Cetak Ringkasan Pulang pakai x-info-button, BUKAN primary: standar
+                         membatasi satu x-primary-button per modal (aksi utama = Cetak Resume). --}}
+                    @if ($hasRingkasanPulang)
+                        <x-info-button type="button" wire:click="cetakPdfRingkasanPulang" wire:loading.attr="disabled"
+                            wire:target="cetakPdfRingkasanPulang">
+                            <span wire:loading.remove wire:target="cetakPdfRingkasanPulang" class="inline-flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                Cetak Ringkasan Pulang
+                            </span>
+                            <span wire:loading wire:target="cetakPdfRingkasanPulang" class="inline-flex items-center gap-1">
+                                <x-loading /> Memuat...
+                            </span>
+                        </x-info-button>
+                    @endif
                     @if ($hasResume)
                         <x-primary-button type="button" wire:click="cetakPdf" wire:loading.attr="disabled" wire:target="cetakPdf">
                             <span wire:loading.remove wire:target="cetakPdf" class="inline-flex items-center gap-1">
