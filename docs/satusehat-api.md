@@ -110,6 +110,9 @@ Urutan kanonik (dari orkestrator `KirimRawatJalanTrait::kirimRawatJalan()`, `:74
 | Condition (diagnosa) | ConditionTrait `createFinalDiagnosis` | `Condition` / active·confirmed, `encounter-diagnosis` | **ICD-10** `http://hl7.org/fhir/sid/icd-10` (SNOMED opsional dual-coding, tak diisi di RJ) | `diagnpinaList[]`/`diagnosaPinaUtama`, `kodeIcdx`/`icdx` |
 | Condition (keluhan utama) | ConditionTrait `createChiefComplaint` | `Condition` / `problem-list-item` | **SNOMED** `http://snomed.info/sct` | `keluhanUtama` + `keluhanUtamaSnomedCode` |
 | Observation (vital) | ObservationTrait | `Observation` / final, `vital-signs` | **LOINC** `http://loinc.org`, unit UCUM `http://unitsofmeasure.org` | `pemeriksaanFisik`/`tandaVital`: sistole/diastole/nadi/suhu/rr |
+| Observation (penilaian) | ObservationTrait + `App\Support\PenilaianObservationMap` | `Observation` / final, **`survey`** (risiko jatuh) · `vital-signs` (antropometri) | **LOINC** — Morse `59460-6` (skor) & `59461-4` (level, answer list **LL905-1**); BB `29463-7`, TB `8302-2`, IMT `39156-5` | `penilaian.resikoJatuh[]` & `penilaian.gizi[]` (**RJ = UGD = RI identik**) |
+| MedicationAdministration (RI) | MedicationAdministrationTrait + `App\Support\ObservasiLanjutanMap` | `MedicationAdministration` / completed + contained `Medication` | **KFA**; route **SNOMED** (`route-codes`) | `observasi.obatDanCairan.pemberianObatDanCairan[]` — obat/cairan yang benar-benar **diberikan** |
+| Observation (oksigen & cairan, RI) | ObservationTrait + `App\Support\ObservasiLanjutanMap` | `Observation` / final | **LOINC** — alat oksigen `107117-4`, laju `3151-8` (**valueRange**), urine output `9187-6` | `observasi.pemakaianOksigen.pemakaianOksigenData[]`, `observasi.pengeluaranCairan.pengeluaranCairan[]` |
 | Procedure | ProcedureTrait | `Procedure` / completed | **ICD-9-CM** `http://hl7.org/fhir/sid/icd-9-cm` (category SNOMED `71388002`) | `tindakanList`/`tindakan`, `kodeIcd9`/`icd9` |
 | AllergyIntolerance | AllergyIntoleranceTrait | `AllergyIntolerance` / active·confirmed | **SNOMED** | (belum di-wire UI) |
 | MedicationRequest | MedicationRequestTrait | `MedicationRequest` + contained `Medication` | **KFA** `http://sys-ids.kemkes.go.id/kfa` | `eresep`/`resepObat`; KFA dari master obat `product_id_satusehat` |
@@ -122,11 +125,27 @@ Urutan kanonik (dari orkestrator `KirimRawatJalanTrait::kirimRawatJalan()`, `:74
 
 **KFA obat** diambil dari master obat kolom `product_id_satusehat` / `product_name_satusehat` (di-set manual di `/master/master-obat`). Kalau kosong → item resep di-skip.
 
+**Kode LOINC Penilaian diverifikasi lewat terminology server** (`tx.fhir.org`, pakai `LoincTrait::lookupLoincCode()` / `ValueSet/$expand`) — **jangan isi dari hafalan**: tebakan awal `59460-2`/`59461-0` ternyata tidak ada. Kategori repo dipetakan ke answer list resmi LL905-1 (Rendah→`LA13038-7`, Sedang→`LA13039-5`, Tinggi→`LA13040-3`) sehingga terkirim sebagai `valueCodeableConcept`, bukan teks bebas. **Humpty Dumpty tidak punya padanan LOINC** → kode generik `73830-2` + `valueString`. **Skor/kategori skrining gizi sengaja tidak dikirim**: skalanya custom 3-item (bukan MST/MUST/Strong-Kids).
+
+**Model e-resep — `App\Support\EresepJson`.** Polanya sama di 3 modul; bedanya hanya rawat inap bisa memberi **lebih dari satu resep dalam satu periode perawatan** (>1 hari):
+- **RJ/UGD (datar, di akar):** `eresep[]` + `eresepRacikan[]`. Tidak ada `eresepHdr` (terbukti 0 record).
+- **RI (berlembar):** `eresepHdr[]` = `{resepNo, resepDate, eresep[], eresepRacikan[], slsNo?, tandaTanganDokter?}`; tiap lembar punya TTD & nomor jual sendiri. Hdr lama bisa tanpa key `eresepRacikan` → wajib `?? []`.
+- `EresepJson::lembar($data)` menormalkan keduanya jadi `[{resepNo, resepDate, nonRacikan[], racikan[noRacikan => bahan[]]}]`. Racikan dikelompokkan per `noRacikan` — **1 grup = 1 obat racikan**, anggotanya = bahan. Ada juga `jumlahRacikan()` (per grup, bukan per baris) & `kesiapanRacikan()`.
+
 ---
 
 ## 7. Pemetaan kolom Dashboard SATUSEHAT → status implementasi
 
-Kolom di dashboard platform SATUSEHAT (jumlah resource per bulan) vs kondisi di sistem ini:
+Kolom di dashboard platform SATUSEHAT (jumlah resource per bulan) vs kondisi di sistem ini.
+
+> ⚠️ **Tabel di bawah sudah usang** (ditulis saat alur baru ada di RJ). Kondisi nyata per 2026-07-15 — dibaca dari mount di `satu-sehat-{rj,ri,ugd}-actions`:
+> - **RJ (12 kartu):** Encounter · Condition · Observation · Procedure · MedicationRequest · ChiefComplaint · Allergy · MedicationDispense · Lab · Radiologi · ClinicalImpression · **Penilaian**
+> - **UGD (12 kartu):** sama seperti RJ (urutan beda; Encounter class **EMER**, Location IGD hardcode)
+> - **RI (12 aktif + 2 digating):** Encounter (**IMP**) · **EpisodeOfCare** · Condition · Procedure · Observation · MedicationRequest · MedicationDispense · Lab · Radiologi · ClinicalImpression (CPPT) · **NutritionOrder** · **Penilaian** — ChiefComplaint & Allergy masih `@if(false)` (SNOMED)
+>
+> Jadi baris "❌ / ⚠️ trait saja" untuk MedicationDispense, ServiceRequest, Specimen, DiagnosticReport, Allergy, ClinicalImpression, EpisodeOfCare, NutritionOrder **sudah tidak berlaku**. Yang benar-benar belum ada: **Composition** (ringkasan pulang), **ImagingStudy** (gap DICOM), **Immunization** (belum ada modul).
+>
+> **Badge kartu = urutan tampil di modul itu** (tidak disamakan lintas modul; set resource memang beda). Dirapikan 2026-07-15.
 
 | Kolom Dashboard (Resource FHIR) | Trait ada? | Ter-wire di UI RJ? | Sistem kode |
 |---|---|---|---|
@@ -156,11 +175,19 @@ Kolom di dashboard platform SATUSEHAT (jumlah resource per bulan) vs kondisi di 
 1. **`env()` tanpa config wrapper** → mati senyap bila `config:cache`. **Rekomendasi:** buat `config/satusehat.php` dan baca via `config('satusehat.*')`.
 2. **5 resource belum di-wire** (Dispense/ServiceRequest/Specimen/DiagnosticReport/Allergy) → dashboard SATUSEHAT untuk kolom itu akan 0 walau trait tersedia. Orkestrator `KirimRawatJalanTrait` sudah memuat semuanya tapi belum dipanggil UI.
 3. **Timeout 10s tanpa retry/connectTimeout** — samakan pola dengan integrasi lain (BPJS `timeout(8)->connectTimeout(3)`), lihat memori "BPJS sync call = freeze".
-4. **KFA/kode di-skip diam-diam** bila master belum diisi → tambahkan peringatan "N item tanpa kode dilewati".
+4. **KFA/kode di-skip diam-diam** bila master belum diisi → tambahkan peringatan "N item tanpa kode dilewati". *(Sebagian sudah: kartu MedicationRequest RJ/UGD/RI kini menampilkan "N racikan belum didukung" via `EresepJson::jumlahRacikan()`. Item non-racikan tanpa KFA **masih** di-skip diam-diam.)*
 5. **`registrationId == medicationCode == kfaCode`** di `kirim-medication-request.blade.php:89-90` — perlu ditinjau apakah field registrasi obat harus beda dari KFA.
 6. **DiagnosticReport default kategori `MB`/Microbiology** — set eksplisit `LAB`/`RAD` saat mengaktifkan lab/radiologi.
 7. **Diagnosa tidak menandai primer/sekunder** (`Encounter.diagnosis.rank` tidak diisi) — semua Condition setara.
 8. **Token TTL hardcoded 3500** mengabaikan `expires_in`, tak ada invalidasi cache saat 401.
+9. **Tidak ada sandbox — dan `.env` menunjuk PRODUKSI.** `SATUSEHAT_BASE_URL` = `api-satusehat.kemkes.go.id` (**tanpa `-stg`**), sementara `CLIENT_ID`/`SECRET_ID`/`ORGANIZATION_ID` **kosong**. Artinya: begitu kredensial diisi di file itu, kiriman uji pertama **langsung menembak produksi**. **Siapkan kredensial `-stg` dulu sebelum uji apa pun.** Konsekuensi: seluruh resource RI/UGD (termasuk Penilaian) **benar secara konstruksi tapi belum pernah divalidasi server** — yang perlu dibuktikan lebih dulu: `category=survey` dan unit UCUM anotasi `{score}`.
+10. **Racikan obat — buntu ganda (spek + data).**
+    - *Spek:* kode `medicationType` untuk compound belum terverifikasi. Sender menulis `'SD' => 'Compound'` tapi **'SD' tak ada di dokumentasi mana pun**, dan ternary `isCompound` **tak pernah aktif** (selalu `'NC'`). Racikan juga tak punya KFA tunggal → belum jelas `Medication.code` harus diisi apa. `ingredient[]` sudah ditulis tapi **di-comment out** di `MedicationRequestTrait` & `MedicationDispenseTrait`.
+    - *Data (probe 2026-07-15):* **~97% baris racikan RJ/UGD tanpa `productId`** (hanya `productName` teks) → tak bisa dipetakan ke KFA. Volume: **RJ 17.428 record / 19.404 grup / 50.823 bahan**; **UGD 2.417 / 2.958 / 8.335**; **RI 142 / 294 / 710**. Sebaran RJ 2026: Jan–Mar **0** ber-productId, Apr **53 vs 3.150**, Mei **86 vs 2.376** → hanya 2–3% ditulis aplikasi PHP ini; **dugaan (belum dibuktikan): sisanya dari sistem lama Oracle Dev 6i** yang berbagi DB.
+11. **⚠️ Satuan dosis `gr` = GRAM, bukan GRAIN.** Di EMR, `"1 gr"` (669 baris) berarti 1 gram; di UCUM `gr` adalah **grain** (~0,065 g) → kalau dikirim apa adanya, dosis salah ~15×. `ObservasiLanjutanMap::SATUAN_UCUM` memaksa `gr/gram/g → 'g'`. Satuan non-UCUM (`amp`, `tab`, `unit`, `flash`) pakai anotasi UCUM `{ampul}` dsb. (dimensionless, jujur). Satuan tak dikenal → dosis `null` → **seluruh `dosage` dibuang** karena constraint FHIR **mad-1** (`dosage` wajib punya `dose` atau `rate`); route ikut dibuang, jangan kirim setengah.
+12. **`rute` pemberian obat = 63 varian teks bebas** (`iv` 6.449, `IV` 684, `Iv` 27, `inheler` 35 — salah ketik). Dipetakan ke SNOMED atas teks ternormalkan; yang tak dikenal **tidak dipetakan** (lebih baik tanpa route daripada salah kode). Perbaikan hulu: jadikan rute picklist, bukan teks bebas.
+13. **Hanya ~31% baris pemberian obat punya `productId`** (2.497 dari 8.078) — cairan (RL/NaCl) tampaknya diketik bebas tanpa memilih master obat. Baris tanpa productId/KFA dilewati tapi **dihitung & dilaporkan** di kartu 13. Perbaikan hulu: wajibkan pilih dari master obat untuk cairan.
+14. **`product_id` tidak ditulis ke tabel racikan.** Kolom `PRODUCT_ID` **ADA** di `rstxn_rjobatracikans` (51.035 baris) & `rstxn_ugdobatracikans` (8.394) tapi **0% terisi** — INSERT di `eresep-{rj,ugd}-racikan.blade.php` tak menyertakannya, padahal nilainya tersedia (dipakai lookup `takar` dua baris di atas). Tabel non-racikan `rstxn_rjobats` menulisnya dengan benar. Akibat: `productId` racikan lama **tak bisa di-backfill lewat join**; satu-satunya jalan tersisa = pencocokan nama (berisiko, ada nama kembar). **Perbaikan termurah: sertakan `product_id` di INSERT racikan.** Dampak non-SATUSEHAT: `hitungSaldoPerObat` melewati baris racikan tanpa `productId` → cek saldo stok apotek diam-diam skip.
 
 ---
 
