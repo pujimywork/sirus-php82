@@ -8,6 +8,7 @@ use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
+use App\Support\AlergiSnomed;
 
 new class extends Component {
     use EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -92,10 +93,24 @@ new class extends Component {
         $pasienData = $this->findDataMasterPasien($data['regNo']);
         if (!empty($pasienData['pasien']['alergi'])) {
             $this->dataDaftarUGD['anamnesa']['alergi']['alergi'] = $pasienData['pasien']['alergi'];
+            // Kode SNOMED ikut teksnya — hanya bila teks alergi juga diambil dari master,
+            // supaya kode tak menempel ke alergi lain. Dulu snomedCode tak pernah disinkron.
+            if (!empty($pasienData['pasien']['alergiSnomedCode'])) {
+                $this->dataDaftarUGD['anamnesa']['alergi']['snomedCode'] = $pasienData['pasien']['alergiSnomedCode'];
+                $this->dataDaftarUGD['anamnesa']['alergi']['snomedDisplayEn'] = $pasienData['pasien']['alergiSnomedDisplayEn'] ?? '';
+                $this->dataDaftarUGD['anamnesa']['alergi']['snomedDisplayId'] = $pasienData['pasien']['alergiSnomedDisplayId'] ?? '';
+            }
         }
         if (!empty($pasienData['pasien']['riwayatPenyakitDahulu'])) {
             $this->dataDaftarUGD['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] = $pasienData['pasien']['riwayatPenyakitDahulu'];
         }
+
+        // Default "Tidak ada alergi" (SNOMED 716186003) bila alergi MASIH KOSONG setelah
+        // prefill master pasien — dipasang saat form DIBUKA, bukan diam-diam saat simpan.
+        // Lihat App\Support\AlergiSnomed untuk alasan & risikonya.
+        $this->dataDaftarUGD['anamnesa']['alergi'] = AlergiSnomed::defaultBilaKosong(
+            $this->dataDaftarUGD['anamnesa']['alergi'] ?? [],
+        );
 
         $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
         $this->incrementVersion('modal-anamnesa-ugd');
@@ -220,6 +235,11 @@ new class extends Component {
 
         if (!empty($alergi)) {
             $pasienData['pasien']['alergi'] = $alergi;
+            // Kode SNOMED ikut teksnya — SELALU ditimpa (termasuk jadi kosong) supaya kode
+            // lama tak tertinggal menempel pada teks alergi yang sudah diganti.
+            $pasienData['pasien']['alergiSnomedCode'] = $this->dataDaftarUGD['anamnesa']['alergi']['snomedCode'] ?? '';
+            $pasienData['pasien']['alergiSnomedDisplayEn'] = $this->dataDaftarUGD['anamnesa']['alergi']['snomedDisplayEn'] ?? '';
+            $pasienData['pasien']['alergiSnomedDisplayId'] = $this->dataDaftarUGD['anamnesa']['alergi']['snomedDisplayId'] ?? '';
             $updated = true;
         }
         if (!empty($riwayat)) {

@@ -7,6 +7,7 @@ use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use Livewire\Attributes\On;
+use App\Support\AlergiSnomed;
 
 new class extends Component {
     use EmrRJTrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
@@ -57,10 +58,28 @@ new class extends Component {
             $this->dataDaftarPoliRJ['anamnesa']['alergi']['alergi'] = $pasienData['pasien']['alergi'];
         }
 
+        // ✅ Isi kode SNOMED alergi dari master pasien — supaya kunjungan berikutnya tak
+        // perlu pilih LOV ulang. Kode HANYA ikut kalau teks alerginya juga ikut dari master;
+        // kalau tidak, kode bisa "menempel" ke teks alergi lain (mis. dokter mengetik alergi
+        // baru) dan salah kode. Dulu snomedCode tak pernah disinkron → terisi 0 dari 397 record.
+        if (isset($pasienData['pasien']['alergi']) && !empty($pasienData['pasien']['alergiSnomedCode'])) {
+            $this->dataDaftarPoliRJ['anamnesa']['alergi']['snomedCode'] = $pasienData['pasien']['alergiSnomedCode'];
+            $this->dataDaftarPoliRJ['anamnesa']['alergi']['snomedDisplayEn'] = $pasienData['pasien']['alergiSnomedDisplayEn'] ?? '';
+            $this->dataDaftarPoliRJ['anamnesa']['alergi']['snomedDisplayId'] = $pasienData['pasien']['alergiSnomedDisplayId'] ?? '';
+        }
+
         // ✅ Isi riwayat penyakit dahulu jika ada
         if (isset($pasienData['pasien']['riwayatPenyakitDahulu'])) {
             $this->dataDaftarPoliRJ['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] = $pasienData['pasien']['riwayatPenyakitDahulu'];
         }
+
+        // ✅ Default "Tidak ada alergi" (SNOMED 716186003) bila alergi MASIH KOSONG setelah
+        // prefill master pasien. Dipasang saat form DIBUKA supaya dokter melihat & bisa
+        // mengubah — bukan disisipkan diam-diam saat simpan. Lihat App\Support\AlergiSnomed
+        // untuk alasan & risikonya.
+        $this->dataDaftarPoliRJ['anamnesa']['alergi'] = AlergiSnomed::defaultBilaKosong(
+            $this->dataDaftarPoliRJ['anamnesa']['alergi'] ?? [],
+        );
 
         // 🔥 INCREMENT: Refresh seluruh modal anamnesa
         $this->incrementVersion('modal-anamnesa-rj');
@@ -371,9 +390,14 @@ new class extends Component {
 
         $updated = false;
 
-        // ✅ Update Alergi (text)
+        // ✅ Update Alergi (text) + kode SNOMED-nya
         if (!empty(($alergi = $this->dataDaftarPoliRJ['anamnesa']['alergi']['alergi'] ?? ''))) {
             $pasienData['pasien']['alergi'] = $alergi;
+            // Kode SNOMED ikut teksnya — SELALU ditimpa (termasuk jadi kosong) supaya kode
+            // lama tak tertinggal menempel pada teks alergi yang sudah diganti.
+            $pasienData['pasien']['alergiSnomedCode'] = $this->dataDaftarPoliRJ['anamnesa']['alergi']['snomedCode'] ?? '';
+            $pasienData['pasien']['alergiSnomedDisplayEn'] = $this->dataDaftarPoliRJ['anamnesa']['alergi']['snomedDisplayEn'] ?? '';
+            $pasienData['pasien']['alergiSnomedDisplayId'] = $this->dataDaftarPoliRJ['anamnesa']['alergi']['snomedDisplayId'] ?? '';
             $updated = true;
         }
 
