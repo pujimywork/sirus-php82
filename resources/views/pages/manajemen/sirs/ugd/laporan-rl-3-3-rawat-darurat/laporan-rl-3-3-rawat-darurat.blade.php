@@ -116,7 +116,7 @@ new class extends Component {
                                 <th colspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center">Total Pasien</th>
                                 <th colspan="3" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center text-blue-700 dark:text-blue-300">Tindak Lanjut Pelayanan</th>
                                 <th colspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center text-rose-700 dark:text-rose-300">Mati di IGD</th>
-                                <th colspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center text-rose-700 dark:text-rose-300">DOA</th>
+                                <th colspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center text-rose-700 dark:text-rose-300">Meninggal Saat Tiba (DOA)</th>
                                 <th colspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center text-amber-700 dark:text-amber-300">Luka-luka</th>
                                 <th rowspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-right text-purple-700 dark:text-purple-300">False Emergency</th>
                             </tr>
@@ -182,8 +182,12 @@ new class extends Component {
                     <span class="text-muted-soft">Rujukan/Non = </span><code>rsmst_entryugds.rujukan_status</code>;
                     <span class="text-muted-soft">Dirawat = </span><code>rj_status='I'</code>;
                     <span class="text-muted-soft">Dirujuk = </span>JSON <code>perencanaan.tindakLanjut.tindakLanjut='Rujuk'</code>;
-                    <span class="text-muted-soft">Mati IGD = </span><code>death_on_igd_status='Y'</code> &times; <code>p.sex</code>;
-                    <span class="text-muted-soft">DOA = </span>triase P0 + Mati IGD; <span class="text-muted-soft">False Emergency = </span>triase P4.
+                    <span class="text-muted-soft">Mati IGD = </span>JSON
+                    <code>perencanaan.tindakLanjut.tindakLanjut='Meninggal'</code> &times; <code>p.sex</code>
+                    (semua pasien yang meninggal di IGD, termasuk yang datang hidup lalu gagal diresusitasi);
+                    <span class="text-muted-soft">Meninggal Saat Tiba / DOA (Death On Arrival) = </span>bagian dari Mati
+                    IGD yang triasenya P0 &mdash; pasien sudah meninggal ketika sampai di IGD;
+                    <span class="text-muted-soft">False Emergency = </span>triase P4.
                     <strong>Belum diisi:</strong> kategori 1.1-2.3 (butuh ICD diagnosis matching), kolom Luka-luka (butuh trauma flag).
                     Filter: <code>klaim_id &lt;&gt; 'KR'</code> &amp; <code>rj_status &lt;&gt; 'F'</code>.
                 </div>

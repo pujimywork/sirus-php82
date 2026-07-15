@@ -360,7 +360,13 @@ new class extends Component {
             'tindakLanjut' => [
                 'tindakLanjut' => '',
                 'keteranganTindakLanjut' => '',
-                'tindakLanjutOptions' => [['tindakLanjut' => 'MRS'], ['tindakLanjut' => 'Kontrol'], ['tindakLanjut' => 'Rujuk'], ['tindakLanjut' => 'Perawatan Selesai'], ['tindakLanjut' => 'PRB'], ['tindakLanjut' => 'Lain-lain']],
+                // 'Meninggal' DIKEMBALIKAN: opsi ini pernah ada (daftar lama: MRS, KRS,
+                // APS, Rujuk, Meninggal, Lain-lain) lalu hilang saat daftar diubah, padahal
+                // 97 record terlanjur memakainya. Akibatnya kematian UGD tak bisa dicatat
+                // lagi di SOAP, dan RL 3.3 (Mati IGD & DOA) kehilangan sumbernya —
+                // kolom rstxn_ugdhdrs.death_on_igd_status tak pernah ditulis 'Y' oleh
+                // siapa pun. RL33Trait sekarang membaca kematian dari nilai ini.
+                'tindakLanjutOptions' => [['tindakLanjut' => 'MRS'], ['tindakLanjut' => 'Kontrol'], ['tindakLanjut' => 'Rujuk'], ['tindakLanjut' => 'Perawatan Selesai'], ['tindakLanjut' => 'PRB'], ['tindakLanjut' => 'Meninggal'], ['tindakLanjut' => 'Lain-lain']],
             ],
 
             'terapiTab' => 'Terapi',

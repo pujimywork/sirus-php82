@@ -160,11 +160,6 @@ trait RL33Trait
             ])
             ->get();
 
-        // String pattern untuk pencarian di JSON (Oracle no JSON_VALUE)
-        $rujukPattern = '"tindakLanjut":"Rujuk"';
-        $p0Pattern    = '"tingkatKegawatan":"P0"';
-        $p4Pattern    = '"tingkatKegawatan":"P4"';
-
         foreach ($rows as $r) {
             // ─── KLASIFIKASI: input poli + umur → SIRS specialty ID ──────
             $poliDesc = (string) ($doctorPoli[(string) $r->dr_id] ?? '');
@@ -175,13 +170,34 @@ trait RL33Trait
             // umur/poli atau default Non bedah lainnya.
 
             // ─── EKSTRAKSI FLAG dari JSON (sekali per row) ───────────────
-            $sex        = (string) ($r->sex ?? '');
-            $isDeathIgd = ($r->death_on_igd_status ?? 'N') === 'Y';
-            $jsonRaw    = (string) ($r->datadaftarugd_json ?? '');
-            $isRujuk    = $jsonRaw !== '' && str_contains($jsonRaw, $rujukPattern);
-            $isP0       = $jsonRaw !== '' && str_contains($jsonRaw, $p0Pattern);
-            $isP4       = $jsonRaw !== '' && str_contains($jsonRaw, $p4Pattern);
-            $isRujukan  = strcasecmp((string) ($entryStatus[(string) $r->entry_id] ?? ''), 'Y') === 0;
+            // ⚠️  DULU pakai str_contains('"tindakLanjut":"Rujuk"') dsb. Itu SALAH BESAR:
+            //     daftar opsi ikut tersimpan di JSON tiap record
+            //     ("tindakLanjutOptions":[{"tindakLanjut":"Rujuk"},...]), jadi polanya
+            //     cocok di HAMPIR SEMUA record — bukan cuma yang benar-benar memilih.
+            //     Terukur 2026-07-15 atas 35.794 record ber-JSON:
+            //       dirujuk : terhitung 24.808, sebenarnya    441  (salah 56x)
+            //       P0      : terhitung 24.461, sebenarnya     69  (salah 354x)
+            //     P0 selama ini tak kelihatan salah karena DOA butuh isDeathIgd yang
+            //     selalu false. Begitu deteksi kematian disambungkan, DOA akan meledak
+            //     kalau pola ini tak dibetulkan.
+            //     Oracle tak punya JSON_VALUE (ORA-00904) → decode di PHP, bukan SQL.
+            $json = json_decode((string) ($r->datadaftarugd_json ?? ''), true) ?: [];
+
+            $tindakLanjut = (string) data_get($json, 'perencanaan.tindakLanjut.tindakLanjut', '');
+            $triase       = (string) data_get($json, 'anamnesa.pengkajianPerawatan.tingkatKegawatan', '');
+
+            $sex       = (string) ($r->sex ?? '');
+            $isRujuk   = $tindakLanjut === 'Rujuk';
+            $isP0      = $triase === 'P0';
+            $isP4      = $triase === 'P4';
+            $isRujukan = strcasecmp((string) ($entryStatus[(string) $r->entry_id] ?? ''), 'Y') === 0;
+
+            // Mati di IGD dibaca dari SOAP (tindak lanjut Meninggal), BUKAN dari kolom
+            // rstxn_ugdhdrs.death_on_igd_status: kolom itu tak punya penulis 'Y' satu pun
+            // di seluruh aplikasi, jadi Mati IGD & DOA selalu 0. Sementara SOAP sudah
+            // punya datanya (97 record ber-tindakLanjut 'Meninggal' per 2026-07-15).
+            // Sejalan dgn cara RI menandai kematian (status pulang BPJS 4 di Perencanaan).
+            $isDeathIgd = $tindakLanjut === 'Meninggal';
 
             // ─── METRIK 1-2: Total Pasien (Rujukan / Non Rujukan) ────────
             // Sumber: rsmst_entryugds.rujukan_status (Y = rujukan dari faskes
@@ -199,6 +215,10 @@ trait RL33Trait
                 $buckets[$sirsId]['dirawat']++;       // sudah pindah ke RI
             } elseif ($isRujuk) {
                 $buckets[$sirsId]['dirujuk']++;       // dirujuk ke RS lain
+            } elseif ($isDeathIgd) {
+                // Meninggal punya kolom sendiri (Mati IGD). Pasien meninggal bukan
+                // "pulang" — tanpa cabang ini dia ikut terhitung di Pulang (rj_status
+                // 'L') SEKALIGUS di Mati IGD → total tindak lanjut menggelembung.
             } elseif ($r->rj_status === 'L') {
                 $buckets[$sirsId]['pulang']++;        // selesai, pulang
             }
