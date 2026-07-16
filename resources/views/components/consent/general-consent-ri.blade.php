@@ -40,6 +40,8 @@
     $agreePre = $clause['agreePre'] ?? '';
     $agreePost = $clause['agreePost'] ?? '';
     $points = $clause['points'] ?? [];
+    $hakPasien = $clause['hakPasien'] ?? [];
+    $tanggungJawabPasien = $clause['tanggungJawabPasien'] ?? [];
     $subtitle = $clause['subtitle'] ?? 'Pelayanan Rawat Inap';
 
     $pihakList = collect($consent['pihakInfoMedis'] ?? [])->filter(fn($p) => !empty(trim($p['nama'] ?? '')));
@@ -57,6 +59,20 @@
     <p style="padding-left: 12px;">
         @foreach ($points as $i => $pt)
             {{ $i + 1 }}. {!! $pt !!}@if (!$loop->last)<br>@endif
+        @endforeach
+    </p>
+    <br>
+    <p><strong>Hak Sebagai Pasien:</strong></p>
+    <p style="padding-left: 12px;">
+        @foreach ($hakPasien as $i => $hak)
+            {{ $i + 1 }}. {!! $hak !!}@if (!$loop->last)<br>@endif
+        @endforeach
+    </p>
+    <br>
+    <p><strong>Tanggung Jawab Sebagai Pasien:</strong></p>
+    <p style="padding-left: 12px;">
+        @foreach ($tanggungJawabPasien as $i => $tj)
+            {{ $i + 1 }}. {!! $tj !!}@if (!$loop->last)<br>@endif
         @endforeach
     </p>
     <br>
@@ -108,6 +124,26 @@
                 class="pl-5 space-y-1 text-sm leading-relaxed text-justify text-gray-700 list-decimal dark:text-gray-300">
                 @foreach ($points as $pt)
                     <li>{!! $pt !!}</li>
+                @endforeach
+            </ol>
+        </div>
+
+        <div class="space-y-1">
+            <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hak Sebagai Pasien</h4>
+            <ol
+                class="pl-5 space-y-1 text-sm leading-relaxed text-justify text-gray-700 list-decimal dark:text-gray-300">
+                @foreach ($hakPasien as $hak)
+                    <li>{!! $hak !!}</li>
+                @endforeach
+            </ol>
+        </div>
+
+        <div class="space-y-1">
+            <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Tanggung Jawab Sebagai Pasien</h4>
+            <ol
+                class="pl-5 space-y-1 text-sm leading-relaxed text-justify text-gray-700 list-decimal dark:text-gray-300">
+                @foreach ($tanggungJawabPasien as $tj)
+                    <li>{!! $tj !!}</li>
                 @endforeach
             </ol>
         </div>

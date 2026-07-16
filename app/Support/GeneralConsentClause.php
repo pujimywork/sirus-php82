@@ -34,6 +34,27 @@ class GeneralConsentClause
 
         $agreePre = 'Dengan ini saya menyatakan ';
 
+        // Hak & Tanggung Jawab pasien — redaksi dipulihkan dari general-consent-body.blade.php
+        // (dihapus d660a2e1 yang mengaku "teks sama"). Sama untuk RJ/UGD/RI.
+        $hakPasien = [
+            'Mendapatkan informasi yang jelas tentang peraturan rumah sakit dan hak serta tanggung jawab saya sebagai pasien.',
+            'Mendapatkan layanan kesehatan yang baik, tanpa diskriminasi dan sesuai dengan standar profesional.',
+            'Memilih dokter dan jenis perawatan yang saya inginkan, sesuai ketentuan rumah sakit.',
+            'Mendapatkan informasi tentang diagnosis, prosedur medis, tujuan, risiko, dan alternatif tindakan medis.',
+            'Memberikan persetujuan atau menolak tindakan medis yang akan dilakukan oleh tenaga kesehatan, termasuk hak untuk menolak/menghentikan terapi serta menolak pelayanan resusitasi.',
+            'Mendapatkan privasi dan kerahasiaan terkait penyakit dan data medis saya.',
+            'Mengajukan keluhan atau saran mengenai pelayanan rumah sakit yang saya terima.',
+            'Meminta konsultasi (<em>second opinion</em>) dengan dokter lain yang berizin jika diperlukan.',
+        ];
+
+        $tanggungJawabPasien = [
+            'Mematuhi peraturan rumah sakit dan menggunakan fasilitas dengan bertanggung jawab.',
+            'Memberikan informasi yang akurat dan lengkap tentang kondisi kesehatan saya.',
+            'Mematuhi rencana terapi yang disarankan oleh tenaga medis setelah mendapatkan penjelasan.',
+            'Menanggung biaya pengobatan yang saya terima sesuai ketentuan yang berlaku.',
+            'Menghormati hak pasien lain dan petugas medis yang memberikan pelayanan.',
+        ];
+
         $pointInfo = 'Saya berhak mendapat informasi yang jelas mengenai kondisi kesehatan, diagnosis, prosedur, risiko, dan alternatif tindakan.';
         $pointSecondOpinion = 'Saya berhak meminta konsultasi dokter lain (<em>second opinion</em>) bila diperlukan.';
         $pointRahasia = 'Rumah sakit menjaga kerahasiaan informasi medis saya sesuai ketentuan yang berlaku.';
@@ -44,6 +65,8 @@ class GeneralConsentClause
                 'rj' => [
                     'subtitle' => 'Pelayanan Rawat Jalan',
                     'introTemplate' => $introTpl('di'),
+                    'hakPasien' => $hakPasien,
+                    'tanggungJawabPasien' => $tanggungJawabPasien,
                     'agreePre' => $agreePre,
                     'agreePost' => ' untuk menerima pelayanan kesehatan, pemeriksaan, dan tindakan yang diperlukan sesuai dengan standar pelayanan medis yang berlaku di rumah sakit ini.',
                     'points' => [
@@ -58,6 +81,8 @@ class GeneralConsentClause
                 'ugd' => [
                     'subtitle' => 'Pelayanan Unit Gawat Darurat',
                     'introTemplate' => $introTpl('di'),
+                    'hakPasien' => $hakPasien,
+                    'tanggungJawabPasien' => $tanggungJawabPasien,
                     'agreePre' => $agreePre,
                     'agreePost' => ' untuk menerima pelayanan kesehatan, pemeriksaan, dan tindakan yang diperlukan sesuai dengan standar pelayanan medis yang berlaku di rumah sakit ini.',
                     'points' => [
@@ -72,6 +97,8 @@ class GeneralConsentClause
                 'ri' => [
                     'subtitle' => 'Pelayanan Rawat Inap',
                     'introTemplate' => $introTpl('selama rawat inap di'),
+                    'hakPasien' => $hakPasien,
+                    'tanggungJawabPasien' => $tanggungJawabPasien,
                     'agreePre' => $agreePre,
                     'agreePost' => ' untuk menerima pelayanan kesehatan, pemeriksaan, dan tindakan yang diperlukan sesuai dengan standar pelayanan medis yang berlaku di rumah sakit ini selama menjalani rawat inap.',
                     'points' => [
