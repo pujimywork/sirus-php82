@@ -302,9 +302,9 @@ new class extends Component {
                         | Diisi oleh Perawat — Pengkajian Awal Rawat Inap
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'pengkajian-perawat'" x-transition.opacity.duration.200ms>
-                            {{-- Dokter & role lain (termasuk Apoteker & Gizi) boleh lihat (view-only); edit/simpan di-gate di dalam component
+                            {{-- Dokter & role lain (termasuk Apoteker, Gizi & Laboratorium) boleh lihat (view-only); edit/simpan di-gate di dalam component
                                  lewat $isReadOnlyByRole. Lihat rm-pengkajian-awal-ri-actions.blade.php --}}
-                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr|Apoteker|Gizi')
+                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr|Apoteker|Gizi|Laboratorium')
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-awal-ri.rm-pengkajian-awal-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-awal-ri-{{ $riHdrNo }}" />
                             @else
@@ -324,9 +324,9 @@ new class extends Component {
                         | Diisi oleh Dokter — Pengkajian Dokter RI
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'pengkajian-dokter'" x-transition.opacity.duration.200ms>
-                            {{-- Perawat & role lain (termasuk Apoteker & Gizi) boleh lihat (view-only); edit/simpan di-gate di dalam component
+                            {{-- Perawat & role lain (termasuk Apoteker, Gizi & Laboratorium) boleh lihat (view-only); edit/simpan di-gate di dalam component
                                  lewat $isReadOnlyByRole. Lihat rm-pengkajian-dokter-ri-actions.blade.php --}}
-                            @hasanyrole('Dokter|Perawat|Admin|Casemix|Mr|Apoteker|Gizi')
+                            @hasanyrole('Dokter|Perawat|Admin|Casemix|Mr|Apoteker|Gizi|Laboratorium')
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-dokter-ri.rm-pengkajian-dokter-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-dokter-ri-{{ $riHdrNo }}" />
                             @else
