@@ -35,29 +35,42 @@ class GeneralConsentClause
         $agreePre = 'Dengan ini saya menyatakan ';
 
         // Hak & Tanggung Jawab pasien — redaksi dipulihkan dari general-consent-body.blade.php
-        // (dihapus d660a2e1 yang mengaku "teks sama"). Sama untuk RJ/UGD/RI.
-        $hakPasien = [
+        // (dihapus d660a2e1). Ini daftar UTAMA; 'points' hanya memuat sisa yang tidak
+        // terwakili di sini — jangan ulangi isi Hak/TJ di points (dulu tumpang tindih 5 poin).
+        // Beda RJ/UGD vs RI hanya pada 1 poin hak & 1 poin tanggung jawab (varian rawat inap).
+        $buildHak = fn(string $poinMenolak) => [
             'Mendapatkan informasi yang jelas tentang peraturan rumah sakit dan hak serta tanggung jawab saya sebagai pasien.',
             'Mendapatkan layanan kesehatan yang baik, tanpa diskriminasi dan sesuai dengan standar profesional.',
             'Memilih dokter dan jenis perawatan yang saya inginkan, sesuai ketentuan rumah sakit.',
             'Mendapatkan informasi tentang diagnosis, prosedur medis, tujuan, risiko, dan alternatif tindakan medis.',
-            'Memberikan persetujuan atau menolak tindakan medis yang akan dilakukan oleh tenaga kesehatan, termasuk hak untuk menolak/menghentikan terapi serta menolak pelayanan resusitasi.',
+            $poinMenolak,
             'Mendapatkan privasi dan kerahasiaan terkait penyakit dan data medis saya.',
             'Mengajukan keluhan atau saran mengenai pelayanan rumah sakit yang saya terima.',
             'Meminta konsultasi (<em>second opinion</em>) dengan dokter lain yang berizin jika diperlukan.',
         ];
 
-        $tanggungJawabPasien = [
+        $buildTanggungJawab = fn(string $poinBiaya) => [
             'Mematuhi peraturan rumah sakit dan menggunakan fasilitas dengan bertanggung jawab.',
             'Memberikan informasi yang akurat dan lengkap tentang kondisi kesehatan saya.',
             'Mematuhi rencana terapi yang disarankan oleh tenaga medis setelah mendapatkan penjelasan.',
-            'Menanggung biaya pengobatan yang saya terima sesuai ketentuan yang berlaku.',
+            $poinBiaya,
             'Menghormati hak pasien lain dan petugas medis yang memberikan pelayanan.',
         ];
 
-        $pointInfo = 'Saya berhak mendapat informasi yang jelas mengenai kondisi kesehatan, diagnosis, prosedur, risiko, dan alternatif tindakan.';
-        $pointSecondOpinion = 'Saya berhak meminta konsultasi dokter lain (<em>second opinion</em>) bila diperlukan.';
-        $pointRahasia = 'Rumah sakit menjaga kerahasiaan informasi medis saya sesuai ketentuan yang berlaku.';
+        $hakPasien = $buildHak(
+            'Memberikan persetujuan atau menolak tindakan medis yang akan dilakukan oleh tenaga kesehatan, termasuk hak untuk menolak/menghentikan terapi serta menolak pelayanan resusitasi.',
+        );
+        $tanggungJawabPasien = $buildTanggungJawab('Menanggung biaya pengobatan yang saya terima sesuai ketentuan yang berlaku.');
+
+        // Varian RI — dua nuansa khas rawat inap yang dulu hidup di 'points'
+        // (terapi penunjang kehidupan, biaya kamar); dipindah ke sini agar tidak hilang.
+        $hakPasienRI = $buildHak(
+            'Memberikan persetujuan atau menolak tindakan medis yang akan dilakukan oleh tenaga kesehatan, termasuk hak untuk menolak/menghentikan terapi, pelayanan resusitasi, serta terapi penunjang kehidupan.',
+        );
+        $tanggungJawabPasienRI = $buildTanggungJawab(
+            'Menanggung biaya pengobatan yang saya terima sesuai ketentuan yang berlaku, termasuk biaya kamar dan tindakan yang dilakukan.',
+        );
+
         $pointICTerpisah = 'Untuk tindakan invasif, pembedahan, anestesi, transfusi darah, dan tindakan berisiko tinggi akan diminta <em>persetujuan tindakan (informed consent)</em> tersendiri.';
 
         return [
@@ -70,11 +83,6 @@ class GeneralConsentClause
                     'agreePre' => $agreePre,
                     'agreePost' => ' untuk menerima pelayanan kesehatan, pemeriksaan, dan tindakan yang diperlukan sesuai dengan standar pelayanan medis yang berlaku di rumah sakit ini.',
                     'points' => [
-                        $pointInfo,
-                        'Saya berhak menolak/menghentikan tindakan, termasuk pelayanan resusitasi, setelah mendapat penjelasan.',
-                        $pointSecondOpinion,
-                        $pointRahasia,
-                        'Saya bertanggung jawab atas biaya pelayanan sesuai ketentuan rumah sakit.',
                         $pointICTerpisah,
                     ],
                 ],
@@ -86,28 +94,18 @@ class GeneralConsentClause
                     'agreePre' => $agreePre,
                     'agreePost' => ' untuk menerima pelayanan kesehatan, pemeriksaan, dan tindakan yang diperlukan sesuai dengan standar pelayanan medis yang berlaku di rumah sakit ini.',
                     'points' => [
-                        $pointInfo,
-                        'Saya berhak menolak/menghentikan tindakan, termasuk pelayanan resusitasi, setelah mendapat penjelasan.',
-                        $pointSecondOpinion,
-                        $pointRahasia,
-                        'Saya bertanggung jawab atas biaya pelayanan sesuai ketentuan rumah sakit.',
                         'Untuk tindakan invasif, pembedahan, anestesi, transfusi darah, dan tindakan berisiko tinggi akan diminta <em>persetujuan tindakan (informed consent)</em> tersendiri. Dalam keadaan darurat yang mengancam nyawa, tindakan penyelamatan dapat dilakukan sebelum persetujuan diperoleh.',
                     ],
                 ],
                 'ri' => [
                     'subtitle' => 'Pelayanan Rawat Inap',
                     'introTemplate' => $introTpl('selama rawat inap di'),
-                    'hakPasien' => $hakPasien,
-                    'tanggungJawabPasien' => $tanggungJawabPasien,
+                    'hakPasien' => $hakPasienRI,
+                    'tanggungJawabPasien' => $tanggungJawabPasienRI,
                     'agreePre' => $agreePre,
                     'agreePost' => ' untuk menerima pelayanan kesehatan, pemeriksaan, dan tindakan yang diperlukan sesuai dengan standar pelayanan medis yang berlaku di rumah sakit ini selama menjalani rawat inap.',
                     'points' => [
-                        $pointInfo,
-                        'Saya berhak menolak/menghentikan tindakan, termasuk pelayanan resusitasi dan terapi penunjang kehidupan, setelah mendapat penjelasan.',
-                        $pointSecondOpinion,
                         'Saya berhak didampingi keluarga, terutama dalam keadaan kritis.',
-                        $pointRahasia,
-                        'Saya bertanggung jawab atas biaya pelayanan rawat inap sesuai ketentuan rumah sakit, termasuk biaya kamar dan tindakan yang dilakukan.',
                         $pointICTerpisah,
                         'Rumah sakit tidak bertanggung jawab atas kehilangan atau kerusakan barang berharga yang saya bawa sendiri.',
                     ],

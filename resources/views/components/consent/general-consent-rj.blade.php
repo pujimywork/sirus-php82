@@ -62,19 +62,28 @@
         @endforeach
     </p>
     <br>
-    <p><strong>Hak Sebagai Pasien:</strong></p>
-    <p style="padding-left: 12px;">
-        @foreach ($hakPasien as $i => $hak)
-            {{ $i + 1 }}. {!! $hak !!}@if (!$loop->last)<br>@endif
-        @endforeach
-    </p>
-    <br>
-    <p><strong>Tanggung Jawab Sebagai Pasien:</strong></p>
-    <p style="padding-left: 12px;">
-        @foreach ($tanggungJawabPasien as $i => $tj)
-            {{ $i + 1 }}. {!! $tj !!}@if (!$loop->last)<br>@endif
-        @endforeach
-    </p>
+    {{-- Hak & Tanggung Jawab berdampingan agar cetakan tidak memanjang ke bawah.
+         Pakai <table>, bukan flex/grid — dompdf tidak mendukung keduanya. --}}
+    <table style="width:100%; border-collapse:collapse;">
+        <tr>
+            <td style="width:50%; vertical-align:top; padding-right:6px;">
+                <p><strong>Hak Sebagai Pasien:</strong></p>
+                <p style="padding-left: 12px;">
+                    @foreach ($hakPasien as $i => $hak)
+                        {{ $i + 1 }}. {!! $hak !!}@if (!$loop->last)<br>@endif
+                    @endforeach
+                </p>
+            </td>
+            <td style="width:50%; vertical-align:top; padding-left:6px;">
+                <p><strong>Tanggung Jawab Sebagai Pasien:</strong></p>
+                <p style="padding-left: 12px;">
+                    @foreach ($tanggungJawabPasien as $i => $tj)
+                        {{ $i + 1 }}. {!! $tj !!}@if (!$loop->last)<br>@endif
+                    @endforeach
+                </p>
+            </td>
+        </tr>
+    </table>
     <br>
     <p><strong>Pihak yang Diberi Akses Informasi Medis:</strong></p>
     @if ($pihakList->count() > 0)
@@ -128,24 +137,27 @@
             </ol>
         </div>
 
-        <div class="space-y-1">
-            <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hak Sebagai Pasien</h4>
-            <ol
-                class="pl-5 space-y-1 text-sm leading-relaxed text-justify text-gray-700 list-decimal dark:text-gray-300">
-                @foreach ($hakPasien as $hak)
-                    <li>{!! $hak !!}</li>
-                @endforeach
-            </ol>
-        </div>
+        {{-- Berdampingan agar tidak memanjang ke bawah; menumpuk di layar sempit. --}}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="space-y-1">
+                <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hak Sebagai Pasien</h4>
+                <ol
+                    class="pl-5 space-y-1 text-sm leading-relaxed text-justify text-gray-700 list-decimal dark:text-gray-300">
+                    @foreach ($hakPasien as $hak)
+                        <li>{!! $hak !!}</li>
+                    @endforeach
+                </ol>
+            </div>
 
-        <div class="space-y-1">
-            <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Tanggung Jawab Sebagai Pasien</h4>
-            <ol
-                class="pl-5 space-y-1 text-sm leading-relaxed text-justify text-gray-700 list-decimal dark:text-gray-300">
-                @foreach ($tanggungJawabPasien as $tj)
-                    <li>{!! $tj !!}</li>
-                @endforeach
-            </ol>
+            <div class="space-y-1">
+                <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Tanggung Jawab Sebagai Pasien</h4>
+                <ol
+                    class="pl-5 space-y-1 text-sm leading-relaxed text-justify text-gray-700 list-decimal dark:text-gray-300">
+                    @foreach ($tanggungJawabPasien as $tj)
+                        <li>{!! $tj !!}</li>
+                    @endforeach
+                </ol>
+            </div>
         </div>
 
         <div class="pt-3 space-y-2 border-t border-gray-100 dark:border-gray-800">
