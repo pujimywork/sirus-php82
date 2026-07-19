@@ -62,7 +62,10 @@ TXT,
 //      - ri_status → 'P' (Pulang); tutup end_date kamar; lockstatus pasien lepas
 //
 // Form terkunci (isFormLocked) setelah pulang → hanya tombol Batal yang muncul.
-// Guard umum: role Admin|Tu; lockRIRow/lockUGDRow/lockRJRow sebelum tulis.
+// Guard role BEDA per aksi (sejak 2026-07):
+//   • Batal Transfer & Batal Transaksi (RJ/UGD) = Admin|Tu|Perawat|Manager Umum|Supervisor Tu.
+//   • Batal Inap / Batal Kunjungan (RI)         = Admin|Supervisor Tu.
+// lockRIRow/lockUGDRow/lockRJRow sebelum tulis.
 TXT,
 
 'transfer' => <<<'TXT'
@@ -98,10 +101,15 @@ TXT,
 'transfer-dokter-tarif' => <<<'TXT'
 // DOKTER & TARIF SAAT TRANSFER — jangan salin mentah dari kunjungan asal.
 //
-// 1) DOKTER dipilih lewat <livewire:lov.dokter.lov-dokter target="...">;
-//    default = dokter asal + fallback saat insert ($pilih ?: $hdr->dr_id).
+// 1) DOKTER dipilih lewat <livewire:lov.dokter.lov-dokter target="...">.
 //    resetTransferState() WAJIB mereset dokter: komponen di-mount sekali per
 //    halaman & dipakai berulang → tanpa itu dokter pasien sebelumnya terbawa.
+//    Default kini BEDA per arah (sejak 2026-07):
+//    • RJ→UGD (transfer-rj-ke-ugd): default KOSONG + WAJIB pilih — guard di
+//      transferKeUGD() menolak bila empty, TANPA fallback ke dokter RJ.
+//      Disamakan dgn Daftar UGD yg dr_id-nya required.
+//    • UGD→RI (transfer-ugd-ke-ri): default = dokter asal (UGD) + fallback saat
+//      insert ($pilih ?: $hdr->dr_id). dr_id RI = dokter PENERIMA (lihat #2).
 //
 // 2) rstxn_rihdrs.dr_id = dokter PENERIMA, BUKAN DPJP.
 //    ⚡daftar-ri menampilkannya sebagai "Penerima:"; "DPJP:" diambil dari
@@ -395,7 +403,9 @@ TXT,
                             <span class="ds-body-sm" style="color:var(--body-strong)">
                                 <strong>Prinsip semua batal:</strong> jalankan dalam <span class="ds-code">DB::transaction</span> +
                                 <span class="ds-code">lock*Row</span>, verifikasi status &amp; guard dulu, tulis audit
-                                (<span class="ds-code">appendAdminLog*</span>), dan gate role (Admin / Supervisor Tu).
+                                (<span class="ds-code">appendAdminLog*</span>), dan gate role sesuai aksi
+                                (Batal Inap/Kunjungan RI: Admin / Supervisor Tu; Batal Transfer &amp; Transaksi RJ/UGD:
+                                Admin, Tu, Perawat, Manager Umum, Supervisor Tu).
                             </span>
                         </div>
                     </section>
@@ -611,7 +621,7 @@ TXT,
                                 ['🧪', 'Belum bisa dibayar/dipulangkan kalau hasil lab belum keluar.', 'Supaya tagihan pasti sudah lengkap sebelum pasien membayar. Berlaku di rawat jalan, UGD, maupun rawat inap.'],
                                 ['🧹', 'Membatalkan hanya boleh kalau BELUM ada tindakan, obat, atau pembayaran.', 'Kalau pasien sudah dilayani (ada obat/lab/tindakan), tak bisa asal dibatalkan — biar tidak ada biaya yang hilang begitu saja.'],
                                 ['📌', 'Membatalkan = memberi cap "Batal", bukan menghapus.', 'Datanya tetap tersimpan untuk audit. Laporan otomatis mengeluarkan data yang berstatus Batal, jadi tidak ikut dihitung.'],
-                                ['🔒', 'Yang boleh membatalkan hanya Admin / Supervisor TU.', 'Petugas biasa tidak bisa membatalkan transaksi — mencegah salah/sengaja hapus.'],
+                                ['🔒', 'Yang boleh membatalkan dibatasi sesuai jenisnya.', 'Batal inap rawat inap hanya Admin / Supervisor TU; batal transfer & transaksi di RJ/UGD juga boleh TU, Perawat, dan Manager Umum. Petugas lain tidak bisa — mencegah salah/sengaja hapus.'],
                                 ['📱', 'Batal antrean BPJS (di Mobile JKN) itu urusan terpisah.', 'Itu hanya untuk melapor ke BPJS, dan TIDAK mengubah tagihan/status di sistem kita. Dua hal yang berbeda.'],
                             ] as [$emoji, $judul, $ket])
                                 <div class="ds-card-outline" style="padding:14px 18px">
