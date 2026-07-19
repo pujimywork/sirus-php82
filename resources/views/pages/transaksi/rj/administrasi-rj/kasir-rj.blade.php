@@ -323,8 +323,8 @@ new class extends Component {
      =============================== */
     public function batalTransaksi(): void
     {
-        if (!auth()->user()->hasAnyRole(['Admin', 'Tu'])) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Admin dan TU yang dapat membatalkan transaksi.');
+        if (!auth()->user()->hasAnyRole(['Admin', 'Tu', 'Perawat', 'Manager Umum', 'Supervisor Tu'])) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki akses untuk membatalkan transaksi.');
             return;
         }
 
@@ -483,8 +483,8 @@ new class extends Component {
 
     public function batalTransferUGD(): void
     {
-        if (!auth()->user()->hasAnyRole(['Admin', 'Tu'])) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Admin dan TU yang dapat membatalkan transfer.');
+        if (!auth()->user()->hasAnyRole(['Admin', 'Tu', 'Perawat', 'Manager Umum', 'Supervisor Tu'])) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki akses untuk membatalkan transfer.');
             return;
         }
 
@@ -745,8 +745,8 @@ new class extends Component {
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <p class="text-sm italic text-muted-soft dark:text-gray-600">Form input dinonaktifkan.</p>
-                    {{-- Batal Transfer / Batal Transaksi — Admin, Supervisor Tu (Tu tidak boleh batal) --}}
-                    @hasanyrole(['Admin', 'Supervisor Tu'])
+                    {{-- Batal Transfer & Batal Transaksi — Admin, Tu, Perawat, Manager Umum, Supervisor Tu (samakan dgn hak transfer) --}}
+                    @hasanyrole(['Admin', 'Tu', 'Perawat', 'Manager Umum', 'Supervisor Tu'])
                     <div class="flex gap-2">
                         @if ($txnStatus === 'I')
                             <x-confirm-button variant="warning" :action="'batalTransferUGD()'" title="Batal Transfer UGD"

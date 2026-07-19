@@ -555,7 +555,7 @@ new class extends Component {
                                                 @endhasanyrole
 
                                                 {{-- Transfer ke RI — aktif HANYA saat status Antrian (rj_status='A'), selain itu disabled --}}
-                                                @hasanyrole('Admin|Tu|Manager Umum|Supervisor Tu')
+                                                @hasanyrole('Admin|Tu|Perawat|Manager Umum|Supervisor Tu')
                                                     <x-secondary-button type="button"
                                                         :disabled="$row->rj_status !== 'A'"
                                                         wire:click="$dispatch('open-transfer-ugd-ke-ri', { rjNo: {{ $row->rj_no }} })"

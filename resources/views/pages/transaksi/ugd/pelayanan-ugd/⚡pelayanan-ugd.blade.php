@@ -868,7 +868,7 @@ new class extends Component {
                                                             @endhasanyrole
 
                                                             {{-- Transfer ke RI — aktif HANYA saat status Antrian (rj_status='A'), selain itu disabled --}}
-                                                            @hasanyrole('Admin|Tu|Perawat')
+                                                            @hasanyrole('Admin|Tu|Perawat|Manager Umum|Supervisor Tu')
                                                                 @if ($row->rj_status === 'A')
                                                                     <x-dropdown-link href="#"
                                                                         wire:click.prevent="$dispatch('open-transfer-ugd-ke-ri', { rjNo: {{ $row->rj_no }} })"

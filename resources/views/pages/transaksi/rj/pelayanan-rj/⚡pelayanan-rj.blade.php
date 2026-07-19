@@ -1072,7 +1072,7 @@ new class extends Component {
                                                                 @endhasanyrole
 
                                                                 {{-- Transfer ke UGD — disabled (tak bisa diklik) bila bukan status Antrian (rj_status='A') --}}
-                                                                @hasanyrole('Admin|Tu')
+                                                                @hasanyrole('Admin|Tu|Perawat|Manager Umum|Supervisor Tu')
                                                                     @php
                                                                         $canTransferUgd = $row->rj_status === 'A';
                                                                         $trfUgdClass = $canTransferUgd
