@@ -109,28 +109,31 @@ new class extends Component {
 
 <div>
     <x-modal name="rm-ri-actions" size="full" height="full" focusable>
-        <x-tabbed-dirty-modal-content name="rm-ri-actions" savedEvent="refresh-after-ri.saved" :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])"
+        <x-tabbed-dirty-modal-content name="rm-ri-actions" savedEvent="refresh-after-ri.saved" :reloadArg="$riHdrNo" :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])"
             :tabs="[
                 [
                     'key' => 'pengkajian-perawat',
                     'label' => 'Pengkajian Perawat',
                     'saveEvent' => 'save-rm-pengkajian-awal-ri',
+                    'reloadEvent' => 'open-rm-pengkajian-awal-ri',
                 ],
                 [
                     'key' => 'pengkajian-dokter',
                     'label' => 'Pengkajian Dokter',
                     'saveEvent' => 'save-rm-pengkajian-dokter-ri',
+                    'reloadEvent' => 'open-rm-pengkajian-dokter-ri',
                 ],
-                ['key' => 'diagnosa', 'label' => 'Diagnosis', 'saveEvent' => 'save-rm-diagnosa-ri'],
-                ['key' => 'perencanaan', 'label' => 'Perencanaan', 'saveEvent' => 'save-rm-perencanaan-ri'],
-                ['key' => 'penilaian', 'label' => 'Penilaian Nyeri', 'saveEvent' => 'save-active-rm-penilaian-ri'],
+                ['key' => 'diagnosa', 'label' => 'Diagnosis', 'saveEvent' => 'save-rm-diagnosa-ri', 'reloadEvent' => 'open-rm-diagnosa-ri'],
+                ['key' => 'perencanaan', 'label' => 'Perencanaan', 'saveEvent' => 'save-rm-perencanaan-ri', 'reloadEvent' => 'open-rm-perencanaan-ri'],
+                ['key' => 'penilaian', 'label' => 'Penilaian Nyeri', 'saveEvent' => 'save-active-rm-penilaian-ri', 'reloadEvent' => 'open-rm-penilaian-ri'],
                 [
                     'key' => 'observasi',
                     'label' => 'Pemberian Obat & Cairan',
                     'saveEvent' => 'save-active-rm-observasi-ri',
+                    'reloadEvent' => 'open-rm-observasi-ri',
                 ],
-                ['key' => 'cppt', 'label' => 'CPPT', 'saveEvent' => 'save-rm-cppt-ri'],
-                ['key' => 'sbar', 'label' => 'SBAR', 'saveEvent' => 'save-rm-sbar-ri'],
+                ['key' => 'cppt', 'label' => 'CPPT', 'saveEvent' => 'save-rm-cppt-ri', 'reloadEvent' => 'open-rm-cppt-ri'],
+                ['key' => 'sbar', 'label' => 'SBAR', 'saveEvent' => 'save-rm-sbar-ri', 'reloadEvent' => 'open-rm-sbar-ri'],
             ]">
 
             {{-- ═══════════ HEADER ═══════════ --}}

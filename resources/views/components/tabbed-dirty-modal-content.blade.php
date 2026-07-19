@@ -2,7 +2,8 @@
     'name',                                                    // modal name untuk open-modal listener
     'savedEvent' => 'refresh-after-saved',                     // event yang reset dirty per section (sub-component dispatch ini setelah save sukses)
     'wireKey',                                                 // wire:key untuk container
-    'tabs' => [],                                              // array tab config: [['key' => '...', 'label' => '...', 'saveEvent' => '...'], ...]
+    'tabs' => [],                                              // array tab config: [['key' => '...', 'label' => '...', 'saveEvent' => '...', 'reloadEvent' => '...'], ...]
+    'reloadArg' => null,                                       // argumen (mis. riHdrNo) yg dikirim ke reloadEvent saat "buang perubahan"
     'initialTab' => null,                                      // tab default; null = ambil dari tabs[0]
     'wrapperClass' => 'flex flex-col min-h-[calc(100vh-8rem)]',
 ])
@@ -38,6 +39,8 @@
         savingAndClosing: false,
         savingAndSwitching: false,
         saveMap: @js(collect($tabs)->mapWithKeys(fn($t) => [$t['key'] => ['label' => $t['label'], 'saveEvent' => $t['saveEvent']]])->all()),
+        reloadMap: @js(collect($tabs)->mapWithKeys(fn($t) => [$t['key'] => $t['reloadEvent'] ?? null])->all()),
+        reloadArg: @js($reloadArg),
 
         markDirty(tab) {
             if (this.saveMap[tab]) this.tabDirty[tab] = true;
@@ -102,6 +105,21 @@
             } finally {
                 this.savingAndSwitching = false;
             }
+        },
+        discardAndSwitch() {
+            // Buang perubahan tab aktif TANPA menyimpan lalu pindah.
+            // Revert data form via reloadEvent (reload dari DB), bukan sekadar reset flag,
+            // supaya edit tak nyangkut & muncul lagi saat balik ke tab ini.
+            const fromTab = this.activeTab;
+            const reloadEv = this.reloadMap[fromTab];
+            if (reloadEv && this.reloadArg) {
+                Livewire.dispatch(reloadEv, { riHdrNo: this.reloadArg });
+            }
+            this.tabDirty[fromTab] = false;
+            const target = this.pendingTab;
+            this.pendingTab = null;
+            this.showSwitchWarning = false;
+            this.activeTab = target;
         },
 
         tryClose() {
@@ -247,18 +265,32 @@
                         </p>
                     </div>
                 </div>
-                <div class="flex items-center justify-end gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
-                    <x-secondary-button type="button" x-on:click="cancelSwitch()"
-                        x-bind:disabled="savingAndSwitching">
-                        Batal
-                    </x-secondary-button>
-                    <x-primary-button type="button" x-on:click="saveAndSwitch()"
-                        x-bind:disabled="savingAndSwitching">
-                        <span x-show="!savingAndSwitching">Simpan &amp; Pindah</span>
-                        <span x-show="savingAndSwitching" x-cloak class="flex items-center gap-1">
-                            <x-loading /> Menyimpan...
-                        </span>
-                    </x-primary-button>
+                <div class="flex items-center justify-between gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
+                    {{-- Aksi destruktif (buang perubahan tab aktif) dipisah di kiri, gaya ghost-merah --}}
+                    <button type="button" x-show="reloadMap[activeTab]" x-on:click="discardAndSwitch()"
+                        x-bind:disabled="savingAndSwitching" title="Pindah tanpa menyimpan perubahan tab ini"
+                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150
+                               text-error bg-error/5 border border-error/20 hover:bg-error/10 hover:border-error/30
+                               focus:outline-none focus:ring-4 focus:ring-error/20
+                               disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 5v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+                        </svg>
+                        Pindah tanpa simpan
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <x-secondary-button type="button" x-on:click="cancelSwitch()"
+                            x-bind:disabled="savingAndSwitching">
+                            Batal
+                        </x-secondary-button>
+                        <x-primary-button type="button" x-on:click="saveAndSwitch()"
+                            x-bind:disabled="savingAndSwitching">
+                            <span x-show="!savingAndSwitching">Simpan &amp; Pindah</span>
+                            <span x-show="savingAndSwitching" x-cloak class="flex items-center gap-1">
+                                <x-loading /> Menyimpan...
+                            </span>
+                        </x-primary-button>
+                    </div>
                 </div>
             </div>
         </div>
