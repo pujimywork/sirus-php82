@@ -90,9 +90,10 @@ new class extends Component {
         $this->regName = $hdr->reg_name ?? null;
         $this->transferKlaimId = $hdr->klaim_id ?: 'UM';
 
-        // Default dokter UGD = dokter RJ (perilaku lama), kini bisa diganti lewat LOV.
-        $this->transferDrId = $hdr->dr_id ?? null;
-        $this->transferDrName = $hdr->dr_name ?? null;
+        // Dokter UGD sengaja DIKOSONGKAN — petugas wajib memilih dokter UGD lewat LOV
+        // (samakan dgn Daftar UGD yg dr_id-nya required). Jangan auto-isi dokter poli RJ.
+        $this->transferDrId = null;
+        $this->transferDrName = null;
 
         // Rincian biaya RJ (yang akan dipindahkan ke UGD)
         $this->biayaRJ = $this->calculateRJCosts($rjNo);
@@ -211,6 +212,12 @@ new class extends Component {
             return;
         }
 
+        // Dokter UGD wajib dipilih (konsisten dgn Daftar UGD yg dr_id-nya required).
+        if (empty($this->transferDrId)) {
+            $this->dispatch('toast', type: 'error', message: 'Pilih dokter UGD terlebih dahulu.');
+            return;
+        }
+
         try {
             // Global lock + retry: cegah rj_no (RSTXN_UGDHDRS) & tempadm_no kembar antar request,
             // dan toleransi race lintas-sistem (legacy Oracle Dev 6i).
@@ -252,7 +259,8 @@ new class extends Component {
                             // Tarif UGD dihitung dari dokter & klaim YANG DIPILIH di modal —
                             // bukan disalin dari RJ. Dokter UGD boleh beda dari dokter poli,
                             // dan tarif UGD-nya pun beda (spesialis 100rb vs umum 30rb).
-                            $ugdDrId = $this->transferDrId ?: $rjHdr->dr_id;
+                            // Dokter wajib dipilih (dijaga guard di transferKeUGD), tak ada fallback ke dokter RJ.
+                            $ugdDrId = $this->transferDrId;
                             $ugdKlaimId = $this->transferKlaimId ?: ($rjHdr->klaim_id ?: 'UM');
                             $tarifUGD = $this->hitungTarifUGD($ugdDrId, $ugdKlaimId);
 
@@ -262,7 +270,7 @@ new class extends Component {
                                 'rj_date'     => $rjHdr->rj_date,
                                 'reg_no'      => $rjHdr->reg_no,
                                 'klaim_id'    => $ugdKlaimId, // dipilih di modal (default = klaim RJ)
-                                // Dokter pilihan; fallback dokter RJ kalau LOV tak disentuh.
+                                // Dokter UGD hasil pilihan di modal (wajib diisi).
                                 'dr_id'       => $ugdDrId,
                                 'shift'       => $rjHdr->shift,
                                 'txn_status'  => 'A',
@@ -469,17 +477,13 @@ new class extends Component {
                         {{-- 3) Dokter UGD --}}
                         <div class="w-full">
                             <label class="mb-1 block text-xs font-semibold text-muted dark:text-gray-400">Dokter
-                                UGD</label>
+                                UGD <span class="text-error">*</span></label>
                             <livewire:lov.dokter.lov-dokter target="dokter-transfer-rj-ke-ugd"
                                 :initialDrId="$transferDrId" label="Cari Dokter UGD"
                                 placeholder="Ketik nama/kode dokter..."
                                 wire:key="lov-dokter-transfer-rj-ke-ugd-{{ $rjNo }}-{{ $renderVersions['modal-transfer-rj-ke-ugd'] ?? 0 }}" />
                             <p class="mt-1 text-xs text-muted dark:text-gray-400">
-                                Default = dokter poli asal
-                                @if ($transferDrName)
-                                    (<span class="font-medium">{{ $transferDrName }}</span>)
-                                @endif
-                                . Ganti bila di UGD ditangani dokter lain.
+                                Wajib pilih dokter yang menangani pasien di UGD (tidak otomatis dari dokter poli asal).
                             </p>
 
                             {{-- Tarif ikut dokter & klaim terpilih — tampilkan supaya petugas
