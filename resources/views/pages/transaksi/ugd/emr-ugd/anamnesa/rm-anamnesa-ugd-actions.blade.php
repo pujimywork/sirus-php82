@@ -305,6 +305,41 @@ new class extends Component {
     /* ===============================
      | REKONSILIASI OBAT
      =============================== */
+
+    /**
+     * Aksi rekonsiliasi obat langsung memanggil save(), sedangkan save()
+     * memvalidasi rules() komponen (field wajib tab Pengkajian). Tanpa
+     * pencegat ini user dapat toast "Cara Masuk IGD wajib diisi" saat
+     * mengurus obat, dan barisnya terlanjur tampil di tabel padahal gagal
+     * tersimpan ke JSON. Panggil SEBELUM state diubah & sebelum reset().
+     *
+     * @return bool true bila field wajib tab Pengkajian sudah terisi.
+     */
+    protected function pengkajianSiapUntukRekonsiliasi(): bool
+    {
+        $pengkajian = $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan'] ?? [];
+
+        $belum = collect([
+            'Cara Masuk IGD' => $pengkajian['caraMasukIgd'] ?? null,
+            'Tingkat Kegawatan' => $pengkajian['tingkatKegawatan'] ?? null,
+            'Keluhan Utama' => $this->dataDaftarUGD['anamnesa']['keluhanUtama']['keluhanUtama'] ?? null,
+        ])
+            ->filter(fn($nilai) => blank($nilai))
+            ->keys();
+
+        if ($belum->isEmpty()) {
+            return true;
+        }
+
+        $this->dispatch(
+            'toast',
+            type: 'error',
+            message: 'Lengkapi tab Pengkajian dulu — ' . $belum->implode(', ') . ' masih kosong.',
+        );
+
+        return false;
+    }
+
     public function addRekonsiliasiObat(): void
     {
         // validate() didahulukan supaya field yang kosong tetap ditandai merah
@@ -322,6 +357,12 @@ new class extends Component {
                 'rekonRute' => 'Rute',
             ],
         );
+
+        // Dicegat di sini: state belum disentuh & isian form belum di-reset,
+        // jadi user tinggal melengkapi Pengkajian lalu klik Tambah lagi.
+        if (!$this->pengkajianSiapUntukRekonsiliasi()) {
+            return;
+        }
 
         $sudahAda = collect($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'] ?? [])
             ->where('namaObat', $this->rekonNamaObat)
@@ -357,6 +398,11 @@ new class extends Component {
             return;
         }
 
+        // Dicegat sebelum nilai dibalik — toggle tak berubah bila gagal simpan.
+        if (!$this->pengkajianSiapUntukRekonsiliasi()) {
+            return;
+        }
+
         $nilai = ($obat[$field] ?? 'Tidak') === 'Ya' ? 'Tidak' : 'Ya';
         $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index][$field] = $nilai;
 
@@ -367,6 +413,11 @@ new class extends Component {
 
     public function removeRekonsiliasiObat(int $index): void
     {
+        // Dicegat sebelum baris dibuang — daftar tetap utuh bila gagal simpan.
+        if (!$this->pengkajianSiapUntukRekonsiliasi()) {
+            return;
+        }
+
         if (isset($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index])) {
             $namaObat = $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index]['namaObat'] ?? '-';
             unset($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index]);
