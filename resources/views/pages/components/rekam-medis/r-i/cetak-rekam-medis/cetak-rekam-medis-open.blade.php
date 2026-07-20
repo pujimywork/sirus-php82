@@ -229,19 +229,22 @@ new class extends Component {
         return (int) floor($mulai->diffInDays($selesai)) . ' hari' . (trim($tanggalKeluar) !== '' ? '' : ' (berjalan)');
     }
 
-    /** Urutkan entri EMR secara kronologis; entri lama tak selalu tersimpan berurutan. */
-    public function urutkanKronologis(array $daftarEntri, string $kolomWaktu): array
+    /**
+     * Urutkan entri EMR menurut waktunya. Default TERBARU DI ATAS (desc) — yang
+     * dicari user saat membuka rekam medis biasanya perkembangan terakhir.
+     * Entri lama tak selalu tersimpan berurutan, jadi selalu diurutkan ulang.
+     */
+    public function urutkanKronologis(array $daftarEntri, string $kolomWaktu, bool $terbaruDiAtas = true): array
     {
-        return collect($daftarEntri)
-            ->sortBy(function ($entri) use ($kolomWaktu) {
-                try {
-                    return Carbon::createFromFormat('d/m/Y H:i:s', trim((string) data_get($entri, $kolomWaktu)))->getTimestamp();
-                } catch (\Throwable) {
-                    return 0;
-                }
-            })
-            ->values()
-            ->all();
+        $terurut = collect($daftarEntri)->sortBy(function ($entri) use ($kolomWaktu) {
+            try {
+                return Carbon::createFromFormat('d/m/Y H:i:s', trim((string) data_get($entri, $kolomWaktu)))->getTimestamp();
+            } catch (\Throwable) {
+                return 0;
+            }
+        });
+
+        return ($terbaruDiAtas ? $terurut->reverse() : $terurut)->values()->all();
     }
 
     /** Signa e-resep: "3 x 1" (signaX x signaHari), atau signaText bila sudah tersimpan. */

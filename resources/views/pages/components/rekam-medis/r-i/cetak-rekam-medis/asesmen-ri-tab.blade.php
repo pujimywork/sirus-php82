@@ -52,6 +52,21 @@
     $daftarCppt = $this->urutkanKronologis((array) $ambil('cppt', []), 'tglCPPT');
     $daftarSbar = $this->urutkanKronologis((array) $ambil('sbar', []), 'tglSBAR');
     $daftarAskep = (array) $ambil('asuhanKeperawatan', []);
+
+    // Blok warna S/O/A/P & S/B/A/R — disamakan dgn tampilan CPPT & SBAR di EMR RI
+    // supaya user melihat pola yang sama di dua tempat.
+    $gayaSoap = [
+        'subjective' => ['lbl' => 'S', 'name' => 'Subjective', 'wrap' => 'border-l-4 border-blue-500 bg-blue-50/40 dark:bg-blue-900/10', 'text' => 'text-blue-700 dark:text-blue-400'],
+        'objective' => ['lbl' => 'O', 'name' => 'Objective', 'wrap' => 'border-l-4 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-900/10', 'text' => 'text-success dark:text-success'],
+        'assessment' => ['lbl' => 'A', 'name' => 'Assessment', 'wrap' => 'border-l-4 border-amber-500 bg-amber-50/40 dark:bg-amber-900/10', 'text' => 'text-amber-700 dark:text-amber-400'],
+        'plan' => ['lbl' => 'P', 'name' => 'Plan', 'wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-error dark:text-rose-400'],
+    ];
+    $gayaSbar = [
+        'situation' => ['lbl' => 'S', 'name' => 'Situation', 'wrap' => 'border-l-4 border-blue-500 bg-blue-50/40 dark:bg-blue-900/10', 'text' => 'text-blue-700 dark:text-blue-400'],
+        'background' => ['lbl' => 'B', 'name' => 'Background', 'wrap' => 'border-l-4 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-900/10', 'text' => 'text-success dark:text-success'],
+        'assessment' => ['lbl' => 'A', 'name' => 'Assessment', 'wrap' => 'border-l-4 border-amber-500 bg-amber-50/40 dark:bg-amber-900/10', 'text' => 'text-amber-700 dark:text-amber-400'],
+        'recommendation' => ['lbl' => 'R', 'name' => 'Recommendation', 'wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-error dark:text-rose-400'],
+    ];
 @endphp
 
 <div class="px-6 py-5 space-y-4">
@@ -511,29 +526,33 @@
                             </span>
                         </div>
 
-                        @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$hurufSoap, $kunciSoap])
-                            @php $isiSoap = trim((string) data_get($catatan, 'soap.' . $kunciSoap)); @endphp
-                            @if ($isiSoap !== '')
-                                <div class="flex gap-2 py-0.5">
-                                    <span class="w-6 font-bold shrink-0 text-brand-green">{{ $hurufSoap }}</span>
-                                    <span class="whitespace-pre-line text-ink dark:text-gray-100">{{ $isiSoap }}</span>
+                        {{-- SOAP dua kolom + blok berwarna — gaya sama dgn tampilan CPPT di EMR RI --}}
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            @foreach ($gayaSoap as $kunciSoap => $gaya)
+                                <div class="{{ $gaya['wrap'] }} pl-3 py-1 rounded-r-md">
+                                    <span class="font-bold {{ $gaya['text'] }}">{{ $gaya['lbl'] }}</span>
+                                    <span class="text-muted"> — {{ $gaya['name'] }}</span>
+                                    <p class="mt-0.5 whitespace-pre-wrap leading-relaxed text-body dark:text-gray-300">
+                                        {{ trim((string) data_get($catatan, 'soap.' . $kunciSoap)) ?: '-' }}</p>
+                                </div>
+                            @endforeach
+
+                            @if (filled(trim((string) ($catatan['instruction'] ?? ''))))
+                                <div>
+                                    <span class="font-semibold text-body dark:text-gray-300">Instruksi:</span>
+                                    <p class="mt-0.5 whitespace-pre-wrap text-body dark:text-gray-300">
+                                        {{ $catatan['instruction'] }}</p>
                                 </div>
                             @endif
-                        @endforeach
 
-                        @if (filled(trim((string) ($catatan['instruction'] ?? ''))))
-                            <div class="flex gap-2 pt-2 mt-2 border-t border-hairline-soft dark:border-gray-700/60">
-                                <span class="w-28 shrink-0 text-muted">Instruksi</span>
-                                <span class="whitespace-pre-line text-ink dark:text-gray-100">{{ $catatan['instruction'] }}</span>
-                            </div>
-                        @endif
-
-                        @if (filled(trim((string) ($catatan['review'] ?? ''))))
-                            <div class="flex gap-2 pt-1">
-                                <span class="w-28 shrink-0 text-muted">Review DPJP</span>
-                                <span class="whitespace-pre-line text-ink dark:text-gray-100">{{ $catatan['review'] }}</span>
-                            </div>
-                        @endif
+                            @if (filled(trim((string) ($catatan['review'] ?? ''))))
+                                <div>
+                                    <span class="font-semibold text-body dark:text-gray-300">Review DPJP:</span>
+                                    <p class="mt-0.5 whitespace-pre-wrap text-body dark:text-gray-300">
+                                        {{ $catatan['review'] }}</p>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -558,15 +577,17 @@
                             </span>
                         </div>
 
-                        @foreach ([['Situation', 'situation'], ['Background', 'background'], ['Assessment', 'assessment'], ['Recommendation', 'recommendation']] as [$judulSbar, $kunciSbar])
-                            @php $isiSbar = trim((string) data_get($catatan, 'sbar.' . $kunciSbar)); @endphp
-                            @if ($isiSbar !== '')
-                                <div class="flex flex-col gap-1 py-0.5 sm:flex-row sm:gap-2">
-                                    <span class="w-32 shrink-0 text-muted">{{ $judulSbar }}</span>
-                                    <span class="whitespace-pre-line text-ink dark:text-gray-100">{{ $isiSbar }}</span>
+                        {{-- SBAR dua kolom + blok berwarna — gaya sama dgn tampilan SBAR di EMR RI --}}
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            @foreach ($gayaSbar as $kunciSbar => $gaya)
+                                <div class="{{ $gaya['wrap'] }} pl-3 py-1 rounded-r-md">
+                                    <span class="font-bold {{ $gaya['text'] }}">{{ $gaya['lbl'] }}</span>
+                                    <span class="text-muted"> — {{ $gaya['name'] }}</span>
+                                    <p class="mt-0.5 whitespace-pre-wrap leading-relaxed text-body dark:text-gray-300">
+                                        {{ trim((string) data_get($catatan, 'sbar.' . $kunciSbar)) ?: '-' }}</p>
                                 </div>
-                            @endif
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -642,7 +663,7 @@
                 @foreach ([['Status Pulang', $statusPulangMap[$statusPulang] ?? $statusPulang], ['Tanggal Pulang', data_get($perencanaan, 'tindakLanjut.tglPulang')], ['Kode Tindak Lanjut', data_get($perencanaan, 'tindakLanjut.tindakLanjutKode')], ['No. SEP', data_get($perencanaan, 'tindakLanjut.noSep')], ['Tanggal Meninggal', data_get($perencanaan, 'tindakLanjut.tglMeninggal')], ['Pelayanan Berkelanjutan', data_get($perencanaan, 'dischargePlanning.pelayananBerkelanjutan.pelayananBerkelanjutan')], ['Penggunaan Alat Bantu', data_get($perencanaan, 'dischargePlanning.penggunaanAlatBantu.penggunaanAlatBantu')]] as [$judul, $nilai])
                     <div
                         class="flex flex-col gap-1 py-1 border-b sm:flex-row sm:gap-2 border-hairline-soft dark:border-gray-700/60">
-                        <span class="w-56 shrink-0 text-muted">{{ $judulSbar }}</span>
+                        <span class="w-56 shrink-0 text-muted">{{ $judul }}</span>
                         <span class="text-ink dark:text-gray-100">{{ filled($nilai) ? $nilai : '-' }}</span>
                     </div>
                 @endforeach
