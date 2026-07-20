@@ -201,7 +201,7 @@ new class extends Component {
 
     /*
     |---------------------------------------------------------------------------
-    | Penunjang tab "Asesmen & Tindakan"
+    | Penunjang tab "Assessment dan Tindakan Selama di Rawat Inap"
     |
     | Logika (parsing tanggal, pengurutan, perakitan teks) ditaruh di sini —
     | BUKAN di @php template — supaya import Carbon di atas tetap berlaku dan
@@ -401,7 +401,7 @@ new class extends Component {
                     <button type="button" x-on:click="tab = 'asesmen'"
                         :class="tab === 'asesmen' ? 'border-brand-green text-brand-green' :
                             'border-transparent text-muted hover:text-ink'"
-                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2 whitespace-nowrap">Asesmen &amp; Tindakan</button>
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2 whitespace-nowrap">Assessment dan Tindakan Selama di Rawat Inap</button>
                     <button type="button" x-on:click="tab = 'resume'"
                         :class="tab === 'resume' ? 'border-brand-green text-brand-green' :
                             'border-transparent text-muted hover:text-ink'"
@@ -420,7 +420,7 @@ new class extends Component {
             {{-- ── BODY (scroll) ── --}}
             <div class="flex-1 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
 
-                {{-- ════ TAB: ASESMEN & TINDAKAN ════
+                {{-- ════ TAB: ASSESSMENT DAN TINDAKAN SELAMA DI RAWAT INAP ════
                      Ringkasan apa saja yang dikerjakan selama ranap (pola preview RJ/UGD). --}}
                 <div x-show="tab === 'asesmen'">
                     @include('pages.components.rekam-medis.r-i.cetak-rekam-medis.asesmen-ri-tab')

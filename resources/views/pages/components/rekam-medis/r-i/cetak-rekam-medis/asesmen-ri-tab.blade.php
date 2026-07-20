@@ -1,6 +1,6 @@
 {{-- pages/components/rekam-medis/r-i/cetak-rekam-medis/asesmen-ri-tab.blade.php
 
-     Ringkasan ASESMEN & TINDAKAN selama rawat inap (read-only) — dipakai sebagai tab
+     Ringkasan ASSESSMENT DAN TINDAKAN selama rawat inap (read-only) — dipakai sebagai tab
      pertama di preview `cetak-rekam-medis-ri`. Tujuannya sama dgn preview RJ/UGD:
      satu layar untuk melihat apa saja yang sudah dikerjakan pada satu episode ranap,
      tanpa membuka EMR-nya satu per satu.
