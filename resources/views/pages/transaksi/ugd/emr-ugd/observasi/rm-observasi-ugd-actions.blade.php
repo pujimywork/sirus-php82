@@ -317,7 +317,7 @@ new class extends Component {
                 {{-- FORM INPUT --}}
                 @if (!$isFormLocked)
                     <div
-                        class="grid grid-cols-12 gap-3 p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+                        class="grid grid-cols-12 gap-2 p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
 
                         {{-- Cairan + Tetesan --}}
                         <div class="col-span-12 md:col-span-6">
@@ -327,7 +327,7 @@ new class extends Component {
                                     class="w-full pr-8" x-ref="olCairan"
                                     x-on:keydown.enter.prevent="$refs.olTetesan?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">ml</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">ml</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.cairan')" class="mt-1" />
                         </div>
@@ -339,114 +339,114 @@ new class extends Component {
                                     class="w-full pr-16" x-ref="olTetesan"
                                     x-on:keydown.enter.prevent="$refs.olSistolik?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">gtt/menit</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">gtt/menit</span>
                             </div>
                         </div>
 
                         {{-- Tanda Vital --}}
-                        <div class="col-span-6 md:col-span-2">
-                            <x-input-label value="TD Sistolik *" class="mb-1" />
+                        <div class="col-span-4 md:col-span-1">
+                            <x-input-label value="Sistolik *" class="mb-1 truncate whitespace-nowrap" />
                             <div class="relative">
-                                <x-text-input wire:model="observasiLanjutan.sistolik" placeholder="Sistolik"
-                                    class="w-full pr-12" x-ref="olSistolik"
+                                <x-text-input wire:model="observasiLanjutan.sistolik" placeholder="Sist"
+                                    class="w-full px-2 pr-10" x-ref="olSistolik"
                                     x-on:keydown.enter.prevent="$refs.olDistolik?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mmHg</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">mmHg</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.sistolik')" class="mt-1" />
                         </div>
 
-                        <div class="col-span-6 md:col-span-2">
-                            <x-input-label value="TD Diastolik *" class="mb-1" />
+                        <div class="col-span-4 md:col-span-1">
+                            <x-input-label value="Diastolik *" class="mb-1 truncate whitespace-nowrap" />
                             <div class="relative">
-                                <x-text-input wire:model="observasiLanjutan.distolik" placeholder="Diastolik"
-                                    class="w-full pr-12" x-ref="olDistolik"
+                                <x-text-input wire:model="observasiLanjutan.distolik" placeholder="Dias"
+                                    class="w-full px-2 pr-10" x-ref="olDistolik"
                                     x-on:keydown.enter.prevent="$refs.olNafas?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mmHg</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">mmHg</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.distolik')" class="mt-1" />
                         </div>
 
-                        <div class="col-span-6 md:col-span-2">
-                            <x-input-label value="Frekuensi Nafas *" class="mb-1" />
+                        <div class="col-span-4 md:col-span-1">
+                            <x-input-label value="RR (Nafas) *" class="mb-1 truncate whitespace-nowrap" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.frekuensiNafas" placeholder="Nafas"
-                                    class="w-full pr-14" x-ref="olNafas"
+                                    class="w-full px-2 pr-10" x-ref="olNafas"
                                     x-on:keydown.enter.prevent="$refs.olNadi?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">x/mnt</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">x/mnt</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.frekuensiNafas')" class="mt-1" />
                         </div>
 
-                        <div class="col-span-6 md:col-span-2">
-                            <x-input-label value="Frekuensi Nadi *" class="mb-1" />
+                        <div class="col-span-4 md:col-span-1">
+                            <x-input-label value="Nadi *" class="mb-1 truncate whitespace-nowrap" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.frekuensiNadi" placeholder="Nadi"
-                                    class="w-full pr-14" x-ref="olNadi"
+                                    class="w-full px-2 pr-10" x-ref="olNadi"
                                     x-on:keydown.enter.prevent="$refs.olSuhu?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">x/mnt</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">x/mnt</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.frekuensiNadi')" class="mt-1" />
                         </div>
 
-                        <div class="col-span-6 md:col-span-2">
-                            <x-input-label value="Suhu *" class="mb-1" />
+                        <div class="col-span-4 md:col-span-1">
+                            <x-input-label value="Suhu *" class="mb-1 truncate whitespace-nowrap" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.suhu" placeholder="Suhu"
-                                    class="w-full pr-6" x-ref="olSuhu"
+                                    class="w-full px-2 pr-6" x-ref="olSuhu"
                                     x-on:keydown.enter.prevent="$refs.olSpo2?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">°C</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">°C</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.suhu')" class="mt-1" />
                         </div>
 
-                        <div class="col-span-6 md:col-span-2">
-                            <x-input-label value="SpO₂ *" class="mb-1" />
+                        <div class="col-span-4 md:col-span-1">
+                            <x-input-label value="SpO₂ *" class="mb-1 truncate whitespace-nowrap" />
                             <div class="relative">
                                 <x-text-input wire:model="observasiLanjutan.spo2" placeholder="SpO₂"
-                                    class="w-full pr-5" x-ref="olSpo2"
+                                    class="w-full px-2 pr-5" x-ref="olSpo2"
                                     x-on:keydown.enter.prevent="$refs.olGda?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">%</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">%</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.spo2')" class="mt-1" />
                         </div>
 
-                        <div class="col-span-6 md:col-span-3">
-                            <x-input-label value="GDA" class="mb-1" />
+                        <div class="col-span-4 md:col-span-1">
+                            <x-input-label value="GDA" class="mb-1 truncate whitespace-nowrap" />
                             <div class="relative">
-                                <x-text-input wire:model="observasiLanjutan.gda" placeholder="Gula Darah Acak"
-                                    class="w-full pr-12" x-ref="olGda"
+                                <x-text-input wire:model="observasiLanjutan.gda" placeholder="GDA"
+                                    class="w-full px-2 pr-10" x-ref="olGda"
                                     x-on:keydown.enter.prevent="$refs.olGcs?.focus()" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mg/dL</span>
+                                    class="absolute inset-y-0 right-1.5 flex items-center text-xs text-muted-soft pointer-events-none">mg/dL</span>
                             </div>
                         </div>
 
-                        <div class="col-span-6 md:col-span-3">
-                            <x-input-label value="GCS" class="mb-1" />
-                            <x-text-input wire:model="observasiLanjutan.gcs" placeholder="E V M" class="w-full"
+                        <div class="col-span-4 md:col-span-1">
+                            <x-input-label value="GCS" class="mb-1 truncate whitespace-nowrap" />
+                            <x-text-input wire:model="observasiLanjutan.gcs" placeholder="E V M" class="w-full px-2"
                                 x-ref="olGcs" x-on:keydown.enter.prevent="$refs.olWaktu?.focus()" />
                         </div>
 
                         {{-- Waktu + Aksi --}}
-                        <div class="col-span-12 md:col-span-6">
-                            <x-input-label value="Waktu Pemeriksaan *" class="mb-1" />
+                        <div class="col-span-12 md:col-span-3">
+                            <x-input-label value="Waktu Pemeriksaan *" class="mb-1 truncate whitespace-nowrap" />
                             <div class="flex items-center gap-2">
                                 <x-text-input wire:model="observasiLanjutan.waktuPemeriksaan"
-                                    placeholder="dd/mm/yyyy hh:mm:ss" class="grow" x-ref="olWaktu" />
+                                    placeholder="dd/mm/yyyy hh:mm:ss" class="grow px-2" x-ref="olWaktu" />
                                 <x-now-button wire:click.prevent="setWaktuPemeriksaan" />
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.waktuPemeriksaan')" class="mt-1" />
                         </div>
 
-                        <div class="col-span-12 md:col-span-6 flex items-end">
+                        <div class="col-span-12 md:col-span-1 flex items-end">
                             <x-primary-button wire:click.prevent="addObservasiLanjutan" wire:loading.attr="disabled"
-                                wire:target="addObservasiLanjutan" class="gap-2">
+                                wire:target="addObservasiLanjutan" class="gap-1.5 w-full justify-center px-2">
                                 <span wire:loading.remove wire:target="addObservasiLanjutan">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -455,7 +455,7 @@ new class extends Component {
                                 </span>
                                 <span wire:loading wire:target="addObservasiLanjutan"><x-loading
                                         class="w-4 h-4" /></span>
-                                Tambah Observasi
+                                Tambah
                             </x-primary-button>
                         </div>
 

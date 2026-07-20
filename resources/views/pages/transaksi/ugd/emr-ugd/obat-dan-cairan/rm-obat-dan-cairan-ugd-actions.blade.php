@@ -381,17 +381,17 @@ new class extends Component {
 
                         @if (!empty($obatDanCairan['productId']))
                             {{-- Fase 2: form isian (HTML biasa, morph aman menambah/menghapus) --}}
-                            <div class="grid grid-cols-12 gap-3" wire:key="oc-fase2-{{ $rjNo }}">
+                            <div class="grid grid-cols-12 gap-2" wire:key="oc-fase2-{{ $rjNo }}">
 
                                 {{-- Nama Obat (disabled) + tombol Ganti --}}
-                                <div wire:key="oc-f2-nama" class="col-span-12 md:col-span-6">
+                                <div wire:key="oc-f2-nama" class="col-span-12 md:col-span-3">
                                     <x-input-label value="Nama Obat / Jenis Cairan *" class="mb-1" />
                                     <div class="flex items-center gap-2">
                                         <x-text-input wire:model="obatDanCairan.namaObatAtauJenisCairan" disabled
                                             class="grow text-base" />
                                         <x-secondary-button type="button"
                                             wire:click="$set('obatDanCairan.productId', '')"
-                                            class="text-sm whitespace-nowrap shrink-0">
+                                            class="px-2 text-xs whitespace-nowrap shrink-0">
                                             Ganti
                                         </x-secondary-button>
                                     </div>
@@ -399,7 +399,7 @@ new class extends Component {
                                 </div>
 
                                 {{-- Jumlah --}}
-                                <div wire:key="oc-f2-jumlah" class="col-span-6 md:col-span-2">
+                                <div wire:key="oc-f2-jumlah" class="col-span-4 md:col-span-1">
                                     <x-input-label value="Jumlah *" class="mb-1" />
                                     <x-text-input wire:model="obatDanCairan.jumlah" placeholder="Jumlah"
                                         class="w-full" x-ref="ocJumlah"
@@ -409,7 +409,7 @@ new class extends Component {
                                 </div>
 
                                 {{-- Dosis --}}
-                                <div wire:key="oc-f2-dosis" class="col-span-6 md:col-span-2">
+                                <div wire:key="oc-f2-dosis" class="col-span-4 md:col-span-1">
                                     <x-input-label value="Dosis *" class="mb-1" />
                                     <x-text-input wire:model="obatDanCairan.dosis" placeholder="Dosis" class="w-full"
                                         x-ref="ocDosis" x-on:keydown.enter.prevent="$refs.ocRute?.focus()" />
@@ -417,36 +417,36 @@ new class extends Component {
                                 </div>
 
                                 {{-- Rute --}}
-                                <div wire:key="oc-f2-rute" class="col-span-6 md:col-span-2">
+                                <div wire:key="oc-f2-rute" class="col-span-4 md:col-span-1">
                                     <x-input-label value="Rute *" class="mb-1" />
-                                    <x-text-input wire:model="obatDanCairan.rute" placeholder="IV / PO / SC ..."
+                                    <x-text-input wire:model="obatDanCairan.rute" placeholder="IV / PO"
                                         class="w-full" x-ref="ocRute"
                                         x-on:keydown.enter.prevent="$refs.ocKeterangan?.focus()" />
                                     <x-input-error :messages="$errors->get('obatDanCairan.rute')" class="mt-1" />
                                 </div>
 
                                 {{-- Keterangan --}}
-                                <div wire:key="oc-f2-ket" class="col-span-12 md:col-span-6">
+                                <div wire:key="oc-f2-ket" class="col-span-12 md:col-span-2">
                                     <x-input-label value="Keterangan *" class="mb-1" />
                                     <x-text-input wire:model="obatDanCairan.keterangan"
-                                        placeholder="Keterangan pemberian..." class="w-full" x-ref="ocKeterangan"
+                                        placeholder="Keterangan..." class="w-full" x-ref="ocKeterangan"
                                         x-on:keydown.enter.prevent="$refs.ocWaktu?.focus()" />
                                     <x-input-error :messages="$errors->get('obatDanCairan.keterangan')" class="mt-1" />
                                 </div>
 
                                 {{-- Waktu Pemberian --}}
-                                <div wire:key="oc-f2-waktu" class="col-span-12 md:col-span-4">
+                                <div wire:key="oc-f2-waktu" class="col-span-12 md:col-span-3">
                                     <x-input-label value="Waktu Pemberian *" class="mb-1" />
                                     <div class="flex items-center gap-2">
                                         <x-text-input wire:model="obatDanCairan.waktuPemberian"
-                                            placeholder="dd/mm/yyyy hh:mm:ss" class="grow" x-ref="ocWaktu" />
+                                            placeholder="dd/mm/yyyy hh:mm:ss" class="grow px-2" x-ref="ocWaktu" />
                                         <x-now-button wire:click.prevent="setWaktuPemberian" />
                                     </div>
                                     <x-input-error :messages="$errors->get('obatDanCairan.waktuPemberian')" class="mt-1" />
                                 </div>
 
                                 {{-- Tombol Tambah --}}
-                                <div wire:key="oc-f2-tambah" class="col-span-12 md:col-span-2 flex items-end">
+                                <div wire:key="oc-f2-tambah" class="col-span-12 md:col-span-1 flex items-end">
                                     <x-primary-button wire:click.prevent="addObatDanCairan" wire:loading.attr="disabled"
                                         wire:target="addObatDanCairan" class="gap-2 w-full justify-center">
                                         <span wire:loading.remove wire:target="addObatDanCairan">

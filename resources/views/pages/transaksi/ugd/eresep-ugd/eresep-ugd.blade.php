@@ -234,11 +234,13 @@ new class extends Component {
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="">
-                    <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display :regNo="$dataDaftarUGD['regNo'] ?? ''"
-                        :rjNo="$rjNo ?? 0"
-                        wire:key="eresep-ugd-rekam-medis-display-ugd-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
+
+                    {{-- REKAM MEDIS — kolom ke-3 grid (dulu di LUAR grid → jatuh ke bawah) --}}
+                    <div>
+                        <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display :regNo="$dataDaftarUGD['regNo'] ?? ''"
+                            :rjNo="$rjNo ?? 0"
+                            wire:key="eresep-ugd-rekam-medis-display-ugd-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
+                    </div>
                 </div>
             </div>
 
