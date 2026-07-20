@@ -199,6 +199,120 @@ new class extends Component {
             : null;
     }
 
+    /*
+    |---------------------------------------------------------------------------
+    | Penunjang tab "Asesmen & Tindakan"
+    |
+    | Logika (parsing tanggal, pengurutan, perakitan teks) ditaruh di sini —
+    | BUKAN di @php template — supaya import Carbon di atas tetap berlaku dan
+    | template hanya berisi mapping tampilan.
+    |---------------------------------------------------------------------------
+    */
+
+    /** Lama rawat dalam hari penuh; masih dirawat → dihitung sampai sekarang. */
+    public function hitungLamaRawat(string $tanggalMasuk, string $tanggalKeluar): string
+    {
+        if (trim($tanggalMasuk) === '') {
+            return '-';
+        }
+
+        try {
+            $mulai = Carbon::createFromFormat('d/m/Y H:i:s', trim($tanggalMasuk));
+            $selesai = trim($tanggalKeluar) !== ''
+                ? Carbon::createFromFormat('d/m/Y H:i:s', trim($tanggalKeluar))
+                : Carbon::now();
+        } catch (\Throwable) {
+            return '-';
+        }
+
+        // Carbon 3 mengembalikan float (mis. 11.1095) — dibulatkan ke bawah jadi hari penuh.
+        return (int) floor($mulai->diffInDays($selesai)) . ' hari' . (trim($tanggalKeluar) !== '' ? '' : ' (berjalan)');
+    }
+
+    /** Urutkan entri EMR secara kronologis; entri lama tak selalu tersimpan berurutan. */
+    public function urutkanKronologis(array $daftarEntri, string $kolomWaktu): array
+    {
+        return collect($daftarEntri)
+            ->sortBy(function ($entri) use ($kolomWaktu) {
+                try {
+                    return Carbon::createFromFormat('d/m/Y H:i:s', trim((string) data_get($entri, $kolomWaktu)))->getTimestamp();
+                } catch (\Throwable) {
+                    return 0;
+                }
+            })
+            ->values()
+            ->all();
+    }
+
+    /** Signa e-resep: "3 x 1" (signaX x signaHari), atau signaText bila sudah tersimpan. */
+    public function rakitSigna(array $obat): string
+    {
+        if (filled($obat['signaText'] ?? null)) {
+            return (string) $obat['signaText'];
+        }
+
+        $signaX = trim((string) ($obat['signaX'] ?? ''));
+        $signaHari = trim((string) ($obat['signaHari'] ?? ''));
+
+        return $signaX !== '' || $signaHari !== '' ? trim($signaX . ' x ' . $signaHari) : '-';
+    }
+
+    /**
+     * Ringkas satu entri penilaian jadi hasil / skor / metode untuk baris tabel.
+     *
+     * Sub-penilaian lain menyimpan datanya di node bernama sama (nyeri.nyeri,
+     * gizi.gizi, dst). C-SSRS beda: field-nya DATAR di level entri, dan key
+     * `resikoBunuhDiri` justru berisi 'Ya'/'Tidak'.
+     */
+    public function ringkasPenilaian(string $jenisPenilaian, array $entriPenilaian): array
+    {
+        $dataPenilaian = $jenisPenilaian === 'resikoBunuhDiri'
+            ? $entriPenilaian
+            : (array) data_get($entriPenilaian, $jenisPenilaian, []);
+
+        $gabung = fn(array $bagian) => trim(implode(' · ', array_filter($bagian, fn($teks) => filled($teks))));
+
+        $hasil = match ($jenisPenilaian) {
+            'nyeri' => $gabung([
+                data_get($dataPenilaian, 'nyeri'),
+                data_get($dataPenilaian, 'nyeriKet'),
+                filled(data_get($dataPenilaian, 'lokasi')) ? 'lokasi: ' . data_get($dataPenilaian, 'lokasi') : null,
+            ]),
+            'resikoJatuh' => $gabung([data_get($dataPenilaian, 'resikoJatuh'), data_get($dataPenilaian, 'kategoriResiko')]),
+            'gizi' => $gabung([
+                'BB ' . (data_get($dataPenilaian, 'beratBadan') ?: '-') . ' kg',
+                'TB ' . (data_get($dataPenilaian, 'tinggiBadan') ?: '-') . ' cm',
+                'IMT ' . (data_get($dataPenilaian, 'imt') ?: '-'),
+                data_get($dataPenilaian, 'kategoriGizi'),
+            ]),
+            'dekubitus' => $gabung([data_get($dataPenilaian, 'dekubitus'), data_get($dataPenilaian, 'kategoriResiko')]),
+            'resikoBunuhDiri' => $gabung([data_get($dataPenilaian, 'resikoBunuhDiri'), data_get($dataPenilaian, 'kategoriResiko')]),
+            default => '',
+        };
+
+        return [
+            'hasil' => $hasil !== '' ? $hasil : '-',
+            'skor' => match ($jenisPenilaian) {
+                'nyeri' => data_get($dataPenilaian, 'nyeriMetode.nyeriMetodeScore'),
+                'resikoJatuh' => data_get($dataPenilaian, 'resikoJatuhMetode.resikoJatuhMetodeScore'),
+                'gizi' => data_get($dataPenilaian, 'skorSkrining'),
+                'dekubitus' => data_get($dataPenilaian, 'bradenScore'),
+                'resikoBunuhDiri' => data_get($dataPenilaian, 'skorKeparahan'),
+                default => null,
+            },
+            'metode' => match ($jenisPenilaian) {
+                'nyeri' => data_get($dataPenilaian, 'nyeriMetode.nyeriMetode'),
+                'resikoJatuh' => data_get($dataPenilaian, 'resikoJatuhMetode.resikoJatuhMetode'),
+                'dekubitus' => 'Braden',
+                'resikoBunuhDiri' => 'C-SSRS',
+                default => null,
+            },
+            'rekomendasi' => (string) data_get($dataPenilaian, 'rekomendasi', ''),
+            'tindakLanjut' => collect((array) data_get($dataPenilaian, 'tindakLanjut', []))->filter()->implode(', '),
+            'catatanKlinis' => (string) data_get($dataPenilaian, 'catatanKlinis', ''),
+        ];
+    }
+
     public function closeModal(): void
     {
         $this->dataDaftarRi = [];
@@ -254,7 +368,7 @@ new class extends Component {
         @endphp
 
         <div class="flex flex-col min-h-[calc(100vh-4rem)]" wire:key="preview-rekam-medis-ri-{{ $riHdrNo }}"
-            x-data="{ tab: 'resume' }">
+            x-data="{ tab: 'asesmen' }">
 
             {{-- ── HEADER ── --}}
             <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
@@ -281,6 +395,10 @@ new class extends Component {
             {{-- ── TAB NAV ── --}}
             <div class="px-6 border-b bg-canvas border-hairline shrink-0 overflow-x-auto dark:bg-gray-900 dark:border-gray-700">
                 <nav class="flex gap-1 -mb-px">
+                    <button type="button" x-on:click="tab = 'asesmen'"
+                        :class="tab === 'asesmen' ? 'border-brand-green text-brand-green' :
+                            'border-transparent text-muted hover:text-ink'"
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2 whitespace-nowrap">Asesmen &amp; Tindakan</button>
                     <button type="button" x-on:click="tab = 'resume'"
                         :class="tab === 'resume' ? 'border-brand-green text-brand-green' :
                             'border-transparent text-muted hover:text-ink'"
@@ -298,6 +416,12 @@ new class extends Component {
 
             {{-- ── BODY (scroll) ── --}}
             <div class="flex-1 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
+
+                {{-- ════ TAB: ASESMEN & TINDAKAN ════
+                     Ringkasan apa saja yang dikerjakan selama ranap (pola preview RJ/UGD). --}}
+                <div x-show="tab === 'asesmen'">
+                    @include('pages.components.rekam-medis.r-i.cetak-rekam-medis.asesmen-ri-tab')
+                </div>
 
                 {{-- ════ TAB: RESUME ════ --}}
                 <div x-show="tab === 'resume'" class="px-6 py-5">

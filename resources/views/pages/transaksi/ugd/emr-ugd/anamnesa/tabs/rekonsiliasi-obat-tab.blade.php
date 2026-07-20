@@ -137,7 +137,7 @@
                             <td>
                                 <div class="ds-td-strong">{{ $obat['namaObat'] ?? '-' }}</div>
                                 @if ($dosisRute)
-                                    <div class="text-xs text-muted dark:text-gray-400">{{ $dosisRute }}</div>
+                                    <div class="text-muted dark:text-gray-400">{{ $dosisRute }}</div>
                                 @endif
                             </td>
 
@@ -147,8 +147,8 @@
                                     @foreach ([['dibawaRanap', 'Dibawa saat ranap'], ['lanjutPulang', 'Lanjut saat pulang']] as [$kolom, $judul])
                                         @php $nilai = ($obat[$kolom] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak'; @endphp
                                         <div class="flex items-center justify-between gap-2">
-                                            <span class="text-xs text-muted dark:text-gray-400">{{ $judul }}</span>
-                                            <span class="text-xs font-medium {{ $nilai === 'Ya' ? 'text-success-deep dark:text-success' : 'text-muted-soft' }}">
+                                            <span class="text-muted dark:text-gray-400">{{ $judul }}</span>
+                                            <span class="font-medium {{ $nilai === 'Ya' ? 'text-success-deep dark:text-success' : 'text-muted-soft' }}">
                                                 {{ $nilai }}
                                             </span>
                                         </div>

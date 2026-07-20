@@ -20,7 +20,15 @@ new class extends Component {
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
 
-    public array $rekonsiliasiObat = ['namaObat' => '', 'dosis' => '', 'rute' => ''];
+    // Model disamakan dgn Rekonsiliasi Obat UGD (anamnesa.rekonsiliasiObat):
+    // nama/dosis/rute wajib + dua keputusan Dibawa Saat Ranap & Lanjut Saat Pulang.
+    public array $rekonsiliasiObat = [
+        'namaObat' => '',
+        'dosis' => '',
+        'rute' => '',
+        'dibawaRanap' => 'Tidak',
+        'lanjutPulang' => 'Tidak',
+    ];
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-pengkajian-dokter-ri'];
@@ -115,6 +123,29 @@ new class extends Component {
         $pd['fisik'] ??= '';
         $fill($pd['fisik'], (string) data_get($ugd, 'pemeriksaan.fisik', ''));
 
+        // 6) Rekonsiliasi Obat — daftar, jadi bukan fill-only per field: obat yang
+        // belum ada DITAMBAHKAN, yang namanya sudah ada di RI dilewati (tak menimpa).
+        $pd['anamnesa']['rekonsiliasiObat'] ??= [];
+        $obatUgd = collect(data_get($ugd, 'anamnesa.rekonsiliasiObat', []) ?? [])
+            ->filter(fn($obat) => filled($obat['namaObat'] ?? null))
+            ->map(
+                fn($obat) => [
+                    'namaObat' => $obat['namaObat'] ?? '',
+                    'dosis' => $obat['dosis'] ?? '',
+                    'rute' => $obat['rute'] ?? '',
+                    'dibawaRanap' => ($obat['dibawaRanap'] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak',
+                    'lanjutPulang' => ($obat['lanjutPulang'] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak',
+                ],
+            )
+            ->values()
+            ->toArray();
+
+        $sebelum = count($pd['anamnesa']['rekonsiliasiObat']);
+        $pd['anamnesa']['rekonsiliasiObat'] = $this->gabungRekonsiliasiObat($pd['anamnesa']['rekonsiliasiObat'], $obatUgd);
+        $obatDitambah = count($pd['anamnesa']['rekonsiliasiObat']) - $sebelum;
+        $copied += $obatDitambah;
+        $skipped += count($obatUgd) - $obatDitambah;
+
         unset($pd);
 
         $this->incrementVersion('modal-pengkajian-dokter-ri');
@@ -125,6 +156,56 @@ new class extends Component {
         }
         $msg .= '. Klik Simpan untuk persist.';
         $this->dispatch('toast', type: 'success', message: $msg);
+    }
+
+    /**
+     * Rekonsiliasi obat dari kunjungan UGD yang MENTRANSFER pasien ini ke ranap.
+     *
+     * Relasi UGD→RI disimpan permanen saat transfer di rstxn_ribiayaselamadugds
+     * (rj_no = UGD, ugd_no_rsri = rihdr_no RI), jadi asalnya pasti — tidak menebak
+     * lewat reg_no/tanggal. Bentuk entri di UGD & RI sudah identik, jadi disalin
+     * apa adanya; record UGD lama yang belum punya dua field keputusan dinormalkan
+     * ke 'Tidak' supaya tampilan/cetak RI tidak kosong.
+     */
+    protected function rekonsiliasiObatDariUgd(string $riHdrNo): array
+    {
+        $rjNoUgd = DB::table('rstxn_ribiayaselamadugds')->where('ugd_no_rsri', $riHdrNo)->orderByDesc('rj_no')->value('rj_no');
+
+        if (empty($rjNoUgd)) {
+            return [];
+        }
+
+        $ugd = $this->findDataUGD((int) $rjNoUgd);
+
+        return collect(data_get($ugd, 'anamnesa.rekonsiliasiObat', []) ?? [])
+            ->filter(fn($obat) => filled($obat['namaObat'] ?? null))
+            ->map(
+                fn($obat) => [
+                    'namaObat' => $obat['namaObat'] ?? '',
+                    'dosis' => $obat['dosis'] ?? '',
+                    'rute' => $obat['rute'] ?? '',
+                    'dibawaRanap' => ($obat['dibawaRanap'] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak',
+                    'lanjutPulang' => ($obat['lanjutPulang'] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak',
+                ],
+            )
+            ->values()
+            ->toArray();
+    }
+
+    /** Gabung daftar obat UGD ke daftar RI — hanya yang belum ada (dedupe nama obat). */
+    protected function gabungRekonsiliasiObat(array $daftarRi, array $daftarUgd): array
+    {
+        $namaSudahAda = collect($daftarRi)->pluck('namaObat')->map(fn($n) => strtolower(trim((string) $n)))->all();
+
+        foreach ($daftarUgd as $obat) {
+            if (in_array(strtolower(trim($obat['namaObat'])), $namaSudahAda, true)) {
+                continue;
+            }
+            $daftarRi[] = $obat;
+            $namaSudahAda[] = strtolower(trim($obat['namaObat']));
+        }
+
+        return array_values($daftarRi);
     }
 
     #[On('open-rm-pengkajian-dokter-ri')]
@@ -143,6 +224,12 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Data RI tidak ditemukan.');
             return;
         }
+
+        // Dicek SEBELUM struktur default dipasang: kalau key rekonsiliasiObat belum
+        // pernah ada, berarti Pengkajian Dokter ini belum pernah disimpan → boleh
+        // ditarik dari UGD. Setelah pernah tersimpan, daftar RI jadi milik dokter RI;
+        // baris yang sengaja dihapus tidak boleh muncul lagi tiap buka form.
+        $belumPernahIsiRekonsiliasi = !array_key_exists('rekonsiliasiObat', (array) data_get($data, 'pengkajianDokter.anamnesa', []));
 
         $this->dataDaftarRi = $data;
         $this->dataDaftarRi['pengkajianDokter'] ??= [
@@ -172,6 +259,14 @@ new class extends Component {
             'tandaTanganDokter' => ['dokterPengkaji' => '', 'dokterPengkajiCode' => '', 'jamDokterPengkaji' => ''],
         ];
 
+        // Prefill rekonsiliasi obat dari kunjungan UGD asal transfer (pola fill-only,
+        // sama semangatnya dgn prefill alergi di bawah). Tersimpan permanen ke JSON RI
+        // begitu dokter menyimpan form — jadi cetakan RI tetap utuh walau data UGD berubah.
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ??= [];
+        if ($belumPernahIsiRekonsiliasi && empty($this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'])) {
+            $this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] = $this->rekonsiliasiObatDariUgd($riHdrNo);
+        }
+
         // Prefill alergi dari MASTER PASIEN (pola sama RJ/UGD) — dokter tak perlu isi ulang
         // tiap kunjungan. Fill-only: yang sudah terisi di RI TIDAK ditimpa. Kode SNOMED hanya
         // ikut kalau teksnya juga ikut, supaya kode tak menempel ke alergi lain.
@@ -191,14 +286,14 @@ new class extends Component {
         // 716186003), pola sama RJ/UGD. RI menyimpannya dgn key BEDA (jenisAlergi*, datar)
         // sehingga dipakai normalisasiRi(); logikanya tetap satu sumber. Record lama tak
         // punya adaAlergi -> diturunkan dari teksnya, jadi tak perlu migrasi data.
-        $this->dataDaftarRi['pengkajianDokter']['anamnesa'] = AlergiSnomed::normalisasiRi(
-            $this->dataDaftarRi['pengkajianDokter']['anamnesa'] ?? [],
-        );
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa'] = AlergiSnomed::normalisasiRi($this->dataDaftarRi['pengkajianDokter']['anamnesa'] ?? []);
 
         $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo); // ← trait
 
         // Lock untuk role bukan Dokter/Admin: Perawat boleh lihat tapi tidak edit/simpan
-        $this->isReadOnlyByRole = !auth()->user()->hasAnyRole(['Dokter', 'Admin']);
+        $this->isReadOnlyByRole = !auth()
+            ->user()
+            ->hasAnyRole(['Dokter', 'Admin']);
 
         $this->incrementVersion('modal-pengkajian-dokter-ri');
     }
@@ -206,9 +301,7 @@ new class extends Component {
     /** Radio "Ada alergi?" diubah -> seragamkan lewat sumber tunggal. */
     public function updatedDataDaftarRiPengkajianDokterAnamnesaAdaAlergi(): void
     {
-        $this->dataDaftarRi['pengkajianDokter']['anamnesa'] = AlergiSnomed::normalisasiRi(
-            $this->dataDaftarRi['pengkajianDokter']['anamnesa'] ?? [],
-        );
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa'] = AlergiSnomed::normalisasiRi($this->dataDaftarRi['pengkajianDokter']['anamnesa'] ?? []);
     }
 
     #[On('save-rm-pengkajian-dokter-ri')]
@@ -241,7 +334,7 @@ new class extends Component {
                 // supaya kunjungan berikutnya — di modul mana pun — sudah terisi.
                 $this->syncAlergiKeMasterPasien();
 
-                $this->appendAdminLogRI((int) $this->riHdrNo, $logKeterangan ?? (($isBaru ? 'Buat' : 'Update') . ' Pengkajian Dokter RI'), 'MR');
+                $this->appendAdminLogRI((int) $this->riHdrNo, $logKeterangan ?? ($isBaru ? 'Buat' : 'Update') . ' Pengkajian Dokter RI', 'MR');
             });
             $this->afterSave('Pengkajian Dokter berhasil disimpan.');
         } catch (\RuntimeException $e) {
@@ -281,7 +374,11 @@ new class extends Component {
 
     public function setDokterPengkaji(): void
     {
-        if (!auth()->user()->hasAnyRole(['Dokter', 'Admin'])) {
+        if (
+            !auth()
+                ->user()
+                ->hasAnyRole(['Dokter', 'Admin'])
+        ) {
             $this->dispatch('toast', type: 'error', message: 'Hanya Dokter / Admin yang dapat melakukan TTD.');
             return;
         }
@@ -293,15 +390,28 @@ new class extends Component {
 
     public function addRekonsiliasiObat(): void
     {
-        if (empty($this->rekonsiliasiObat['namaObat'])) {
-            $this->dispatch('toast', type: 'error', message: 'Nama obat kosong.');
-            return;
-        }
+        // validate() didahulukan supaya field yang kosong tetap ditandai merah
+        // (guard/early-return sebelum validate bikin border error tak muncul).
+        $this->validateWithToast(
+            [
+                'rekonsiliasiObat.namaObat' => ['required', 'string', 'max:200'],
+                'rekonsiliasiObat.dosis' => ['required', 'string', 'max:100'],
+                'rekonsiliasiObat.rute' => ['required', 'string'],
+            ],
+            [],
+            [
+                'rekonsiliasiObat.namaObat' => 'Nama Obat',
+                'rekonsiliasiObat.dosis' => 'Dosis',
+                'rekonsiliasiObat.rute' => 'Rute',
+            ],
+        );
 
-        $exists = collect($this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [])->contains('namaObat', $this->rekonsiliasiObat['namaObat']);
+        $sudahAda = collect($this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [])
+            ->where('namaObat', $this->rekonsiliasiObat['namaObat'])
+            ->count();
 
-        if ($exists) {
-            $this->dispatch('toast', type: 'error', message: 'Obat sudah ada.');
+        if ($sudahAda > 0) {
+            $this->dispatch('toast', type: 'error', message: 'Obat sudah ada dalam daftar.');
             return;
         }
 
@@ -309,18 +419,26 @@ new class extends Component {
             'namaObat' => $this->rekonsiliasiObat['namaObat'],
             'dosis' => $this->rekonsiliasiObat['dosis'],
             'rute' => $this->rekonsiliasiObat['rute'],
+            'dibawaRanap' => $this->rekonsiliasiObat['dibawaRanap'] ?? 'Tidak',
+            'lanjutPulang' => $this->rekonsiliasiObat['lanjutPulang'] ?? 'Tidak',
         ];
 
-        $this->store('Tambah riwayat pemakaian obat — ' . $this->rekonsiliasiObat['namaObat']);
+        $namaObat = $this->rekonsiliasiObat['namaObat'];
         $this->reset(['rekonsiliasiObat']);
+        $this->store('Tambah riwayat pemakaian obat — ' . $namaObat);
     }
 
-    public function removeRekonsiliasiObat(string $namaObat): void
+    public function removeRekonsiliasiObat(int $index): void
     {
-        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] = collect($this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [])
-            ->reject(fn($o) => $o['namaObat'] === $namaObat)
-            ->values()
-            ->toArray();
+        $daftarObat = $this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [];
+
+        if (!isset($daftarObat[$index])) {
+            return;
+        }
+
+        $namaObat = $daftarObat[$index]['namaObat'] ?? '-';
+        unset($daftarObat[$index]);
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] = array_values($daftarObat);
 
         $this->store('Hapus riwayat pemakaian obat — ' . $namaObat);
     }
@@ -451,17 +569,12 @@ new class extends Component {
                 this.$dispatch('section-dirty', { tab: this.tab });
             }
         },
-    }"
-    x-init="
+    }" x-init="openedAt = Date.now();
+    window.addEventListener('refresh-after-ri.saved', () => {
+        sectionDirty = false;
         openedAt = Date.now();
-        window.addEventListener('refresh-after-ri.saved', () => {
-            sectionDirty = false;
-            openedAt = Date.now();
-            $dispatch('section-clean', { tab: tab });
-        });
-    "
-    x-on:input="markDirty()"
-    x-on:change="markDirty()">
+        $dispatch('section-clean', { tab: tab });
+    });" x-on:input="markDirty()" x-on:change="markDirty()">
 
     @if ($isFormLocked)
         <div
@@ -483,14 +596,16 @@ new class extends Component {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Mode lihat (view-only) — hanya <strong>Dokter / Admin</strong> yang dapat mengedit & menyimpan Pengkajian Dokter.
+            Mode lihat (view-only) — hanya <strong>Dokter / Admin</strong> yang dapat mengedit & menyimpan Pengkajian
+            Dokter.
         </div>
     @endif
 
     {{-- ══════════════════════════════════════
     | BAGIAN 1 — ANAMNESA
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 1 — Anamnesa" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="true">
+    <x-border-form title="Bagian 1 — Anamnesa" align="start" bgcolor="bg-surface-soft" :collapsible="true"
+        :open="true">
         <div class="mt-3 space-y-3">
 
             <div>
@@ -504,17 +619,13 @@ new class extends Component {
             {{-- DINONAKTIFKAN SEMENTARA: aktifkan RI SNOMED dengan mengubah `false` → `true`.
                  Sinkron dgn sender di satu-sehat-ri-actions (kirim-chief-complaint/allergy). --}}
             @if (false)
-            <div>
-                <livewire:lov.snomed.lov-snomed
-                    target="keluhanUtamaSnomedRi"
-                    label="Kode SNOMED Keluhan Utama (Satu Sehat)"
-                    placeholder="Ketik keluhan dalam Bahasa Indonesia / Inggris..."
-                    valueSet="condition-code"
-                    :initialSnomedCode="$dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedCode'] ?? null"
-                    :disabled="$isFormLocked || $isReadOnlyByRole"
-                    wire:key="lov-snomed-keluhan-ri-{{ $riHdrNo ?? 'new' }}-{{ $renderVersions['modal-pengkajian-dokter-ri'] ?? 0 }}"
-                />
-            </div>
+                <div>
+                    <livewire:lov.snomed.lov-snomed target="keluhanUtamaSnomedRi"
+                        label="Kode SNOMED Keluhan Utama (Satu Sehat)"
+                        placeholder="Ketik keluhan dalam Bahasa Indonesia / Inggris..." valueSet="condition-code"
+                        :initialSnomedCode="$dataDaftarRi['pengkajianDokter']['anamnesa']['keluhanUtamaSnomedCode'] ?? null" :disabled="$isFormLocked || $isReadOnlyByRole"
+                        wire:key="lov-snomed-keluhan-ri-{{ $riHdrNo ?? 'new' }}-{{ $renderVersions['modal-pengkajian-dokter-ri'] ?? 0 }}" />
+                </div>
             @endif
 
             <div>
@@ -573,8 +684,8 @@ new class extends Component {
                             <livewire:lov.snomed.lov-snomed target="alergiSnomedRi"
                                 label="Kode SNOMED Zat Penyebab Alergi (Satu Sehat)"
                                 placeholder="Ketik nama zat / obat penyebab..." valueSet="substance-code"
-                                :initialSnomedCode="$dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedCode'] ?? null"
-                                :disabled="$isFormLocked || $isReadOnlyByRole"
+                                :initialSnomedCode="$dataDaftarRi['pengkajianDokter']['anamnesa']['jenisAlergiSnomedCode'] ??
+                                    null" :disabled="$isFormLocked || $isReadOnlyByRole"
                                 wire:key="lov-snomed-alergi-ri-{{ $riHdrNo ?? 'new' }}-{{ $renderVersions['modal-pengkajian-dokter-ri'] ?? 0 }}" />
                         </div>
                     @endif
@@ -592,76 +703,188 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 1B — REKONSILIASI OBAT (key JSON: rekonsiliasiObat)
     ══════════════════════════════════════ --}}
-    <x-border-form title="Rekonsiliasi Obat" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Rekonsiliasi Obat" align="start" bgcolor="bg-surface-soft" :collapsible="true"
+        :open="false">
         <div class="mt-3 space-y-3">
 
+            <div x-data="{ open: false }"
+                class="overflow-hidden border rounded-2xl bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700">
+                <button type="button" @click="open = !open"
+                    class="flex items-center justify-between w-full px-4 py-3 text-base font-semibold text-blue-900 transition-colors hover:bg-blue-100 dark:text-blue-200 dark:hover:bg-blue-900/30">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Cara Pengisian Rekonsiliasi Obat
+                    </span>
+                    <svg class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                <div x-show="open" x-collapse class="px-4 pb-4 space-y-3 text-base text-blue-900 dark:text-blue-200">
+                    <p>
+                        Daftar obat yang sedang / terakhir dipakai pasien <strong>sebelum masuk rawat inap</strong>
+                        (rekonsiliasi obat).
+                    </p>
+
+                    <ol class="space-y-2 ml-6 list-decimal">
+                        <li>
+                            Isi <strong>Nama Obat</strong>, <strong>Dosis</strong>, dan <strong>Rute</strong>
+                            (ketiganya wajib).
+                        </li>
+                        <li>
+                            Tentukan <strong>Dibawa Saat Ranap</strong> (obat ikut dibawa ke ruangan) dan
+                            <strong>Lanjut Saat Pulang</strong> (obat diteruskan di rumah).
+                        </li>
+                        <li>
+                            Klik <strong>Tambah</strong> &mdash; data langsung tersimpan dan muncul di tabel.
+                        </li>
+                    </ol>
+
+                    <p>
+                        Isian di tabel bersifat <strong>data saja</strong>. Bila ada yang keliru, hapus
+                        barisnya lalu tambahkan ulang dengan keterangan yang benar.
+                    </p>
+                </div>
+            </div>
+
             @if (!$isFormLocked && !$isReadOnlyByRole)
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <x-input-label value="Nama Obat" />
-                        <x-text-input wire:model="rekonsiliasiObat.namaObat" class="w-full mt-1"
-                            placeholder="Nama obat..." />
+                {{-- Nama Obat · Dosis · Rute sebaris — pola sama dgn Rekonsiliasi Obat UGD --}}
+                <div class="grid grid-cols-12 gap-2">
+                    <div class="col-span-5">
+                        <x-input-label value="Nama Obat" :required="true" class="truncate whitespace-nowrap" />
+                        <x-text-input wire:model="rekonsiliasiObat.namaObat"
+                            wire:keydown.enter.prevent="addRekonsiliasiObat" placeholder="Amlodipin 10 mg"
+                            :error="$errors->has('rekonsiliasiObat.namaObat')" class="w-full px-2 mt-1" />
+                        <x-input-error :messages="$errors->get('rekonsiliasiObat.namaObat')" class="mt-1" />
                     </div>
-                    <div>
-                        <x-input-label value="Dosis" />
-                        <x-text-input wire:model="rekonsiliasiObat.dosis" class="w-full mt-1" placeholder="500mg..." />
+
+                    <div class="col-span-3">
+                        <x-input-label value="Dosis" :required="true" class="truncate whitespace-nowrap" />
+                        <x-text-input wire:model="rekonsiliasiObat.dosis"
+                            wire:keydown.enter.prevent="addRekonsiliasiObat" placeholder="1x1 tab" :error="$errors->has('rekonsiliasiObat.dosis')"
+                            class="w-full px-2 mt-1" />
+                        <x-input-error :messages="$errors->get('rekonsiliasiObat.dosis')" class="mt-1" />
                     </div>
-                    <div>
-                        <x-input-label value="Rute" />
-                        <x-text-input wire:model="rekonsiliasiObat.rute" class="w-full mt-1"
-                            placeholder="Oral / IV / SC..." />
+
+                    <div class="col-span-4">
+                        <x-input-label value="Rute" :required="true" class="truncate whitespace-nowrap" />
+                        <x-select-input wire:model="rekonsiliasiObat.rute" :error="$errors->has('rekonsiliasiObat.rute')"
+                            class="w-full px-2 mt-1">
+                            <option value="">—</option>
+                            @foreach (['Oral', 'Sublingual', 'IV', 'IM', 'SC', 'Inhalasi', 'Topikal', 'Rektal', 'Tetes Mata', 'Tetes Telinga', 'Lainnya'] as $rute)
+                                <option value="{{ $rute }}">{{ $rute }}</option>
+                            @endforeach
+                        </x-select-input>
+                        <x-input-error :messages="$errors->get('rekonsiliasiObat.rute')" class="mt-1" />
                     </div>
                 </div>
-                <div>
-                    <x-primary-button wire:click="addRekonsiliasiObat" type="button" class="text-sm">
-                        + Tambah Obat
-                    </x-primary-button>
+
+                {{-- Keputusan rekonsiliasi: label kiri, toggle kanan --}}
+                <div class="pt-1 space-y-2 border-t border-hairline dark:border-gray-700">
+                    <div class="flex items-center justify-between gap-3">
+                        <x-input-label value="Dibawa Saat Ranap" :required="false" />
+                        <x-toggle wire:model.live="rekonsiliasiObat.dibawaRanap" trueValue="Ya" falseValue="Tidak"
+                            :label="($rekonsiliasiObat['dibawaRanap'] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak'" />
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3">
+                        <x-input-label value="Lanjut Saat Pulang" :required="false" />
+                        <x-toggle wire:model.live="rekonsiliasiObat.lanjutPulang" trueValue="Ya" falseValue="Tidak"
+                            :label="($rekonsiliasiObat['lanjutPulang'] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak'" />
+                    </div>
                 </div>
+
+                <x-primary-button type="button" wire:click="addRekonsiliasiObat" wire:loading.attr="disabled"
+                    wire:target="addRekonsiliasiObat" class="justify-center gap-1.5 w-full">
+                    <span wire:loading.remove wire:target="addRekonsiliasiObat" class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Tambah
+                    </span>
+                    <span wire:loading wire:target="addRekonsiliasiObat" class="flex items-center gap-1.5">
+                        <x-loading class="w-4 h-4" /> Menyimpan...
+                    </span>
+                </x-primary-button>
             @endif
 
-            @if (!empty($dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat']))
-                <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-surface-soft dark:bg-gray-700 text-muted">
-                            <tr>
-                                <th class="px-3 py-2">Nama Obat</th>
-                                <th class="px-3 py-2">Dosis</th>
-                                <th class="px-3 py-2">Rute</th>
-                                @if (!$isFormLocked && !$isReadOnlyByRole)
-                                    <th class="px-3 py-2 w-10"></th>
-                                @endif
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
-                            @foreach ($dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] as $obat)
-                                <tr class="bg-canvas dark:bg-gray-800">
-                                    <td class="px-3 py-2">{{ $obat['namaObat'] }}</td>
-                                    <td class="px-3 py-2">{{ $obat['dosis'] }}</td>
-                                    <td class="px-3 py-2">{{ $obat['rute'] }}</td>
-                                    @if (!$isFormLocked && !$isReadOnlyByRole)
-                                        <td class="px-3 py-2">
-                                            <x-outline-button type="button"
-                                                wire:click="removeRekonsiliasiObat('{{ $obat['namaObat'] }}')"
-                                                wire:confirm="Hapus obat {{ $obat['namaObat'] }}?" wire:loading.attr="disabled"
-                                                class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
-                                                title="Hapus">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </x-outline-button>
-                                        </td>
+            {{-- Daftar obat — susunan kolom sama dgn Rekonsiliasi Obat UGD --}}
+            <div class="overflow-x-auto bg-canvas border rounded-2xl border-hairline dark:border-gray-700">
+                <table class="ds-table">
+                    <thead>
+                        <tr>
+                            <th class="ds-c w-10">No</th>
+                            <th>Obat (Dosis &middot; Rute)</th>
+                            <th>Keterangan</th>
+                            <th class="ds-c w-14">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [] as $index => $obat)
+                            <tr wire:key="rekon-obat-ri-{{ $riHdrNo ?? 'new' }}-{{ $index }}">
+                                @php
+                                    $dosisRute = collect([$obat['dosis'] ?? null, $obat['rute'] ?? null])
+                                        ->filter(fn($isi) => filled($isi))
+                                        ->implode(' · ');
+                                @endphp
+                                <td class="ds-c ds-td-meta">{{ $index + 1 }}</td>
+                                <td>
+                                    <div class="ds-td-strong">{{ $obat['namaObat'] ?? '-' }}</div>
+                                    @if ($dosisRute)
+                                        <div class="text-muted dark:text-gray-400">{{ $dosisRute }}</div>
                                     @endif
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @else
-                <p class="text-sm text-center text-muted-soft py-2">Belum ada obat.</p>
-            @endif
+                                </td>
+
+                                {{-- Keputusan rekonsiliasi — tampil sebagai data saja (diisi lewat form Tambah). --}}
+                                <td>
+                                    <div class="space-y-1.5">
+                                        @foreach ([['dibawaRanap', 'Dibawa saat ranap'], ['lanjutPulang', 'Lanjut saat pulang']] as [$kolom, $judul])
+                                            @php $nilai = ($obat[$kolom] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak'; @endphp
+                                            <div class="flex items-center justify-between gap-2">
+                                                <span
+                                                    class="text-muted dark:text-gray-400">{{ $judul }}</span>
+                                                <span
+                                                    class="font-medium {{ $nilai === 'Ya' ? 'text-success-deep dark:text-success' : 'text-muted-soft' }}">
+                                                    {{ $nilai }}
+                                                </span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </td>
+
+                                <td class="ds-c">
+                                    @if (!$isFormLocked && !$isReadOnlyByRole)
+                                        <x-confirm-button variant="danger-soft" :action="'removeRekonsiliasiObat(' . $index . ')'" title="Hapus Obat"
+                                            :message="'Yakin hapus ' .
+                                                ($obat['namaObat'] ?? 'obat ini') .
+                                                ' dari daftar?'" confirmText="Ya, hapus" cancelText="Batal"
+                                            class="px-2 py-1">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </x-confirm-button>
+                                    @else
+                                        <span class="text-muted-soft">—</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="ds-c italic text-muted-soft">
+                                    Belum ada riwayat pemakaian obat.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
 
         </div>
     </x-border-form>
@@ -669,7 +892,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 2.1 — PEMERIKSAAN FISIK
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2.1 — Pemeriksaan Fisik" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 2.1 — Pemeriksaan Fisik" align="start" bgcolor="bg-surface-soft" :collapsible="true"
+        :open="false">
         <div class="mt-3">
             <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.fisik" class="w-full" rows="5"
                 :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Deskripsi pemeriksaan fisik status generalis..." />
@@ -679,7 +903,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 2.2 — PEMERIKSAAN ANATOMI
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2.2 — Pemeriksaan Anatomi" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 2.2 — Pemeriksaan Anatomi" align="start" bgcolor="bg-surface-soft"
+        :collapsible="true" :open="false">
         @php
             $anatomiList = [
                 'kepala' => 'Kepala',
@@ -779,7 +1004,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 3 — STATUS LOKALIS
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 3 — Status Lokalis" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 3 — Status Lokalis" align="start" bgcolor="bg-surface-soft" :collapsible="true"
+        :open="false">
         <div class="mt-3">
             <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.statusLokalis.deskripsiGambar" class="w-full"
                 rows="4" :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Deskripsi status lokalis..." />
@@ -789,7 +1015,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 4 — HASIL PEMERIKSAAN PENUNJANG
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 4 — Hasil Pemeriksaan Penunjang" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 4 — Hasil Pemeriksaan Penunjang" align="start" bgcolor="bg-surface-soft"
+        :collapsible="true" :open="false">
         <div class="mt-3 grid grid-cols-3 gap-3">
             <div>
                 <x-input-label value="Laboratorium" />
@@ -812,7 +1039,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 5 — DIAGNOSA & RENCANA
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 5 — Diagnosis & Rencana Terapi" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 5 — Diagnosis & Rencana Terapi" align="start" bgcolor="bg-surface-soft"
+        :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
             <div>
                 <x-input-label value="Diagnosis Awal / Assessment" />
@@ -834,7 +1062,8 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 7 — RINGKASAN PASIEN PULANG
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 7 — Ringkasan Pasien Pulang" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 7 — Ringkasan Pasien Pulang" align="start" bgcolor="bg-surface-soft"
+        :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
             <div>
                 <x-input-label value="Kondisi Saat Pulang" />
@@ -859,15 +1088,14 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 6 — TANDA TANGAN DOKTER
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 6 — Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 6 — Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-surface-soft"
+        :collapsible="true" :open="false">
         <div class="mt-3">
-            <x-signature.ttd-petugas :framed="false" :allowClear="false"
-                :ttd="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] ?? ''"
-                :date="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? ''"
-                :code="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkajiCode'] ?? ''"
-                :locked="$isFormLocked || $isReadOnlyByRole"
-                :canSign="auth()->user()?->hasAnyRole(['Dokter', 'Admin'])"
-                sign="setDokterPengkaji" nameLabel="Dokter Pengkaji" dateLabel="Jam TTD" signLabel="TTD Saya" />
+            <x-signature.ttd-petugas :framed="false" :allowClear="false" :ttd="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] ?? ''" :date="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? ''"
+                :code="$dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkajiCode'] ?? ''" :locked="$isFormLocked || $isReadOnlyByRole" :canSign="auth()
+                    ->user()
+                    ?->hasAnyRole(['Dokter', 'Admin'])" sign="setDokterPengkaji"
+                nameLabel="Dokter Pengkaji" dateLabel="Jam TTD" signLabel="TTD Saya" />
         </div>
     </x-border-form>
 
