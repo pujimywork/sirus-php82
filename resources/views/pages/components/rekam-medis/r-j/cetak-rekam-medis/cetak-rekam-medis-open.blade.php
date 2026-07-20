@@ -351,9 +351,12 @@ new class extends Component {
                                     class="text-body dark:text-gray-300">{{ \App\Support\AlergiSnomed::untukCetak($txn['anamnesa']['alergi'] ?? []) }}</span>
                             </p>
 
-                            {{-- Riwayat Pemakaian Obat (dh. Rekonsiliasi Obat) --}}
+                            {{-- Rekonsiliasi Obat — TIDAK ditampilkan di RJ: entry-nya memang
+                                 tidak ada di EMR RJ (skema rekonsiliasiObat dikomentari di
+                                 rm-anamnesa-rj-actions.blade.php), jadi tabel ini selalu kosong.
+                                 Fitur ini hidup di UGD (tab Rekonsiliasi Obat) & RI (Pengkajian Dokter).
                             <div>
-                                <p class="mb-1.5 text-base text-muted">Riwayat Pemakaian Obat :</p>
+                                <p class="mb-1.5 text-base text-muted">Rekonsiliasi Obat :</p>
                                 <table class="w-full text-sm border-collapse">
                                     <thead>
                                         <tr class="bg-surface-soft dark:bg-gray-800">
@@ -391,6 +394,7 @@ new class extends Component {
                                     </tbody>
                                 </table>
                             </div>
+                            --}}
                         </div>
                     </x-border-form>
 

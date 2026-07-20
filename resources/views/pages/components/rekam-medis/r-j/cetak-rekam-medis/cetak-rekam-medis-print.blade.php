@@ -147,7 +147,10 @@
                 <span class="font-bold">Alergi :</span>
                 {!! nl2br(e(\App\Support\AlergiSnomed::untukCetak($txn['anamnesa']['alergi'] ?? []))) !!}
                 <br>
-                <span class="font-bold">Riwayat Pemakaian Obat :</span>
+                {{-- Rekonsiliasi Obat — TIDAK dicetak di RJ: entry-nya memang tidak ada di
+                     EMR RJ (skema rekonsiliasiObat dikomentari di rm-anamnesa-rj-actions.blade.php),
+                     jadi tabelnya selalu kosong. Fitur ini hidup di UGD & RI.
+                <span class="font-bold">Rekonsiliasi Obat :</span>
                 <table class="w-full border-collapse mt-0.5 text-[10px]">
                     <thead>
                         <tr class="bg-gray-100">
@@ -172,6 +175,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                --}}
             </td>
 
             {{-- ── PANEL KANAN: Perawat + Tanda Vital + Nutrisi ────────── --}}

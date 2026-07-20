@@ -21,10 +21,19 @@ new class extends Component {
     public string $caraMasukIgd = '';
     public string $saranaTransportasiId = '4';
 
+    /**
+     * Tab aktif disimpan di server (pola suket) — aksi seperti Tambah obat
+     * memicu re-render + wire:key baru, dan Alpine state lokal akan balik ke
+     * tab pertama kalau tidak di-entangle.
+     */
+    public string $anamnesaActiveTab = 'pengkajian';
+
     /* ---- Rekonsiliasi Obat ---- */
     public string $rekonNamaObat = '';
     public string $rekonDosis = '';
     public string $rekonRute = '';
+    public string $rekonDibawaRanap = 'Tidak';
+    public string $rekonLanjutPulang = 'Tidak';
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-anamnesa-ugd'];
@@ -298,10 +307,21 @@ new class extends Component {
      =============================== */
     public function addRekonsiliasiObat(): void
     {
-        if (empty($this->rekonNamaObat)) {
-            $this->dispatch('toast', type: 'error', message: 'Nama obat tidak boleh kosong.');
-            return;
-        }
+        // validate() didahulukan supaya field yang kosong tetap ditandai merah
+        // (guard/early-return sebelum validate bikin border error tak muncul).
+        $this->validateWithToast(
+            [
+                'rekonNamaObat' => ['required', 'string', 'max:200'],
+                'rekonDosis' => ['required', 'string', 'max:100'],
+                'rekonRute' => ['required', 'string'],
+            ],
+            [],
+            [
+                'rekonNamaObat' => 'Nama Obat',
+                'rekonDosis' => 'Dosis',
+                'rekonRute' => 'Rute',
+            ],
+        );
 
         $sudahAda = collect($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'] ?? [])
             ->where('namaObat', $this->rekonNamaObat)
@@ -316,11 +336,33 @@ new class extends Component {
             'namaObat' => $this->rekonNamaObat,
             'dosis' => $this->rekonDosis,
             'rute' => $this->rekonRute,
+            'dibawaRanap' => $this->rekonDibawaRanap,
+            'lanjutPulang' => $this->rekonLanjutPulang,
         ];
 
         $namaObat = $this->rekonNamaObat;
-        $this->reset(['rekonNamaObat', 'rekonDosis', 'rekonRute']);
-        $this->save('Tambah Riwayat Pemakaian Obat UGD — ' . $namaObat);
+        $this->reset(['rekonNamaObat', 'rekonDosis', 'rekonRute', 'rekonDibawaRanap', 'rekonLanjutPulang']);
+        $this->save('Tambah Rekonsiliasi Obat UGD — ' . $namaObat);
+    }
+
+    /**
+     * Balik nilai keputusan rekonsiliasi (dibawa saat rawat inap / dilanjutkan
+     * saat pulang) dari toggle per baris tabel — langsung tersimpan.
+     */
+    public function toggleRekonsiliasiObat(int $index, string $field): void
+    {
+        $obat = $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index] ?? null;
+
+        if (!$obat || !in_array($field, ['dibawaRanap', 'lanjutPulang'], true)) {
+            return;
+        }
+
+        $nilai = ($obat[$field] ?? 'Tidak') === 'Ya' ? 'Tidak' : 'Ya';
+        $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index][$field] = $nilai;
+
+        $label = $field === 'dibawaRanap' ? 'Dibawa saat rawat inap' : 'Dilanjutkan saat pulang';
+
+        $this->save('Ubah Rekonsiliasi Obat UGD — ' . ($obat['namaObat'] ?? '-') . ' / ' . $label . ': ' . $nilai);
     }
 
     public function removeRekonsiliasiObat(int $index): void
@@ -329,7 +371,7 @@ new class extends Component {
             $namaObat = $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index]['namaObat'] ?? '-';
             unset($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index]);
             $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'] = array_values($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat']);
-            $this->save('Hapus Riwayat Pemakaian Obat UGD — ' . $namaObat);
+            $this->save('Hapus Rekonsiliasi Obat UGD — ' . $namaObat);
         }
     }
 
@@ -404,7 +446,7 @@ new class extends Component {
             'alergiTab' => 'Alergi',
             'alergi' => ['adaAlergi' => '', 'alergi' => '', 'snomedCode' => '', 'snomedDisplayEn' => '', 'snomedDisplayId' => ''],
 
-            'rekonsiliasiObatTab' => 'Riwayat Pemakaian Obat',
+            'rekonsiliasiObatTab' => 'Rekonsiliasi Obat',
             'rekonsiliasiObat' => [],
 
             'statusPsikologisTab' => 'Status Psikologis',
@@ -489,9 +531,12 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
         $this->dataDaftarUGD = [];
+        $this->anamnesaActiveTab = 'pengkajian';
         $this->rekonNamaObat = '';
         $this->rekonDosis = '';
         $this->rekonRute = '';
+        $this->rekonDibawaRanap = 'Tidak';
+        $this->rekonLanjutPulang = 'Tidak';
         $this->tingkatKegawatan = '';
         $this->caraMasukIgd = '';
         $this->saranaTransportasiId = '4';
@@ -506,7 +551,7 @@ new class extends Component {
                 class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 @if (isset($dataDaftarUGD['anamnesa']))
-                    <div x-data="{ activeTab: 'pengkajian' }" class="w-full">
+                    <div x-data="{ activeTab: @entangle('anamnesaActiveTab') }" class="w-full">
 
                         {{-- TAB NAVIGATION --}}
                         <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
@@ -524,16 +569,12 @@ new class extends Component {
                                         @click="activeTab = 'keluhan'">
                                         Keluhan & Riwayat
                                     </button>
-                                </li>
-
-                                <li class="mr-1">
-                                    <button type="button"
-                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'rekonsiliasi' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : 'border-transparent hover:text-muted hover:border-gray-300'"
-                                        @click="activeTab = 'rekonsiliasi'">
-                                        Riwayat Pemakaian Obat
-                                    </button>
                                 </li> --}}
+
+                                <x-tab variant="underline" active-expr="activeTab === 'rekonsiliasi'"
+                                    x-on:click="activeTab = 'rekonsiliasi'">
+                                    Rekonsiliasi Obat
+                                </x-tab>
 
                                 <x-tab variant="underline" active-expr="activeTab === 'psikologis'"
                                     x-on:click="activeTab = 'psikologis'">
@@ -557,11 +598,11 @@ new class extends Component {
 
                             {{-- <div x-show="activeTab === 'keluhan'" x-transition.opacity.duration.300ms>
                                 @include('pages.transaksi.ugd.emr-ugd.anamnesa.tabs.keluhan-riwayat-tab')
-                            </div>
+                            </div> --}}
 
                             <div x-show="activeTab === 'rekonsiliasi'" x-transition.opacity.duration.300ms>
                                 @include('pages.transaksi.ugd.emr-ugd.anamnesa.tabs.rekonsiliasi-obat-tab')
-                            </div> --}}
+                            </div>
 
                             <div x-show="activeTab === 'psikologis'" x-transition.opacity.duration.300ms>
                                 @include('pages.transaksi.ugd.emr-ugd.anamnesa.tabs.status-psikologis-tab')

@@ -405,7 +405,7 @@ new class extends Component {
                                     class="text-body dark:text-gray-300">{{ \App\Support\AlergiSnomed::untukCetak($txn['anamnesa']['alergi'] ?? []) }}</span>
                             </p>
                             <div>
-                                <p class="mb-1.5 text-base text-muted">Riwayat Pemakaian Obat :</p>
+                                <p class="mb-1.5 text-base text-muted">Rekonsiliasi Obat :</p>
                                 <table class="w-full text-sm border-collapse">
                                     <thead>
                                         <tr class="bg-surface-soft dark:bg-gray-800">
@@ -418,6 +418,12 @@ new class extends Component {
                                             <th
                                                 class="px-2.5 py-1.5 text-left text-sm font-medium text-muted border border-hairline dark:border-gray-700">
                                                 Rute</th>
+                                            <th
+                                                class="px-2.5 py-1.5 text-left text-sm font-medium text-muted border border-hairline dark:border-gray-700">
+                                                Dibawa Saat Ranap</th>
+                                            <th
+                                                class="px-2.5 py-1.5 text-left text-sm font-medium text-muted border border-hairline dark:border-gray-700">
+                                                Lanjut Saat Pulang</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -432,10 +438,18 @@ new class extends Component {
                                                 <td
                                                     class="px-2.5 py-1.5 text-body dark:text-gray-300 border border-hairline dark:border-gray-700">
                                                     {{ $obat['rute'] ?? '-' }}</td>
+                                                <td
+                                                    class="px-2.5 py-1.5 text-body dark:text-gray-300 border border-hairline dark:border-gray-700">
+                                                    {{ filled($obat['dibawaRanap'] ?? null) ? $obat['dibawaRanap'] : '-' }}
+                                                </td>
+                                                <td
+                                                    class="px-2.5 py-1.5 text-body dark:text-gray-300 border border-hairline dark:border-gray-700">
+                                                    {{ filled($obat['lanjutPulang'] ?? null) ? $obat['lanjutPulang'] : '-' }}
+                                                </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="3"
+                                                <td colspan="5"
                                                     class="px-2.5 py-1.5 text-center text-muted-soft border border-hairline dark:border-gray-700">
                                                     Tidak ada data</td>
                                             </tr>

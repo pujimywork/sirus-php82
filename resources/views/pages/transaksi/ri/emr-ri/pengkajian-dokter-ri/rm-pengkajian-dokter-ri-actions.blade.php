@@ -590,9 +590,9 @@ new class extends Component {
     </x-border-form>
 
     {{-- ══════════════════════════════════════
-    | BAGIAN 1B — RIWAYAT PEMAKAIAN OBAT (dh. Rekonsiliasi Obat; key JSON tetap rekonsiliasiObat)
+    | BAGIAN 1B — REKONSILIASI OBAT (key JSON: rekonsiliasiObat)
     ══════════════════════════════════════ --}}
-    <x-border-form title="Riwayat Pemakaian Obat" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
+    <x-border-form title="Rekonsiliasi Obat" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
 
             @if (!$isFormLocked && !$isReadOnlyByRole)

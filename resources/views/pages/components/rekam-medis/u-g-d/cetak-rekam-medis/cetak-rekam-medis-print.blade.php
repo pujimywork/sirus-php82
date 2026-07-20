@@ -160,13 +160,15 @@
                 <span class="font-bold">Riwayat Penyakit Sekarang :</span> {!! nl2br(e($txn['anamnesa']['riwayatPenyakitSekarangUmum']['riwayatPenyakitSekarangUmum'] ?? '-')) !!}<br>
                 <span class="font-bold">Riwayat Penyakit Dahulu :</span> {!! nl2br(e($txn['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] ?? '-')) !!}<br>
                 <span class="font-bold">Alergi :</span> {!! nl2br(e(\App\Support\AlergiSnomed::untukCetak($txn['anamnesa']['alergi'] ?? []))) !!}<br>
-                <span class="font-bold">Riwayat Pemakaian Obat :</span>
+                <span class="font-bold">Rekonsiliasi Obat :</span>
                 <table class="w-full border-collapse mt-0.5 text-[10px]">
                     <thead>
                         <tr class="bg-gray-100">
                             <th class="border border-gray-500 px-1 py-0.5 text-left">Nama Obat</th>
                             <th class="border border-gray-500 px-1 py-0.5 text-left">Dosis</th>
                             <th class="border border-gray-500 px-1 py-0.5 text-left">Rute</th>
+                            <th class="border border-gray-500 px-1 py-0.5 text-left">Dibawa Saat Ranap</th>
+                            <th class="border border-gray-500 px-1 py-0.5 text-left">Lanjut Saat Pulang</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -175,9 +177,15 @@
                                 <td class="border border-gray-500 px-1 py-0.5">{{ $obat['namaObat'] ?? '-' }}</td>
                                 <td class="border border-gray-500 px-1 py-0.5">{{ $obat['dosis'] ?? '-' }}</td>
                                 <td class="border border-gray-500 px-1 py-0.5">{{ $obat['rute'] ?? '-' }}</td>
+                                <td class="border border-gray-500 px-1 py-0.5">
+                                    {{ filled($obat['dibawaRanap'] ?? null) ? $obat['dibawaRanap'] : '-' }}</td>
+                                <td class="border border-gray-500 px-1 py-0.5">
+                                    {{ filled($obat['lanjutPulang'] ?? null) ? $obat['lanjutPulang'] : '-' }}</td>
                             </tr>
                         @empty
                             <tr>
+                                <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
+                                <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
                                 <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
                                 <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
                                 <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
