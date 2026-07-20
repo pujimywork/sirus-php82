@@ -24,27 +24,26 @@
             <div x-show="open" x-collapse class="px-4 pb-4 space-y-3 text-base text-blue-900 dark:text-blue-200">
                 <p>
                     Daftar obat yang sedang / terakhir dipakai pasien <strong>sebelum masuk UGD</strong>
-                    (rekonsiliasi obat). Pengisiannya bertahap mengikuti perjalanan pasien:
+                    (rekonsiliasi obat).
                 </p>
 
                 <ol class="space-y-2 ml-6 list-decimal">
                     <li>
-                        <strong>Saat pasien masuk:</strong> isi Nama Obat, Dosis, dan Rute
-                        (ketiganya wajib), lalu klik <strong>Tambah</strong>. Data langsung tersimpan.
+                        Isi <strong>Nama Obat</strong>, <strong>Dosis</strong>, dan <strong>Rute</strong>
+                        (ketiganya wajib).
                     </li>
                     <li>
-                        <strong>Saat pasien dirawat inapkan:</strong> nyalakan toggle
-                        <strong>Dibawa Saat Rawat Inap</strong> pada obat yang ikut dibawa ke ruangan.
+                        Tentukan <strong>Dibawa Saat Ranap</strong> (obat ikut dibawa ke ruangan) dan
+                        <strong>Lanjut Saat Pulang</strong> (obat diteruskan di rumah).
                     </li>
                     <li>
-                        <strong>Saat pasien pulang:</strong> nyalakan toggle
-                        <strong>Dilanjutkan Saat Pulang</strong> pada obat yang diteruskan di rumah.
+                        Klik <strong>Tambah</strong> &mdash; data langsung tersimpan dan muncul di tabel.
                     </li>
                 </ol>
 
                 <p>
-                    Kedua toggle bisa diubah kapan saja langsung di tabel &mdash; setiap perubahan
-                    langsung tersimpan tanpa perlu klik Simpan.
+                    Isian di tabel bersifat <strong>data saja</strong>. Bila ada yang keliru, hapus
+                    barisnya lalu tambahkan ulang dengan keterangan yang benar.
                 </p>
             </div>
         </div>
@@ -53,28 +52,28 @@
         @if (!$isFormLocked)
             <div class="space-y-3">
 
-                {{-- Baris atas: identitas obat --}}
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-12">
-                    <div class="sm:col-span-6">
-                        <x-input-label value="Nama Obat" :required="true" />
+                {{-- Nama Obat · Dosis · Rute sebaris; label ringkas + nowrap supaya tidak pecah baris --}}
+                <div class="grid grid-cols-12 gap-2">
+                    <div class="col-span-5">
+                        <x-input-label value="Nama Obat" :required="true" class="truncate whitespace-nowrap" />
                         <x-text-input wire:model="rekonNamaObat" wire:keydown.enter.prevent="addRekonsiliasiObat"
-                            placeholder="Contoh: Amlodipin 10 mg" :error="$errors->has('rekonNamaObat')" :disabled="$isFormLocked"
-                            class="w-full mt-1" />
+                            placeholder="Amlodipin 10 mg" :error="$errors->has('rekonNamaObat')" :disabled="$isFormLocked"
+                            class="w-full px-2 mt-1" />
                         <x-input-error :messages="$errors->get('rekonNamaObat')" class="mt-1" />
                     </div>
 
-                    <div class="sm:col-span-3">
-                        <x-input-label value="Dosis" :required="true" />
+                    <div class="col-span-3">
+                        <x-input-label value="Dosis" :required="true" class="truncate whitespace-nowrap" />
                         <x-text-input wire:model="rekonDosis" wire:keydown.enter.prevent="addRekonsiliasiObat"
-                            placeholder="Contoh: 1x1 tab" :error="$errors->has('rekonDosis')" :disabled="$isFormLocked"
-                            class="w-full mt-1" />
+                            placeholder="1x1 tab" :error="$errors->has('rekonDosis')" :disabled="$isFormLocked"
+                            class="w-full px-2 mt-1" />
                         <x-input-error :messages="$errors->get('rekonDosis')" class="mt-1" />
                     </div>
 
-                    <div class="sm:col-span-3">
-                        <x-input-label value="Rute" :required="true" />
+                    <div class="col-span-4">
+                        <x-input-label value="Rute" :required="true" class="truncate whitespace-nowrap" />
                         <x-select-input wire:model="rekonRute" :error="$errors->has('rekonRute')" :disabled="$isFormLocked"
-                            class="w-full mt-1">
+                            class="w-full px-2 mt-1">
                             <option value="">—</option>
                             @foreach (['Oral', 'Sublingual', 'IV', 'IM', 'SC', 'Inhalasi', 'Topikal', 'Rektal', 'Tetes Mata', 'Tetes Telinga', 'Lainnya'] as $rute)
                                 <option value="{{ $rute }}">{{ $rute }}</option>
@@ -84,36 +83,34 @@
                     </div>
                 </div>
 
-                {{-- Baris bawah: keputusan rekonsiliasi + tombol tambah --}}
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="flex flex-wrap items-center gap-x-8 gap-y-3">
-                        <div class="flex items-center gap-3">
-                            <x-input-label value="Dibawa Saat Ranap" :required="false" />
-                            <x-toggle wire:model.live="rekonDibawaRanap" trueValue="Ya" falseValue="Tidak"
-                                :label="$rekonDibawaRanap === 'Ya' ? 'Ya' : 'Tidak'" :disabled="$isFormLocked" />
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <x-input-label value="Lanjut Saat Pulang" :required="false" />
-                            <x-toggle wire:model.live="rekonLanjutPulang" trueValue="Ya" falseValue="Tidak"
-                                :label="$rekonLanjutPulang === 'Ya' ? 'Ya' : 'Tidak'" :disabled="$isFormLocked" />
-                        </div>
+                {{-- Keputusan rekonsiliasi: label kiri, toggle kanan, sejajar --}}
+                <div class="pt-1 space-y-2 border-t border-hairline dark:border-gray-700">
+                    <div class="flex items-center justify-between gap-3">
+                        <x-input-label value="Dibawa Saat Ranap" :required="false" />
+                        <x-toggle wire:model.live="rekonDibawaRanap" trueValue="Ya" falseValue="Tidak"
+                            :label="$rekonDibawaRanap === 'Ya' ? 'Ya' : 'Tidak'" :disabled="$isFormLocked" />
                     </div>
 
-                    <x-primary-button type="button" wire:click="addRekonsiliasiObat" wire:loading.attr="disabled"
-                        wire:target="addRekonsiliasiObat" class="justify-center gap-1.5 w-full sm:w-auto">
-                        <span wire:loading.remove wire:target="addRekonsiliasiObat" class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Tambah
-                        </span>
-                        <span wire:loading wire:target="addRekonsiliasiObat" class="flex items-center gap-1.5">
-                            <x-loading class="w-4 h-4" /> Menyimpan...
-                        </span>
-                    </x-primary-button>
+                    <div class="flex items-center justify-between gap-3">
+                        <x-input-label value="Lanjut Saat Pulang" :required="false" />
+                        <x-toggle wire:model.live="rekonLanjutPulang" trueValue="Ya" falseValue="Tidak"
+                            :label="$rekonLanjutPulang === 'Ya' ? 'Ya' : 'Tidak'" :disabled="$isFormLocked" />
+                    </div>
                 </div>
+
+                <x-primary-button type="button" wire:click="addRekonsiliasiObat" wire:loading.attr="disabled"
+                    wire:target="addRekonsiliasiObat" class="justify-center gap-1.5 w-full">
+                    <span wire:loading.remove wire:target="addRekonsiliasiObat" class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Tambah
+                    </span>
+                    <span wire:loading wire:target="addRekonsiliasiObat" class="flex items-center gap-1.5">
+                        <x-loading class="w-4 h-4" /> Menyimpan...
+                    </span>
+                </x-primary-button>
             </div>
         @endif
 
@@ -122,10 +119,10 @@
             <table class="ds-table">
                 <thead>
                     <tr>
-                        <th class="ds-c w-12">No</th>
+                        <th class="ds-c w-10">No</th>
                         <th>Obat (Dosis &middot; Rute)</th>
                         <th>Keterangan</th>
-                        <th class="ds-c w-24">Aksi</th>
+                        <th class="ds-c w-14">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -144,19 +141,16 @@
                                 @endif
                             </td>
 
-                            {{-- Keputusan rekonsiliasi — bisa diisi/diubah belakangan (saat transfer ke ranap
-                                 maupun saat pasien pulang), tiap perubahan langsung tersimpan. --}}
+                            {{-- Keputusan rekonsiliasi — tampil sebagai data saja (diisi lewat form Tambah). --}}
                             <td>
                                 <div class="space-y-1.5">
-                                    @foreach ([['dibawaRanap', 'Dibawa Saat Rawat Inap'], ['lanjutPulang', 'Dilanjutkan Saat Pulang']] as [$kolom, $judul])
+                                    @foreach ([['dibawaRanap', 'Dibawa saat ranap'], ['lanjutPulang', 'Lanjut saat pulang']] as [$kolom, $judul])
                                         @php $nilai = ($obat[$kolom] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak'; @endphp
-                                        <div class="flex items-center gap-2">
-                                            <span
-                                                class="text-xs text-muted dark:text-gray-400 w-40 shrink-0">{{ $judul }}</span>
-                                            <x-toggle :current="$nilai" trueValue="Ya" falseValue="Tidak" :label="$nilai"
-                                                :disabled="$isFormLocked"
-                                                wireClick="toggleRekonsiliasiObat({{ $index }}, '{{ $kolom }}')"
-                                                title="{{ $judul }}" class="text-xs" />
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs text-muted dark:text-gray-400">{{ $judul }}</span>
+                                            <span class="text-xs font-medium {{ $nilai === 'Ya' ? 'text-success-deep dark:text-success' : 'text-muted-soft' }}">
+                                                {{ $nilai }}
+                                            </span>
                                         </div>
                                     @endforeach
                                 </div>

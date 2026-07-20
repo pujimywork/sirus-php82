@@ -418,12 +418,10 @@ new class extends Component {
                                             <th
                                                 class="px-2.5 py-1.5 text-left text-sm font-medium text-muted border border-hairline dark:border-gray-700">
                                                 Rute</th>
+                                            {{-- Digabung satu kolom (label atas-bawah), seperti pada cetak --}}
                                             <th
                                                 class="px-2.5 py-1.5 text-left text-sm font-medium text-muted border border-hairline dark:border-gray-700">
-                                                Dibawa Saat Ranap</th>
-                                            <th
-                                                class="px-2.5 py-1.5 text-left text-sm font-medium text-muted border border-hairline dark:border-gray-700">
-                                                Lanjut Saat Pulang</th>
+                                                Keterangan</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -438,18 +436,17 @@ new class extends Component {
                                                 <td
                                                     class="px-2.5 py-1.5 text-body dark:text-gray-300 border border-hairline dark:border-gray-700">
                                                     {{ $obat['rute'] ?? '-' }}</td>
-                                                <td
+                                                <td style="white-space:nowrap"
                                                     class="px-2.5 py-1.5 text-body dark:text-gray-300 border border-hairline dark:border-gray-700">
-                                                    {{ filled($obat['dibawaRanap'] ?? null) ? $obat['dibawaRanap'] : '-' }}
-                                                </td>
-                                                <td
-                                                    class="px-2.5 py-1.5 text-body dark:text-gray-300 border border-hairline dark:border-gray-700">
+                                                    Dibawa saat ranap :
+                                                    {{ filled($obat['dibawaRanap'] ?? null) ? $obat['dibawaRanap'] : '-' }}<br>
+                                                    Lanjut saat pulang :
                                                     {{ filled($obat['lanjutPulang'] ?? null) ? $obat['lanjutPulang'] : '-' }}
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="5"
+                                                <td colspan="4"
                                                     class="px-2.5 py-1.5 text-center text-muted-soft border border-hairline dark:border-gray-700">
                                                     Tidak ada data</td>
                                             </tr>

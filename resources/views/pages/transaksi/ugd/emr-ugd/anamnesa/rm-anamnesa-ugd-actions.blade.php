@@ -386,31 +386,6 @@ new class extends Component {
         $this->save('Tambah Rekonsiliasi Obat UGD — ' . $namaObat);
     }
 
-    /**
-     * Balik nilai keputusan rekonsiliasi (dibawa saat rawat inap / dilanjutkan
-     * saat pulang) dari toggle per baris tabel — langsung tersimpan.
-     */
-    public function toggleRekonsiliasiObat(int $index, string $field): void
-    {
-        $obat = $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index] ?? null;
-
-        if (!$obat || !in_array($field, ['dibawaRanap', 'lanjutPulang'], true)) {
-            return;
-        }
-
-        // Dicegat sebelum nilai dibalik — toggle tak berubah bila gagal simpan.
-        if (!$this->pengkajianSiapUntukRekonsiliasi()) {
-            return;
-        }
-
-        $nilai = ($obat[$field] ?? 'Tidak') === 'Ya' ? 'Tidak' : 'Ya';
-        $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index][$field] = $nilai;
-
-        $label = $field === 'dibawaRanap' ? 'Dibawa saat rawat inap' : 'Dilanjutkan saat pulang';
-
-        $this->save('Ubah Rekonsiliasi Obat UGD — ' . ($obat['namaObat'] ?? '-') . ' / ' . $label . ': ' . $nilai);
-    }
-
     public function removeRekonsiliasiObat(int $index): void
     {
         // Dicegat sebelum baris dibuang — daftar tetap utuh bila gagal simpan.

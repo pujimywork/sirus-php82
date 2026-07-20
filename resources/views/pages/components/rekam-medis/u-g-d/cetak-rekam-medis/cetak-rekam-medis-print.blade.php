@@ -164,27 +164,30 @@
                 <table class="w-full border-collapse mt-0.5 text-[10px]">
                     <thead>
                         <tr class="bg-gray-100">
-                            <th class="border border-gray-500 px-1 py-0.5 text-left">Nama Obat</th>
-                            <th class="border border-gray-500 px-1 py-0.5 text-left">Dosis</th>
-                            <th class="border border-gray-500 px-1 py-0.5 text-left">Rute</th>
-                            <th class="border border-gray-500 px-1 py-0.5 text-left">Dibawa Saat Ranap</th>
-                            <th class="border border-gray-500 px-1 py-0.5 text-left">Lanjut Saat Pulang</th>
+                            <th class="border border-gray-500 px-1 py-0.5 text-left" style="width:40%">Nama Obat</th>
+                            <th class="border border-gray-500 px-1 py-0.5 text-left" style="width:14%">Dosis</th>
+                            <th class="border border-gray-500 px-1 py-0.5 text-left" style="width:12%">Rute</th>
+                            {{-- Dua keputusan digabung satu kolom (label atas-bawah) supaya nama obat lebih lega --}}
+                            <th class="border border-gray-500 px-1 py-0.5 text-left" style="width:34%">Keterangan</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($txn['anamnesa']['rekonsiliasiObat'] ?? [] as $obat)
+                            @php
+                                $dibawaRanap = filled($obat['dibawaRanap'] ?? null) ? $obat['dibawaRanap'] : '-';
+                                $lanjutPulang = filled($obat['lanjutPulang'] ?? null) ? $obat['lanjutPulang'] : '-';
+                            @endphp
                             <tr>
                                 <td class="border border-gray-500 px-1 py-0.5">{{ $obat['namaObat'] ?? '-' }}</td>
                                 <td class="border border-gray-500 px-1 py-0.5">{{ $obat['dosis'] ?? '-' }}</td>
                                 <td class="border border-gray-500 px-1 py-0.5">{{ $obat['rute'] ?? '-' }}</td>
-                                <td class="border border-gray-500 px-1 py-0.5">
-                                    {{ filled($obat['dibawaRanap'] ?? null) ? $obat['dibawaRanap'] : '-' }}</td>
-                                <td class="border border-gray-500 px-1 py-0.5">
-                                    {{ filled($obat['lanjutPulang'] ?? null) ? $obat['lanjutPulang'] : '-' }}</td>
+                                <td class="border border-gray-500 px-1 py-0.5" style="white-space:nowrap">
+                                    Dibawa saat ranap : {{ $dibawaRanap }}<br>
+                                    Lanjut saat pulang : {{ $lanjutPulang }}
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
                                 <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
                                 <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
                                 <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
