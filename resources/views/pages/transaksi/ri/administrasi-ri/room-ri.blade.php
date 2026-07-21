@@ -3,7 +3,9 @@
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
+use Carbon\Carbon;
 
 new class extends Component {
     use EmrRITrait;
@@ -131,10 +133,15 @@ new class extends Component {
         // Boleh 0 — kamar transit (mis. UGD sebentar) tidak dihitung biaya
         $newDay = max(0, (int) $newDay);
 
+        // Nilai lama untuk audit log (kolom day bisa NULL = belum pernah disetel manual)
+        $hariLama = DB::table('rsmst_trfrooms')->where('trfr_no', $trfrNo)->value('day');
+        $hariLama = $hariLama === null ? '(otomatis)' : (int) $hariLama;
+
         try {
-            DB::transaction(function () use ($trfrNo, $newDay) {
+            DB::transaction(function () use ($trfrNo, $newDay, $hariLama) {
                 $this->lockRIRow($this->riHdrNo);
                 DB::table('rsmst_trfrooms')->where('trfr_no', $trfrNo)->update(['day' => $newDay]);
+                $this->appendAdminLogRI($this->riHdrNo, "Ubah Hari kamar #{$trfrNo}: {$hariLama} → {$newDay}");
             });
 
             $this->findData($this->riHdrNo);
@@ -144,6 +151,143 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal update hari: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | UPDATE TANGGAL MULAI / SELESAI KAMAR
+     |
+     | Format input dd/mm/yyyy hh24:mi:ss (sama dengan yang ditampilkan).
+     | Kolom Selesai boleh dikosongkan → baris kembali jadi kamar aktif,
+     | tapi hanya bila tidak ada baris aktif lain (satu pasien satu kamar aktif).
+     | Kolom `day` DIHITUNG ULANG dari rentang tanggal yang baru (nilai manual
+     | sebelumnya tertimpa, tercatat di audit log) — setelah itu tetap boleh
+     | disetel manual lewat kolom Hari, mis. kamar transit yang tak ditagih.
+     =============================== */
+    public function updateTanggalKamar(int $trfrNo, string $kolom, ?string $nilai): void
+    {
+        // Whitelist kolom — jangan pakai if/else, nilai tak terduga harus ditolak
+        if (!in_array($kolom, ['start_date', 'end_date'], true)) {
+            return;
+        }
+
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
+            $this->findData($this->riHdrNo);
+            return;
+        }
+
+        $label = $kolom === 'start_date' ? 'Mulai' : 'Selesai';
+        $nilai = trim((string) $nilai);
+
+        // Aturan tanggal mengikuti standar repo: date_format:d/m/Y H:i:s.
+        // Kolom Selesai boleh kosong (nullable) → kamar kembali aktif.
+        $validator = Validator::make(
+            ['tanggal' => $nilai === '' ? null : $nilai],
+            ['tanggal' => $kolom === 'start_date' ? 'bail|required|date_format:d/m/Y H:i:s' : 'bail|nullable|date_format:d/m/Y H:i:s'],
+            [
+                'tanggal.required' => "Tanggal {$label} wajib diisi.",
+                'tanggal.date_format' => "Tanggal {$label} — format: dd/mm/yyyy hh:mm:ss.",
+            ],
+        );
+
+        if ($validator->fails()) {
+            $this->dispatch('toast', type: 'error', message: $validator->errors()->first('tanggal'));
+            $this->findData($this->riHdrNo);
+            return;
+        }
+
+        $tanggal = $nilai === '' ? null : Carbon::createFromFormat('d/m/Y H:i:s', $nilai);
+
+        $baris = DB::table('rsmst_trfrooms')
+            ->select(
+                DB::raw("to_char(start_date, 'dd/mm/yyyy hh24:mi:ss') as start_date"),
+                DB::raw("to_char(end_date,   'dd/mm/yyyy hh24:mi:ss') as end_date"),
+            )
+            ->where('trfr_no', $trfrNo)
+            ->first();
+
+        if (!$baris) {
+            return;
+        }
+
+        // Tidak ada perubahan (blur tanpa edit) → diam saja
+        $nilaiLama = (string) ($kolom === 'start_date' ? $baris->start_date : $baris->end_date);
+        if ($nilaiLama === $nilai) {
+            return;
+        }
+
+        $mulai = $kolom === 'start_date' ? $tanggal : ($baris->start_date ? Carbon::createFromFormat('d/m/Y H:i:s', $baris->start_date) : null);
+        $selesai = $kolom === 'end_date' ? $tanggal : ($baris->end_date ? Carbon::createFromFormat('d/m/Y H:i:s', $baris->end_date) : null);
+
+        // Satu-satunya aturan urutan: Selesai tidak boleh lebih kecil dari Mulai.
+        // Sama persis diperbolehkan — kamar transit bisa masuk & keluar di detik yang sama.
+        if ($mulai && $selesai && $selesai->lessThan($mulai)) {
+            $this->dispatch('toast', type: 'error', message: 'Tanggal Selesai tidak boleh lebih kecil dari tanggal Mulai.');
+            $this->findData($this->riHdrNo);
+            return;
+        }
+
+        if ($kolom === 'end_date' && $tanggal === null) {
+            $adaKamarAktifLain = DB::table('rsmst_trfrooms')
+                ->where('rihdr_no', $this->riHdrNo)
+                ->where('trfr_no', '<>', $trfrNo)
+                ->whereNull('end_date')
+                ->exists();
+
+            if ($adaKamarAktifLain) {
+                $this->dispatch('toast', type: 'error', message: 'Sudah ada kamar aktif lain — tutup dulu kamar tersebut.');
+                $this->findData($this->riHdrNo);
+                return;
+            }
+        }
+
+        // Hari dihitung ulang dari rentang tanggal yang baru. Kalau Selesai kosong
+        // (kamar masih aktif), day dikembalikan NULL supaya findData menghitungnya
+        // berjalan dari sysdate. Angka ini boleh ditimpa manual lewat kolom Hari.
+        //
+        // max(1, ...) menyamai proses Pindah Kamar (pindah-kamar-ri: ROUND(trfrDate -
+        // start_date) lalu max(1, ...)) — pindah kurang dari sehari tetap ditagih 1 hari.
+        // Kalau memang tak ingin ditagih (kamar transit), setel 0 manual di kolom Hari.
+        // Carbon 3: jangan pakai diffInSeconds(other, false) — tandanya terbalik.
+        $hariBaru = null;
+        if ($mulai && $selesai) {
+            $hariBaru = max(1, (int) round(($selesai->getTimestamp() - $mulai->getTimestamp()) / 86400));
+        }
+
+        try {
+            DB::transaction(function () use ($trfrNo, $kolom, $label, $tanggal, $nilaiLama, $hariBaru) {
+                $this->lockRIRow($this->riHdrNo);
+
+                DB::table('rsmst_trfrooms')
+                    ->where('trfr_no', $trfrNo)
+                    ->update([
+                        $kolom => $tanggal
+                            ? DB::raw("to_date('" . $tanggal->format('d/m/Y H:i:s') . "', 'dd/mm/yyyy hh24:mi:ss')")
+                            : null,
+                        'day' => $hariBaru,
+                    ]);
+
+                $tanggalBaru = $tanggal ? $tanggal->format('d/m/Y H:i:s') : '(kosong — kamar aktif)';
+                $this->appendAdminLogRI(
+                    $this->riHdrNo,
+                    "Ubah tanggal {$label} kamar #{$trfrNo}: " . ($nilaiLama ?: '(kosong)') . " → {$tanggalBaru}"
+                        . ', Hari dihitung ulang → ' . ($hariBaru === null ? '(berjalan)' : $hariBaru),
+                );
+            });
+
+            $this->findData($this->riHdrNo);
+            $this->dispatch('administrasi-ri.updated');
+            $pesanHari = $hariBaru === null
+                ? 'Hari kembali dihitung berjalan (kamar aktif).'
+                : "Hari dihitung ulang jadi {$hariBaru} hari — masih bisa diubah manual.";
+            $this->dispatch('toast', type: 'success', message: "Tanggal {$label} berhasil diubah. {$pesanHari}");
+        } catch (\RuntimeException $e) {
+            $this->findData($this->riHdrNo);
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->findData($this->riHdrNo);
+            $this->dispatch('toast', type: 'error', message: 'Gagal update tanggal: ' . $e->getMessage());
         }
     }
 
@@ -333,14 +477,33 @@ new class extends Component {
                                     <span class="ml-1 font-mono text-[10px] text-muted-soft">· {{ $item['room_id'] }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">{{ $item['start_date'] ?? '-' }}</td>
-                            <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">{{ $item['end_date'] ?? '—' }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                @if (!$isFormLocked)
+                                    <input type="text" value="{{ $item['start_date'] }}"
+                                        placeholder="dd/mm/yyyy hh:mm:ss"
+                                        x-on:change="$wire.updateTanggalKamar({{ $item['trfr_no'] }}, 'start_date', $event.target.value)"
+                                        class="w-40 px-2 py-1 font-mono text-xs bg-canvas border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:ring-1 focus:border-brand-green focus:ring-brand-green/40 dark:focus:border-brand-lime dark:focus:ring-brand-lime/40" />
+                                @else
+                                    <span class="font-mono text-xs text-muted">{{ $item['start_date'] ?? '-' }}</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                @if (!$isFormLocked)
+                                    {{-- dikosongkan = kamar jadi aktif kembali --}}
+                                    <input type="text" value="{{ $item['end_date'] }}"
+                                        placeholder="kosong = masih aktif"
+                                        x-on:change="$wire.updateTanggalKamar({{ $item['trfr_no'] }}, 'end_date', $event.target.value)"
+                                        class="w-40 px-2 py-1 font-mono text-xs bg-canvas border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:ring-1 focus:border-brand-green focus:ring-brand-green/40 dark:focus:border-brand-lime dark:focus:ring-brand-lime/40" />
+                                @else
+                                    <span class="font-mono text-xs text-muted">{{ $item['end_date'] ?? '—' }}</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-right text-body dark:text-gray-300">
                                 @if (!$isFormLocked)
                                     <input type="number" min="0"
                                         value="{{ $day }}"
                                         x-on:change="$wire.updateDay({{ $item['trfr_no'] }}, $event.target.value)"
-                                        class="w-16 px-2 py-1 text-xs font-semibold text-right bg-canvas border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+                                        class="w-16 px-2 py-1 text-xs font-semibold text-right bg-canvas border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:ring-1 focus:border-brand-green focus:ring-brand-green/40 dark:focus:border-brand-lime dark:focus:ring-brand-lime/40
                                         [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 @else
                                     {{ $day }}
