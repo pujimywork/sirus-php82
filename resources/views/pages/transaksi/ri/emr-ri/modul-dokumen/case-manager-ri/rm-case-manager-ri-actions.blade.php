@@ -1170,7 +1170,9 @@ new class extends Component {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $field)
                     <div>
-                        <x-input-label value="{{ $field['label'] }} *" />
+                        {{-- :value (bound) — label "Pelaksanaan & Monitoring" ber-&, kalau lewat value="{{ }}"
+                             akan ter-escape dua kali & tampil "&amp;" di layar --}}
+                        <x-input-label :value="$field['label'] . ' *'" />
                         <x-textarea wire:model="formB.{{ $field['key'] }}" :error="$errors->has('formB.' . $field['key'])" class="w-full mt-1" rows="4"
                             placeholder="{{ $field['label'] }}..." />
                         <x-input-error :messages="$errors->get('formB.' . $field['key'])" class="mt-1" />

@@ -545,81 +545,86 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- Kebiasaan: Merokok --}}
-            <div class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
-                <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-2 uppercase tracking-wide">Kebiasaan
-                    Merokok</p>
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <x-input-label value="Status" />
-                        <x-select-input
-                            wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.pilihan"
-                            class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
-                            <option value="">— Pilih —</option>
-                            <option value="ya">Ya</option>
-                            <option value="tidak">Tidak</option>
-                            <option value="berhenti">Berhenti</option>
-                        </x-select-input>
-                    </div>
-                    @if (in_array(
-                            $dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian2RiwayatPasien']['kebiasaan']['merokok']['pilihan'] ?? '',
-                            ['ya', 'berhenti']))
-                        <div>
-                            <x-input-label value="Jenis Rokok" />
-                            <x-text-input
-                                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.detail.jenis"
-                                class="w-full mt-1" placeholder="Filter, Kretek, dll..." :disabled="$isFormLocked || $isReadOnlyByRole" />
-                        </div>
-                        <div>
-                            <x-input-label value="Jumlah/Hari (batang)" />
-                            <x-text-input
-                                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.detail.jumlahPerHari"
-                                class="w-full mt-1" type="number" step="1" min="0"
-                                :disabled="$isFormLocked || $isReadOnlyByRole" />
-                        </div>
-                    @endif
-                </div>
-            </div>
+            {{-- Kebiasaan: Merokok + Alkohol/Obat — 2 kartu sebaris --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-            {{-- Kebiasaan: Alkohol/Obat --}}
-            <div class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
-                <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-2 uppercase tracking-wide">
-                    Kebiasaan Alkohol / Obat-obatan</p>
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <x-input-label value="Status" />
-                        <x-select-input
-                            wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.pilihan"
-                            class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
-                            <option value="">— Pilih —</option>
-                            <option value="ya">Ya</option>
-                            <option value="tidak">Tidak</option>
-                            <option value="berhenti">Berhenti</option>
-                        </x-select-input>
+                {{-- Kebiasaan: Merokok --}}
+                <div class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
+                    <p class="text-sm font-semibold text-ink dark:text-white mb-2 uppercase tracking-wide">Kebiasaan
+                        Merokok</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <x-input-label value="Status" />
+                            <x-select-input
+                                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.pilihan"
+                                class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
+                                <option value="">— Pilih —</option>
+                                <option value="ya">Ya</option>
+                                <option value="tidak">Tidak</option>
+                                <option value="berhenti">Berhenti</option>
+                            </x-select-input>
+                        </div>
+                        @if (in_array(
+                                $dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian2RiwayatPasien']['kebiasaan']['merokok']['pilihan'] ?? '',
+                                ['ya', 'berhenti']))
+                            <div>
+                                <x-input-label value="Jenis Rokok" />
+                                <x-text-input
+                                    wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.detail.jenis"
+                                    class="w-full mt-1" placeholder="Filter, Kretek, dll..." :disabled="$isFormLocked || $isReadOnlyByRole" />
+                            </div>
+                            <div>
+                                <x-input-label value="Jumlah/Hari (batang)" />
+                                <x-text-input
+                                    wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.detail.jumlahPerHari"
+                                    class="w-full mt-1" type="number" step="1" min="0"
+                                    :disabled="$isFormLocked || $isReadOnlyByRole" />
+                            </div>
+                        @endif
                     </div>
-                    @if (in_array(
-                            $dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian2RiwayatPasien']['kebiasaan']['alkoholObat']['pilihan'] ??
-                                '',
-                            ['ya', 'berhenti']))
-                        <div>
-                            <x-input-label value="Jenis" />
-                            <x-text-input
-                                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.detail.jenis"
-                                class="w-full mt-1" placeholder="Jenis alkohol/obat..." :disabled="$isFormLocked || $isReadOnlyByRole" />
-                        </div>
-                        <div>
-                            <x-input-label value="Jumlah/Hari" />
-                            <x-text-input
-                                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.detail.jumlahPerHari"
-                                class="w-full mt-1" type="number" step="any" min="0"
-                                :disabled="$isFormLocked || $isReadOnlyByRole" />
-                        </div>
-                    @endif
                 </div>
-            </div>
 
-            {{-- Vaksinasi --}}
-            <div class="grid grid-cols-2 gap-2">
+                {{-- Kebiasaan: Alkohol/Obat --}}
+                <div class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
+                    <p class="text-sm font-semibold text-ink dark:text-white mb-2 uppercase tracking-wide">
+                        Kebiasaan Alkohol / Obat-obatan</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <x-input-label value="Status" />
+                            <x-select-input
+                                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.pilihan"
+                                class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
+                                <option value="">— Pilih —</option>
+                                <option value="ya">Ya</option>
+                                <option value="tidak">Tidak</option>
+                                <option value="berhenti">Berhenti</option>
+                            </x-select-input>
+                        </div>
+                        @if (in_array(
+                                $dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian2RiwayatPasien']['kebiasaan']['alkoholObat']['pilihan'] ??
+                                    '',
+                                ['ya', 'berhenti']))
+                            <div>
+                                <x-input-label value="Jenis" />
+                                <x-text-input
+                                    wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.detail.jenis"
+                                    class="w-full mt-1" placeholder="Jenis alkohol/obat..." :disabled="$isFormLocked || $isReadOnlyByRole" />
+                            </div>
+                            <div>
+                                <x-input-label value="Jumlah/Hari" />
+                                <x-text-input
+                                    wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.detail.jumlahPerHari"
+                                    class="w-full mt-1" type="number" step="any" min="0"
+                                    :disabled="$isFormLocked || $isReadOnlyByRole" />
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+            </div>{{-- /kebiasaan 2 kartu --}}
+
+            {{-- Vaksinasi + Riwayat Keluarga — satu baris (3 kolom) --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
                 <div>
                     <x-input-label value="Vaksinasi Influenza" />
                     <x-select-input
@@ -642,10 +647,8 @@ new class extends Component {
                         <option value="menolak">Menolak</option>
                     </x-select-input>
                 </div>
-            </div>
 
-            {{-- Riwayat Keluarga --}}
-            <div class="grid grid-cols-1 gap-4">
+                {{-- Riwayat Keluarga (keterangan menumpuk di bawahnya saat pilih "Lainnya") --}}
                 <div>
                     <x-input-label value="Riwayat Penyakit Keluarga" />
                     <x-select-input
@@ -658,17 +661,15 @@ new class extends Component {
                         <option value="stroke">Stroke</option>
                         <option value="lainnya">Lainnya</option>
                     </x-select-input>
-                </div>
-                @if (
-                    ($dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian2RiwayatPasien']['riwayatKeluarga']['pilihan'] ?? '') ===
-                        'lainnya')
-                    <div>
-                        <x-input-label value="Keterangan Riwayat Keluarga" />
+                    @if (
+                        ($dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian2RiwayatPasien']['riwayatKeluarga']['pilihan'] ?? '') ===
+                            'lainnya')
                         <x-text-input
                             wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.riwayatKeluarga.keterangan"
-                            class="w-full mt-1" placeholder="Keterangan..." :disabled="$isFormLocked || $isReadOnlyByRole" />
-                    </div>
-                @endif
+                            class="w-full mt-1" placeholder="Keterangan riwayat keluarga..."
+                            :disabled="$isFormLocked || $isReadOnlyByRole" />
+                    @endif
+                </div>
             </div>
 
         </div>
@@ -800,7 +801,7 @@ new class extends Component {
 
         {{-- Keluarga Dekat --}}
         <div class="mt-4 p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
-            <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-2 uppercase tracking-wide">Keluarga
+            <p class="text-sm font-semibold text-ink dark:text-white mb-2 uppercase tracking-wide">Keluarga
                 Dekat yang Dapat Dihubungi</p>
             <div class="grid grid-cols-3 gap-3">
                 <div>
@@ -853,7 +854,7 @@ new class extends Component {
 
         {{-- Pemeriksaan Sistem Organ --}}
         <div class="mt-4">
-            <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-3 uppercase tracking-wide">Pemeriksaan
+            <p class="text-sm font-semibold text-ink dark:text-white mb-3 uppercase tracking-wide">Pemeriksaan
                 Sistem Organ</p>
 
             @php
@@ -922,7 +923,8 @@ new class extends Component {
                 ];
             @endphp
 
-            <div class="grid grid-cols-8 gap-2">
+            {{-- 4 kolom: baris 1 = 4 sistem organ, baris 2 = 2 sisanya + Neurologi (col-span-2) --}}
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 items-start">
                 @foreach ($organSystems as $organ)
                     @php
                         $currentPilihan =
@@ -931,7 +933,9 @@ new class extends Component {
                             ][$organ['path']]['pilihan'] ?? '';
                     @endphp
                     <div class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
-                        <x-input-label value="{{ $organ['label'] }}" />
+                        {{-- pakai :value (bound), BUKAN value="{{ }}" — "{{ }}" meng-escape & jadi &amp;
+                             lalu komponen meng-escape lagi → tampil "&amp;" di layar --}}
+                        <x-input-label :value="$organ['label']" />
                         <x-select-input
                             wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.pemeriksaanSistemOrgan.{{ $organ['path'] }}.pilihan"
                             class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
@@ -957,7 +961,7 @@ new class extends Component {
                 @endphp
                 <div
                     class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800 col-span-2">
-                    <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-2">Neurologi</p>
+                    <p class="text-sm font-semibold text-ink dark:text-white mb-2 uppercase tracking-wide">Neurologi</p>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <x-input-label value="Tingkat Kesadaran" />
@@ -1062,7 +1066,7 @@ new class extends Component {
         @if (!$isFormLocked && !$isReadOnlyByRole)
             <div
                 class="mt-4 p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-canvas dark:bg-gray-800/50">
-                <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-3 uppercase tracking-wide">Tambah
+                <p class="text-sm font-semibold text-ink dark:text-white mb-3 uppercase tracking-wide">Tambah
                     Dokter</p>
                 <div class="grid grid-cols-5 gap-3 items-end">
 

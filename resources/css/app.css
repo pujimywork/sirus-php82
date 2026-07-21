@@ -110,6 +110,11 @@
 .ds-caption    { @apply font-sans font-medium text-caption; }            /* 13 custom */
 .ds-caption-up { @apply font-sans font-semibold text-caption-up uppercase text-muted; } /* 11.5 custom */
 .ds-code       { @apply font-normal text-caption; font-family: var(--mono); }
+/* Judul bagian pada kartu form (x-border-form). Sengaja BUKAN ds-caption-up:
+   caption dipakai untuk teks sekunder (muted, 11.5px) sehingga kepala tiap bagian
+   form ikut pudar & sulit dipindai. Di sini pakai warna ink + ukuran sedikit lebih
+   besar; color pakai var(--ink) supaya ikut ber-swap di mode gelap tanpa dark:. */
+.ds-form-title { @apply font-sans font-semibold text-sm uppercase; color: var(--ink); letter-spacing: 0.06em; }
 .ds-eyebrow    { @apply font-sans font-semibold text-xs uppercase text-brand-green; letter-spacing: 1.2px; }
 
 /* Spike-mark (asterisk radial Anthropic) sederhana */
