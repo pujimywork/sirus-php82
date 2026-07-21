@@ -1432,6 +1432,39 @@ TXT,
                                 </ul>
                             </div>
                         </div>
+
+                        {{-- Tanda tangan & buka kunci (baku sejak Inform Consent / Akhir Hayat) --}}
+                        <div class="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Tanda tangan: 3 pihak, petugas TERAKHIR</div>
+                                <div class="ds-body-sm">
+                                    Pasien/keluarga (wajib) &middot; saksi (opsional, tampil langsung) &middot; petugas.
+                                    <strong>TTD petugas = aksi terakhir yang sekaligus MENGUNCI</strong> entri
+                                    (<span class="ds-code">setDokterPenjelas</span> / <span class="ds-code">ttdPetugas</span>) —
+                                    JANGAN bikin tombol &ldquo;Simpan &amp; Kunci&rdquo; terpisah; footer cukup Simpan Draft.
+                                    TTD masuk <span class="ds-code">rules()</span> supaya errornya merah di kolomnya, bukan cek manual.
+                                </div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Buka kunci (unlock)</div>
+                                <div class="ds-body-sm">
+                                    Hanya <span class="ds-code">Admin | Manager Umum | Manager Medis</span>, gate DUA lapis
+                                    (<span class="ds-code">&#64;hasanyrole</span> di tombol + cek role di server). Mencabut
+                                    <span class="ds-code">finalized</span> + <strong>TTD petugas saja</strong>; TTD pasien &amp;
+                                    saksi DIPERTAHANKAN. Wajib <span class="ds-code">appendAdminLogRI(&hellip;, 'MR')</span>
+                                    yang menyebut pelakunya.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ds-card-outline mt-4" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                Rincian pola (struktur file, siklus entri, rancangan panel &amp; opsi, jebakan Blade
+                                escape-ganda <span class="ds-code">&amp;amp;</span> pada prop komponen) ada di
+                                <span class="ds-code">docs/modul-dokumen-ri-pattern.md</span>.
+                            </span>
+                        </div>
                     </section>
 
                     {{-- ====== 08 ADMINISTRASI & KASIR ====== --}}

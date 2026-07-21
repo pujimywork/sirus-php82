@@ -34,3 +34,27 @@ Compiler Volt salah-strip komentar `//` bila ada substring `re-use` / `reuse` �
 
 ## 4. Pola UI sudah terdokumentasi — jangan reinvent
 Sebelum bikin komponen, cek `docs/` (lihat skill `ui-pattern-docs`): tombol standar, now-button, print PDF/TTD, page-frame, dirty-modal, stable-lookup, tinymce. Ikuti pola yang ada agar konsisten.
+
+## Escape ganda pada prop komponen (tampil `&amp;` di layar)
+
+Prop yang di-echo ulang komponen dengan `{{ }}` (`value` pada `x-input-label`, `title` pada
+`x-border-form`, `nameLabel`/`signLabel`/`emptyText` pada `x-signature.ttd-petugas`, dll.)
+akan ter-escape DUA kali:
+
+```blade
+{{-- SALAH — layar menampilkan "Mata &amp; Telinga" --}}
+<x-input-label value="Mata &amp; Telinga" />
+<x-input-label value="{{ $organ['label'] }}" />   {{-- label ber-& juga kena --}}
+
+{{-- BENAR --}}
+<x-input-label value="Mata & Telinga" />
+<x-input-label :value="$organ['label']" />
+```
+
+`&amp;` tetap benar untuk teks HTML biasa (paragraf, isi tombol). Yang dilarang hanya di
+ATRIBUT prop komponen. Cek cepat sebelum lapor:
+
+```bash
+grep -n '(value|title|nameLabel|signLabel)="[^"]*&amp;' file.blade.php   # harus kosong
+grep -c '&amp;amp;' file.blade.php                                        # harus 0
+```
