@@ -1068,7 +1068,8 @@ new class extends Component {
     ══════════════════════════════════════ --}}
     <x-border-form title="Bagian 7 — Ringkasan Pasien Pulang" align="start" bgcolor="bg-surface-soft"
         :collapsible="true" :open="false">
-        <div class="mt-3 space-y-3">
+        {{-- Kondisi Pulang + Instruksi Pulang + Kontrol Ke — satu baris --}}
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
             <div>
                 <x-input-label value="Kondisi Saat Pulang" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.ringkasanPasienPulang.kondisiPulang"

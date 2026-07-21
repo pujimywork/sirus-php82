@@ -1042,14 +1042,23 @@ new class extends Component {
                                             @if (($dr['levelDokter'] ?? '') !== 'RawatGabung')
                                                 <x-ghost-button type="button" class="!text-sm !py-0.5 !px-2"
                                                     wire:click="setLevelDokter({{ $idx }}, 'RawatGabung')">
-                                                    RG
+                                                    Rawat Gabung
                                                 </x-ghost-button>
                                             @endif
-                                            <x-danger-button type="button" class="!text-sm !py-0.5 !px-2"
-                                                wire:click="removeLevelingDokter('{{ $dr['tglEntry'] }}')"
-                                                wire:confirm="Hapus dokter ini dari daftar?">
-                                                Hapus
-                                            </x-danger-button>
+                                            {{-- Tombol sampah baris tabel = standar x-outline-button merah-tint
+                                                 (lihat docs/standar-komponen-tombol.md, contoh e-resep) --}}
+                                            <x-outline-button type="button"
+                                                wire:click.prevent="removeLevelingDokter('{{ $dr['tglEntry'] }}')"
+                                                wire:confirm="Hapus dokter ini dari daftar?" wire:loading.attr="disabled"
+                                                class="!px-2 !py-1 !text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                                title="Hapus dokter dari daftar leveling">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </x-outline-button>
                                         </div>
                                     </td>
                                 @endif
@@ -1118,27 +1127,32 @@ new class extends Component {
     <x-border-form title="Bagian 5 — Catatan & Tanda Tangan" align="start" bgcolor="bg-surface-soft"
         :collapsible="true" :open="false">
 
-        {{-- Catatan Umum --}}
-        <div class="mt-3">
-            <x-input-label value="Catatan Umum" />
-            <x-textarea
-                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian5CatatanDanTandaTangan.catatanUmum"
-                class="w-full mt-1" rows="2" placeholder="Catatan tambahan..." :disabled="$isFormLocked || $isReadOnlyByRole" />
-        </div>
+        {{-- Catatan Umum + Rumusan Masalah — sebaris --}}
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
 
-        {{-- Rumusan Masalah --}}
-        <div class="mt-3">
-            <x-input-label value="Rumusan Masalah" />
-            <x-textarea
-                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian5CatatanDanTandaTangan.rumusanMasalah"
-                class="w-full mt-1" rows="2"
-                placeholder="Masalah keperawatan, mis: Nyeri akut b.d agen pencedera fisiologis..."
-                :disabled="$isFormLocked || $isReadOnlyByRole" />
-            <p class="mt-1 text-sm text-muted dark:text-gray-400 italic">
-                Tindak lanjuti rumusan masalah ini dengan mengisi <span class="font-semibold">Asuhan
-                    Keperawatan</span> (diagnosis SDKI + intervensi SIKI + luaran SLKI).
-            </p>
-        </div>
+            {{-- Catatan Umum --}}
+            <div>
+                <x-input-label value="Catatan Umum" />
+                <x-textarea
+                    wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian5CatatanDanTandaTangan.catatanUmum"
+                    class="w-full mt-1" rows="2" placeholder="Catatan tambahan..." :disabled="$isFormLocked || $isReadOnlyByRole" />
+            </div>
+
+            {{-- Rumusan Masalah --}}
+            <div>
+                <x-input-label value="Rumusan Masalah" />
+                <x-textarea
+                    wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian5CatatanDanTandaTangan.rumusanMasalah"
+                    class="w-full mt-1" rows="2"
+                    placeholder="Masalah keperawatan, mis: Nyeri akut b.d agen pencedera fisiologis..."
+                    :disabled="$isFormLocked || $isReadOnlyByRole" />
+                <p class="mt-1 text-sm text-muted dark:text-gray-400 italic">
+                    Tindak lanjuti rumusan masalah ini dengan mengisi <span class="font-semibold">Asuhan
+                        Keperawatan</span> (diagnosis SDKI + intervensi SIKI + luaran SLKI).
+                </p>
+            </div>
+
+        </div>{{-- /catatan + rumusan masalah --}}
 
         {{-- TTD Perawat --}}
         <div class="mt-3">
