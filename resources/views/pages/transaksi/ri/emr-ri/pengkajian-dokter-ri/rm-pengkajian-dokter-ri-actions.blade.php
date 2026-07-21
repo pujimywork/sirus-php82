@@ -446,7 +446,7 @@ new class extends Component {
     private function afterSave(string $msg): void
     {
         $this->incrementVersion('modal-pengkajian-dokter-ri');
-        $this->dispatch('refresh-after-ri.saved');
+        $this->dispatch('refresh-after-ri.saved', tab: 'pengkajian-dokter');
         $this->dispatch('toast', type: 'success', message: $msg);
     }
 
@@ -570,7 +570,11 @@ new class extends Component {
             }
         },
     }" x-init="openedAt = Date.now();
-    window.addEventListener('refresh-after-ri.saved', () => {
+    window.addEventListener('refresh-after-ri.saved', (e) => {
+        // hanya bereaksi pada save tab sendiri — kalau tidak, save tab lain ikut
+        // menghapus penanda dirty tab ini padahal isinya belum tersimpan
+        const savedTab = e.detail?.tab;
+        if (savedTab && savedTab !== 'pengkajian-dokter') return;
         sectionDirty = false;
         openedAt = Date.now();
         $dispatch('section-clean', { tab: tab });

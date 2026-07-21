@@ -422,7 +422,7 @@ new class extends Component {
     private function afterSave(string $msg): void
     {
         $this->incrementVersion('modal-asuhan-keperawatan-ri');
-        $this->dispatch('refresh-after-ri.saved');
+        $this->dispatch('refresh-after-ri.saved', tab: 'asuhan');
         $this->dispatch('toast', type: 'success', message: $msg);
         // Beritahu sibling (CPPT) untuk reload — sync bidirectional UI
         $this->dispatch('rm-ri.askep.changed');

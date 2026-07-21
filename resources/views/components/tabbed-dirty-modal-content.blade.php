@@ -5,6 +5,7 @@
     'tabs' => [],                                              // array tab config: [['key' => '...', 'label' => '...', 'saveEvent' => '...', 'reloadEvent' => '...'], ...]
     'reloadArg' => null,                                       // argumen (mis. riHdrNo) yg dikirim ke reloadEvent saat "buang perubahan"
     'initialTab' => null,                                      // tab default; null = ambil dari tabs[0]
+    'guardSwitch' => true,                                     // false = pindah tab langsung tanpa dialog konfirmasi (titik dirty tetap jalan)
     'wrapperClass' => 'flex flex-col min-h-[calc(100vh-8rem)]',
 ])
 
@@ -38,6 +39,9 @@
         pendingTab: null,
         savingAndClosing: false,
         savingAndSwitching: false,
+        {{-- JANGAN pakai tanda kutip ganda di komentar ini: isi x-data ada di dalam atribut HTML,
+             satu kutip ganda akan menutup atribut & sisa JS bocor jadi teks di halaman. --}}
+        saveFailed: false,          // true = percobaan Simpan menyisakan tab yang belum tersimpan
         saveMap: @js(collect($tabs)->mapWithKeys(fn($t) => [$t['key'] => ['label' => $t['label'], 'saveEvent' => $t['saveEvent']]])->all()),
         reloadMap: @js(collect($tabs)->mapWithKeys(fn($t) => [$t['key'] => $t['reloadEvent'] ?? null])->all()),
         reloadArg: @js($reloadArg),
@@ -63,10 +67,13 @@
             if (ev) Livewire.dispatch(ev);
         },
 
-        /* ── Switch tab dengan guard dirty pada activeTab ── */
+        /* ── Switch tab dengan guard dirty pada activeTab ──
+           guardSwitch=false: pindah langsung. Perubahan tetap tersimpan di state Livewire
+           tab asal (tidak di-reload dari DB), jadi titik dirty & isinya tetap ada saat balik. */
+        guardSwitch: @js((bool) $guardSwitch),
         requestSwitchTab(targetTab) {
             if (targetTab === this.activeTab) return;
-            if (this.tabDirty[this.activeTab]) {
+            if (this.guardSwitch && this.tabDirty[this.activeTab]) {
                 this.pendingTab = targetTab;
                 this.showSwitchWarning = true;
                 return;
@@ -124,33 +131,36 @@
 
         tryClose() {
             if (this.isAnyDirty()) {
+                this.saveFailed = false;
                 this.showUnsavedWarning = true;
             } else {
                 $wire.closeModal();
             }
         },
 
+        /* Simpan semua tab dirty lalu tutup — HANYA kalau semuanya benar-benar tersimpan.
+           Tab yang gagal validasi tidak mengirim section-clean, jadi tetap dirty:
+           modal dibiarkan terbuka & daftar tab tersisa ditampilkan, bukan ditutup diam-diam. */
         async saveAndClose() {
             if (this.savingAndClosing) return;
             this.savingAndClosing = true;
+            this.saveFailed = false;
             try {
                 const dirtyKeys = this.dirtyTabKeys();
                 const events = dirtyKeys.map(k => this.saveMap[k]?.saveEvent).filter(Boolean);
                 if (events.length > 0) {
-                    let saved = 0;
-                    const onSaved = () => saved++;
-                    window.addEventListener('{{ $savedEvent }}', onSaved);
-                    try {
-                        events.forEach(e => Livewire.dispatch(e));
-                        const deadline = Date.now() + 3000;
-                        while (saved < events.length && Date.now() < deadline) {
-                            await new Promise(r => setTimeout(r, 50));
-                        }
-                    } finally {
-                        window.removeEventListener('{{ $savedEvent }}', onSaved);
+                    events.forEach(e => Livewire.dispatch(e));
+                    // Tunggu sampai tiap tab melapor bersih (section-clean → markClean),
+                    // bukan sekadar menghitung event saved global.
+                    const deadline = Date.now() + 5000;
+                    while (this.dirtyTabKeys().length > 0 && Date.now() < deadline) {
+                        await new Promise(r => setTimeout(r, 50));
                     }
                 }
-                Object.keys(this.tabDirty).forEach(k => this.tabDirty[k] = false);
+                if (this.isAnyDirty()) {
+                    this.saveFailed = true;   // biarkan dialog terbuka, tampilkan sisa tab
+                    return;
+                }
                 this.showUnsavedWarning = false;
                 await $wire.closeModal();
             } finally {
@@ -198,8 +208,25 @@
                         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Ada tab belum disimpan</h3>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             Tab berikut punya perubahan belum disimpan:
-                            <span class="font-medium text-gray-700 dark:text-gray-300" x-text="dirtyTabLabels().join(', ')"></span>.
+                        </p>
+                        {{-- List ke bawah — lebih kebaca saat tab yang dirty banyak --}}
+                        <ul class="mt-2 space-y-1 text-sm">
+                            <template x-for="label in dirtyTabLabels()" :key="label">
+                                <li class="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
+                                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                                    <span x-text="label"></span>
+                                </li>
+                            </template>
+                        </ul>
+                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400" x-show="!saveFailed">
                             Simpan semua, atau keluar tanpa menyimpan?
+                        </p>
+                        {{-- Muncul kalau tombol Simpan sudah ditekan tapi masih ada tab yang gagal tersimpan
+                             (mis. validasi belum lengkap). Modal sengaja tidak ditutup. --}}
+                        <p x-show="saveFailed" x-cloak
+                            class="p-2 mt-2 text-sm border rounded-lg text-error bg-error/5 border-error/20">
+                            Tab di atas <strong>gagal disimpan</strong>. Buka tab tersebut dan cek pesan validasi
+                            (field wajib berwarna merah), lalu Simpan lagi — atau pilih Keluar untuk membuang perubahan.
                         </p>
                     </div>
                 </div>

@@ -348,7 +348,7 @@ new class extends Component {
     private function afterSave(string $msg): void
     {
         $this->incrementVersion('modal-pengkajian-awal-ri');
-        $this->dispatch('refresh-after-ri.saved');
+        $this->dispatch('refresh-after-ri.saved', tab: 'pengkajian-perawat');
         $this->dispatch('toast', type: 'success', message: $msg);
     }
 
@@ -374,7 +374,11 @@ new class extends Component {
             }
         },
     }" x-init="openedAt = Date.now();
-    window.addEventListener('refresh-after-ri.saved', () => {
+    window.addEventListener('refresh-after-ri.saved', (e) => {
+        // hanya bereaksi pada save tab sendiri — kalau tidak, save tab lain ikut
+        // menghapus penanda dirty tab ini padahal isinya belum tersimpan
+        const savedTab = e.detail?.tab;
+        if (savedTab && savedTab !== 'pengkajian-perawat') return;
         sectionDirty = false;
         openedAt = Date.now();
         $dispatch('section-clean', { tab: tab });
@@ -411,10 +415,11 @@ new class extends Component {
     ══════════════════════════════════════════ --}}
     <x-border-form title="Bagian 1 — Data Umum" align="start" bgcolor="bg-surface-soft" :collapsible="true"
         :open="true">
-        <div class="mt-3 grid grid-cols-4 gap-2">
+        {{-- 1 baris, grid 12 kolom: 4 dropdown sempit (2 kolom) + Diagnosis Masuk lebar (4 kolom). --}}
+        <div class="mt-3 grid grid-cols-6 xl:grid-cols-12 gap-2 items-start">
 
             {{-- Kondisi Saat Masuk --}}
-            <div>
+            <div class="col-span-3 xl:col-span-2">
                 <x-input-label value="Kondisi Saat Masuk" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.kondisiSaatMasuk"
@@ -426,15 +431,15 @@ new class extends Component {
                 </x-select-input>
             </div>
 
-            {{-- Diagnosis Masuk --}}
-            <div>
+            {{-- Diagnosis Masuk (paling lebar — teks bebas) --}}
+            <div class="col-span-3 xl:col-span-4">
                 <x-input-label value="Diagnosis Masuk" />
                 <x-text-input wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.diagnosaMasuk"
                     class="w-full mt-1" placeholder="Diagnosis masuk..." :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
 
             {{-- Asal Pasien --}}
-            <div>
+            <div class="col-span-2 xl:col-span-2">
                 <x-input-label value="Asal Pasien" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.asalPasien.pilihan"
@@ -452,15 +457,10 @@ new class extends Component {
                 @endif
             </div>
 
-            {{-- DPJP --}}
-            <div>
-                {{-- <x-input-label value="DPJP" />
-                <x-text-input wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.dpjp"
-                    class="w-full mt-1" placeholder="Nama DPJP..." :disabled="$isFormLocked || $isReadOnlyByRole" /> --}}
-            </div>
+            {{-- DPJP: sengaja dihapus dari grid (dulu div kosong penahan kolom) — sudah tampil di header pasien. --}}
 
             {{-- Barang Berharga --}}
-            <div>
+            <div class="col-span-2 xl:col-span-2">
                 <x-input-label value="Barang Berharga" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.barangBerharga.pilihan"
@@ -477,7 +477,7 @@ new class extends Component {
             </div>
 
             {{-- Alat Bantu --}}
-            <div>
+            <div class="col-span-2 xl:col-span-2">
                 <x-input-label value="Alat Bantu" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.alatBantu.pilihan"

@@ -299,15 +299,17 @@ new class extends Component {
                             </p>
                         </div>
 
-                        {{-- Tgl Masuk + Cara Masuk --}}
+                        {{-- Tgl Masuk --}}
                         <div>
                             <span class="text-muted">Tgl Masuk:</span>
                             <span class="ml-1 text-body dark:text-gray-300">{{ $ri['entryDate'] ?? '-' }}</span>
                         </div>
+                        {{-- Cara Masuk — sementara disembunyikan (tidak tampil di UI)
                         <div>
                             <span class="text-muted">Cara Masuk:</span>
                             <span class="ml-1 text-body dark:text-gray-300">{{ $entryDesc }}</span>
                         </div>
+                        --}}
 
                         {{-- No. SEP (kalau ada) --}}
                         @if (!empty($ri['sep']['noSep']))

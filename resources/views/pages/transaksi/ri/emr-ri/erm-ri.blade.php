@@ -109,7 +109,9 @@ new class extends Component {
 
 <div>
     <x-modal name="rm-ri-actions" size="full" height="full" focusable>
-        <x-tabbed-dirty-modal-content name="rm-ri-actions" savedEvent="refresh-after-ri.saved" :reloadArg="$riHdrNo" :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])"
+        {{-- guardSwitch=false: pindah tab tidak lagi memunculkan dialog konfirmasi.
+             Penanda dirty (titik amber di tab) & konfirmasi saat Tutup modal tetap aktif. --}}
+        <x-tabbed-dirty-modal-content name="rm-ri-actions" savedEvent="refresh-after-ri.saved" :reloadArg="$riHdrNo" :guardSwitch="false" :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])"
             :tabs="[
                 [
                     'key' => 'pengkajian-perawat',
@@ -160,8 +162,11 @@ new class extends Component {
             </div>
 
             {{-- ── TAB NAVIGATION ── --}}
-            <div class="mt-3 border-b border-hairline dark:border-gray-700">
-                <div class="flex flex-wrap gap-1 -mb-px">
+            {{-- Satu baris + panah scroll (seragam EMR RJ/UGD): x-scrollable-tabs membungkus track x-tabs.
+                 w-max min-w-full = border bawah tetap penuh walau tab lebih sempit dari kontainer. --}}
+            <div class="mt-3">
+                <x-scrollable-tabs class="w-full">
+                    <x-tabs variant="underline" class="flex-nowrap w-max min-w-full gap-1">
 
                     @php
                         $klaimStatusRi =
@@ -289,7 +294,8 @@ new class extends Component {
                         </x-tab>
                     @endforeach
 
-                </div>
+                    </x-tabs>
+                </x-scrollable-tabs>
             </div>
 
             {{-- ═══════════ BODY — TAB PANELS ═══════════ --}}
