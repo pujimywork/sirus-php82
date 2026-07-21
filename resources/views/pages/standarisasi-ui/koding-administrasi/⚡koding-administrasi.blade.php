@@ -195,6 +195,51 @@ DB::transaction(function () {
 // Role: Admin | Supervisor Tu.
 TXT,
 
+'edit-inline' => <<<'TXT'
+// SEL TABEL YANG LANGSUNG TERSIMPAN (room-ri: Hari, tarif, tgl Mulai/Selesai).
+// Nilai dikirim lewat ARGUMEN AKSI, bukan wire:model — baris tabel tak punya properti per-sel.
+// Blade:
+//   x-on:change="$wire.updateTanggalKamar({{ trfr_no }}, 'end_date', $event.target.value)"
+
+public function updateTanggalKamar(int $trfrNo, string $kolom, ?string $nilai): void
+{
+    // 1. whitelist kolom — nilai tak terduga DITOLAK (jangan jatuh ke else)
+    if (!in_array($kolom, ['start_date', 'end_date'], true)) return;
+
+    // 2. guard lock; tiap jalur gagal WAJIB findData() lagi supaya layar balik ke isi DB
+    if ($this->isFormLocked) { /* toast + findData */ return; }
+
+    // 3. validasi pakai RULE repo, bukan cek manual Carbon
+    Validator::make(
+        ['tanggal' => $nilai === '' ? null : $nilai],
+        ['tanggal' => 'bail|required|date_format:d/m/Y H:i:s'],   // nullable bila boleh kosong
+    );
+    // createFromFormat SAJA tidak cukup: 32/13/2026 diterima lalu digeser diam-diam.
+
+    // 4. tak ada perubahan → diam (tanpa query, tanpa toast)
+    if ($nilaiLama === $nilai) return;
+
+    // 5. KOLOM TURUNAN: tiru rumus proses yang membuatnya (pindah-kamar-ri)
+    //    ROUND(selesai - mulai) lalu max(1, ...) → pindah < 1 hari TETAP 1 hari.
+    //    max(0, ...) akan MENGHAPUS tagihan sehari saat jam kamar transit dikoreksi.
+    $hariBaru = max(1, (int) round(($selesai->getTimestamp() - $mulai->getTimestamp()) / 86400));
+    //    Carbon 3: JANGAN diffInSeconds($other, false) — tandanya terbalik.
+
+    DB::transaction(function () use (...) {
+        $this->lockRIRow($this->riHdrNo);
+        DB::table('rsmst_trfrooms')->where('trfr_no', $trfrNo)->update([
+            $kolom => DB::raw("to_date('...', 'dd/mm/yyyy hh24:mi:ss')"),
+            'day'  => $hariBaru,
+        ]);
+        // audit DI DALAM transaksi — rollback tak boleh meninggalkan log
+        $this->appendAdminLogRI($this->riHdrNo, "Ubah tanggal Selesai kamar #{$trfrNo}: {lama} → {baru}, Hari → {$hariBaru}");
+    });
+
+    $this->findData($this->riHdrNo);
+    $this->dispatch('administrasi-ri.updated');
+}
+TXT,
+
         ];
     }
 };
@@ -231,6 +276,7 @@ TXT,
                 'groups' => [
                     'Administrasi' => [
                         'kasir' => 'Alur Kasir sampai Pulang',
+                        'edit-inline' => 'Edit Inline Tabel Biaya',
                     ],
                     'Transfer & Batal' => [
                         'transfer'        => 'Transfer UGD → RI',
@@ -935,6 +981,70 @@ TXT,
                                 <span class="ds-code">ugdtempadmins</span> flag 'RJ', (2) recovery RJ 'I'→'A' saat data tak ketemu.
                                 Poin (3) hard-delete <strong>tak bisa 100% sama</strong> karena UGD tak punya status 'F' seperti RI —
                                 opsi: buat delete berpanduan child atau biarkan.
+                            </span>
+                        </div>
+                    </section>
+
+                    {{-- ====== EDIT INLINE TABEL BIAYA ====== --}}
+                    <section x-show="section === 'edit-inline'" x-cloak>
+                        <div class="ds-eyebrow mb-3">05b — Administrasi</div>
+                        <h1 class="ds-display-md mb-4">Edit Inline Tabel Biaya</h1>
+                        <p class="ds-body-md mb-4" style="max-width:62ch">
+                            Sel tabel yang tersimpan begitu blur — dipakai di Riwayat Kamar
+                            (<span class="ds-code">room-ri</span>: Hari, tarif kamar/perawatan/CS, tanggal
+                            Mulai &amp; Selesai) serta tabel Visit/Konsul. Yang berbahaya di sini bukan UI-nya,
+                            melainkan <strong>angka biaya yang ikut bergerak</strong>.
+                        </p>
+
+                        <div class="ds-card-dark mt-2" style="padding:0; overflow:hidden">
+                            <div class="px-4 py-2.5" style="background:var(--surface-dark-soft)">
+                                <span class="ds-caption-up" style="color:var(--on-dark-soft)">Kerangka aksi — urutannya mengikat</span>
+                            </div>
+                            <pre class="ds-code" style="margin:0; padding:20px 24px; color:var(--on-dark-soft); overflow-x:auto; line-height:1.7">{{ $snip['edit-inline'] }}</pre>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-2">
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Kolom turunan = tiru rumus pembuatnya</div>
+                                <div class="ds-body-sm">
+                                    <span class="ds-code">day</span> mengalikan biaya
+                                    (<span class="ds-code">subtotal = (kamar+prwtn+cs) × day</span>). Pindah Kamar menulisnya
+                                    <span class="ds-code">max(1, ROUND(trfrDate - start_date))</span>, maka aksi lain wajib sama.
+                                    Beda rumus antar-jalur = hasil berbeda tergantung user masuk lewat pintu mana.
+                                </div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Log tiap kolom pengali biaya</div>
+                                <div class="ds-body-sm">
+                                    Cek aksi lama di file yang sama — sempat timpang: hapus kamar &amp; ubah tarif ter-log,
+                                    tapi <span class="ds-code">updateDay</span> tidak. Log tulis <strong>lama → baru</strong>;
+                                    kolom NULL tulis maknanya (<span class="ds-code">(otomatis)</span>), bukan <span class="ds-code">0</span>.
+                                </div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Guard state, bukan cuma format</div>
+                                <div class="ds-body-sm">
+                                    Selesai tak boleh lebih kecil dari Mulai (sama persis boleh — kamar transit);
+                                    Selesai dikosongkan = kamar aktif lagi, tolak bila sudah ada baris aktif lain.
+                                    Bandingkan pasangan nilai final, supaya edit Mulai kena aturan yang sama.
+                                </div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">UI</div>
+                                <div class="ds-body-sm">
+                                    Ring fokus brand (samakan dengan <span class="ds-code">x-text-input</span>), tombol hapus baris
+                                    = outline merah-tint + ikon sampah <span class="ds-code">!px-2 !py-1</span>. Saat terkunci,
+                                    sel kembali jadi teks biasa — bukan sekadar <span class="ds-code">disabled</span>.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ds-card-outline mt-6" style="padding:16px 20px">
+                            <span class="ds-spike" style="vertical-align:middle"></span>
+                            <span class="ds-body-sm" style="color:var(--body-strong)">
+                                <strong>Sengaja belum dipasang</strong> di Riwayat Kamar (keputusan user — jangan ditambahkan diam-diam):
+                                guard tumpang tindih antar baris, rentang di luar tanggal rawat inap, dan sinkronisasi rantai transfer
+                                (Selesai baris bawah ↔ Mulai baris atas).
                             </span>
                         </div>
                     </section>
