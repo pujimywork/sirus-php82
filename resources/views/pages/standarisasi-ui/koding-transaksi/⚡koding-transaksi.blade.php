@@ -410,7 +410,7 @@ TXT,
 
 'dokumen-skeleton' => <<<'TXT'
 // KERANGKA FORM MULTI-ENTRI — pola TERBARU (penundaan-pelayanan-ri /
-// permintaan-kerohanian-ri). Satu kunjungan bisa punya BANYAK entri;
+// akhir-hayat-ri). Satu kunjungan bisa punya BANYAK entri;
 // tiap entri hidup sendiri: Draft (bebas edit) → TTD (terkunci selamanya).
 
 public bool   $isFormLocked = false;   // EMR terkunci / prop disabled

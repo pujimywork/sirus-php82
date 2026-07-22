@@ -256,7 +256,7 @@ new class extends Component {
     }
 
     /* ===============================
-     | CETAK (inline — pola kerohanian RI)
+     | CETAK (inline — pola cetak inline dokumen RI)
      =============================== */
     public function cetak(): mixed
     {

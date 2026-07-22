@@ -117,14 +117,9 @@ new class extends Component {
                             Penundaan Pelayanan
                         </x-tab>
 
-                        <x-tab variant="underline" active-expr="activeTab === 'permintaanKerohanian'"
-                            x-on:click="activeTab = 'permintaanKerohanian'" class="inline-flex items-center gap-2">
-                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                            </svg>
-                            Kerohanian
-                        </x-tab>
+                        {{-- Permintaan Kerohanian dihapus dari modul-dokumen RI: kebutuhan
+                             spiritual/kerohanian kini tercakup di Pengkajian Akhir Hayat.
+                             Viewer historis tetap ada di display Rekam Medis. --}}
 
                         <x-tab variant="underline" active-expr="activeTab === 'akhirHayat'"
                             x-on:click="activeTab = 'akhirHayat'" class="inline-flex items-center gap-2">
@@ -265,13 +260,7 @@ new class extends Component {
                         wire:key="akhir-hayat-ri-{{ $riHdrNo ?? 'init' }}" />
                 </div>
 
-                {{-- TAB: PERMINTAAN KEROHANIAN --}}
-                <div x-show="activeTab === 'permintaanKerohanian'" x-transition.opacity.duration.200ms
-                    style="display:none">
-                    <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.permintaan-kerohanian-ri.rm-permintaan-kerohanian-ri-actions
-                        :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
-                        wire:key="permintaan-kerohanian-ri-{{ $riHdrNo ?? 'init' }}" />
-                </div>
+                {{-- Panel PERMINTAAN KEROHANIAN dihapus — lihat catatan di daftar tab. --}}
 
                 {{-- TAB: CASE MANAGER --}}
                 @hasanyrole('Perawat|Admin|MPP')

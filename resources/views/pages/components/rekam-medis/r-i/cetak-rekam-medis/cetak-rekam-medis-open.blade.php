@@ -675,8 +675,7 @@ new class extends Component {
                     <livewire:pages::components.rekam-medis.r-i.dokumen-view.penundaan-pelayanan-view-ri :riHdrNo="(string) $riHdrNo"
                         :entries="$ri['penundaanPelayananRI'] ?? []" wire:key="rm-view-penundaan-pelayanan-{{ $riHdrNo }}" />
 
-                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.permintaan-kerohanian-view-ri :riHdrNo="(string) $riHdrNo"
-                        :entries="$ri['permintaanKerohanianRI'] ?? []" wire:key="rm-view-permintaan-kerohanian-{{ $riHdrNo }}" />
+                    {{-- Permintaan Kerohanian dihapus — konsepnya digabung ke Pengkajian Akhir Hayat. --}}
 
                     {{-- ── Pengkajian Akhir Hayat — viewer (Lihat + Cetak dalam modal) ── --}}
                     <livewire:pages::components.rekam-medis.r-i.dokumen-view.akhir-hayat-view-ri :riHdrNo="(string) $riHdrNo"

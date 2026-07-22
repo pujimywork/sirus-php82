@@ -52,7 +52,7 @@ new class extends Component {
         'berat' => 'Berat',
     ];
 
-    // Sama seperti form Permintaan Kerohanian — pilihan agama/kepercayaan pasien.
+    // Pilihan agama/kepercayaan pasien (untuk kebutuhan spiritual).
     public array $agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu', 'Kepercayaan Lain'];
 
 
