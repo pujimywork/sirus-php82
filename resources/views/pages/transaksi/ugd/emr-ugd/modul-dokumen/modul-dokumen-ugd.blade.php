@@ -201,6 +201,21 @@ new class extends Component {
                                         @endif
                                     </x-tab>
 
+                                    {{-- Pengkajian Akhir Hayat --}}
+                                    <x-tab variant="underline" active-expr="activeTab === 'akhir-hayat'"
+                                        x-on:click="activeTab = 'akhir-hayat'"
+                                        class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                        Akhir Hayat
+                                        @if (!empty($dataDaftarUGD['pengkajianAkhirHayatUGD']) && count($dataDaftarUGD['pengkajianAkhirHayatUGD']) > 0)
+                                            <x-badge variant="success"
+                                                class="text-[10px] px-1.5 py-0">{{ count($dataDaftarUGD['pengkajianAkhirHayatUGD']) }}</x-badge>
+                                        @endif
+                                    </x-tab>
+
                                     {{-- Surat Keterangan Kematian — tab hanya muncul bila Screening UGD
                                          menyimpulkan P0, supaya tak jadi tab permanen di tiap pasien. --}}
                                     @if (($dataDaftarUGD['screening']['triaseSaran'] ?? '') === 'P0')
@@ -260,6 +275,13 @@ new class extends Component {
                                 <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.penundaan-pelayanan.rm-penundaan-pelayanan-actions
                                     :rjNo="$rjNo" :disabled="$isFormLocked"
                                     wire:key="penundaan-pelayanan-ugd-{{ $rjNo ?? 'init' }}" />
+                            </div>
+
+                            {{-- Panel: Pengkajian Akhir Hayat --}}
+                            <div x-show="activeTab === 'akhir-hayat'" x-transition.opacity.duration.300ms>
+                                <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.akhir-hayat.rm-akhir-hayat-actions
+                                    :rjNo="$rjNo" :disabled="$isFormLocked"
+                                    wire:key="akhir-hayat-ugd-{{ $rjNo ?? 'init' }}" />
                             </div>
 
                             {{-- Panel: Surat Keterangan Kematian --}}

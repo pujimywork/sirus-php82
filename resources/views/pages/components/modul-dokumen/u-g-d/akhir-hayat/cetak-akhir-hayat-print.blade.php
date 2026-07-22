@@ -1,4 +1,4 @@
-{{-- resources/views/pages/components/modul-dokumen/r-i/akhir-hayat-ri/cetak-akhir-hayat-ri-print.blade.php --}}
+{{-- resources/views/pages/components/modul-dokumen/u-g-d/akhir-hayat/cetak-akhir-hayat-print.blade.php --}}
 {{-- Pengkajian Akhir Hayat (End of Life) — gabungan formulir KARS + RM.RI.62 --}}
 
 <x-pdf.layout-a4-with-out-background title="PENGKAJIAN AKHIR HAYAT">

@@ -112,3 +112,52 @@ Lihat `docs/clause-versioning.md` + skill `clause-versioning`.
 4. Verifikasi sebelum lapor: compile via `Blade::compileString` + `php -l`, hitung
    keseimbangan `<div>`/`<fieldset>`/`<x-border-form>`, dan render dengan data contoh
    lalu cek `Unexpected end tag` via DOMDocument.
+
+> Catatan `Blade::compileString`: sebagian file host (mis. `cetak-rekam-medis-open`)
+> **tidak** standalone-compilable (pakai `@if` yang terentang via `@include`/slot) —
+> hasilnya "unexpected endif". Bandingkan dgn versi `git HEAD`: kalau HEAD gagal identik,
+> itu pre-existing, bukan salahmu. Validasi final yang sahih = **`php artisan view:cache`**
+> (EXIT 0 = semua view kompilasi lewat pipeline Blade asli), lalu `view:clear`.
+
+---
+
+## 9. Port ke jalur lain (RI ⇄ UGD ⇄ RJ)
+
+Satu form dokumen sering harus tersedia di lebih dari satu jalur. **Jangan tulis ulang** —
+salin file actions + cetak dari jalur acuan, lalu ganti token berikut (per-string, bukan
+`RI→UGD` global karena banyak identifier mengandung "RI"):
+
+| RI | UGD | RJ |
+|----|-----|----|
+| `Txn\Ri\EmrRITrait` | `Txn\Ugd\EmrUGDTrait` | `Txn\Rj\EmrRJTrait` |
+| `?string $riHdrNo` | `?int $rjNo` | `?int $rjNo` |
+| `$dataDaftarRi` | `$dataDaftarUGD` | `$dataDaftarRj` |
+| `findDataRI` / `checkEmrRIStatus` | `findDataUGD` / `checkEmrUGDStatus` | `findDataRJ` / … |
+| `updateJsonRI` / `appendAdminLogRI` / `lockRIRow` | `…UGD` | `…RJ` |
+| key JSON `pengkajian<Dok>RI` | `pengkajian<Dok>UGD` | `…RJ` |
+| modal `rm-<dok>-ri-` · area `modal-<dok>-ri` | `…-ugd` | `…-rj` |
+| `display-pasien-ri :riHdrNo` | `display-pasien-ugd :rjNo` | `display-pasien-rj :rjNo` |
+| prefill `pengkajianAwalPasienRawatInap…` | path EMR UGD (mis. `diagnosisFreeText`) | path EMR RJ |
+| loadView `…r-i.<dok>.cetak-<dok>-ri-print` | `…u-g-d.<dok>.cetak-<dok>-print` | `…r-j.…` |
+
+Konvensi nama: folder/file **UGD/RJ membuang sufiks** `-ri` (`…/akhir-hayat/rm-akhir-hayat-actions`),
+tapi **modal-name / renderArea / nama file PDF tetap** memakai `-ugd`/`-rj`. `regNo`/`regName`
+tersedia di data UGD/RJ juga, jadi cetak inline + `MasterPasienTrait` tetap jalan.
+`App\Support\*Clause` & `App\Support\*Options` (peta label cetak) **dipakai bersama** semua jalur —
+jangan diduplikasi. Verifikasi: `view:cache` EXIT 0 + grep tidak ada token RI nyasar.
+
+## 10. Viewer di display Rekam Medis (WAJIB saat menambah dokumen)
+
+Menambah form baru **belum selesai** sampai dokumennya bisa dilihat di **display Rekam Medis**.
+Pola viewer read-only (Lihat = render blade cetak ke iframe) ada di
+`docs/dokumen-view-pattern.md`. Untuk tiap jalur yang dipasang:
+
+1. Buat komponen viewer `resources/views/pages/components/rekam-medis/<jalur>/dokumen-view/<dok>-view-<jalur>.blade.php`.
+2. **Daftarkan** di `…/rekam-medis/<jalur>/cetak-rekam-medis/cetak-rekam-medis-open.blade.php`
+   (RI pakai var `$ri` + `:riHdrNo`; UGD pakai `$txn` + `:rjNo`), oper `:entries="$rec['pengkajian<Dok><Jalur>'] ?? []"`.
+3. Dokumen dgn cetak **payload seragam** (dataRi/form/ttd) → pakai
+   `DokumenViewSupportTrait::previewDokumenRi()/streamCetakDokumenRi()` langsung.
+4. Dokumen dgn cetak **payload bespoke** (butuh `entry` + `opsiLabel` + `clause`, mis. Akhir Hayat)
+   → viewer **self-contained**: pakai `dvPasien/dvTtdPath/dvIdentitasRs/renderDokumenPreview`
+   + `buildData()` yang meniru `cetak()` komponen EMR. Taruh peta label di
+   `App\Support\<Dok>Options::labels()` supaya satu sumber untuk semua jalur.

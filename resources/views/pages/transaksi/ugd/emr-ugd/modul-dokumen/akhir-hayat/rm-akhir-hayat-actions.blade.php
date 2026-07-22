@@ -1,16 +1,16 @@
 <?php
-// resources/views/pages/transaksi/ri/emr-ri/modul-dokumen/akhir-hayat-ri/rm-akhir-hayat-ri-actions.blade.php
+// resources/views/pages/transaksi/ugd/emr-ugd/modul-dokumen/akhir-hayat/rm-akhir-hayat-actions.blade.php
 //
-// PENGKAJIAN AKHIR HAYAT (RI) — gabungan formulir KARS (End of Life) + RM.RI.62.
+// PENGKAJIAN AKHIR HAYAT (UGD) — gabungan formulir KARS (End of Life) + RM.RI.62.
 //   dari KARS     : diagnosis & prognosis, penilaian fisik/TTV, simptom berskala,
 //                   keadaan emosional, informasi & edukasi, pernyataan persetujuan + 3 TTD.
 //   dari RM.RI.62 : kebutuhan spiritual, orang dihubungi, rencana perawatan/home care,
 //                   dukungan kunjungan, kondisi keluarga yang ditinggalkan, autopsi/donasi,
 //                   intervensi keperawatan & medis (termasuk DNR).
-// Pola modul-dokumen RI multi-entri: draft → TTD → Simpan & Kunci → Lihat/Cetak.
+// Pola modul-dokumen UGD multi-entri: draft → TTD → Simpan & Kunci → Lihat/Cetak.
 
 use Livewire\Component;
-use App\Http\Traits\Txn\Ri\EmrRITrait;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
@@ -21,13 +21,13 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 new class extends Component {
-    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
+    use EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
-    public ?string $riHdrNo = null;
+    public ?int $rjNo = null;
     public ?string $regNo = null;
     public bool $disabled = false;
-    public array $dataDaftarRi = [];
+    public array $dataDaftarUGD = [];
 
     // TTD gambar dari komponen signature-pad (jangan tulis tag x-... di komentar:
     // Blade tetap mengkompilasinya walau berada di dalam komentar PHP)
@@ -40,7 +40,7 @@ new class extends Component {
     public bool $viewOnly = false;       // entri terkunci ditampilkan read-only
 
     public array $renderVersions = [];
-    protected array $renderAreas = ['modal-akhir-hayat-ri'];
+    protected array $renderAreas = ['modal-akhir-hayat-ugd'];
 
     /* ===============================
      | OPTION LIST (key => label)
@@ -130,50 +130,50 @@ new class extends Component {
     /* ===============================
      | MOUNT / OPEN / CLOSE
      =============================== */
-    public function mount(?string $riHdrNo = null, bool $disabled = false): void
+    public function mount(?int $rjNo = null, bool $disabled = false): void
     {
-        $this->riHdrNo = $riHdrNo ?: null;
+        $this->rjNo = $rjNo ?: null;
         $this->disabled = $disabled;
-        $this->registerAreas(['modal-akhir-hayat-ri']);
+        $this->registerAreas(['modal-akhir-hayat-ugd']);
 
         $this->form = $this->defaultForm();
         $this->prefillHeader();
 
-        if ($this->riHdrNo) {
-            $data = $this->findDataRI($this->riHdrNo);
+        if ($this->rjNo) {
+            $data = $this->findDataUGD($this->rjNo);
             if ($data) {
-                $this->dataDaftarRi = $data;
+                $this->dataDaftarUGD = $data;
                 $this->regNo = $data['regNo'] ?? null;
-                $this->dataDaftarRi['pengkajianAkhirHayatRI'] ??= [];
+                $this->dataDaftarUGD['pengkajianAkhirHayatUGD'] ??= [];
                 $this->form['ttd']['keluargaNama'] = $data['regName'] ?? '';
-                $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
+                $this->isFormLocked = $this->checkEmrUGDStatus($this->rjNo) || $disabled;
             }
         }
     }
 
     public function openModal(): void
     {
-        if (!$this->riHdrNo || $this->disabled) {
+        if (!$this->rjNo || $this->disabled) {
             return;
         }
 
-        $data = $this->findDataRI($this->riHdrNo);
+        $data = $this->findDataUGD($this->rjNo);
         if ($data) {
-            $this->dataDaftarRi = $data;
+            $this->dataDaftarUGD = $data;
             $this->regNo = $data['regNo'] ?? $this->regNo;
-            $this->dataDaftarRi['pengkajianAkhirHayatRI'] ??= [];
-            $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled;
+            $this->dataDaftarUGD['pengkajianAkhirHayatUGD'] ??= [];
+            $this->isFormLocked = $this->checkEmrUGDStatus($this->rjNo) || $this->disabled;
         }
 
         $this->resetFormAkhirHayat();
         $this->prefillDariEmr();
 
-        $this->dispatch('open-modal', name: "rm-akhir-hayat-ri-{$this->riHdrNo}");
+        $this->dispatch('open-modal', name: "rm-akhir-hayat-ugd-{$this->rjNo}");
     }
 
     public function closeModal(): void
     {
-        $this->dispatch('close-modal', name: "rm-akhir-hayat-ri-{$this->riHdrNo}");
+        $this->dispatch('close-modal', name: "rm-akhir-hayat-ugd-{$this->rjNo}");
     }
 
     /* ===============================
@@ -276,7 +276,7 @@ new class extends Component {
      */
     private function prefillDariEmr(): void
     {
-        $diagnosa = data_get($this->dataDaftarRi, 'pengkajianAwalPasienRawatInap.bagian1DataUmum.diagnosaMasuk', '');
+        $diagnosa = data_get($this->dataDaftarUGD, 'diagnosisFreeText', '');
         if (filled($diagnosa) && empty($this->form['medis']['diagnosaUtama'])) {
             $this->form['medis']['diagnosaUtama'] = (string) $diagnosa;
         }
@@ -304,7 +304,7 @@ new class extends Component {
     /** Jenis asesmen ditentukan sistem: entri pertama Awal, berikutnya Ulang. */
     private function tentukanJenisAsesmen(string $id): string
     {
-        $list = $this->dataDaftarRi['pengkajianAkhirHayatRI'] ?? [];
+        $list = $this->dataDaftarUGD['pengkajianAkhirHayatUGD'] ?? [];
         $existing = collect($list)->firstWhere('id', $id);
         if ($existing) {
             return $existing['form']['jenisAsesmen'] ?? 'awal';
@@ -321,7 +321,7 @@ new class extends Component {
             return;
         }
         $this->keluargaSignature = $dataUrl;
-        $this->incrementVersion('modal-akhir-hayat-ri');
+        $this->incrementVersion('modal-akhir-hayat-ugd');
     }
 
     public function clearKeluargaSignature(): void
@@ -331,7 +331,7 @@ new class extends Component {
         }
         $this->keluargaSignature = '';
         $this->form['ttd']['keluargaTTD'] = '';
-        $this->incrementVersion('modal-akhir-hayat-ri');
+        $this->incrementVersion('modal-akhir-hayat-ugd');
     }
 
     public function setSaksiSignature(string $dataUrl): void
@@ -340,7 +340,7 @@ new class extends Component {
             return;
         }
         $this->saksiSignature = $dataUrl;
-        $this->incrementVersion('modal-akhir-hayat-ri');
+        $this->incrementVersion('modal-akhir-hayat-ugd');
     }
 
     public function clearSaksiSignature(): void
@@ -350,7 +350,7 @@ new class extends Component {
         }
         $this->saksiSignature = '';
         $this->form['ttd']['saksiTTD'] = '';
-        $this->incrementVersion('modal-akhir-hayat-ri');
+        $this->incrementVersion('modal-akhir-hayat-ugd');
     }
 
     /**
@@ -445,7 +445,7 @@ new class extends Component {
         }
         $form['fisik']['bmi'] = $this->bmi ?? ''; // snapshot hasil hitung
 
-        $existing = collect($this->dataDaftarRi['pengkajianAkhirHayatRI'] ?? [])->firstWhere('id', $id);
+        $existing = collect($this->dataDaftarUGD['pengkajianAkhirHayatUGD'] ?? [])->firstWhere('id', $id);
         $createdAt = $existing['created_at'] ?? Carbon::now(config('app.timezone'))->format('Y-m-d H:i:s');
         $createdBy = $existing['created_by'] ?? [
             'code' => auth()->user()->myuser_code ?? '',
@@ -466,14 +466,14 @@ new class extends Component {
         $entry = $this->buildEntry($id, $finalized);
 
         DB::transaction(function () use ($entry, $id, $logVerb) {
-            $this->lockRIRow($this->riHdrNo);
+            $this->lockUGDRow($this->rjNo);
 
-            $fresh = $this->findDataRI($this->riHdrNo) ?? [];
-            if (!isset($fresh['pengkajianAkhirHayatRI']) || !is_array($fresh['pengkajianAkhirHayatRI'])) {
-                $fresh['pengkajianAkhirHayatRI'] = [];
+            $fresh = $this->findDataUGD($this->rjNo) ?? [];
+            if (!isset($fresh['pengkajianAkhirHayatUGD']) || !is_array($fresh['pengkajianAkhirHayatUGD'])) {
+                $fresh['pengkajianAkhirHayatUGD'] = [];
             }
 
-            $list = $fresh['pengkajianAkhirHayatRI'];
+            $list = $fresh['pengkajianAkhirHayatUGD'];
             $idx = collect($list)->search(fn($it) => ($it['id'] ?? null) === $id);
             if ($idx === false) {
                 $list[] = $entry;
@@ -483,14 +483,14 @@ new class extends Component {
                 }
                 $list[$idx] = $entry;
             }
-            $fresh['pengkajianAkhirHayatRI'] = array_values($list);
+            $fresh['pengkajianAkhirHayatUGD'] = array_values($list);
 
-            $this->updateJsonRI((int) $this->riHdrNo, $fresh);
-            $this->dataDaftarRi = $fresh;
+            $this->updateJsonUGD((int) $this->rjNo, $fresh);
+            $this->dataDaftarUGD = $fresh;
 
             $jenis = ($entry['form']['jenisAsesmen'] ?? 'awal') === 'ulang' ? 'Ulang' : 'Awal';
-            $this->appendAdminLogRI(
-                (int) $this->riHdrNo,
+            $this->appendAdminLogUGD(
+                (int) $this->rjNo,
                 $logVerb . ' Pengkajian Akhir Hayat (Asesmen ' . $jenis . ') — ' . ($entry['form']['tglAsesmen'] ?? '-'),
                 'MR',
             );
@@ -588,7 +588,7 @@ new class extends Component {
         try {
             $this->persistEntry($id, false, 'Simpan draft');
             $this->editingKey = $id;
-            $this->incrementVersion('modal-akhir-hayat-ri');
+            $this->incrementVersion('modal-akhir-hayat-ugd');
             $this->dispatch('toast', type: 'success', message: 'Draft tersimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -608,7 +608,7 @@ new class extends Component {
         $this->saksiSignature = (string) data_get($entri, 'form.ttd.saksiTTD', '');
         $this->editingKey = $entri['id'] ?? null;
         $this->resetValidation();
-        $this->incrementVersion('modal-akhir-hayat-ri');
+        $this->incrementVersion('modal-akhir-hayat-ugd');
     }
 
     public function editEntry(string $id): void
@@ -617,7 +617,7 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
             return;
         }
-        $entri = collect($this->dataDaftarRi['pengkajianAkhirHayatRI'] ?? [])->firstWhere('id', $id);
+        $entri = collect($this->dataDaftarUGD['pengkajianAkhirHayatUGD'] ?? [])->firstWhere('id', $id);
         if (!$entri) {
             $this->dispatch('toast', type: 'error', message: 'Entri tidak ditemukan.');
             return;
@@ -634,7 +634,7 @@ new class extends Component {
 
     public function viewEntry(string $id): void
     {
-        $entri = collect($this->dataDaftarRi['pengkajianAkhirHayatRI'] ?? [])->firstWhere('id', $id);
+        $entri = collect($this->dataDaftarUGD['pengkajianAkhirHayatUGD'] ?? [])->firstWhere('id', $id);
         if (!$entri) {
             $this->dispatch('toast', type: 'error', message: 'Entri tidak ditemukan.');
             return;
@@ -659,10 +659,10 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($id) {
-                $this->lockRIRow($this->riHdrNo);
+                $this->lockUGDRow($this->rjNo);
 
-                $fresh = $this->findDataRI($this->riHdrNo) ?? [];
-                $list = $fresh['pengkajianAkhirHayatRI'] ?? [];
+                $fresh = $this->findDataUGD($this->rjNo) ?? [];
+                $list = $fresh['pengkajianAkhirHayatUGD'] ?? [];
 
                 $deletedRow = collect($list)->firstWhere('id', $id);
                 $newList = array_values(array_filter($list, fn($e) => ($e['id'] ?? null) !== $id));
@@ -670,12 +670,12 @@ new class extends Component {
                     throw new \RuntimeException('Data tidak ditemukan atau sudah dihapus.');
                 }
 
-                $fresh['pengkajianAkhirHayatRI'] = $newList;
-                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
-                $this->dataDaftarRi = $fresh;
+                $fresh['pengkajianAkhirHayatUGD'] = $newList;
+                $this->updateJsonUGD((int) $this->rjNo, $fresh);
+                $this->dataDaftarUGD = $fresh;
 
-                $this->appendAdminLogRI(
-                    (int) $this->riHdrNo,
+                $this->appendAdminLogUGD(
+                    (int) $this->rjNo,
                     'Hapus Pengkajian Akhir Hayat — ' . ($deletedRow['form']['tglAsesmen'] ?? '-'),
                     'MR',
                 );
@@ -684,7 +684,7 @@ new class extends Component {
             if ($this->editingKey === $id) {
                 $this->cancelEdit();
             }
-            $this->incrementVersion('modal-akhir-hayat-ri');
+            $this->incrementVersion('modal-akhir-hayat-ugd');
             $this->dispatch('toast', type: 'success', message: 'Pengkajian akhir hayat berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -716,10 +716,10 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($id) {
-                $this->lockRIRow($this->riHdrNo);
+                $this->lockUGDRow($this->rjNo);
 
-                $fresh = $this->findDataRI($this->riHdrNo) ?: [];
-                $list = $fresh['pengkajianAkhirHayatRI'] ?? [];
+                $fresh = $this->findDataUGD($this->rjNo) ?: [];
+                $list = $fresh['pengkajianAkhirHayatUGD'] ?? [];
                 $index = collect($list)->search(fn($it) => ($it['id'] ?? null) === $id);
                 if ($index === false) {
                     throw new \RuntimeException('Entri tidak ditemukan.');
@@ -731,19 +731,19 @@ new class extends Component {
                 $list[$index]['form']['ttd']['petugasCode'] = '';
                 $list[$index]['form']['ttd']['petugasDate'] = '';
 
-                $fresh['pengkajianAkhirHayatRI'] = array_values($list);
-                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
-                $this->dataDaftarRi = $fresh;
+                $fresh['pengkajianAkhirHayatUGD'] = array_values($list);
+                $this->updateJsonUGD((int) $this->rjNo, $fresh);
+                $this->dataDaftarUGD = $fresh;
 
-                $this->appendAdminLogRI(
-                    (int) $this->riHdrNo,
+                $this->appendAdminLogUGD(
+                    (int) $this->rjNo,
                     'Buka kunci Pengkajian Akhir Hayat — entri ' . ($list[$index]['form']['tglAsesmen'] ?? $id)
                         . ' (oleh ' . (auth()->user()->myuser_name ?? auth()->user()->name ?? '-') . ')',
                     'MR',
                 );
             });
 
-            $this->incrementVersion('modal-akhir-hayat-ri');
+            $this->incrementVersion('modal-akhir-hayat-ugd');
             $this->dispatch('toast', type: 'success', message: 'Kunci dibuka — entri kembali draft & TTD petugas dicabut. Silakan koreksi lalu kunci ulang.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -757,7 +757,7 @@ new class extends Component {
      =============================== */
     public function cetak(string $id)
     {
-        $entry = collect($this->dataDaftarRi['pengkajianAkhirHayatRI'] ?? [])->firstWhere('id', $id);
+        $entry = collect($this->dataDaftarUGD['pengkajianAkhirHayatUGD'] ?? [])->firstWhere('id', $id);
         if (!$entry) {
             $this->dispatch('toast', type: 'error', message: 'Data pengkajian tidak ditemukan.');
             return;
@@ -786,7 +786,7 @@ new class extends Component {
             }
 
             $data = array_merge($pasien, [
-                'dataRi' => $this->dataDaftarRi,
+                'dataRi' => $this->dataDaftarUGD,
                 'entry' => $entry,
                 'identitasRs' => $identitasRs,
                 'ttdPetugasPath' => $ttdPetugasPath,
@@ -808,10 +808,10 @@ new class extends Component {
 
             set_time_limit(300);
 
-            $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.akhir-hayat-ri.cetak-akhir-hayat-ri-print', ['data' => $data])->setPaper('A4');
+            $pdf = Pdf::loadView('pages.components.modul-dokumen.u-g-d.akhir-hayat.cetak-akhir-hayat-print', ['data' => $data])->setPaper('A4');
 
             $this->dispatch('toast', type: 'success', message: 'Berhasil mencetak Pengkajian Akhir Hayat.');
-            return response()->streamDownload(fn() => print $pdf->output(), 'akhir-hayat-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
+            return response()->streamDownload(fn() => print $pdf->output(), 'akhir-hayat-ugd-' . ($pasien['regNo'] ?? $this->rjNo) . '.pdf');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal cetak: ' . $e->getMessage());
         }
@@ -820,21 +820,21 @@ new class extends Component {
     public function resetFormAkhirHayat(): void
     {
         $this->form = $this->defaultForm();
-        $this->form['ttd']['keluargaNama'] = $this->dataDaftarRi['regName'] ?? '';
+        $this->form['ttd']['keluargaNama'] = $this->dataDaftarUGD['regName'] ?? '';
         $this->prefillHeader();
         $this->keluargaSignature = '';
         $this->saksiSignature = '';
         $this->editingKey = null;
         $this->viewOnly = false;
         $this->resetValidation();
-        $this->incrementVersion('modal-akhir-hayat-ri');
+        $this->incrementVersion('modal-akhir-hayat-ugd');
     }
 };
 ?>
 
 <div>
     {{-- ══ RINGKASAN + TOMBOL ══ --}}
-    @php $akhirHayatCount = count($dataDaftarRi['pengkajianAkhirHayatRI'] ?? []); @endphp
+    @php $akhirHayatCount = count($dataDaftarUGD['pengkajianAkhirHayatUGD'] ?? []); @endphp
     <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div class="flex-1 space-y-2">
@@ -853,7 +853,7 @@ new class extends Component {
             </div>
             <div class="flex shrink-0">
                 <x-primary-button type="button" wire:click="openModal" wire:loading.attr="disabled"
-                    wire:target="openModal" :disabled="!$riHdrNo" class="gap-2">
+                    wire:target="openModal" :disabled="!$rjNo" class="gap-2">
                     <span wire:loading.remove wire:target="openModal" class="flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -869,7 +869,7 @@ new class extends Component {
     </div>
 
     {{-- ══ MODAL ══ --}}
-    <x-modal name="rm-akhir-hayat-ri-{{ $riHdrNo ?? 'init' }}" size="full" height="full" focusable>
+    <x-modal name="rm-akhir-hayat-ugd-{{ $rjNo ?? 'init' }}" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]">
 
             <div class="flex items-center justify-between gap-4 px-6 py-4 border-b border-hairline bg-surface-soft dark:border-gray-700">
@@ -898,12 +898,12 @@ new class extends Component {
             </div>
 
             <div class="px-4 pt-4">
-                <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
-                    wire:key="akhir-hayat-ri-display-pasien-{{ $riHdrNo ?? 'init' }}" />
+                <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
+                    wire:key="akhir-hayat-ugd-display-pasien-{{ $rjNo ?? 'init' }}" />
             </div>
 
             <div class="flex-1 p-4 sm:p-6 space-y-4"
-                wire:key="{{ $this->renderKey('modal-akhir-hayat-ri', [$riHdrNo ?? 'new']) }}">
+                wire:key="{{ $this->renderKey('modal-akhir-hayat-ugd', [$rjNo ?? 'new']) }}">
 
                 @php $formRO = $isFormLocked || $viewOnly; @endphp
 
@@ -949,7 +949,7 @@ new class extends Component {
                         <div class="pb-1">
                             @php
                                 $jenisTersimpan = $editingKey ? $form['jenisAsesmen'] ?? '' : '';
-                                $jenisAktif = $jenisTersimpan ?: (count($dataDaftarRi['pengkajianAkhirHayatRI'] ?? []) > 0 ? 'ulang' : 'awal');
+                                $jenisAktif = $jenisTersimpan ?: (count($dataDaftarUGD['pengkajianAkhirHayatUGD'] ?? []) > 0 ? 'ulang' : 'awal');
                             @endphp
                             <x-badge variant="info">{{ $jenisAktif === 'ulang' ? 'Asesmen Ulang' : 'Asesmen Awal' }}</x-badge>
                         </div>
@@ -1499,7 +1499,7 @@ new class extends Component {
 
                 {{-- ═══════════ RIWAYAT ═══════════ --}}
                 <x-border-form title="Riwayat Pengkajian Akhir Hayat" align="start" bgcolor="bg-surface-soft">
-                    @php $list = $dataDaftarRi['pengkajianAkhirHayatRI'] ?? []; @endphp
+                    @php $list = $dataDaftarUGD['pengkajianAkhirHayatUGD'] ?? []; @endphp
                     <div class="mt-3 overflow-x-auto bg-canvas border border-hairline rounded-xl dark:border-gray-700 dark:bg-gray-900">
                         <table class="min-w-full text-sm">
                             <thead class="bg-surface-soft dark:bg-gray-800">

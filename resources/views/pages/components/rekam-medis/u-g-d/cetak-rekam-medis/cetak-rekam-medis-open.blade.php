@@ -778,6 +778,10 @@ new class extends Component {
                         <livewire:pages::components.rekam-medis.u-g-d.dokumen-view.surat-kematian-view-ugd :rjNo="$rjNo"
                             :surat="$txn['suratKematianUGD'] ?? []" wire:key="rm-view-sk-ugd-{{ $rjNo }}" />
                     @endif
+
+                    {{-- ── Pengkajian Akhir Hayat — viewer (Lihat + Cetak dalam modal) ── --}}
+                    <livewire:pages::components.rekam-medis.u-g-d.dokumen-view.akhir-hayat-view-ugd :rjNo="$rjNo"
+                        :entries="$txn['pengkajianAkhirHayatUGD'] ?? []" wire:key="rm-view-akhir-hayat-ugd-{{ $rjNo }}" />
                 </div>
 
                 {{-- ════ TAB: HASIL PENUNJANG (lab / radiologi / upload — view-only) ════ --}}

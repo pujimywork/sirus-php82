@@ -1457,12 +1457,43 @@ TXT,
                             </div>
                         </div>
 
+                        {{-- Port lintas jalur + viewer rekam medis (baku sejak Akhir Hayat RI→UGD) --}}
+                        <div class="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Port ke jalur lain (RI ⇄ UGD ⇄ RJ)</div>
+                                <div class="ds-body-sm">
+                                    Satu form sering dipasang di beberapa jalur — <strong>salin</strong> actions + cetak,
+                                    ganti token <strong>per-string</strong> (bukan <span class="ds-code">RI→UGD</span> global):
+                                    <span class="ds-code">EmrRITrait→EmrUGDTrait</span>,
+                                    <span class="ds-code">?string $riHdrNo→?int $rjNo</span>,
+                                    <span class="ds-code">findDataRI/updateJsonRI/lockRIRow/appendAdminLogRI→…UGD</span>,
+                                    key JSON <span class="ds-code">pengkajian&lt;Dok&gt;RI→…UGD</span>.
+                                    Folder/file UGD/RJ <strong>buang sufiks</strong> <span class="ds-code">-ri</span>,
+                                    tapi modal-name / renderArea / nama PDF <strong>tetap</strong> <span class="ds-code">-ugd</span>.
+                                    <span class="ds-code">*Clause</span> &amp; <span class="ds-code">*Options</span> dipakai bersama — jangan diduplikasi.
+                                </div>
+                            </div>
+                            <div class="ds-card-outline" style="padding:20px">
+                                <div class="ds-title-sm mb-2">Viewer rekam medis — WAJIB</div>
+                                <div class="ds-body-sm">
+                                    Dokumen baru belum selesai sampai bisa dilihat di <strong>display Rekam Medis</strong>:
+                                    buat <span class="ds-code">rekam-medis/&lt;jalur&gt;/dokumen-view/&lt;dok&gt;-view-&lt;jalur&gt;</span>
+                                    lalu daftarkan di <span class="ds-code">cetak-rekam-medis-open</span>.
+                                    Cetak payload seragam → pakai <span class="ds-code">DokumenViewSupportTrait</span> langsung;
+                                    payload bespoke (butuh <span class="ds-code">entry+opsiLabel+clause</span>, mis. Akhir Hayat) →
+                                    viewer self-contained dgn <span class="ds-code">buildData()</span> peniru <span class="ds-code">cetak()</span>.
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="ds-card-outline mt-4" style="padding:16px 20px">
                             <span class="ds-spike" style="vertical-align:middle"></span>
                             <span class="ds-body-sm" style="color:var(--body-strong)">
                                 Rincian pola (struktur file, siklus entri, rancangan panel &amp; opsi, jebakan Blade
-                                escape-ganda <span class="ds-code">&amp;amp;</span> pada prop komponen) ada di
-                                <span class="ds-code">docs/modul-dokumen-ri-pattern.md</span>.
+                                escape-ganda <span class="ds-code">&amp;amp;</span> pada prop komponen, <strong>§9 port jalur</strong>,
+                                <strong>§10 viewer rekam-medis</strong>) ada di
+                                <span class="ds-code">docs/modul-dokumen-ri-pattern.md</span>. Verifikasi final =
+                                <span class="ds-code">php artisan view:cache</span> (EXIT 0), bukan compileString.
                             </span>
                         </div>
                     </section>
