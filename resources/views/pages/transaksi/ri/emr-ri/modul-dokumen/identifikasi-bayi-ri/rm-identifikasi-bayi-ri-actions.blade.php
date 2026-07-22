@@ -203,6 +203,10 @@ new class extends Component {
 
     public function hapus(string $createdAt): void
     {
+        if (!auth()->user()?->can('dokumen.hapus')) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berwenang menghapus entri.');
+            return;
+        }
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menghapus.');
             return;
@@ -469,11 +473,20 @@ new class extends Component {
                                     <span class="ml-2 text-muted">· {{ $e['jenisKelamin'] ?? '-' }}</span>
                                     <div class="text-xs text-muted dark:text-gray-400">Gelang: {{ $e['warnaGelang'] ?? '-' }} · BB {{ $e['bb'] ?? '-' }} gr · PB {{ $e['pb'] ?? '-' }} cm</div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <x-secondary-button type="button" wire:click="cetak('{{ $e['createdAt'] }}')" class="px-3 py-1.5 text-sm">Cetak</x-secondary-button>
+                                <div class="flex flex-col items-center gap-2">
+                                    <div class="flex items-center gap-2">
+                                    <x-secondary-button type="button" wire:click="cetak('{{ $e['createdAt'] }}')" wire:loading.attr="disabled" wire:target="cetak('{{ $e['createdAt'] }}')" class="px-3 py-1.5 text-sm">
+                                        <span wire:loading.remove wire:target="cetak('{{ $e['createdAt'] }}')" class="flex items-center gap-1.5">Cetak</span>
+                                        <span wire:loading wire:target="cetak('{{ $e['createdAt'] }}')" class="flex items-center gap-1.5"><x-loading class="w-5 h-5" /> Mencetak...</span>
+                                    </x-secondary-button>
+                                    </div>
                                     @unless ($isFormLocked)
+                                        <div class="flex items-center gap-2">
+                                        @can('dokumen.hapus')
                                         <x-danger-button type="button" wire:click="hapus('{{ $e['createdAt'] }}')"
                                             wire:confirm="Hapus entri identifikasi bayi ini?" class="px-3 py-1.5 text-sm">Hapus</x-danger-button>
+                                        @endcan
+                                        </div>
                                     @endunless
                                 </div>
                             </div>

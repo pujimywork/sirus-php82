@@ -308,7 +308,7 @@ new class extends Component {
      =============================== */
     private function bolehBukaKunci(): bool
     {
-        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
+        return (bool) auth()->user()?->can('dokumen.bukaKunci');
     }
 
     public function bukaKunci(string $signatureDate): void
@@ -590,6 +590,10 @@ new class extends Component {
      =============================== */
     public function hapus(string $signatureDate): void
     {
+        if (!auth()->user()?->can('dokumen.hapus')) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berwenang menghapus entri.');
+            return;
+        }
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menghapus.');
             return;
@@ -1178,7 +1182,9 @@ new class extends Component {
                                                     @endif
                                                 </td>
                                                 <td class="px-4 py-3 align-middle text-center" @click.stop>
-                                                    <div class="flex items-center justify-center gap-2">
+                                                    <div class="flex flex-col items-center gap-2">
+                                                        {{-- Baris atas: aksi non-destruktif (Lanjut/TTD + Lihat + Cetak) --}}
+                                                        <div class="flex items-center justify-center gap-2">
                                                         @if (!$isFinal && !$isFormLocked)
                                                             <x-primary-button type="button" wire:click="editEntry('{{ $rowKey }}')" wire:loading.attr="disabled" wire:target="editEntry('{{ $rowKey }}')" class="gap-1.5" title="Lanjutkan mengisi entri ini">
                                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1212,28 +1218,35 @@ new class extends Component {
                                                                 </span>
                                                                 <span wire:loading wire:target="cetak('{{ $rowKey }}')" class="flex items-center gap-1.5"><x-loading class="w-5 h-5" /> Mencetak...</span>
                                                             </x-secondary-button>
-                                                            @if (!$isFormLocked)
-                                                                @hasanyrole('Admin|Manager Umum|Manager Medis')
-                                                                    <x-confirm-button action="bukaKunci('{{ $rowKey }}')"
-                                                                        title="Buka Kunci Inform Consent"
-                                                                        message="TTD petugas akan dicabut &amp; entri kembali menjadi draft untuk dikoreksi. Lanjutkan?"
-                                                                        confirmText="Ya, Buka Kunci"
-                                                                        class="gap-1.5">
-                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" /></svg>
-                                                                        Buka Kunci
-                                                                    </x-confirm-button>
-                                                                @endhasanyrole
-                                                            @endif
                                                         @endif
+                                                        </div>
+
+                                                        {{-- Baris bawah: aksi terkunci/destruktif (Buka Kunci + Hapus) --}}
                                                         @if (!$isFormLocked)
-                                                            <x-outline-button type="button" wire:click.prevent="hapus('{{ $rowKey }}')" wire:confirm="Yakin hapus Inform Consent ini?"
-                                                                wire:loading.attr="disabled"
-                                                                class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
-                                                                title="Hapus">
-                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
-                                                            </x-outline-button>
+                                                            <div class="flex items-center justify-center gap-2">
+                                                                @if ($isFinal)
+                                                                    @can('dokumen.bukaKunci')
+                                                                        <x-confirm-button action="bukaKunci('{{ $rowKey }}')"
+                                                                            title="Buka Kunci Inform Consent"
+                                                                            message="TTD petugas akan dicabut &amp; entri kembali menjadi draft untuk dikoreksi. Lanjutkan?"
+                                                                            confirmText="Ya, Buka Kunci"
+                                                                            class="gap-1.5">
+                                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" /></svg>
+                                                                            Buka Kunci
+                                                                        </x-confirm-button>
+                                                                    @endcan
+                                                                @endif
+                                                                @can('dokumen.hapus')
+                                                                    <x-outline-button type="button" wire:click.prevent="hapus('{{ $rowKey }}')" wire:confirm="Yakin hapus Inform Consent ini?"
+                                                                        wire:loading.attr="disabled"
+                                                                        class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                                                        title="Hapus">
+                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                        </svg>
+                                                                    </x-outline-button>
+                                                                @endcan
+                                                            </div>
                                                         @endif
                                                     </div>
                                                 </td>

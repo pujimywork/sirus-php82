@@ -446,6 +446,10 @@ new class extends Component {
      =============================== */
     public function hapus(string $tglPindah): void
     {
+        if (!auth()->user()?->can('dokumen.hapus')) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berwenang menghapus entri.');
+            return;
+        }
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only.');
             return;
@@ -1099,6 +1103,8 @@ new class extends Component {
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-2 text-center space-x-1 whitespace-nowrap">
+                                                    <div class="flex flex-col items-center gap-2">
+                                                    <div class="flex items-center justify-center gap-2">
                                                     <x-secondary-button
                                                         wire:click="cetakPindahRi('{{ $pindah['tglPindah'] }}')"
                                                         wire:loading.attr="disabled" wire:target="cetakPindahRi"
@@ -1123,6 +1129,11 @@ new class extends Component {
                                                             class="text-xs py-1 px-2">
                                                             Lanjutkan
                                                         </x-secondary-button>
+                                                    @endif
+                                                    </div>
+                                                    @if (!$rowLocked && !$isFormLocked)
+                                                    <div class="flex items-center justify-center gap-2">
+                                                        @can('dokumen.hapus')
                                                         <x-outline-button type="button"
                                                             wire:click.prevent="hapus('{{ $pindah['tglPindah'] }}')"
                                                             wire:confirm="Yakin hapus catatan pindah ini?"
@@ -1136,7 +1147,10 @@ new class extends Component {
                                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                             </svg>
                                                         </x-outline-button>
+                                                        @endcan
+                                                    </div>
                                                     @endif
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @endforeach

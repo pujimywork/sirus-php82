@@ -530,6 +530,10 @@ new class extends Component {
 
     public function removeEdukasiTerintegrasiById(string $id): void
     {
+        if (!auth()->user()?->can('dokumen.hapus')) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berwenang menghapus entri.');
+            return;
+        }
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
             return;
@@ -1184,7 +1188,9 @@ new class extends Component {
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-center align-middle" @click.stop>
-                                <div class="flex items-center justify-center gap-2">
+                                <div class="flex flex-col items-center gap-2">
+                                    {{-- Baris atas: aksi non-destruktif (Lanjut/Lihat/Cetak) --}}
+                                    <div class="flex items-center justify-center gap-2">
                                     @if (!$isFinal && !$isFormLocked && $id)
                                         <x-primary-button type="button" wire:click="editEntry('{{ $id }}')"
                                             wire:loading.attr="disabled" wire:target="editEntry('{{ $id }}')"
@@ -1220,7 +1226,12 @@ new class extends Component {
                                             <span wire:loading wire:target="cetak('{{ $id }}')" class="flex items-center gap-1.5"><x-loading class="w-5 h-5" /> Mencetak...</span>
                                         </x-secondary-button>
                                     @endif
+                                    </div>
+
+                                    {{-- Baris bawah: aksi destruktif (Hapus) --}}
                                     @if (!$isFormLocked && $id)
+                                        <div class="flex items-center justify-center gap-2">
+                                        @can('dokumen.hapus')
                                         <x-outline-button type="button"
                                             wire:click.prevent="removeEdukasiTerintegrasiById('{{ $id }}')"
                                             wire:confirm="Hapus data edukasi terintegrasi ini?"
@@ -1232,6 +1243,8 @@ new class extends Component {
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </x-outline-button>
+                                        @endcan
+                                        </div>
                                     @endif
                                 </div>
                             </td>

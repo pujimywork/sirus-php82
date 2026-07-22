@@ -310,7 +310,7 @@ new class extends Component {
      =============================== */
     private function bolehBukaKunci(): bool
     {
-        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
+        return (bool) auth()->user()?->can('dokumen.bukaKunci');
     }
 
     public function bukaKunci(): void
@@ -793,17 +793,38 @@ new class extends Component {
                     </x-secondary-button>
 
                     @if ($rjNo)
-                        <x-secondary-button wire:click="cetak" wire:loading.attr="disabled" wire:target="cetak"
-                            class="gap-2">
-                            <span wire:loading.remove wire:target="cetak" class="flex items-center gap-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                </svg>
-                                Cetak
-                            </span>
-                            <span wire:loading wire:target="cetak" class="flex items-center gap-1"><x-loading /> Mencetak...</span>
-                        </x-secondary-button>
+                        <div class="flex flex-col items-center gap-2">
+                            {{-- Baris atas: Cetak --}}
+                            <div class="flex items-center justify-center gap-2">
+                                <x-secondary-button wire:click="cetak" wire:loading.attr="disabled" wire:target="cetak"
+                                    class="gap-2">
+                                    <span wire:loading.remove wire:target="cetak" class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                        </svg>
+                                        Cetak
+                                    </span>
+                                    <span wire:loading wire:target="cetak" class="flex items-center gap-1"><x-loading /> Mencetak...</span>
+                                </x-secondary-button>
+                            </div>
+
+                            {{-- Baris bawah: Buka Kunci --}}
+                            @if ($isFormLocked && !empty($gc['petugasPemeriksa']))
+                                <div class="flex items-center justify-center gap-2">
+                                    @can('dokumen.bukaKunci')
+                                        <x-confirm-button action="bukaKunci()"
+                                            title="Buka Kunci General Consent"
+                                            message="TTD petugas akan dicabut &amp; form dapat diedit kembali. Lanjutkan?"
+                                            confirmText="Ya, Buka Kunci"
+                                            class="gap-1.5">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" /></svg>
+                                            Buka Kunci
+                                        </x-confirm-button>
+                                    @endcan
+                                </div>
+                            @endif
+                        </div>
 
                         @if (!$isFormLocked)
                             <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled"
@@ -812,19 +833,6 @@ new class extends Component {
                                 <span wire:loading wire:target="save"><x-loading class="w-4 h-4" />
                                     Menyimpan...</span>
                             </x-primary-button>
-                        @endif
-
-                        @if ($isFormLocked && !empty($gc['petugasPemeriksa']))
-                            @hasanyrole('Admin|Manager Umum|Manager Medis')
-                                <x-confirm-button action="bukaKunci()"
-                                    title="Buka Kunci General Consent"
-                                    message="TTD petugas akan dicabut &amp; form dapat diedit kembali. Lanjutkan?"
-                                    confirmText="Ya, Buka Kunci"
-                                    class="gap-1.5">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-8 4h10a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 012-2z" /></svg>
-                                    Buka Kunci
-                                </x-confirm-button>
-                            @endhasanyrole
                         @endif
                     @endif
                 </div>

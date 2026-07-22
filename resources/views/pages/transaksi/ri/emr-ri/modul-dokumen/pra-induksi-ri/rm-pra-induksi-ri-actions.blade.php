@@ -437,6 +437,10 @@ new class extends Component {
 
     public function hapus(string $createdAt): void
     {
+        if (!auth()->user()?->can('dokumen.hapus')) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berwenang menghapus entri.');
+            return;
+        }
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menghapus.');
             return;
@@ -769,7 +773,8 @@ new class extends Component {
                                                         @endif
                                                     </td>
                                                     <td class="px-4 py-3 text-center align-middle" @click.stop>
-                                                        <div class="flex items-center justify-center gap-2">
+                                                        <div class="flex flex-col items-center gap-2">
+                                                            <div class="flex items-center justify-center gap-2">
                                                             @if (!$isFinal && !$isFormLocked)
                                                                 <x-primary-button type="button" wire:click="editEntry('{{ $rowKey }}')" wire:loading.attr="disabled" wire:target="editEntry('{{ $rowKey }}')" class="gap-1.5" title="Lanjutkan mengisi entri ini">
                                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -794,11 +799,16 @@ new class extends Component {
                                                                 </span>
                                                                 <span wire:loading wire:target="cetak('{{ $rowKey }}')" class="flex items-center gap-1"><x-loading class="w-4 h-4" /> ...</span>
                                                             </x-secondary-button>
+                                                            </div>
                                                             @if (!$isFormLocked)
+                                                                <div class="flex items-center justify-center gap-2">
+                                                                @can('dokumen.hapus')
                                                                 <x-outline-button type="button" wire:click.prevent="hapus('{{ $rowKey }}')" wire:confirm="Yakin hapus asesmen ini?" wire:loading.attr="disabled"
                                                                     class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300" title="Hapus">
                                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                                 </x-outline-button>
+                                                                @endcan
+                                                                </div>
                                                             @endif
                                                         </div>
                                                     </td>

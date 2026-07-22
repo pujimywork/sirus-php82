@@ -53,7 +53,15 @@ Aturan yang mengikat:
 - Entri final tak boleh ditimpa: `persistEntry()` melempar RuntimeException bila targetnya final.
 - **Buka kunci** hanya mencabut `finalized` + **TTD petugas**; TTD pasien/keluarga & saksi
   DIPERTAHANKAN (tak boleh dihapus sepihak oleh staf) + audit log wajib menyebut pelakunya.
-  Gate dua lapis: `@hasanyrole` di tombol **dan** `bolehBukaKunci()` di server.
+  Gate dua lapis: `@can('dokumen.bukaKunci')` di tombol **dan** `bolehBukaKunci()` (yang mengembalikan
+  `auth()->user()?->can('dokumen.bukaKunci')`) di server.
+- **Hapus entri** juga digate: `@can('dokumen.hapus')` di tombol + guard
+  `if (!auth()->user()?->can('dokumen.hapus')) { toast; return; }` sebagai statement pertama
+  method hapus. Berlaku baik untuk draft maupun entri final.
+- **Role terpusat**: daftar role Hapus & Buka Kunci ada di **satu file** `App\Support\ModulDokumenAksiRole`
+  (konstanta `HAPUS` & `BUKA_KUNCI`, saat ini triad `Admin | Manager Umum | Manager Medis`), didaftarkan
+  sebagai Gate `dokumen.hapus` & `dokumen.bukaKunci` di `AppServiceProvider::boot()`. Menambah role =
+  ubah 1 file itu. **JANGAN** tulis `@hasanyrole('Admin|...')`/`hasAnyRole([...])` literal di modul dokumen.
 
 ## 4. Tanda tangan
 

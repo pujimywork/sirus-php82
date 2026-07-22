@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Services\AppMenu;
+use App\Support\ModulDokumenAksiRole;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +30,11 @@ class AppServiceProvider extends ServiceProvider
             || request()->isSecure()) {
             URL::forceScheme('https');
         }
+
+        // Gate aksi sensitif modul dokumen — daftar role dari satu sumber
+        // (App\Support\ModulDokumenAksiRole). Ubah role cukup di file itu.
+        Gate::define('dokumen.hapus', fn ($user) => $user->hasAnyRole(ModulDokumenAksiRole::HAPUS));
+        Gate::define('dokumen.bukaKunci', fn ($user) => $user->hasAnyRole(ModulDokumenAksiRole::BUKA_KUNCI));
 
         // Blade directive untuk render path TTD user.
         // - Standar baru: DB simpan filename saja (mis: 08052026081302.png)

@@ -553,7 +553,10 @@ new class extends Component {
                         Kunci</x-primary-button>
                 @endif
                 @if ($sudahAda)
-                    <x-primary-button wire:click="cetak">Cetak</x-primary-button>
+                    <x-primary-button wire:click="cetak" wire:loading.attr="disabled" wire:target="cetak">
+                        <span wire:loading.remove wire:target="cetak" class="flex items-center gap-1.5">Cetak</span>
+                        <span wire:loading wire:target="cetak" class="flex items-center gap-1.5"><x-loading class="w-5 h-5" /> Mencetak...</span>
+                    </x-primary-button>
                 @endif
             </div>
 
