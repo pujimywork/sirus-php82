@@ -130,19 +130,57 @@ new class extends Component {
     }
 
     /* ===============================
-     | SAVE
+     | SIMPAN DRAFT — boleh sebagian, TANPA validasi penuh (pola baku modul-dokumen).
      =============================== */
-    public function save(): void
+    public function saveDraft(): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
             return;
         }
 
+        $this->persistScreening('Simpan draft');
+    }
+
+    /* ===============================
+     | TTD PETUGAS — pola baku: aksi yang MEMVALIDASI kelengkapan (rules) lalu
+     | STEMPEL nama/kode/tgl + SIMPAN KE DB. Tak lagi cuma di memori → tak hilang
+     | saat modal ditutup tanpa simpan.
+     =============================== */
+    public function setPetugasScreening(): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        if (
+            !auth()
+                ->user()
+                ->hasAnyRole(['Perawat', 'Dokter', 'Admin'])
+        ) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak berwenang menandatangani screening.');
+            return;
+        }
+
+        // Screening wajib lengkap (rules) sebelum boleh TTD-E — field kosong memerah + toast.
+        // validate() melempar bila gagal → stempel & simpan di bawah tak jalan.
         $this->validateWithToast();
 
+        $this->dataDaftarPoliRJ['screening']['petugasScreening'] = auth()->user()->myuser_name;
+        $this->dataDaftarPoliRJ['screening']['petugasScreeningCode'] = auth()->user()->myuser_code;
+        $this->dataDaftarPoliRJ['screening']['tanggalScreening'] = now()->format('d/m/Y H:i:s');
+
+        $this->persistScreening('TTD Petugas');
+    }
+
+    /* ===============================
+     | PERSIST (bersama Draft & TTD) — lock row → re-read → patch slice screening
+     | + hitung keputusan/flag server-side (kebenaran) → tulis JSON → audit MR.
+     =============================== */
+    private function persistScreening(string $verb): void
+    {
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($verb) {
                 // 1. Lock row dulu
                 $this->lockRJRow($this->rjNo);
 
@@ -166,48 +204,19 @@ new class extends Component {
                 $this->dataDaftarPoliRJ = ['screening' => $screening];
 
                 // 4. Audit log
-                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Screening RJ — keputusan ' . ($screening['keputusan'] ?? '-'), 'MR');
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Screening RJ (' . $verb . ') — keputusan ' . ($screening['keputusan'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-screening-rj');
-            // Refresh tabel Daftar/Pelayanan RJ HANYA saat eskalasi — badge merah/kuning
-            // (IGD/Disegerakan) yang ditampilkan di list. Hasil "Aman" tak punya badge, jadi
-            // requery tabel + re-read CLOB (bikin ngadat) dilewati untuk mayoritas kasus.
-            // if (in_array($this->dataDaftarPoliRJ['screening']['keputusan'] ?? null, ['IGD', 'Disegerakan'], true)) {
-            //     $this->dispatch('refresh-after-rj.saved');
-            //}
-            $this->dispatch('toast', type: 'success', message: 'Screening berhasil disimpan.');
+            // Refresh tabel Daftar/Pelayanan RJ sengaja dilewati (perf: hindari requery + re-read CLOB).
+            $this->dispatch('toast', type: 'success', message: $verb === 'TTD Petugas'
+                ? 'Screening ditandatangani & disimpan.'
+                : 'Draft screening disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
-    }
-
-    /* ===============================
-     | ACTIONS
-     =============================== */
-    public function setPetugasScreening(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        if (
-            !auth()
-                ->user()
-                ->hasAnyRole(['Perawat', 'Dokter', 'Admin'])
-        ) {
-            $this->dispatch('toast', type: 'error', message: 'Anda tidak berwenang menandatangani screening.');
-            return;
-        }
-
-        // Screening wajib lengkap (rules) sebelum boleh TTD-E.
-        $this->validateWithToast();
-
-        $this->dataDaftarPoliRJ['screening']['petugasScreening'] = auth()->user()->myuser_name;
-        $this->dataDaftarPoliRJ['screening']['petugasScreeningCode'] = auth()->user()->myuser_code;
-        $this->dataDaftarPoliRJ['screening']['tanggalScreening'] = now()->format('d/m/Y H:i:s');
     }
 
     /* ===============================
@@ -604,16 +613,17 @@ new class extends Component {
                     <div class="flex gap-3 ml-auto">
                         <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
                         @if (!$isFormLocked)
-                            <x-primary-button wire:click.prevent="save()" wire:loading.attr="disabled">
-                                <span wire:loading.remove>
+                            <x-primary-button wire:click.prevent="saveDraft()" wire:loading.attr="disabled"
+                                wire:target="saveDraft">
+                                <span wire:loading.remove wire:target="saveDraft">
                                     <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
                                     </svg>
-                                    Simpan Screening
+                                    Simpan Draft
                                 </span>
-                                <span wire:loading><x-loading /> Menyimpan...</span>
+                                <span wire:loading wire:target="saveDraft"><x-loading /> Menyimpan...</span>
                             </x-primary-button>
                         @endif
                     </div>

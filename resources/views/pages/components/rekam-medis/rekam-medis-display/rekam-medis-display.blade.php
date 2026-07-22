@@ -612,7 +612,11 @@ new class extends Component {
                                                     </div>
 
                                                     {{-- Diagnosis & Terapi --}}
-                                                    <div class="grid grid-cols-1 gap-3 mt-3" x-data="{ expandedDx: false }">
+                                                    {{-- wire:key pada elemen x-data ini WAJIB: mengunci island Alpine
+                                                         sebagai satu unit saat morph, agar child x-show="expandedDx" tak
+                                                         terpisah dari scope-nya ("expandedDx is not defined"). --}}
+                                                    <div class="grid grid-cols-1 gap-3 mt-3" x-data="{ expandedDx: false }"
+                                                        wire:key="rmd-dx-{{ $myQData->layanan_status ?? 'x' }}-{{ $myQData->txn_no }}">
                                                         {{-- Toggle Diagnosis & ICD10 --}}
                                                         @php
                                                             $dxCount = !empty($datadaftar_json['diagnosis']) ? count($datadaftar_json['diagnosis']) : 0;
@@ -725,7 +729,8 @@ new class extends Component {
                                                                 $rmRIHasContent = trim(strip_tags($rmRI)) !== '';
                                                             @endphp
                                                             @if ($rmRIHasContent)
-                                                                <div class="p-2 rounded bg-surface-soft" x-data="{ expandedRm: false }">
+                                                                <div class="p-2 rounded bg-surface-soft" x-data="{ expandedRm: false }"
+                                                                    wire:key="rmd-rm-{{ $myQData->layanan_status ?? 'x' }}-{{ $myQData->txn_no }}">
                                                                     <button type="button" x-on:click="expandedRm = !expandedRm"
                                                                         class="flex items-center justify-between w-full text-left">
                                                                         <span class="flex items-center gap-1.5">
@@ -1093,6 +1098,7 @@ new class extends Component {
 
                                                             @if (!empty($datadaftar_json['sep']['noSep']))
                                                                 <div x-data="{ showSep: false }"
+                                                                    wire:key="rmd-sep-{{ $myQData->layanan_status ?? 'x' }}-{{ $myQData->txn_no }}"
                                                                     class="pt-2 mt-1 border-t border-hairline dark:border-gray-700">
                                                                     <button type="button" x-on:click="showSep = !showSep"
                                                                         class="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-body dark:text-gray-400 dark:hover:text-gray-200">
