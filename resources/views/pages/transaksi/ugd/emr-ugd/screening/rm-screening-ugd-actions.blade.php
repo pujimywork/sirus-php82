@@ -12,6 +12,7 @@ new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
+    public bool $isEmrLocked = false;   // kunci EMR-level (kunjungan selesai) — tak bisa dibuka dari sini
     public ?int $rjNo = null;
     public array $dataDaftarUGD = [];
 
@@ -73,7 +74,10 @@ new class extends Component {
             'screening' => is_array($screeningData) ? $screeningData : $this->getDefaultScreening(),
         ];
 
-        $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
+        // Kunci berlapis: (a) EMR-level (kunjungan selesai) → tak bisa dibuka dari sini;
+        // (b) sudah TTD petugas → terkunci, TAPI bisa "Buka Kunci" (Admin/Manager).
+        $this->isEmrLocked = $this->checkEmrUGDStatus($rjNo);
+        $this->isFormLocked = $this->isEmrLocked || filled($this->dataDaftarUGD['screening']['petugasPelayanan'] ?? '');
 
         // Sync radio properties dari data
         $sc = $this->dataDaftarUGD['screening'];
@@ -242,17 +246,23 @@ new class extends Component {
     /* ===============================
      | SAVE
      =============================== */
-    public function save(): void
+    public function saveDraft(): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
             return;
         }
 
-        $this->validateWithToast();
+        $this->persistScreening('Simpan draft');
+    }
 
+    /* ===============================
+     | PERSIST (bersama Draft & TTD) — termasuk sinkronisasi P0 ke Anamnesa & log.
+     =============================== */
+    private function persistScreening(string $verb): void
+    {
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($verb) {
                 // 1. Lock row dulu
                 $this->lockUGDRow($this->rjNo);
 
@@ -297,7 +307,7 @@ new class extends Component {
                 $this->dataDaftarUGD = ['screening' => $data['screening']];
 
                 // 4. Audit log — penetapan MAUPUN pencabutan P0 dicatat eksplisit.
-                $logText = ($isBaru ? 'Buat' : 'Update') . ' Screening UGD — prioritas ' . ($data['screening']['prioritasPelayanan'] ?? '-') . ' — saran triase ' . ($triaseSaran ?? '-');
+                $logText = ($isBaru ? 'Buat' : 'Update') . ' Screening UGD (' . $verb . ') — prioritas ' . ($data['screening']['prioritasPelayanan'] ?? '-') . ' — saran triase ' . ($triaseSaran ?? '-');
 
                 if ($isP0) {
                     $logText .= ' (MENINGGAL — dinyatakan oleh ' . ($data['screening']['dokterPenyataMeninggal'] ?: '-') . ' pukul ' . ($data['screening']['waktuMeninggal'] ?: '-') . '; triase Anamnesa di-set P0)';
@@ -310,7 +320,9 @@ new class extends Component {
 
             // 5. Notify + increment — di luar transaksi
             $this->incrementVersion('modal-screening-ugd');
-            $this->dispatch('toast', type: 'success', message: 'Screening berhasil disimpan.');
+            $this->dispatch('toast', type: 'success', message: $verb === 'TTD Petugas'
+                ? 'Screening ditandatangani & disimpan.'
+                : 'Draft screening disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
@@ -336,9 +348,73 @@ new class extends Component {
             return;
         }
 
+        // Screening wajib lengkap (rules) sebelum boleh TTD-E — field kosong memerah + toast.
+        // validate() melempar bila gagal → stempel & simpan di bawah tak jalan.
+        $this->validateWithToast();
+
         $this->dataDaftarUGD['screening']['petugasPelayanan'] = auth()->user()->myuser_name;
         $this->dataDaftarUGD['screening']['petugasPelayananCode'] = auth()->user()->myuser_code;
         $this->dataDaftarUGD['screening']['tanggalPelayanan'] = now()->format('d/m/Y H:i:s');
+
+        $this->persistScreening('TTD Petugas');
+
+        // TTD = mengunci (pola baku modul-dokumen). Buka Kunci hanya lewat bukaKunci().
+        $this->isFormLocked = true;
+    }
+
+    /* ===============================
+     | BUKA KUNCI — cabut TTD petugas → screening editable lagi.
+     | Hanya Admin / Manager Umum / Manager Medis. Tak bisa bila EMR-level terkunci.
+     |   Catatan: hanya mencabut TTD; hasil triase/P0 yang tersimpan TIDAK diubah.
+     =============================== */
+    private function bolehBukaKunci(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
+    }
+
+    public function bukaKunci(): void
+    {
+        if (!$this->bolehBukaKunci()) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin / Manager yang dapat membuka kunci.');
+            return;
+        }
+        if ($this->isEmrLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Kunjungan sudah selesai — screening read-only.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockUGDRow($this->rjNo);
+
+                $data = $this->findDataUGD($this->rjNo);
+                if (empty($data) || empty($data['screening'])) {
+                    throw new \RuntimeException('Data screening tidak ditemukan.');
+                }
+
+                // Cabut TTD petugas SAJA; isian screening & triase dipertahankan.
+                $data['screening']['petugasPelayanan'] = '';
+                $data['screening']['petugasPelayananCode'] = '';
+                $data['screening']['tanggalPelayanan'] = '';
+
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = ['screening' => $data['screening']];
+
+                $this->appendAdminLogUGD(
+                    (int) $this->rjNo,
+                    'Buka kunci Screening UGD (oleh ' . (auth()->user()->myuser_name ?? '-') . ')',
+                    'MR',
+                );
+            });
+
+            $this->isFormLocked = false;   // isEmrLocked sudah dipastikan false di atas
+            $this->incrementVersion('modal-screening-ugd');
+            $this->dispatch('toast', type: 'success', message: 'Kunci screening dibuka, silakan koreksi lalu TTD ulang.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuka kunci: ' . $e->getMessage());
+        }
     }
 
     public function setWaktuMeninggal(): void
@@ -426,6 +502,7 @@ new class extends Component {
     {
         $this->resetVersion();
         $this->isFormLocked = false;
+        $this->isEmrLocked = false;
         $this->dataDaftarUGD = [];
         $this->pernafasan = '';
         $this->kesadaran = '';
@@ -786,17 +863,34 @@ new class extends Component {
                 <div class="flex justify-end gap-3">
                     <div class="flex gap-3 ml-auto">
                         <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
+
+                        {{-- Terkunci oleh TTD (bukan EMR-level) → Admin/Manager boleh Buka Kunci --}}
+                        @if ($isFormLocked && !$isEmrLocked)
+                            @hasanyrole('Admin|Manager Umum|Manager Medis')
+                                <x-confirm-button action="bukaKunci" title="Buka Kunci Screening"
+                                    message="TTD petugas akan dicabut & screening kembali bisa diedit. Hasil triase/P0 yang tersimpan tidak diubah. Lanjutkan?"
+                                    confirmText="Ya, Buka Kunci" class="gap-1.5">
+                                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                    </svg>
+                                    Buka Kunci
+                                </x-confirm-button>
+                            @endhasanyrole
+                        @endif
+
                         @if (!$isFormLocked)
-                            <x-primary-button wire:click.prevent="save()" wire:loading.attr="disabled">
-                                <span wire:loading.remove>
+                            <x-primary-button wire:click.prevent="saveDraft()" wire:loading.attr="disabled"
+                                wire:target="saveDraft">
+                                <span wire:loading.remove wire:target="saveDraft">
                                     <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
                                     </svg>
-                                    Simpan Screening
+                                    Simpan Draft
                                 </span>
-                                <span wire:loading><x-loading /> Menyimpan...</span>
+                                <span wire:loading wire:target="saveDraft"><x-loading /> Menyimpan...</span>
                             </x-primary-button>
                         @endif
                     </div>

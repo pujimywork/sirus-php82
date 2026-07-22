@@ -11,6 +11,7 @@ new class extends Component {
     use EmrRJTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
+    public bool $isEmrLocked = false;   // kunci EMR-level (kunjungan selesai) — tak bisa dibuka dari sini
     public ?int $rjNo = null;
     public array $dataDaftarPoliRJ = [];
 
@@ -67,10 +68,13 @@ new class extends Component {
             'screening' => is_array($screeningData) ? $screeningData : $this->getDefaultScreeningRJ(),
         ];
 
-        $this->isFormLocked = $this->checkEmrRJStatus($rjNo);
+        // Kunci berlapis: (a) EMR-level (kunjungan selesai) → tak bisa dibuka dari sini;
+        // (b) sudah TTD petugas → terkunci, TAPI bisa "Buka Kunci" (Admin/Manager).
+        $screening = $this->dataDaftarPoliRJ['screening'];
+        $this->isEmrLocked = $this->checkEmrRJStatus($rjNo);
+        $this->isFormLocked = $this->isEmrLocked || filled($screening['petugasScreening'] ?? '');
 
         // Sync radio properties dari data
-        $screening = $this->dataDaftarPoliRJ['screening'];
         $this->kesadaran = $screening['kesadaran'] ?? '';
         $this->pernafasan = $screening['pernafasan'] ?? '';
         $this->nyeriDada = $screening['nyeriDada'] ?? '';
@@ -171,6 +175,63 @@ new class extends Component {
         $this->dataDaftarPoliRJ['screening']['tanggalScreening'] = now()->format('d/m/Y H:i:s');
 
         $this->persistScreening('TTD Petugas');
+
+        // TTD = mengunci (pola baku modul-dokumen). Buka Kunci hanya lewat bukaKunci().
+        $this->isFormLocked = true;
+    }
+
+    /* ===============================
+     | BUKA KUNCI — cabut TTD petugas → screening editable lagi.
+     | Hanya Admin / Manager Umum / Manager Medis. Tak bisa bila EMR-level terkunci.
+     =============================== */
+    private function bolehBukaKunci(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
+    }
+
+    public function bukaKunci(): void
+    {
+        if (!$this->bolehBukaKunci()) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin / Manager yang dapat membuka kunci.');
+            return;
+        }
+        if ($this->isEmrLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Kunjungan sudah selesai — screening read-only.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockRJRow($this->rjNo);
+
+                $data = $this->findDataRJ($this->rjNo);
+                if (empty($data) || empty($data['screening'])) {
+                    throw new \RuntimeException('Data screening tidak ditemukan.');
+                }
+
+                // Cabut TTD petugas SAJA; isian screening dipertahankan.
+                $data['screening']['petugasScreening'] = '';
+                $data['screening']['petugasScreeningCode'] = '';
+                $data['screening']['tanggalScreening'] = '';
+
+                $this->updateJsonRJ((int) $this->rjNo, $data);
+                $this->dataDaftarPoliRJ = ['screening' => $data['screening']];
+
+                $this->appendAdminLogRJ(
+                    (int) $this->rjNo,
+                    'Buka kunci Screening RJ (oleh ' . (auth()->user()->myuser_name ?? '-') . ')',
+                    'MR',
+                );
+            });
+
+            $this->isFormLocked = false;   // isEmrLocked sudah dipastikan false di atas
+            $this->incrementVersion('modal-screening-rj');
+            $this->dispatch('toast', type: 'success', message: 'Kunci screening dibuka, silakan koreksi lalu TTD ulang.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuka kunci: ' . $e->getMessage());
+        }
     }
 
     /* ===============================
@@ -323,6 +384,7 @@ new class extends Component {
     {
         $this->resetVersion();
         $this->isFormLocked = false;
+        $this->isEmrLocked = false;
         $this->dataDaftarPoliRJ = [];
         $this->kesadaran = '';
         $this->pernafasan = '';
@@ -612,6 +674,22 @@ new class extends Component {
                 <div class="flex justify-end gap-3">
                     <div class="flex gap-3 ml-auto">
                         <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
+
+                        {{-- Terkunci oleh TTD (bukan EMR-level) → Admin/Manager boleh Buka Kunci --}}
+                        @if ($isFormLocked && !$isEmrLocked)
+                            @hasanyrole('Admin|Manager Umum|Manager Medis')
+                                <x-confirm-button action="bukaKunci" title="Buka Kunci Screening"
+                                    message="TTD petugas akan dicabut & screening kembali bisa diedit. Lanjutkan?"
+                                    confirmText="Ya, Buka Kunci" class="gap-1.5">
+                                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                    </svg>
+                                    Buka Kunci
+                                </x-confirm-button>
+                            @endhasanyrole
+                        @endif
+
                         @if (!$isFormLocked)
                             <x-primary-button wire:click.prevent="saveDraft()" wire:loading.attr="disabled"
                                 wire:target="saveDraft">
