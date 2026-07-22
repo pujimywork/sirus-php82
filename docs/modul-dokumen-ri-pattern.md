@@ -169,3 +169,23 @@ Pola viewer read-only (Lihat = render blade cetak ke iframe) ada di
    → viewer **self-contained**: pakai `dvPasien/dvTtdPath/dvIdentitasRs/renderDokumenPreview`
    + `buildData()` yang meniru `cetak()` komponen EMR. Taruh peta label di
    `App\Support\<Dok>Options::labels()` supaya satu sumber untuk semua jalur.
+
+## 11. Penanda tab (badge "ada data")
+
+Tiap `<x-tab>` di hub `modul-dokumen-<jalur>.blade.php` **wajib** menampilkan badge saat
+dokumennya sudah ada isi — supaya user tahu tab mana yang berisi tanpa membukanya. Hub sudah
+memegang seluruh JSON EMR di `$dataDaftarRi` / `$dataDaftarUGD` / `$dataDaftarPoliRJ`, jadi badge
+membaca langsung dari `$dataDaftar<Jalur>['<jsonKey>']`. Sisipkan **sebelum `</x-tab>`**, gaya
+seragam `<x-badge variant="success" class="text-[10px] px-1.5 py-0">…</x-badge>`.
+
+| Tipe dokumen | Guard | Isi badge |
+|---|---|---|
+| **multi** (array entri) | `@if (count($key ?? []) > 0)` | `{{ count($key) }}` (angka) |
+| **single** (satu objek) | `@if (!empty($key['signature']))` / `['isFinal']` | `&#10003;` (atau `TTD`) |
+| **dual** (mis. `formMPP`) | `@if ($n > 0)` dgn `$n = count(formA)+count(formB)` | `{{ $n }}` |
+| **umbrella** (tab berisi banyak sub-dok, mis. Pelayanan Bedah / VK) | `@if (collect([...childKeys])->first(fn($k) => !empty($dataDaftar<Jalur>[$k])))` | `&#10003;` |
+
+Contoh (multi): `@if (count($dataDaftarRi['informConsentPasienRI'] ?? []) > 0) <x-badge …>{{ count($dataDaftarRi['informConsentPasienRI']) }}</x-badge> @endif`.
+Contoh (umbrella): daftar semua child key dokumen di dalam tab (Pelayanan Bedah = 8 dok bedah/anestesi;
+VK/Kebidanan = 11 dok obstetri/neonatal) lalu `->first(...)` → `&#10003;` bila salah satu ada data.
+`suket` (RJ/UGD) = container dua sub-key single → `!empty($key['suketSehat']) || !empty($key['suketIstirahat'])`.

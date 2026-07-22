@@ -106,6 +106,9 @@ new class extends Component {
                                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                             General Consent
+                            @if (!empty($dataDaftarRi['generalConsentPasienRI']['signature']))
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">&#10003;</x-badge>
+                            @endif
                         </x-tab>
 
                         <x-tab variant="underline" active-expr="activeTab === 'penundaanPelayanan'"
@@ -115,6 +118,9 @@ new class extends Component {
                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Penundaan Pelayanan
+                            @if (count($dataDaftarRi['penundaanPelayananRI'] ?? []) > 0)
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">{{ count($dataDaftarRi['penundaanPelayananRI']) }}</x-badge>
+                            @endif
                         </x-tab>
 
                         {{-- Permintaan Kerohanian dihapus dari modul-dokumen RI: kebutuhan
@@ -128,6 +134,9 @@ new class extends Component {
                                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                             Akhir Hayat
+                            @if (count($dataDaftarRi['pengkajianAkhirHayatRI'] ?? []) > 0)
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">{{ count($dataDaftarRi['pengkajianAkhirHayatRI']) }}</x-badge>
+                            @endif
                         </x-tab>
 
                         <x-tab variant="underline" active-expr="activeTab === 'permintaanDarah'"
@@ -137,6 +146,9 @@ new class extends Component {
                                     d="M12 3l5.5 6.5a5.5 5.5 0 11-11 0L12 3z" />
                             </svg>
                             Permintaan Darah
+                            @if (count($dataDaftarRi['permintaanDarahRI'] ?? []) > 0)
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">{{ count($dataDaftarRi['permintaanDarahRI']) }}</x-badge>
+                            @endif
                         </x-tab>
 
                         <x-tab variant="underline" active-expr="activeTab === 'informConsent'"
@@ -147,6 +159,9 @@ new class extends Component {
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             Inform Consent
+                            @if (count($dataDaftarRi['informConsentPasienRI'] ?? []) > 0)
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">{{ count($dataDaftarRi['informConsentPasienRI']) }}</x-badge>
+                            @endif
                         </x-tab>
 
                         @hasanyrole('Perawat|Admin|MPP')
@@ -158,6 +173,10 @@ new class extends Component {
                                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                                 Case Manager (MPP)
+                                @php $jumlahMpp = count($dataDaftarRi['formMPP']['formA'] ?? []) + count($dataDaftarRi['formMPP']['formB'] ?? []); @endphp
+                                @if ($jumlahMpp > 0)
+                                    <x-badge variant="success" class="text-[10px] px-1.5 py-0">{{ $jumlahMpp }}</x-badge>
+                                @endif
                             </x-tab>
                         @endhasanyrole
 
@@ -169,6 +188,9 @@ new class extends Component {
                                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                             </svg>
                             Edukasi Pasien
+                            @if (count($dataDaftarRi['edukasiPasien'] ?? []) > 0)
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">{{ count($dataDaftarRi['edukasiPasien']) }}</x-badge>
+                            @endif
                         </x-tab>
 
                         <x-tab variant="underline" active-expr="activeTab === 'edukasiTerintegrasi'"
@@ -179,6 +201,9 @@ new class extends Component {
                                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             Edukasi Terintegrasi
+                            @if (count($dataDaftarRi['edukasiPasienTerintegrasi'] ?? []) > 0)
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">{{ count($dataDaftarRi['edukasiPasienTerintegrasi']) }}</x-badge>
+                            @endif
                         </x-tab>
 
                         <x-tab variant="underline" active-expr="activeTab === 'pindahRuang'"
@@ -189,6 +214,9 @@ new class extends Component {
                                     d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
                             Pindah Antar Ruang
+                            @if (count($dataDaftarRi['formPindahAntarRuangRI'] ?? []) > 0)
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">{{ count($dataDaftarRi['formPindahAntarRuangRI']) }}</x-badge>
+                            @endif
                         </x-tab>
 
                         <x-tab variant="underline" active-expr="activeTab === 'pelayananBedah'"
@@ -198,6 +226,9 @@ new class extends Component {
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             Pelayanan Bedah
+                            @if (collect(['pengkajianPreOpRI', 'praAnestesiRI', 'siteMarkingRI', 'praInduksiRI', 'laporanOperasiRI', 'laporanAnestesiRI', 'pascaAnestesiRI', 'instruksiPascaBedahRI'])->first(fn($k) => !empty($dataDaftarRi[$k])))
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">&#10003;</x-badge>
+                            @endif
                         </x-tab>
 
                         <x-tab variant="underline" active-expr="activeTab === 'vkKebidanan'"
@@ -206,6 +237,9 @@ new class extends Component {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                             VK / Kebidanan
+                            @if (collect(['pengkajianAwalObstetriRI', 'riwayatObstetriRI', 'observasiPersalinanRI', 'laporanPersalinanRI', 'indikatorScRI', 'observasiNifasRI', 'pengkajianAwalGinekologiRI', 'pengkajianAwalBayiRI', 'pengkajianNeonatalPerawatRI', 'identifikasiBayiRI', 'catatanTerapiNeonatalRI'])->first(fn($k) => !empty($dataDaftarRi[$k])))
+                                <x-badge variant="success" class="text-[10px] px-1.5 py-0">&#10003;</x-badge>
+                            @endif
                         </x-tab>
 
                         {{-- Surat Kematian — tab hanya muncul bila status pulang di Perencanaan
