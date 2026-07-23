@@ -1270,7 +1270,7 @@ TXT,
                             <div class="ds-card-outline" style="padding:20px">
                                 <div class="ds-title-sm mb-2">Kelengkapan EMR</div>
                                 <ul class="ds-body-sm space-y-1.5" style="list-style:disc; padding-left:18px">
-                                    <li><span class="ds-code">EmrCompletenessRJTrait::calculateEmrPercentRJ()</span> — bobot S15/O25/A25/P25/N10</li>
+                                    <li><span class="ds-code">EmrCompletenessRJTrait::calculateEmrPercentRJ()</span> — bobot S15/O20/A25/P20/N10/K10 (K = koding SNOMED)</li>
                                     <li>Ditampilkan sebagai progress di list (info-kelengkapan-emr)</li>
                                     <li>RI bobotnya beda (+CPPT &amp; keperawatan) — jangan samakan lintas jalur</li>
                                 </ul>
@@ -1748,8 +1748,8 @@ TXT,
                                             </tr>
                                             <tr>
                                                 <td class="ds-td-strong">Kelengkapan</td>
-                                                <td class="ds-td-class">EmrCompletenessRJTrait<br><span class="ds-body-sm">S15 / O25 / A25 / P25 / N10</span></td>
-                                                <td class="ds-td-class">EmrCompletenessUGDTrait</td>
+                                                <td class="ds-td-class">EmrCompletenessRJTrait<br><span class="ds-body-sm">S15 / O20 / A25 / P20 / N10 / K10</span></td>
+                                                <td class="ds-td-class">EmrCompletenessUGDTrait<br><span class="ds-body-sm">S15 / O15 / A20 / P15 / N10 / T15 / K10</span></td>
                                                 <td class="ds-td-class">EmrCompletenessRITrait <span class="ds-body-sm">(bobot beda: + CPPT &amp; keperawatan)</span></td>
                                             </tr>
                                             <tr>

@@ -6,11 +6,12 @@ namespace App\Http\Traits\Txn\Rj;
  * Hitung persentase kelengkapan EMR RJ dari JSON datadaftarpolirj_json.
  *
  * Bobot section (weighted):
- *   S — Anamnesa     15%
- *   O — Pemeriksaan  25%
- *   A — Diagnosa     25%
- *   P — Perencanaan  25%
- *   N — Penilaian    10%
+ *   S — Anamnesa       15%
+ *   O — Pemeriksaan    20%
+ *   A — Diagnosa       25%
+ *   P — Perencanaan    20%
+ *   N — Penilaian      10%
+ *   K — Koding SNOMED  10%
  *
  * Aturan "terisi":
  *   - Field "screening" (alergi, riwayat penyakit dahulu) — boleh berisi
@@ -26,7 +27,7 @@ namespace App\Http\Traits\Txn\Rj;
 trait EmrCompletenessRJTrait
 {
     /**
-     * @return array{emr: int, sections: array{s: int, o: int, a: int, p: int, n: int}}
+     * @return array{emr: int, sections: array{s: int, o: int, a: int, p: int, n: int, k: int}}
      */
     public function calculateEmrPercentRJ(array $json): array
     {
@@ -35,8 +36,9 @@ trait EmrCompletenessRJTrait
         $a = $this->scoreDiagnosaRJ($json);
         $p = $this->scorePerencanaanRJ($json['perencanaan'] ?? []);
         $n = $this->scorePenilaianRJ($json['penilaian'] ?? []);
+        $k = $this->scoreSnomedRJ($json['anamnesa'] ?? []);
 
-        $total = ($s * 0.15) + ($o * 0.25) + ($a * 0.25) + ($p * 0.25) + ($n * 0.10);
+        $total = ($s * 0.15) + ($o * 0.20) + ($a * 0.25) + ($p * 0.20) + ($n * 0.10) + ($k * 0.10);
 
         return [
             'emr' => (int) round($total),
@@ -46,6 +48,7 @@ trait EmrCompletenessRJTrait
                 'a' => (int) round($a),
                 'p' => (int) round($p),
                 'n' => (int) round($n),
+                'k' => (int) round($k),
             ],
         ];
     }
@@ -148,6 +151,30 @@ trait EmrCompletenessRJTrait
     }
 
     /**
+     * K — Koding SNOMED: field anamnesa yang punya slot SNOMED (Keluhan Utama & Alergi)
+     * harus di-coding (snomedCode terisi), bukan sekadar free-text.
+     *
+     * PENTING: hanya field yang KONTENnya terisi yang dinilai — field kosong TIDAK
+     * ikut menyeret skor (sudah dipenalti di section Anamnesa; jangan double-penalti,
+     * dan jangan beri poin gratis untuk EMR kosong → return 0 bila belum ada konten).
+     */
+    private function scoreSnomedRJ(array $a): int
+    {
+        $fieldSnomed = [
+            ['konten' => $a['keluhanUtama']['keluhanUtama'] ?? null, 'snomedCode' => $a['keluhanUtama']['snomedCode'] ?? null],
+            ['konten' => $a['alergi']['alergi'] ?? null, 'snomedCode' => $a['alergi']['snomedCode'] ?? null],
+        ];
+
+        $fieldTerisi = array_filter($fieldSnomed, fn($field) => filled($field['konten']));
+        if (empty($fieldTerisi)) {
+            return 0; // belum ada konten yang bisa di-coding
+        }
+
+        $jumlahTerkode = array_sum(array_map(fn($field) => filled($field['snomedCode']) ? 1 : 0, $fieldTerisi));
+        return (int) round(($jumlahTerkode / count($fieldTerisi)) * 100);
+    }
+
+    /**
      * Checklist per-section: label + filled status untuk setiap field yang
      * dihitung di score* methods. Dipakai modal info-kelengkapan-emr agar
      * user tahu field mana yang sudah/belum diisi (bukan cuma % total).
@@ -177,7 +204,7 @@ trait EmrCompletenessRJTrait
             ],
             'o' => [
                 'label' => 'Pemeriksaan',
-                'weight' => 25,
+                'weight' => 20,
                 'items' => [
                     ['label' => 'Frekuensi nadi', 'filled' => filled($tv['frekuensiNadi'] ?? null)],
                     ['label' => 'Frekuensi napas', 'filled' => filled($tv['frekuensiNafas'] ?? null)],
@@ -201,7 +228,7 @@ trait EmrCompletenessRJTrait
             ],
             'p' => [
                 'label' => 'Perencanaan',
-                'weight' => 25,
+                'weight' => 20,
                 'items' => [
                     [
                         'label' => 'Terapi ATAU tindak lanjut',
@@ -216,6 +243,20 @@ trait EmrCompletenessRJTrait
                 'items' => [
                     ['label' => 'Penilaian nyeri (min 1 entry)', 'filled' => !empty($n['nyeri'])],
                     ['label' => 'Risiko jatuh (min 1 entry)', 'filled' => !empty($n['resikoJatuh'])],
+                ],
+            ],
+            'k' => [
+                'label' => 'Koding SNOMED',
+                'weight' => 10,
+                'items' => [
+                    [
+                        'label' => 'Keluhan Utama ter-coding SNOMED (bila diisi)',
+                        'filled' => blank($a['keluhanUtama']['keluhanUtama'] ?? null) || filled($a['keluhanUtama']['snomedCode'] ?? null),
+                    ],
+                    [
+                        'label' => 'Alergi ter-coding SNOMED (bila diisi)',
+                        'filled' => blank($a['alergi']['alergi'] ?? null) || filled($a['alergi']['snomedCode'] ?? null),
+                    ],
                 ],
             ],
         ];

@@ -10,7 +10,7 @@ new class extends Component {
 
     public ?int $rjNo = null;
     public array $data = [];
-    public array $pct = ['emr' => 0, 'sections' => ['s' => 0, 'o' => 0, 'a' => 0, 'p' => 0, 'n' => 0, 't' => 0]];
+    public array $pct = ['emr' => 0, 'sections' => ['s' => 0, 'o' => 0, 'a' => 0, 'p' => 0, 'n' => 0, 't' => 0, 'k' => 0]];
     public array $checklist = [];
     public array $snomed = [];
 
@@ -101,10 +101,10 @@ new class extends Component {
                                 </span>
                             </div>
                         </div>
-                        <div class="grid grid-cols-6 gap-1 p-3 text-xs text-center">
+                        <div class="grid grid-cols-7 gap-1 p-3 text-xs text-center">
                             @php
-                                $labels = ['s' => 'S', 'o' => 'O', 'a' => 'A', 'p' => 'P', 'n' => 'N', 't' => 'T'];
-                                $names  = ['s' => 'Anamnesa', 'o' => 'Pemeriksaan', 'a' => 'Diagnosa', 'p' => 'Perencanaan', 'n' => 'Penilaian', 't' => 'Triase'];
+                                $labels = ['s' => 'S', 'o' => 'O', 'a' => 'A', 'p' => 'P', 'n' => 'N', 't' => 'T', 'k' => 'K'];
+                                $names  = ['s' => 'Anamnesa', 'o' => 'Pemeriksaan', 'a' => 'Diagnosa', 'p' => 'Perencanaan', 'n' => 'Penilaian', 't' => 'Triase', 'k' => 'Koding SNOMED'];
                             @endphp
                             @foreach ($labels as $key => $letter)
                                 @php $score = $pct['sections'][$key] ?? 0; @endphp
@@ -127,7 +127,7 @@ new class extends Component {
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                                 </svg>
                                 <span class="font-semibold text-ink dark:text-gray-200">SNOMED Coding</span>
-                                <span class="text-xs text-muted dark:text-gray-400">(info — tidak masuk ke %)</span>
+                                <span class="text-xs text-muted dark:text-gray-400">(section K — 10% dari %)</span>
                             </div>
                         </div>
                         <table class="w-full text-sm">
@@ -235,8 +235,9 @@ new class extends Component {
 
                 <div class="p-3 border border-hairline rounded-lg bg-surface-soft dark:bg-gray-900/40 dark:border-gray-700">
                     <p class="text-xs text-muted dark:text-gray-400">
-                        <span class="font-semibold">SNOMED coding</span> tidak masuk perhitungan persentase, namun ditampilkan terpisah sebagai indikator kesiapan SATUSEHAT.
-                        Modul observasi/obat-cairan/rujukan/transfer bersifat opsional. Standar: <strong>Permenkes 24/2022</strong> & <strong>SNARS Ed. 1.1</strong>.
+                        <span class="font-semibold">SNOMED coding</span> (Keluhan Utama &amp; Alergi) kini masuk perhitungan persentase — bobot <strong>10%</strong> (section K).
+                        Field yang KOSONG tidak menyeret skor (dipenalti di Anamnesa); hanya field terisi yang belum di-coding yang menurunkan K. Detail kode ditampilkan terpisah (kesiapan SATUSEHAT).
+                        Modul observasi/obat-cairan/rujukan/transfer bersifat opsional. Standar: <strong>Permenkes 24/2022</strong> &amp; <strong>SNARS Ed. 1.1</strong>.
                     </p>
                 </div>
 
