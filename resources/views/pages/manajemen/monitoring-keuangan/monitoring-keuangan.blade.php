@@ -100,7 +100,33 @@ new class extends Component {
             </div>
 
             {{-- ═══════════════════════════════════════════════════════ --}}
-            {{-- SECTION 2: KAS & BANK (placeholder)                     --}}
+            {{-- SECTION 2: PIUTANG PASIEN                               --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            <div class="max-w-3xl mx-auto">
+                <h3 class="mb-3 text-sm font-semibold tracking-wider text-muted uppercase dark:text-gray-400">
+                    Piutang Pasien
+                </h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <a href="{{ route('manajemen.rs.tu.piutang-pasien') }}" wire:navigate
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-rose-50 text-rose-700 group-hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="font-semibold text-ink dark:text-gray-100">Piutang Pasien (Cicilan / Bon)</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
+                                Daftar transaksi belum lunas (Hutang/bon) &mdash; RJ, UGD &amp; RI, sisa piutang per pasien
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            {{-- SECTION 3: KAS & BANK (placeholder)                     --}}
             {{-- ═══════════════════════════════════════════════════════ --}}
             <div class="max-w-3xl mx-auto">
                 <h3 class="mb-3 text-sm font-semibold tracking-wider text-muted uppercase dark:text-gray-400">
