@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
@@ -17,18 +18,27 @@ new class extends Component {
     /* -------------------------
      | Filter & Pagination state
      * ------------------------- */
+    // Filter dipersist per-tab (Session) supaya tak reset saat pindah tab di /transaksi/apotek
+    // (komponen anak di-unmount/remount oleh @if tab). Key di-namespace 'apotek-rj-*'.
+    #[Session(key: 'apotek-rj-searchKeyword')]
     public string $searchKeyword = '';
+    #[Session(key: 'apotek-rj-filterTanggal')]
     public string $filterTanggal = '';
+    #[Session(key: 'apotek-rj-filterTaskId7')]
     public string $filterTaskId7 = 'N'; // '' | 'Y' (sudah serah obat) | 'N' (belum, default)
+    #[Session(key: 'apotek-rj-filterKlaim')]
     public string $filterKlaim = ''; // '' | 'BPJS' | 'UMUM' — pakai klaim_status (JM dianggap BPJS)
+    #[Session(key: 'apotek-rj-filterDokter')]
     public string $filterDokter = '';
+    #[Session(key: 'apotek-rj-itemsPerPage')]
     public int $itemsPerPage = 10;
     public string $autoRefresh = 'Ya';
 
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
-        $this->filterTanggal = Carbon::now()->format('d/m/Y');
+        // Hanya default ke hari ini bila belum ada nilai tersimpan (Session) — jaga filter saat remount.
+        $this->filterTanggal = $this->filterTanggal ?: Carbon::now()->format('d/m/Y');
     }
 
     /* -------------------------

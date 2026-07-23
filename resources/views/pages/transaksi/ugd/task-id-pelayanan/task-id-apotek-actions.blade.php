@@ -20,7 +20,7 @@ use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
  * Sebelumnya komponen ini di-mount per baris dengan prop #[Reactive] → saat list
  * re-render pasca 'refresh-after-apotek.saved', semua child reactive ikut satu
  * batch → TooManyComponents saat baris banyak. Dengan mount sekali, batch tak lagi
- * skala jumlah baris. Tombol Batal (task-id-99) tetap terpisah.
+ * skala jumlah baris.
  *
  * ⚠️ Logika tiap aksi (lock → find → guard idempoten → penomoran noAntrianApotek
  *    anti-race → updateJson) IDENTIK versi lama.

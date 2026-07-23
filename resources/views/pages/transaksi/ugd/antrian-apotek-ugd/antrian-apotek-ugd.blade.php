@@ -5,6 +5,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Support\OracleLob;
@@ -16,18 +17,26 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['antrian-apotek-toolbar'];
 
+    // Filter dipersist per-tab (Session) supaya tak reset saat pindah tab di /transaksi/apotek.
+    #[Session(key: 'apotek-ugd-searchKeyword')]
     public string $searchKeyword = '';
+    #[Session(key: 'apotek-ugd-filterTanggal')]
     public string $filterTanggal = '';
+    #[Session(key: 'apotek-ugd-filterTaskId7')]
     public string $filterTaskId7 = 'N'; // '' | 'Y' (sudah serah obat) | 'N' (belum, default)
+    #[Session(key: 'apotek-ugd-filterKlaim')]
     public string $filterKlaim = ''; // '' | 'BPJS' | 'UMUM' — pakai klaim_status (JM dianggap BPJS)
+    #[Session(key: 'apotek-ugd-filterDokter')]
     public string $filterDokter = '';
+    #[Session(key: 'apotek-ugd-itemsPerPage')]
     public int $itemsPerPage = 10;
     public string $autoRefresh = 'Ya';
 
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
-        $this->filterTanggal = Carbon::now()->format('d/m/Y');
+        // Hanya default ke hari ini bila belum ada nilai tersimpan (Session) — jaga filter saat remount.
+        $this->filterTanggal = $this->filterTanggal ?: Carbon::now()->format('d/m/Y');
     }
 
     public function updatedSearchKeyword(): void
@@ -201,7 +210,6 @@ new class extends Component {
 
             $row->task_id6 = $json['taskIdPelayanan']['taskId6'] ?? null;
             $row->task_id7 = $json['taskIdPelayanan']['taskId7'] ?? null;
-            $row->task_id99 = $json['taskIdPelayanan']['taskId99'] ?? null;
 
             $row->status_resep = $json['statusResep']['status'] ?? null;
             $row->status_resep_label = match ($row->status_resep) {
@@ -588,19 +596,6 @@ new class extends Component {
                                         @else
                                         <div class="flex flex-col gap-2">
 
-                                            {{-- Batal — Admin only (UGD-specific). Tombol di sini; logika di host
-                                                 task-id-99 (mount 1×). wire:click="$dispatch(...)" = aksi Livewire. --}}
-                                            @role('Admin')
-                                                <div class="flex justify-end">
-                                                    <x-danger-button type="button"
-                                                        wire:click="$dispatch('task-id-batal-proses-ugd', { rjNo: {{ $row->rj_no }} })"
-                                                        class="!px-2 !py-1 text-xs {{ $row->task_id99 ? '!opacity-60' : '' }}"
-                                                        title="{{ $row->task_id99 ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk membatalkan antrian (hanya bisa sebelum TaskId6/7)' }}">
-                                                        Batal
-                                                    </x-danger-button>
-                                                </div>
-                                            @endrole
-
                                             {{-- Row 1: [grid T6 T7] | [Telaah] --}}
                                             <div class="grid grid-cols-2 gap-2">
                                                 {{-- Group T6+T7 (sub-grid 2 kolom) --}}
@@ -727,12 +722,6 @@ new class extends Component {
              dispatch 'task-id-apotek-proses-ugd' ke sini via wire:click. --}}
         <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-apotek-actions
             wire:key="task-id-apotek-actions-ugd-host" />
-
-        {{-- Host aksi Batal (task-id-99) — mount 1×, Admin only. --}}
-        @role('Admin')
-            <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-99
-                wire:key="task-id-99-ugd-host" />
-        @endrole
 
         <livewire:pages::transaksi.ugd.antrian-apotek-ugd.antrian-apotek-ugd-actions
             wire:key="antrian-apotek-ugd-actions" />
