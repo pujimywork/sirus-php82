@@ -221,6 +221,51 @@ Pola standar untuk halaman daftar data master.
 
 ---
 
+## 3b. Kolom Pasien di List Transaksi — namespace `x-list.*`
+
+Komponen baris tabel/list **layar** dikumpulkan di `resources/views/components/list/`
+→ dipakai sebagai `<x-list.*>`. Namespace ini **paralel** dgn `<x-pdf.*>` (versi cetak):
+`x-list.*` = tampilan list layar, `x-pdf.*` = cetak. Jangan buat markup identitas/SEP
+inline lagi di halaman — pakai komponen ini supaya satu perubahan berlaku semua list.
+
+### `<x-list.identitas-pasien>` — blok identitas pasien (layar)
+
+Acuan tampilan: `transaksi/rj/pelayanan-rj`. Urutan baku 4 baris:
+**No RM → Nama + ikon gender → tgl lahir (umur) → alamat**.
+
+```blade
+<x-list.identitas-pasien :regNo="$row->reg_no" :nama="$row->reg_name" :sex="$row->sex"
+    :tglLahir="$row->birth_date" :alamat="$row->address" :collapseUmur="true" />
+```
+
+- **Umur SELALU dihitung dari `:tglLahir`** (birth_date, format d/m/Y) DI DALAM komponen —
+  satu format `X Thn Y Bln Z Hr`, dijamin fresh (bukan kolom snapshot thn/bln/hari).
+  Jangan hitung umur di halaman lalu oper `:umur` — biarkan komponen. `:umur` hanya
+  override opsional.
+- **Gender = simbol**: `♂` biru (L) / `♀` rose (P), bukan teks; `title`/`aria-label` utk aksesibilitas.
+- `:collapseUmur="true"` → baris tgl-lahir/umur ikut toggle Alpine `expanded` (list yg punya
+  detail: daftar/pelayanan RJ-UGD). Default `false` = umur selalu tampil.
+- **Slot** (opsional) utk baris tambahan spesifik halaman (mis. `Masuk: ...` di kasir,
+  badge jenis resep di apotek): taruh di antara tag buka/tutup, dirender setelah alamat.
+- Class wrapper default `space-y-0 leading-tight`; JANGAN oper `class="space-y-1"` (konflik
+  precedence Tailwind). Oper hanya `class="min-w-0"` bila perlu.
+- Beda dari `<x-pdf.identitas-pasien>` (cetak, berbasis `<table>`).
+
+### `<x-list.sep-spri>` — nomor SEP & SPRI
+
+```blade
+<x-list.sep-spri :sep="$row->vno_sep" :spri="$row->no_spri" />
+```
+
+- **SEP** → `font-mono text-xs text-emerald-600 dark:text-emerald-400` (hijau, non-bold).
+- **SPRI** → `font-mono text-xs text-purple-600 dark:text-purple-400` (ungu). SPRI = Surat
+  Perintah Rawat **Inap**, hanya relevan jalur RI; di RJ/UGD cukup oper `:sep` saja.
+- Tampil hanya bila ada nilainya; `'-'`/kosong disembunyikan.
+- Pakai di **kolom SEP list**. JANGAN pakai di modal detail / header EMR (`display-pasien-*`)
+  / pesan status casemix — itu konteks lain.
+
+---
+
 ## 4. Input Harga / Tarif (`<x-text-input-number>`)
 
 Semua field yang berisi nominal uang (harga, tarif, gaji, biaya) **wajib** menggunakan `<x-text-input-number>`.
