@@ -4,8 +4,8 @@ README standarisasi pengkodingan & UI/UX untuk semua modul di `resources/views/p
 Tujuan: kode ringkas, seragam, dan mudah diaudit programmer lain — cukup hafal SATU pola.
 
 **Acuan kanonik: `master-agama`** (`resources/views/pages/master/master-agama/`) — implementasi
-terbersih generasi design-system `ds-*`. Halaman style guide hidup: route `/standarisasi-ui`.
-Versi tutorial interaktif (per-submenu, gaya docs Livewire): route `/standarisasi-ui/koding-master`.
+terbersih generasi design-system `ds-*`. Halaman style guide hidup: route `/panduan-dev`.
+Versi tutorial interaktif (per-submenu, gaya docs Livewire): route `/panduan-dev/koding-master`.
 
 > Dokumen ini memakai token generasi baru (`ds-table`, `bg-surface-soft`, `border-hairline`,
 > `x-action-edit/delete`). Contoh markup di `standar-ui-komponen.md` §3 dan `page-frame-pattern.md`
@@ -309,7 +309,7 @@ Modul yang sudah 100% sesuai: `master-agama`, `master-stocklocations`, `master-a
 | Apa | Di mana |
 |---|---|
 | Template kanonik | `resources/views/pages/master/master-agama/` |
-| Style guide hidup | route `/standarisasi-ui` |
+| Style guide hidup | route `/panduan-dev` |
 | Token & kelas `ds-*` | `resources/css/app.css` (sumber warna: `tailwind.config.cjs`) |
 | `x-action-edit` / `x-action-delete` | `resources/views/components/action-{edit,delete}.blade.php` |
 | `x-toolbar-refresh-reset` | `resources/views/components/toolbar-refresh-reset.blade.php` |

@@ -119,14 +119,16 @@ new class extends Component {
                             <a href="#warna" class="ds-btn ds-btn-primary">Lihat token warna</a>
                             <a href="#komponen" class="ds-btn ds-btn-secondary">Komponen</a>
                             <a href="#v2" class="ds-btn ds-btn-secondary">Standar v2</a>
-                            <a href="{{ route('standarisasi-ui.koding-master') }}" wire:navigate
+                            <a href="{{ route('panduan-dev.koding-master') }}" wire:navigate
                                 class="ds-btn ds-btn-secondary">Tutorial Koding Master →</a>
-                            <a href="{{ route('standarisasi-ui.koding-transaksi') }}" wire:navigate
+                            <a href="{{ route('panduan-dev.koding-transaksi') }}" wire:navigate
                                 class="ds-btn ds-btn-secondary">Tutorial Koding Transaksi →</a>
-                            <a href="{{ route('standarisasi-ui.koding-satusehat') }}" wire:navigate
+                            <a href="{{ route('panduan-dev.koding-satusehat') }}" wire:navigate
                                 class="ds-btn ds-btn-secondary">Tutorial Koding SATUSEHAT →</a>
-                            <a href="{{ route('standarisasi-ui.koding-administrasi') }}" wire:navigate
+                            <a href="{{ route('panduan-dev.koding-administrasi') }}" wire:navigate
                                 class="ds-btn ds-btn-secondary">Tutorial Koding Administrasi →</a>
+                            <a href="{{ route('panduan-dev.koding-skill') }}" wire:navigate
+                                class="ds-btn ds-btn-primary">Katalog Skill →</a>
                         </div>
                     </div>
 
@@ -933,7 +935,7 @@ $dispatch(<span style="color:var(--accent-amber)">'close-modal'</span>, &#123; n
                             </div>
                             {{-- tabel penuh --}}
                             <div class="overflow-hidden border rounded-xl" style="border-color:var(--hairline)">
-                                @include('pages.standarisasi-ui.partial-mock-table', ['rows' => $mockRows])
+                                @include('pages.panduan-dev.partial-mock-table', ['rows' => $mockRows])
                             </div>
                         </div>
                     </div>
@@ -968,7 +970,7 @@ $dispatch(<span style="color:var(--accent-amber)">'close-modal'</span>, &#123; n
                                     <x-toolbar-refresh-reset :label="null" />
                                 </div>
                                 <div class="overflow-hidden border rounded-xl" style="border-color:var(--hairline)">
-                                    @include('pages.standarisasi-ui.partial-mock-table', ['rows' => $mockRows])
+                                    @include('pages.panduan-dev.partial-mock-table', ['rows' => $mockRows])
                                 </div>
                             </div>
                         </div>
@@ -1000,7 +1002,7 @@ $dispatch(<span style="color:var(--accent-amber)">'close-modal'</span>, &#123; n
                                 </div>
                                 {{-- tabel scroll-x --}}
                                 <div class="overflow-hidden border rounded-xl" style="border-color:var(--hairline)">
-                                    @include('pages.standarisasi-ui.partial-mock-table', ['rows' => $mockRows, 'minWidth' => '520px'])
+                                    @include('pages.panduan-dev.partial-mock-table', ['rows' => $mockRows, 'minWidth' => '520px'])
                                 </div>
                                 <p class="mt-2 ds-body-sm" style="color:var(--muted-soft);font-size:11px">⟷ tabel di-scroll horizontal, bukan di-wrap</p>
                             </div>

@@ -344,12 +344,12 @@ TXT,
                 <div class="flex items-center gap-2">
                     <span class="ds-spike"></span>
                     <span class="ds-title-sm" style="color:var(--ink)">RSI&nbsp;Madinah</span>
-                    <a href="{{ route('standarisasi-ui') }}" wire:navigate
+                    <a href="{{ route('panduan-dev') }}" wire:navigate
                         class="ds-body-sm hover:underline" style="color:var(--muted-soft)">/ Standarisasi UI</a>
                     <span class="ds-body-sm" style="color:var(--muted-soft)">/ Koding Administrasi</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('standarisasi-ui.koding-transaksi') }}" wire:navigate
+                    <a href="{{ route('panduan-dev.koding-transaksi') }}" wire:navigate
                         class="ds-btn ds-btn-secondary" style="height:34px; padding:6px 12px; font-size:13px">← Tutorial Transaksi</a>
                     <x-theme-toggle />
                 </div>
@@ -404,7 +404,7 @@ TXT,
                     <div class="px-3 pt-4" style="border-top:1px solid var(--hairline)">
                         <div class="ds-caption" style="color:var(--muted-soft)">
                             Acuan kode: <span class="ds-code">transaksi/{rj,ugd,ri}/administrasi-*</span><br>
-                            Prasyarat: <a href="{{ route('standarisasi-ui.koding-transaksi') }}" wire:navigate
+                            Prasyarat: <a href="{{ route('panduan-dev.koding-transaksi') }}" wire:navigate
                                 class="hover:underline" style="color:var(--primary)">Tutorial Koding Transaksi</a>
                         </div>
                     </div>

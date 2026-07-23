@@ -1,4 +1,4 @@
-{{-- Tabel STANDAR (.ds-table) untuk preview Responsive di /standarisasi-ui.
+{{-- Tabel STANDAR (.ds-table) untuk preview Responsive di /panduan-dev.
      Sama persis dengan "Model tabel" — hanya ditampilkan di frame Desktop/Tablet/Mobile.
      Props: $rows = [[id, nama, kode, status(1/0)], ...], $minWidth (opsional, mis. '520px'
      untuk memicu scroll horizontal di frame sempit). --}}

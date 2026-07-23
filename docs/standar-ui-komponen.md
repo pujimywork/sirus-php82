@@ -2,6 +2,9 @@
 
 Panduan standarisasi tampilan dan penggunaan komponen Blade di seluruh aplikasi SIRUS.
 
+> 📚 Lihat juga **[Indeks Skill](skills-index.md)** — katalog 12 skill repo (aturan "baca-dulu-sebelum-X"
+> per tipe tugas: blade-safe-edit, naming-conventions, modul-dokumen, oracle-quirks, dll).
+
 ---
 
 ## 1. Struktur Modal (x-modal)

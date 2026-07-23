@@ -10,7 +10,7 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
     : '';
 @endphp
 
-{{-- Pagination ber-tema brand — gaya .ds-page-btn (sama dengan /standarisasi-ui):
+{{-- Pagination ber-tema brand — gaya .ds-page-btn (sama dengan /panduan-dev):
      tombol terpisah rounded, halaman aktif hijau brand solid. --}}
 <div>
     @if ($paginator->hasPages())

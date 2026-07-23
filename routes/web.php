@@ -28,25 +28,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     // Halaman acuan standarisasi UI (design system internal)
-    Route::livewire('/standarisasi-ui', 'pages::standarisasi-ui.standarisasi-ui')
-        ->name('standarisasi-ui');
+    Route::livewire('/panduan-dev', 'pages::panduan-dev.panduan-dev')
+        ->name('panduan-dev');
 
     // Tutorial standarisasi koding modul master (docs/standar-master-module.md versi web)
-    Route::livewire('/standarisasi-ui/koding-master', 'pages::standarisasi-ui.koding-master.koding-master')
-        ->name('standarisasi-ui.koding-master');
+    Route::livewire('/panduan-dev/koding-master', 'pages::panduan-dev.koding-master.koding-master')
+        ->name('panduan-dev.koding-master');
 
     // Tutorial standarisasi koding modul transaksi (RJ/UGD/RI: pendaftaran-pelayanan-kasir + EMR/dokumen/administrasi)
-    Route::livewire('/standarisasi-ui/koding-transaksi', 'pages::standarisasi-ui.koding-transaksi.koding-transaksi')
-        ->name('standarisasi-ui.koding-transaksi');
+    Route::livewire('/panduan-dev/koding-transaksi', 'pages::panduan-dev.koding-transaksi.koding-transaksi')
+        ->name('panduan-dev.koding-transaksi');
 
     // Tutorial standarisasi pengiriman data SATUSEHAT (FHIR R4: auth, transport, IHS,
     // urutan resource, standarisasi per-resource, peta dashboard) — docs/satusehat-api.md versi web
-    Route::livewire('/standarisasi-ui/koding-satusehat', 'pages::standarisasi-ui.koding-satusehat.koding-satusehat')
-        ->name('standarisasi-ui.koding-satusehat');
+    Route::livewire('/panduan-dev/koding-satusehat', 'pages::panduan-dev.koding-satusehat.koding-satusehat')
+        ->name('panduan-dev.koding-satusehat');
 
     // Tutorial konsep administrasi/kasir RJ/UGD/RI sampai pulang + transfer & model batal
-    Route::livewire('/standarisasi-ui/koding-administrasi', 'pages::standarisasi-ui.koding-administrasi.koding-administrasi')
-        ->name('standarisasi-ui.koding-administrasi');
+    Route::livewire('/panduan-dev/koding-administrasi', 'pages::panduan-dev.koding-administrasi.koding-administrasi')
+        ->name('panduan-dev.koding-administrasi');
+
+    // Katalog skill repo (.claude/skills/*) — versi web dari docs/skills-index.md
+    Route::livewire('/panduan-dev/koding-skill', 'pages::panduan-dev.koding-skill.koding-skill')
+        ->name('panduan-dev.koding-skill');
 
     Route::livewire('/master/poli', 'pages::master.master-poli.master-poli')
         ->name('master.poli');

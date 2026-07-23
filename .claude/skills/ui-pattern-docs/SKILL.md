@@ -7,6 +7,8 @@ description: Indeks pola UI/komponen terdokumentasi di folder docs/. Baca sebelu
 
 Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti pola yang ada agar konsisten. Baca file docs terkait sebelum implementasi.
 
+> Katalog SEMUA skill repo (12) ada di `docs/skills-index.md` — daftar skill + "baca saat".
+
 | Kebutuhan | Baca file |
 |---|---|
 | **Modul master baru / CRUD list+form** (struktur file, event, `ds-table`, `x-action-*`, ORA-02292) | `docs/standar-master-module.md` (acuan kanonik: `master-agama`) |

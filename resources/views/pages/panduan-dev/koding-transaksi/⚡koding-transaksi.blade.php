@@ -792,12 +792,12 @@ TXT,
                 <div class="flex items-center gap-2">
                     <span class="ds-spike"></span>
                     <span class="ds-title-sm" style="color:var(--ink)">RSI&nbsp;Madinah</span>
-                    <a href="{{ route('standarisasi-ui') }}" wire:navigate
+                    <a href="{{ route('panduan-dev') }}" wire:navigate
                         class="ds-body-sm hover:underline" style="color:var(--muted-soft)">/ Standarisasi UI</a>
                     <span class="ds-body-sm" style="color:var(--muted-soft)">/ Koding Transaksi</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('standarisasi-ui.koding-master') }}" wire:navigate
+                    <a href="{{ route('panduan-dev.koding-master') }}" wire:navigate
                         class="ds-btn ds-btn-secondary" style="height:34px; padding:6px 12px; font-size:13px">← Tutorial Master</a>
                     <x-theme-toggle />
                 </div>
@@ -827,7 +827,7 @@ TXT,
 
                     <div class="px-3 pt-4" style="border-top:1px solid var(--hairline)">
                         <div class="ds-caption" style="color:var(--muted-soft)">
-                            Prasyarat: <a href="{{ route('standarisasi-ui.koding-master') }}" wire:navigate
+                            Prasyarat: <a href="{{ route('panduan-dev.koding-master') }}" wire:navigate
                                 class="hover:underline" style="color:var(--primary)">Tutorial Koding Master</a><br>
                             Acuan jalur terlengkap: <span class="ds-code">transaksi/rj</span>
                         </div>
@@ -1927,7 +1927,7 @@ TXT,
                             <table class="ds-table">
                                 <thead><tr><th>Topik</th><th>Baca</th></tr></thead>
                                 <tbody>
-                                    <tr><td class="ds-td-strong">Standar modul master (prasyarat)</td><td class="ds-td-class">docs/standar-master-module.md + /standarisasi-ui/koding-master</td></tr>
+                                    <tr><td class="ds-td-strong">Standar modul master (prasyarat)</td><td class="ds-td-class">docs/standar-master-module.md + /panduan-dev/koding-master</td></tr>
                                     <tr><td class="ds-td-strong">Trait API eksternal</td><td class="ds-td-class">docs/trait-template-api-eksternal.md</td></tr>
                                     <tr><td class="ds-td-strong">Bridging iDRG</td><td class="ds-td-class">docs/idrg-bridging.md</td></tr>
                                     <tr><td class="ds-td-strong">Diagnosa ICD-10</td><td class="ds-td-class">docs/diagnosa-architecture.md (+ skill diagnosa-flow)</td></tr>

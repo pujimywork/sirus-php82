@@ -799,7 +799,7 @@ TXT,
                 <div class="flex items-center gap-2">
                     <span class="ds-spike"></span>
                     <span class="ds-title-sm" style="color:var(--ink)">RSI&nbsp;Madinah</span>
-                    <a href="{{ route('standarisasi-ui') }}" wire:navigate
+                    <a href="{{ route('panduan-dev') }}" wire:navigate
                         class="ds-body-sm hover:underline" style="color:var(--muted-soft)">/ Standarisasi UI</a>
                     <span class="ds-body-sm" style="color:var(--muted-soft)">/ Koding Master</span>
                 </div>
@@ -897,7 +897,7 @@ TXT,
                             <ol class="ds-body-sm space-y-1.5" style="list-style:decimal; padding-left:18px">
                                 <li><strong>Jalankan proyek di lokal</strong> — <span class="ds-code">composer install</span> · <span class="ds-code">npm install &amp;&amp; npm run build</span> · salin <span class="ds-code">.env</span> (kredensial Oracle dev: minta ke lead) · <span class="ds-code">php artisan serve</span> · login akun dev.</li>
                                 <li><strong>Khatam tutorial ini berurutan</strong> (bab 01–14), lalu praktik <strong>satu master Level 1</strong> sampai lolos checklist bab 14.</li>
-                                <li>Lanjut <a href="{{ route('standarisasi-ui.koding-transaksi') }}" wire:navigate class="hover:underline font-semibold" style="color:var(--primary)">Tutorial Koding Transaksi</a> — mulai dari bab Alur Pasien &amp; Data Inti (JSON CLOB), baru bab tahapan.</li>
+                                <li>Lanjut <a href="{{ route('panduan-dev.koding-transaksi') }}" wire:navigate class="hover:underline font-semibold" style="color:var(--primary)">Tutorial Koding Transaksi</a> — mulai dari bab Alur Pasien &amp; Data Inti (JSON CLOB), baru bab tahapan.</li>
                                 <li>Praktik transaksi pertama lewat bab <em>Alur: Tambah Fitur</em> di tutorial transaksi — dan hafalkan bab <em>Ranjau Umum</em> + <em>Glosarium Istilah</em> di sana sebelum menyentuh kode.</li>
                             </ol>
                         </div>
@@ -1461,7 +1461,7 @@ TXT,
                                 Varian, ukuran, dan warna lengkap semua tombol:
                                 <span class="ds-code">docs/standar-komponen-tombol.md</span>.
                                 Katalog visual seluruh komponen (dgn demo interaktif): halaman
-                                <a href="{{ route('standarisasi-ui') }}" wire:navigate class="hover:underline" style="color:var(--primary)">Standarisasi UI</a>.
+                                <a href="{{ route('panduan-dev') }}" wire:navigate class="hover:underline" style="color:var(--primary)">Standarisasi UI</a>.
                             </span>
                         </div>
                     </section>
@@ -2025,7 +2025,7 @@ TXT,
                             <span class="ds-spike" style="vertical-align:middle"></span>
                             <span class="ds-body-sm" style="color:var(--body-strong)">
                                 Ingin melihat komponen aslinya hidup (bisa diklik &amp; diketik)? Buka
-                                <a href="{{ route('standarisasi-ui') }}" wire:navigate class="hover:underline" style="color:var(--primary)">halaman Standarisasi UI</a>
+                                <a href="{{ route('panduan-dev') }}" wire:navigate class="hover:underline" style="color:var(--primary)">halaman Standarisasi UI</a>
                                 — katalog interaktif seluruh komponen; halaman ini fokus ke <em>peta</em> penempatannya.
                             </span>
                         </div>
@@ -2348,7 +2348,7 @@ TXT,
                             <span class="ds-spike" style="vertical-align:middle"></span>
                             <span class="ds-body-sm" style="color:var(--body-strong)">
                                 <strong>Lanjutan:</strong> sudah khatam modul master? Lanjut ke
-                                <a href="{{ route('standarisasi-ui.koding-transaksi') }}" wire:navigate
+                                <a href="{{ route('panduan-dev.koding-transaksi') }}" wire:navigate
                                     class="hover:underline font-semibold" style="color:var(--primary)">Tutorial Koding Transaksi</a>
                                 — pendaftaran → pelayanan → kasir (RJ/UGD/RI) + EMR, modul dokumen, administrasi.
                             </span>
