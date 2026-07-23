@@ -137,23 +137,6 @@ new class extends Component {
         return $paginator;
     }
 
-    private function umur(?string $birthDate): string
-    {
-        if (! $birthDate) {
-            return '-';
-        }
-        try {
-            $diff = \Carbon\Carbon::createFromFormat('d/m/Y', $birthDate)->diff(now());
-            return "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
-        } catch (\Throwable $e) {
-            return '-';
-        }
-    }
-
-    public function with(): array
-    {
-        return ['umurFn' => fn($bd) => $this->umur($bd)];
-    }
 };
 ?>
 
@@ -214,22 +197,17 @@ new class extends Component {
                                             <td class="px-4 py-3 align-top rounded-l-2xl">
                                                 <div class="grid grid-cols-2 gap-x-4 gap-y-1">
                                                     {{-- Kolom kiri: Identitas + Lokasi --}}
-                                                    <div class="min-w-0">
-                                                        <div class="text-base font-medium text-body dark:text-gray-300">
-                                                            {{ $p->reg_no }}
-                                                        </div>
-                                                        <div class="text-lg font-semibold text-brand dark:text-white leading-tight">
-                                                            {{ $p->reg_name ?? '-' }} /
-                                                            ({{ $p->sex === 'L' ? 'Laki-Laki' : ($p->sex === 'P' ? 'Perempuan' : '-') }})
-                                                        </div>
-                                                        <div class="text-sm text-body dark:text-gray-400">
-                                                            {{ $p->birth_date ?? '-' }} <span class="text-muted">({{ $umurFn($p->birth_date) }})</span>
-                                                        </div>
+                                                    <x-list.identitas-pasien class="min-w-0"
+                                                        :regNo="$p->reg_no"
+                                                        :nama="$p->reg_name"
+                                                        :sex="$p->sex"
+                                                        :tglLahir="$p->birth_date"
+                                                        :alamat="$p->address">
                                                         <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 leading-tight mt-1">{{ $p->bangsal_name ?? '-' }}</div>
                                                         <div class="text-sm text-body dark:text-gray-300 leading-tight">
                                                             {{ $p->room_name ?? '-' }}
                                                         </div>
-                                                    </div>
+                                                    </x-list.identitas-pasien>
 
                                                     {{-- Kolom kanan: DPJP / Penerima / Masuk --}}
                                                     <div class="min-w-0">

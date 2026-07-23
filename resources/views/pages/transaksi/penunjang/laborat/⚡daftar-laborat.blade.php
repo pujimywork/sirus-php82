@@ -112,11 +112,6 @@ new class extends Component {
                 'reg_name',
                 'sex',
                 DB::raw("to_char(birth_date,'dd/mm/yyyy') as birth_date"),
-                DB::raw("CASE WHEN birth_date IS NOT NULL THEN
-                    trunc(months_between(sysdate, birth_date) / 12) || ' Thn ' ||
-                    trunc(mod(months_between(sysdate, birth_date), 12)) || ' Bln ' ||
-                    trunc(sysdate - add_months(birth_date, trunc(months_between(sysdate, birth_date)))) || ' Hr'
-                    ELSE NULL END as umur_format"),
                 'address',
                 'checkup_status',
                 'checkup_rjri',
@@ -369,24 +364,7 @@ new class extends Component {
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-4 space-y-1 align-top">
-                                        <div class="text-base font-medium text-body dark:text-gray-300">
-                                            {{ $row->reg_no ?? '-' }}
-                                        </div>
-                                        <div class="text-lg font-semibold text-brand dark:text-white">
-                                            {{ $row->reg_name ?? '-' }} /
-                                            ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                        </div>
-                                        <div class="text-sm text-body dark:text-gray-400">
-                                            {{ $row->birth_date ?? '-' }}
-                                            @if (!empty($row->umur_format))
-                                                <span class="text-muted">({{ $row->umur_format }})</span>
-                                            @endif
-                                        </div>
-                                        @if (!empty($row->address))
-                                            <div class="text-sm text-muted dark:text-gray-400">
-                                                {{ $row->address }}
-                                            </div>
-                                        @endif
+                                        <x-list.identitas-pasien :regNo="$row->reg_no" :nama="$row->reg_name" :sex="$row->sex" :tglLahir="$row->birth_date" :alamat="$row->address" :collapseUmur="false" />
                                     </td>
 
                                     {{-- TANGGAL / LAYANAN --}}

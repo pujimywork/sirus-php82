@@ -304,18 +304,6 @@ new class extends Component {
         $row->procedure_free_text = $json['procedureFreeText'] ?? '-';
         $row->procedure_detail = $json['procedure'] ?? null;
 
-        if (!empty($row->birth_date)) {
-            try {
-                $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                $diff = $tglLahir->diff(now());
-                $row->umur_format = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
-            } catch (\Exception $e) {
-                $row->umur_format = '-';
-            }
-        } else {
-            $row->umur_format = '-';
-        }
-
         $row->status_text = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Transfer Inap'][$row->rj_status] ?? 'Pelayanan';
         $row->status_variant = ['A' => 'warning', 'L' => 'success', 'F' => 'danger', 'I' => 'brand'][$row->rj_status] ?? 'gray';
 
@@ -531,22 +519,9 @@ new class extends Component {
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
                                         <div class="space-y-1">
-                                            <div class="text-base font-medium text-body dark:text-gray-300">
-                                                {{ $row->reg_no ?? '-' }}
-                                            </div>
-                                            <div class="text-lg font-semibold text-brand dark:text-white">
-                                                {{ $row->reg_name ?? '-' }} /
-                                                ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                            </div>
-                                            <div class="text-sm text-body dark:text-gray-400">
-                                                {{ $row->birth_date ?? '-' }}
-                                                @if (!empty($row->umur_format) && $row->umur_format !== '-')
-                                                    <span class="text-muted">({{ $row->umur_format }})</span>
-                                                @endif
-                                            </div>
-                                            <div class="text-sm text-muted dark:text-gray-400">
-                                                {{ $row->address ?? '-' }}
-                                            </div>
+                                            <x-list.identitas-pasien :regNo="$row->reg_no" :nama="$row->reg_name"
+                                                :sex="$row->sex" :tglLahir="$row->birth_date"
+                                                :alamat="$row->address" :collapseUmur="false" />
                                         </div>
                                     </td>
 
@@ -558,9 +533,7 @@ new class extends Component {
                                         <div class="text-sm text-muted dark:text-gray-400">
                                             {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
                                         </div>
-                                        <div class="font-mono text-sm text-body dark:text-gray-300">
-                                            {{ $row->vno_sep ?? '-' }}
-                                        </div>
+                                        <x-list.sep-spri :sep="$row->vno_sep" />
                                         <div class="flex flex-wrap gap-2">
                                             @if ($row->lab_status)
                                                 <x-badge variant="alternative">Laborat</x-badge>

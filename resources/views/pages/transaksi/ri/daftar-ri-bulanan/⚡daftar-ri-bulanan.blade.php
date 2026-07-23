@@ -247,18 +247,6 @@ new class extends Component {
             default => 'alternative',
         };
 
-        if (!empty($row->birth_date)) {
-            try {
-                $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                $diff = $tglLahir->diff(now());
-                $row->umur_format = "{$diff->y} Thn, {$diff->m} Bln, {$diff->d} Hr";
-            } catch (\Exception $e) {
-                $row->umur_format = '-';
-            }
-        } else {
-            $row->umur_format = '-';
-        }
-
         $row->status_text = ['I' => 'Dirawat', 'P' => 'Pulang', 'F' => 'Batal'][$row->ri_status] ?? 'RI';
         $row->status_variant = ['I' => 'brand', 'P' => 'success', 'F' => 'danger'][$row->ri_status] ?? 'gray';
 
@@ -398,25 +386,12 @@ new class extends Component {
                                     {{-- PASIEN — sama dengan daftar-ri (harian) --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
                                         <div class="flex items-start gap-4">
-                                            <div class="space-y-1 min-w-0">
-                                                <div class="text-base font-medium text-body dark:text-gray-300">
-                                                    {{ $r->reg_no ?? '-' }}
-                                                </div>
-                                                <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $r->reg_name ?? '-' }}
-                                                    /
-                                                    ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
-                                                </div>
-                                                <div class="text-base text-body dark:text-gray-400">
-                                                    {{ $r->birth_date ?? '-' }}
-                                                    @if ($r->umur_format && $r->umur_format !== '-')
-                                                        <span class="text-muted">({{ $r->umur_format }})</span>
-                                                    @endif
-                                                </div>
-                                                <div class="text-base text-muted dark:text-gray-400">
-                                                    {{ $r->address ?? '-' }}
-                                                </div>
-                                            </div>
+                                            <x-list.identitas-pasien class="min-w-0"
+                                                :regNo="$r->reg_no"
+                                                :nama="$r->reg_name"
+                                                :sex="$r->sex"
+                                                :tglLahir="$r->birth_date"
+                                                :alamat="$r->address" />
                                         </div>
                                     </td>
 
@@ -458,17 +433,7 @@ new class extends Component {
                                             <div class="space-y-2">
                                                 <x-badge :variant="$r->klaim_badge_variant">{{ $r->klaim_desc ?? $r->klaim_id ?? '-' }}</x-badge>
 
-                                                @if ($r->no_sep)
-                                                    <div class="font-mono text-xs text-muted dark:text-gray-300">
-                                                        SEP: {{ $r->no_sep }}
-                                                    </div>
-                                                @endif
-
-                                                @if ($r->no_spri)
-                                                    <div class="font-mono text-xs text-purple-600 dark:text-purple-400">
-                                                        SPRI: {{ $r->no_spri }}
-                                                    </div>
-                                                @endif
+                                                <x-list.sep-spri :sep="$r->no_sep" :spri="$r->no_spri" />
 
                                                 @if ($r->lab_status > 0 || $r->rad_status > 0)
                                                     <div class="flex gap-2 flex-wrap">

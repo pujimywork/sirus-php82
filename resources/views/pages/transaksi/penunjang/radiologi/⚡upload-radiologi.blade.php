@@ -107,19 +107,14 @@ new class extends Component {
     #[Computed]
     public function rows()
     {
-        // Kolom identitas pasien yang sama dipakai di 3 query — birth_date jadi string,
-        // umur_format dihitung di Oracle via SQL biar ringan & konsisten.
+        // Kolom identitas pasien yang sama dipakai di 3 query — birth_date jadi string;
+        // umur dihitung di komponen x-list.identitas-pasien dari birth_date.
         $pasienCols = [
             'p.reg_no',
             'p.reg_name',
             'p.sex',
             'p.address',
             DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"),
-            DB::raw("CASE WHEN p.birth_date IS NOT NULL THEN
-                trunc(months_between(sysdate, p.birth_date) / 12) || ' Thn ' ||
-                trunc(mod(months_between(sysdate, p.birth_date), 12)) || ' Bln ' ||
-                trunc(sysdate - add_months(p.birth_date, trunc(months_between(sysdate, p.birth_date)))) || ' Hr'
-                ELSE NULL END as umur_format"),
         ];
 
         // SEMUA sumber → union RJ+UGD+RI (setiap subquery difilter + ditambah waktu_sort utk urut gabungan)
@@ -689,24 +684,7 @@ new class extends Component {
                                             </span>
                                             <x-badge :variant="['RJ' => 'info', 'UGD' => 'danger', 'RI' => 'purple'][$row->src] ?? 'alternative'">{{ ['RJ' => 'Rawat Jalan', 'UGD' => 'UGD', 'RI' => 'Rawat Inap'][$row->src] ?? $row->src }}</x-badge>
                                         </div>
-                                        <div class="pt-1 text-base font-medium text-body dark:text-gray-300">
-                                            {{ $row->reg_no ?? '-' }}
-                                        </div>
-                                        <div class="text-lg font-semibold text-brand dark:text-white">
-                                            {{ $row->reg_name ?? '-' }} /
-                                            ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                        </div>
-                                        <div class="text-sm text-body dark:text-gray-400">
-                                            {{ $row->birth_date ?? '-' }}
-                                            @if (!empty($row->umur_format))
-                                                <span class="text-muted">({{ $row->umur_format }})</span>
-                                            @endif
-                                        </div>
-                                        @if (!empty($row->address))
-                                            <div class="text-sm text-muted dark:text-gray-400">
-                                                {{ $row->address }}
-                                            </div>
-                                        @endif
+                                        <x-list.identitas-pasien class="pt-1" :regNo="$row->reg_no" :nama="$row->reg_name" :sex="$row->sex" :tglLahir="$row->birth_date" :alamat="$row->address" :collapseUmur="false" />
                                     </td>
 
                                     {{-- PEMERIKSAAN --}}

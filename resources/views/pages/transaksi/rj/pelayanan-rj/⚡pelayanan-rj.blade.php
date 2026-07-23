@@ -332,18 +332,6 @@ new class extends Component {
                 $row->is_json_valid = $row->rj_no == $row->rj_no_json;
                 $row->bg_check_json = $row->is_json_valid ? 'bg-green-100' : 'bg-red-100';
 
-                if (!empty($row->birth_date)) {
-                    try {
-                        $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                        $diff = $tglLahir->diff(now());
-                        $row->umur_format = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
-                    } catch (\Exception $e) {
-                        $row->umur_format = '-';
-                    }
-                } else {
-                    $row->umur_format = '-';
-                }
-
                 // Status berdasarkan urutan Task ID (4=Masuk Poli, 5=Keluar Poli, 6=Menunggu Resep, 7=Terima Resep, 99=Batal)
                 // Batal di-detect dari Task ID 99 OR rj_status='F' (legacy dari Oracle Dev 6i / mutasi langsung)
                 $tasks = $json['taskIdPelayanan'] ?? [];
@@ -593,25 +581,9 @@ new class extends Component {
                                                     antrian
                                                 </span>
                                             </div>
-                                            <div class="space-y-0 leading-tight">
-                                                <div class="text-base font-medium text-body dark:text-gray-300">
-                                                    {{ $row->reg_no ?? '-' }}
-                                                </div>
-                                                <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }} /
-                                                    ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                                </div>
-                                                <div x-show="expanded" x-collapse
-                                                    class="text-sm text-body dark:text-gray-400">
-                                                    {{ $row->birth_date ?? '-' }}
-                                                    @if (!empty($row->umur_format) && $row->umur_format !== '-')
-                                                        <span class="text-muted">({{ $row->umur_format }})</span>
-                                                    @endif
-                                                </div>
-                                                <div class="text-sm text-muted dark:text-gray-400">
-                                                    {{ $row->address ?? '-' }}
-                                                </div>
-                                            </div>
+                                            <x-list.identitas-pasien :regNo="$row->reg_no" :nama="$row->reg_name" :sex="$row->sex"
+                                                :tglLahir="$row->birth_date" :alamat="$row->address"
+                                                :collapseUmur="true" />
                                         </div>
 
                                         {{-- Penanda hasil skrining awal — hanya jika eskalasi (Rujuk IGD / Disegerakan) --}}

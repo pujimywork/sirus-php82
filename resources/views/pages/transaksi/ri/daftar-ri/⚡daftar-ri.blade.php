@@ -153,13 +153,6 @@ new class extends Component {
                 'rv.sex',
                 'rv.address',
                 DB::raw("to_char(rv.birth_date,'dd/mm/yyyy') as birth_date"),
-                DB::raw("
-                    CASE WHEN rv.birth_date IS NOT NULL THEN
-                        trunc(months_between(sysdate, rv.birth_date) / 12) || ' Thn, ' ||
-                        trunc(mod(months_between(sysdate, rv.birth_date), 12)) || ' Bln, ' ||
-                        trunc(sysdate - add_months(rv.birth_date, trunc(months_between(sysdate, rv.birth_date)))) || ' Hr'
-                    ELSE '0 Thn, 0 Bln, 0 Hr' END AS thn_umur
-                "),
                 'rv.dr_id',
                 'rv.dr_name',
                 'rv.klaim_id',
@@ -349,18 +342,6 @@ new class extends Component {
             /* EMR progress bar color — tanpa opacity modifier */
             $row->emr_bar_color = $row->emr_percent >= 80 ? 'bg-emerald-500' : ($row->emr_percent >= 50 ? 'bg-amber-400' : 'bg-rose-400');
 
-            $row->umur_format = $row->thn_umur ?? '-';
-            if (empty($row->umur_format) || $row->umur_format === '-') {
-                if (!empty($row->birth_date)) {
-                    try {
-                        $lahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                        $diff = $lahir->diff(now());
-                        $row->umur_format = "{$diff->y} Thn, {$diff->m} Bln, {$diff->d} Hr";
-                    } catch (\Exception) {
-                    }
-                }
-            }
-
             // Batal (ri_status='F') dinilai DULUAN & lepas dari peran: dokter/perawat pun
             // tak boleh masuk EMR record batal. Sebelumnya 'F' tak ada di statusMap → tampil
             // badge abu-abu "RI", tak bisa dibedakan dari record hidup, tombol tetap aktif.
@@ -535,25 +516,12 @@ new class extends Component {
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
                                         <div class="flex items-start gap-4">
-                                            <div class="space-y-1 min-w-0">
-                                                <div class="text-base font-medium text-body dark:text-gray-300">
-                                                    {{ $row->reg_no ?? '-' }}
-                                                </div>
-                                                <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }}
-                                                    /
-                                                    ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                                </div>
-                                                <div class="text-base text-body dark:text-gray-400">
-                                                    {{ $row->birth_date ?? '-' }}
-                                                    @if ($row->umur_format && $row->umur_format !== '-')
-                                                        <span class="text-muted">({{ $row->umur_format }})</span>
-                                                    @endif
-                                                </div>
-                                                <div class="text-base text-muted dark:text-gray-400">
-                                                    {{ $row->address ?? '-' }}
-                                                </div>
-                                            </div>
+                                            <x-list.identitas-pasien class="min-w-0"
+                                                :regNo="$row->reg_no"
+                                                :nama="$row->reg_name"
+                                                :sex="$row->sex"
+                                                :tglLahir="$row->birth_date"
+                                                :alamat="$row->address" />
                                         </div>
                                     </td>
 
@@ -619,17 +587,7 @@ new class extends Component {
                                                     </x-badge>
                                                 @endif
 
-                                                @if ($row->no_sep)
-                                                    <div class="font-mono text-xs text-muted dark:text-gray-300">
-                                                        SEP: {{ $row->no_sep }}
-                                                    </div>
-                                                @endif
-
-                                                @if ($row->no_spri)
-                                                    <div class="font-mono text-xs text-purple-600 dark:text-purple-400">
-                                                        SPRI: {{ $row->no_spri }}
-                                                    </div>
-                                                @endif
+                                                <x-list.sep-spri :sep="$row->no_sep" :spri="$row->no_spri" />
 
                                                 @if ($row->lab_status > 0 || $row->rad_status > 0)
                                                     <div class="flex gap-2 flex-wrap">

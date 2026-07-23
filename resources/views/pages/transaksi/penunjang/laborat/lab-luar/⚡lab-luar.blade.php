@@ -73,11 +73,6 @@ new class extends Component {
                 'o.pdf_path', 'o.keterangan',
                 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address',
                 DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"),
-                DB::raw("CASE WHEN p.birth_date IS NOT NULL THEN
-                    trunc(months_between(sysdate, p.birth_date) / 12) || ' Thn ' ||
-                    trunc(mod(months_between(sysdate, p.birth_date), 12)) || ' Bln ' ||
-                    trunc(sysdate - add_months(p.birth_date, trunc(months_between(sysdate, p.birth_date)))) || ' Hr'
-                    ELSE NULL END as umur_format"),
                 'h.status_rjri', 'h.ref_no',
                 'h.checkup_status',
                 'd.dr_name',
@@ -287,22 +282,7 @@ new class extends Component {
                                 <span class="ml-1 font-mono text-xs text-muted">{{ $r->ref_no }}</span>
                             </td>
                             <td class="px-4 py-3 space-y-1 align-top">
-                                <div class="text-sm font-mono text-muted">{{ $r->reg_no ?? '-' }}</div>
-                                <div class="text-base font-semibold text-brand dark:text-white">
-                                    {{ $r->reg_name ?? '-' }} /
-                                    ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
-                                </div>
-                                <div class="text-sm text-body dark:text-gray-400">
-                                    {{ $r->birth_date ?? '-' }}
-                                    @if (!empty($r->umur_format))
-                                        <span class="text-muted">({{ $r->umur_format }})</span>
-                                    @endif
-                                </div>
-                                @if (!empty($r->address))
-                                    <div class="text-sm text-muted dark:text-gray-400">
-                                        {{ $r->address }}
-                                    </div>
-                                @endif
+                                <x-list.identitas-pasien :regNo="$r->reg_no" :nama="$r->reg_name" :sex="$r->sex" :tglLahir="$r->birth_date" :alamat="$r->address" :collapseUmur="false" />
                             </td>
                             <td class="px-4 py-3 text-body dark:text-gray-300">
                                 {{ $r->labout_desc }}

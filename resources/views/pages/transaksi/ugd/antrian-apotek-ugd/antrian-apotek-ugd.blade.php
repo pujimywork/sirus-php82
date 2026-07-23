@@ -217,18 +217,6 @@ new class extends Component {
 
             $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
 
-            if (!empty($row->birth_date)) {
-                try {
-                    $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                    $diff = $tglLahir->diff(now());
-                    $row->umur_format = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
-                } catch (\Exception $e) {
-                    $row->umur_format = '-';
-                }
-            } else {
-                $row->umur_format = '-';
-            }
-
             $statusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Transfer Inap'];
             $statusVariant = ['A' => 'warning', 'L' => 'success', 'F' => 'danger', 'I' => 'brand'];
             $row->status_text = $statusMap[$row->rj_status] ?? '-';
@@ -434,34 +422,20 @@ new class extends Component {
                                             </div>
 
                                             <div class="space-y-1 min-w-0">
-                                                <div class="text-base font-medium text-body dark:text-gray-300">
-                                                    {{ $row->reg_no ?? '-' }}
-                                                </div>
-                                                <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }} /
-                                                    ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                                </div>
-                                                <div class="text-sm text-body dark:text-gray-400">
-                                                    {{ $row->birth_date ?? '-' }}
-                                                    @if (!empty($row->umur_format))
-                                                        <span class="text-muted">({{ $row->umur_format }})</span>
+                                                <x-list.identitas-pasien :regNo="$row->reg_no" :nama="$row->reg_name"
+                                                    :sex="$row->sex" :tglLahir="$row->birth_date"
+                                                    :alamat="$row->address" :collapseUmur="false">
+                                                    {{-- Jenis resep badge --}}
+                                                    @if ($row->no_antrian_apotek > 0)
+                                                        <span
+                                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium
+                                                            {{ $row->jenis_resep === 'racikan'
+                                                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                                                                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                                            {{ ucfirst($row->jenis_resep) }}
+                                                        </span>
                                                     @endif
-                                                </div>
-                                                @if (!empty($row->address))
-                                                    <div class="text-sm text-muted dark:text-gray-400">
-                                                        {{ $row->address }}
-                                                    </div>
-                                                @endif
-                                                {{-- Jenis resep badge --}}
-                                                @if ($row->no_antrian_apotek > 0)
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium
-                                                        {{ $row->jenis_resep === 'racikan'
-                                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
-                                                        {{ ucfirst($row->jenis_resep) }}
-                                                    </span>
-                                                @endif
+                                                </x-list.identitas-pasien>
                                             </div>
                                         </div>
                                     </td>

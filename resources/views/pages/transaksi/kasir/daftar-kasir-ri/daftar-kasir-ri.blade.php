@@ -78,13 +78,6 @@ new class extends Component {
                 'rv.sex',
                 'rv.address',
                 DB::raw("to_char(rv.birth_date,'dd/mm/yyyy') as birth_date"),
-                DB::raw("
-                    CASE WHEN rv.birth_date IS NOT NULL THEN
-                        trunc(months_between(sysdate, rv.birth_date) / 12) || ' Thn, ' ||
-                        trunc(mod(months_between(sysdate, rv.birth_date), 12)) || ' Bln, ' ||
-                        trunc(sysdate - add_months(rv.birth_date, trunc(months_between(sysdate, rv.birth_date)))) || ' Hr'
-                    ELSE '-' END AS thn_umur
-                "),
                 'rv.dr_id',
                 'rv.dr_name',
                 'rv.klaim_id',
@@ -126,8 +119,8 @@ new class extends Component {
             $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $row->rihdr_no, 'datadaftarri_json');
             $json = json_decode($jsonRaw ?: '{}', true) ?? [];
             $row->no_sep = $json['sep']['noSep'] ?? ($row->vno_sep ?? null);
+            $row->no_spri = $json['spri']['noSPRIBPJS'] ?? null;
             $row->admin_user = isset($json['AdministrasiRI']) ? $json['AdministrasiRI']['userLog'] ?? '✔' : '-';
-            $row->umur_format = $row->thn_umur ?? '-';
             $row->leveling_dokter_list = $json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [];
 
             $statusMap = ['I' => 'Dirawat', 'P' => 'Pulang'];
@@ -249,22 +242,16 @@ new class extends Component {
                                 <tr wire:key="daftar-kasir-ri-{{ $row->reg_no ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/40">
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-4 space-y-1 align-top">
-                                        <div class="text-base font-medium text-body dark:text-gray-300">
-                                            {{ $row->reg_no ?? '-' }}
-                                        </div>
-                                        <div class="text-lg font-semibold text-brand dark:text-white">
-                                            {{ $row->reg_name ?? '-' }} /
-                                            ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                        </div>
-                                        <div class="text-sm text-body dark:text-gray-400">
-                                            {{ $row->birth_date ?? '-' }}
-                                            @if (!empty($row->umur_format) && $row->umur_format !== '-')
-                                                <span class="text-muted">({{ $row->umur_format }})</span>
-                                            @endif
-                                        </div>
-                                        <div class="text-sm text-muted dark:text-gray-400">
-                                            Masuk: {{ $row->entry_date_display }}
-                                        </div>
+                                        <x-list.identitas-pasien
+                                            :regNo="$row->reg_no"
+                                            :nama="$row->reg_name"
+                                            :sex="$row->sex"
+                                            :tglLahir="$row->birth_date"
+                                            :alamat="$row->address">
+                                            <div class="text-sm text-muted dark:text-gray-400">
+                                                Masuk: {{ $row->entry_date_display }}
+                                            </div>
+                                        </x-list.identitas-pasien>
                                     </td>
 
                                     {{-- KAMAR / DOKTER --}}
@@ -305,11 +292,7 @@ new class extends Component {
                                         <div>
                                             <x-badge :variant="$row->klaim_variant">{{ $row->klaim_label }}</x-badge>
                                         </div>
-                                        @if ($row->no_sep)
-                                            <div class="font-mono text-xs text-muted dark:text-gray-400">
-                                                {{ $row->no_sep }}
-                                            </div>
-                                        @endif
+                                        <x-list.sep-spri :sep="$row->no_sep" :spri="$row->no_spri" />
                                     </td>
 
                                     {{-- ADMINISTRASI BADGE --}}

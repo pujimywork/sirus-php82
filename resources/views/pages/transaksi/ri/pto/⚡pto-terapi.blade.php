@@ -48,15 +48,6 @@ new class extends Component {
             return;
         }
 
-        $umur = '-';
-        if ($row->birth_date) {
-            try {
-                $diff = Carbon::createFromFormat('d/m/Y', $row->birth_date)->diff(now());
-                $umur = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
-            } catch (\Throwable $e) {
-            }
-        }
-
         $data = null;
         try {
             $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $row->rihdr_no, 'datadaftarri_json');
@@ -79,9 +70,8 @@ new class extends Component {
         $this->pasien = [
             'reg_name'     => $row->reg_name,
             'reg_no'       => $row->reg_no,
-            'sex'          => $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-'),
+            'sex'          => $row->sex, // 'L' | 'P' — pemetaan label di komponen identitas-pasien
             'birth_date'   => $row->birth_date ?? '-',
-            'umur'         => $umur,
             'address'      => $row->address ?? '-',
             'bangsal_name' => $row->bangsal_name ?? '-',
             'room_name'    => $row->room_name ?? '-',
@@ -192,24 +182,19 @@ new class extends Component {
             <div class="px-5 py-4 border-b border-hairline dark:border-gray-700 bg-surface-soft/70 dark:bg-gray-800/40 rounded-t-2xl">
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     {{-- Identitas + Lokasi --}}
-                    <div class="space-y-1 min-w-0">
-                        <div class="text-base font-medium text-body dark:text-gray-300">
-                            {{ $pasien['reg_no'] }}
-                        </div>
-                        <div class="text-lg font-semibold text-brand dark:text-white">
-                            {{ $pasien['reg_name'] }} / ({{ $pasien['sex'] }})
-                        </div>
-                        <div class="text-sm text-body dark:text-gray-400">
-                            {{ $pasien['birth_date'] }} <span class="text-muted">({{ $pasien['umur'] }})</span>
-                        </div>
-                        <div class="text-sm text-muted dark:text-gray-400">{{ $pasien['address'] }}</div>
+                    <x-list.identitas-pasien class="min-w-0"
+                        :regNo="$pasien['reg_no']"
+                        :nama="$pasien['reg_name']"
+                        :sex="$pasien['sex']"
+                        :tglLahir="$pasien['birth_date']"
+                        :alamat="$pasien['address']">
                         <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 leading-tight mt-1">
                             {{ $pasien['bangsal_name'] }}
                         </div>
                         <div class="text-sm text-ink dark:text-gray-200 leading-tight">
                             {{ $pasien['room_name'] }}
                         </div>
-                    </div>
+                    </x-list.identitas-pasien>
 
                     {{-- DPJP / Penerima / Masuk --}}
                     <div class="space-y-1 min-w-0">

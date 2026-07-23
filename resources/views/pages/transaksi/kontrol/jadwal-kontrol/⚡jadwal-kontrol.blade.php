@@ -166,17 +166,6 @@ new class extends Component {
                     continue;
                 }
 
-                // Umur dihitung realtime dari birth_date (kolom thn/bln/hari stored
-                // tidak refresh) — format standar identitas pasien Daftar RJ.
-                $umurFormat = '-';
-                if (!empty($kunjungan->birth_date)) {
-                    try {
-                        $selisih = Carbon::createFromFormat('d/m/Y', $kunjungan->birth_date)->diff(Carbon::now(config('app.timezone')));
-                        $umurFormat = "{$selisih->y} Thn {$selisih->m} Bln {$selisih->d} Hr";
-                    } catch (\Throwable) {
-                    }
-                }
-
                 $jadwalList->push([
                     'sumber' => $sumber['sumber'],
                     'trx_no' => (string) $kunjungan->trx_no,
@@ -185,7 +174,6 @@ new class extends Component {
                     'sex' => $kunjungan->sex,
                     'address' => $kunjungan->address,
                     'birth_date' => $kunjungan->birth_date,
-                    'umur_format' => $umurFormat,
                     'tgl_kunjungan' => $kunjungan->tgl_kunjungan,
                     'tglKontrol' => $kontrol['tglKontrol'] ?? '-',
                     'poliKontrolDesc' => $kontrol['poliKontrolDesc'] ?? '-',
@@ -378,24 +366,7 @@ new class extends Component {
                                     </td>
                                     {{-- Identitas pasien — standar Daftar RJ (RM, nama brand, L/P 3-cabang, alamat, umur dari birth_date) --}}
                                     <td class="px-4 py-3">
-                                        <div class="space-y-0 leading-tight">
-                                            <div class="text-base font-medium text-body dark:text-gray-300">
-                                                {{ $row['reg_no'] ?? '-' }}
-                                            </div>
-                                            <div class="text-lg font-semibold text-brand dark:text-white">
-                                                {{ $row['reg_name'] ?? '-' }} /
-                                                ({{ $row['sex'] === 'L' ? 'Laki-Laki' : ($row['sex'] === 'P' ? 'Perempuan' : '-') }})
-                                            </div>
-                                            <div class="text-sm text-body dark:text-gray-400">
-                                                {{ $row['birth_date'] ?? '-' }}
-                                                @if (!empty($row['umur_format']) && $row['umur_format'] !== '-')
-                                                    <span class="text-muted">({{ $row['umur_format'] }})</span>
-                                                @endif
-                                            </div>
-                                            <div class="text-sm text-muted dark:text-gray-400">
-                                                {{ $row['address'] ?? '-' }}
-                                            </div>
-                                        </div>
+                                        <x-list.identitas-pasien :regNo="$row['reg_no']" :nama="$row['reg_name']" :sex="$row['sex']" :tglLahir="$row['birth_date']" :alamat="$row['address']" :collapseUmur="false" />
                                     </td>
                                     {{-- Kontrol: atas poli/dokter, bawah tgl kunjungan bersanding tgl kontrol --}}
                                     <td class="px-4 py-3">
