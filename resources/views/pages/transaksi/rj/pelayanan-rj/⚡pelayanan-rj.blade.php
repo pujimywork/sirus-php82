@@ -636,9 +636,8 @@ new class extends Component {
                                                 </x-badge>
                                             @endif
                                         </div>
-                                        <div><span class="text-muted dark:text-gray-400 leading-tight text-xs">Klaim
-                                                : {{ $row->klaim_desc ?? '-' }}</span>
-
+                                        <div class="mt-0.5">
+                                            <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
                                         </div>
                                         {{-- No Booking — hanya untuk pasien BPJS (klaim_status=BPJS atau klaim_id=JM/JKN Mobile) --}}
                                         @if ($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM')

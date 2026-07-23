@@ -134,7 +134,7 @@ new class extends Component {
             ->leftJoin('rsmst_doctors as d', 'd.dr_id', '=', 's.dr_id')
             ->join('rstxn_rihdrs as r', 'r.rihdr_no', '=', 's.rihdr_no')
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'r.klaim_id')
-            ->select(['s.sls_no', DB::raw("to_char(s.sls_date,'dd/mm/yyyy hh24:mi:ss') as sls_date_display"), 's.status', 's.rihdr_no', 's.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 's.no_antrian', 's.dr_id', 'd.dr_name', 's.shift', 'r.ri_status', 'r.klaim_id', 'k.klaim_desc', 'r.datadaftarri_json', 'r.vno_sep', DB::raw("to_char(s.waktu_masuk_pelayanan,'dd/mm/yyyy hh24:mi') as waktu_masuk"), DB::raw("to_char(s.waktu_selesai_pelayanan,'dd/mm/yyyy hh24:mi') as waktu_selesai"), DB::raw('(select count(*) from imtxn_slsdtls where sls_no = s.sls_no) as item_count')])
+            ->select(['s.sls_no', DB::raw("to_char(s.sls_date,'dd/mm/yyyy hh24:mi:ss') as sls_date_display"), 's.status', 's.rihdr_no', 's.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 's.no_antrian', 's.dr_id', 'd.dr_name', 's.shift', 'r.ri_status', 'r.klaim_id', 'k.klaim_desc', 'k.klaim_status', 'r.datadaftarri_json', 'r.vno_sep', DB::raw("to_char(s.waktu_masuk_pelayanan,'dd/mm/yyyy hh24:mi') as waktu_masuk"), DB::raw("to_char(s.waktu_selesai_pelayanan,'dd/mm/yyyy hh24:mi') as waktu_selesai"), DB::raw('(select count(*) from imtxn_slsdtls where sls_no = s.sls_no) as item_count')])
             ->whereNotNull('s.rihdr_no')
             ->whereBetween('s.sls_date', [$start, $end]);
 
@@ -273,20 +273,6 @@ new class extends Component {
                 'A' => 'brand',
                 'P' => 'gray',
                 'B' => 'danger',
-                default => 'alternative',
-            };
-
-            // Klaim
-            $row->klaim_label = match ($row->klaim_id) {
-                'UM' => 'UMUM',
-                'JM' => 'BPJS',
-                'KR' => 'Kronis',
-                default => $row->klaim_desc ?? 'Asuransi Lain',
-            };
-            $row->klaim_variant = match ($row->klaim_id) {
-                'UM' => 'success',
-                'JM' => 'brand',
-                'KR' => 'warning',
                 default => 'alternative',
             };
 
@@ -492,20 +478,14 @@ new class extends Component {
                                         <div class="text-sm text-body dark:text-gray-300">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
-                                        <x-badge :variant="$row->klaim_variant">
-                                            {{ $row->klaim_label }}
-                                        </x-badge>
+                                        <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
                                         <x-badge :variant="$row->ri_status_variant">
                                             {{ $row->ri_status_text }}
                                         </x-badge>
                                         <div class="text-xs text-muted dark:text-gray-500">
                                             No RI: {{ $row->rihdr_no }}
                                         </div>
-                                        @if ($row->vno_sep)
-                                            <div class="font-mono text-xs text-muted dark:text-gray-400">
-                                                {{ $row->vno_sep }}
-                                            </div>
-                                        @endif
+                                        <x-list.sep-spri :sep="$row->vno_sep" />
                                     </td>
 
                                     {{-- STATUS LAYANAN --}}

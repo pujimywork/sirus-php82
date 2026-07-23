@@ -293,20 +293,6 @@ new class extends Component {
                 $row->status_variant = 'gray';
             }
 
-            // Klaim badge
-            $row->klaim_label = match ($row->klaim_id) {
-                'UM' => 'UMUM',
-                'JM' => 'BPJS',
-                'KR' => 'Kronis',
-                default => 'Asuransi Lain',
-            };
-            $row->klaim_variant = match ($row->klaim_id) {
-                'UM' => 'success',
-                'JM' => 'brand',
-                'KR' => 'warning',
-                default => 'alternative',
-            };
-
             return $row;
         });
 
@@ -522,9 +508,7 @@ new class extends Component {
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
                                         <div class="flex flex-wrap items-center gap-1">
-                                            <x-badge :variant="$row->klaim_variant">
-                                                {{ $row->klaim_label }}
-                                            </x-badge>
+                                            <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
                                             @if (($row->status_kronis ?? 'N') === 'Y')
                                                 <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
                                                       title="Kunjungan ini punya obat dengan split kronis (BPJS InaCBG + Kronis luar paket)">
@@ -538,11 +522,7 @@ new class extends Component {
                                                 </span>
                                             @endif
                                         </div>
-                                        @if ($row->vno_sep)
-                                            <div class="font-mono text-xs text-muted dark:text-gray-400">
-                                                {{ $row->vno_sep }}
-                                            </div>
-                                        @endif
+                                        <x-list.sep-spri :sep="$row->vno_sep" />
                                         <div class="text-xs text-muted dark:text-gray-500">
                                             No RJ: {{ $row->rj_no }}
                                         </div>

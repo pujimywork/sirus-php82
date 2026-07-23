@@ -253,12 +253,6 @@ new class extends Component {
         $row->no_spri    = $json['spri']['noSPRIBPJS'] ?? null;
         $row->leveling_dokter_list = $json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [];
 
-        $row->klaim_badge_variant = match ($row->klaim_id ?? '') {
-            'UM' => 'success',
-            'JM' => 'brand',
-            default => 'alternative',
-        };
-
         $row->status_text = ['I' => 'Dirawat', 'P' => 'Pulang', 'F' => 'Batal'][$row->ri_status] ?? 'RI';
         $row->status_variant = ['I' => 'brand', 'P' => 'success', 'F' => 'danger'][$row->ri_status] ?? 'gray';
 
@@ -443,7 +437,7 @@ new class extends Component {
 
                                             {{-- Sub-kanan: Klaim / SEP / SPRI / Lab+Rad --}}
                                             <div class="space-y-2">
-                                                <x-badge :variant="$r->klaim_badge_variant">{{ $r->klaim_desc ?? $r->klaim_id ?? '-' }}</x-badge>
+                                                <x-list.klaim-badge :status="$r->klaim_status" :desc="$r->klaim_desc" :id="$r->klaim_id" />
 
                                                 <x-list.sep-spri :sep="$r->no_sep" :spri="$r->no_spri" />
 

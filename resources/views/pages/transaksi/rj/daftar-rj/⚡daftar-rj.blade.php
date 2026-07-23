@@ -921,7 +921,10 @@ new class extends Component {
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
                                         <div class="text-sm text-muted dark:text-gray-400 leading-tight">
-                                            {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
+                                            {{ $row->dr_name ?? '-' }}
+                                        </div>
+                                        <div class="leading-tight">
+                                            <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
                                         </div>
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
                                             <div class="text-xs text-muted dark:text-gray-500 leading-tight">

@@ -538,7 +538,10 @@ new class extends Component {
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
                                         <div class="text-sm text-muted dark:text-gray-400">
-                                            {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
+                                            {{ $row->dr_name ?? '-' }}
+                                        </div>
+                                        <div>
+                                            <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
                                         </div>
                                         <x-list.sep-spri :sep="$row->vno_sep" />
                                         <div class="flex flex-wrap gap-2">

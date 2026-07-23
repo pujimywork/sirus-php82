@@ -87,6 +87,7 @@ new class extends Component {
                 'rv.dr_name',
                 'rv.klaim_id',
                 'kt.klaim_status',
+                'kt.klaim_desc',
                 'rv.ri_status',
                 'rv.vno_sep',
                 'rv.bangsal_id',
@@ -132,19 +133,6 @@ new class extends Component {
             $statusVariant = ['I' => 'brand', 'P' => 'success'];
             $row->status_text = $statusMap[$row->ri_status] ?? 'RI';
             $row->status_variant = $statusVariant[$row->ri_status] ?? 'gray';
-
-            $row->klaim_label = match ($row->klaim_id ?? '') {
-                'UM' => 'UMUM',
-                'JM' => 'BPJS',
-                'KR' => 'Kronis',
-                default => 'Asuransi Lain',
-            };
-            $row->klaim_variant = match ($row->klaim_id ?? '') {
-                'UM' => 'success',
-                'JM' => 'brand',
-                'KR' => 'warning',
-                default => 'alternative',
-            };
 
             return $row;
         });
@@ -295,7 +283,7 @@ new class extends Component {
                                     <td class="px-6 py-4 space-y-2 align-top">
                                         <x-badge :variant="$row->status_variant">{{ $row->status_text }}</x-badge>
                                         <div>
-                                            <x-badge :variant="$row->klaim_variant">{{ $row->klaim_label }}</x-badge>
+                                            <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
                                         </div>
                                         <x-list.sep-spri :sep="$row->no_sep" :spri="$row->no_spri" />
                                     </td>

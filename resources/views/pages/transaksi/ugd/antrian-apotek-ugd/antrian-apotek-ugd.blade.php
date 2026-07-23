@@ -230,24 +230,6 @@ new class extends Component {
             $row->status_text = $statusMap[$row->rj_status] ?? '-';
             $row->status_variant = $statusVariant[$row->rj_status] ?? 'gray';
 
-            // Klaim badge — selaras dgn filter Klaim: BPJS = klaim_status='BPJS' atau klaim_id='JM'
-            $isBpjs = $row->klaim_id === 'JM' || $row->klaim_status === 'BPJS';
-            if ($isBpjs) {
-                $row->klaim_label = 'BPJS';
-                $row->klaim_variant = 'info';
-            } else {
-                $row->klaim_label = match ($row->klaim_id) {
-                    'UM' => 'UMUM',
-                    'KR' => 'Kronis',
-                    default => 'Asuransi Lain',
-                };
-                $row->klaim_variant = match ($row->klaim_id) {
-                    'UM' => 'success',
-                    'KR' => 'warning',
-                    default => 'alternative',
-                };
-            }
-
             return $row;
         });
 
@@ -454,12 +436,8 @@ new class extends Component {
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <x-badge :variant="$row->klaim_variant">{{ $row->klaim_label }}</x-badge>
-                                            @if ($row->vno_sep)
-                                                <span class="font-mono text-xs text-muted dark:text-gray-400">
-                                                    {{ $row->vno_sep }}
-                                                </span>
-                                            @endif
+                                            <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
+                                            <x-list.sep-spri :sep="$row->vno_sep" />
                                         </div>
                                     </td>
 

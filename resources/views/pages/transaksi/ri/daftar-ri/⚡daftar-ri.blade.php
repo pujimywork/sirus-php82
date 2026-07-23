@@ -362,13 +362,6 @@ new class extends Component {
                 $row->status_variant = $statusVariant[$row->ri_status] ?? 'gray';
             }
 
-            $row->klaim_badge_variant = match ($row->klaim_id ?? '') {
-                'UM' => 'success',
-                'JM' => 'brand',
-                'KR' => 'warning',
-                default => 'danger',
-            };
-
             return $row;
         });
 
@@ -561,7 +554,7 @@ new class extends Component {
 
                                             {{-- ── Sub-kanan: Klaim / Risiko Jatuh / SEP / SPRI / Lab+Rad ── --}}
                                             <div class="space-y-2">
-                                                <x-badge :variant="$row->klaim_badge_variant">{{ $row->klaim_desc ?? $row->klaim_id ?? '-' }}</x-badge>
+                                                <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
 
                                                 @if (!empty($row->resiko_jatuh))
                                                     <x-badge :variant="$row->resiko_jatuh['kategori'] === 'Tinggi' ? 'danger' : 'warning'" class="gap-1"

@@ -530,8 +530,8 @@ new class extends Component {
                                             class="text-base font-semibold text-body dark:text-gray-300 leading-tight">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
-                                        <div class="text-sm text-muted dark:text-gray-400 leading-tight">
-                                            {{ $row->klaim_desc ?? '-' }}
+                                        <div class="leading-tight">
+                                            <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
                                         </div>
                                         <div class="text-xs text-muted dark:text-gray-400 leading-tight">
                                             Cara Masuk: {{ $row->entry_desc ?? '-' }}
