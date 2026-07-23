@@ -355,6 +355,47 @@ new class extends Component {
                     </div>
                 </div>
 
+                {{-- ===== KOMPONEN LIST TRANSAKSI (x-list.*) ===== --}}
+                <div class="ds-card-outline mb-6">
+                    <div class="ds-caption-up mb-5" style="color:var(--muted)">Komponen kolom list transaksi — &lt;x-list.*&gt;</div>
+                    <p class="ds-body-sm mb-5" style="color:var(--muted-soft)">
+                        Dipakai di baris tabel semua list (daftar/kasir/apotek/bulanan/pelayanan RJ/UGD/RI).
+                        Acuan: <code class="ds-code">docs/standar-ui-komponen.md</code> §3b. Paralel dgn <code class="ds-code">&lt;x-pdf.*&gt;</code> (cetak).
+                    </p>
+
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        {{-- identitas-pasien --}}
+                        <div>
+                            <div class="ds-body-sm mb-2" style="color:var(--muted)">&lt;x-list.identitas-pasien&gt; <span style="color:var(--muted-soft)">— umur dihitung dari tglLahir; gender = ikon ♂/♀</span></div>
+                            <div class="ds-card" style="padding:12px">
+                                <x-list.identitas-pasien regNo="0184R00" nama="BUDI SANTOSO" sex="L"
+                                    tglLahir="15/03/1990" alamat="Tulungagung" />
+                            </div>
+                        </div>
+
+                        {{-- sep-spri --}}
+                        <div>
+                            <div class="ds-body-sm mb-2" style="color:var(--muted)">&lt;x-list.sep-spri&gt; <span style="color:var(--muted-soft)">— SEP emerald, SPRI ungu</span></div>
+                            <div class="ds-card" style="padding:12px">
+                                <x-list.sep-spri sep="0184R0060725V002895" spri="SPRI-123" />
+                            </div>
+                        </div>
+
+                        {{-- klaim-badge --}}
+                        <div>
+                            <div class="ds-body-sm mb-2" style="color:var(--muted)">&lt;x-list.klaim-badge&gt; <span style="color:var(--muted-soft)">— label desc asli, warna dari klaim_status</span></div>
+                            <div class="ds-card" style="padding:12px">
+                                <div class="flex flex-wrap gap-2">
+                                    <x-list.klaim-badge status="BPJS" desc="JKN MANDIRI" />
+                                    <x-list.klaim-badge status="UMUM" desc="JASA RAHARJA" />
+                                    <x-list.klaim-badge status="KRONIS" desc="KRONIS" />
+                                    <x-list.klaim-badge status="DOKEL" desc="DOKEL" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- ===== FORM ===== --}}
                 <div class="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
                     <div class="ds-card-outline">

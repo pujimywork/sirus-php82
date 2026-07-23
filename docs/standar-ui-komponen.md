@@ -267,6 +267,23 @@ Acuan tampilan: `transaksi/rj/pelayanan-rj`. Urutan baku 4 baris:
 - Pakai di **kolom SEP list**. JANGAN pakai di modal detail / header EMR (`display-pasien-*`)
   / pesan status casemix — itu konteks lain.
 
+### `<x-list.klaim-badge>` — cara bayar / klaim
+
+```blade
+<x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
+```
+
+- **Data tetap dari MODEL KLAIM** (`rsmst_klaimtypes`): label = `klaim_desc` asli (mis. "JKN MANDIRI"),
+  **BUKAN** disederhanakan jadi "UMUM/BPJS".
+- **Warna dari `klaim_status`** (kategori) — robust untuk SEMUA jenis klaim:
+  `BPJS → success` · `UMUM → alternative` · `KRONIS → warning` · `DOKEL → purple` · lainnya `→ gray`.
+  (Jangan match `klaim_id` — jenis lain seperti Jasa Raharja/BPJS-TK jatuh ke default yang salah.)
+- Label format **"KATEGORI · desc"** (mis. "BPJS · JKN MANDIRI"); dedupe bila desc = kategori
+  (jadi "UMUM", "KRONIS").
+- Query WAJIB select `klaim_status`, `klaim_desc`, `klaim_id` (join `rsmst_klaimtypes`).
+- Pakai di **kolom cara bayar semua list** (pelayanan/daftar/kasir/apotek/bulanan). JANGAN untuk
+  filter toolbar (opsi BPJS/UMUM di `<select filterKlaim>` itu FILTER, bukan display).
+
 ---
 
 ## 4. Input Harga / Tarif (`<x-text-input-number>`)
