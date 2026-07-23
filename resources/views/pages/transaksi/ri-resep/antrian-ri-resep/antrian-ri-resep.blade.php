@@ -437,7 +437,7 @@ new class extends Component {
                             @forelse ($this->rows as $row)
                                 <tr
                                     wire:key="ri-resep-antrian-row-{{ $row->sls_no }}"
-                                    class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-blue-50 dark:hover:bg-gray-800 rounded-xl
+                                    class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-blue-50 dark:hover:bg-gray-800 rounded-xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                     {{ $row->no_antrian > 0 ? 'border-l-4 border-l-blue-500' : '' }}">
 
                                     {{-- ANTRIAN & PASIEN --}}
