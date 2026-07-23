@@ -624,17 +624,8 @@ new class extends Component {
                                         <div class="font-semibold text-brand dark:text-emerald-400 leading-tight">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
-                                        @php
-                                            $isBpjs = $row->klaim_status === 'BPJS' || $row->klaim_id === 'JM';
-                                        @endphp
-                                        <div
-                                            class="flex flex-wrap items-center gap-2 text-sm text-muted dark:text-gray-400 leading-tight">
-                                            <span>{{ $row->dr_name ?? '-' }}</span>
-                                            @if ($isBpjs)
-                                                <x-badge :variant="$isBpjs ? 'info' : 'alternative'">
-                                                    {{ $isBpjs ? 'BPJS' : 'UMUM' }}
-                                                </x-badge>
-                                            @endif
+                                        <div class="text-sm text-muted dark:text-gray-400 leading-tight">
+                                            {{ $row->dr_name ?? '-' }}
                                         </div>
                                         <div class="mt-0.5">
                                             <x-list.klaim-badge :status="$row->klaim_status" :desc="$row->klaim_desc" :id="$row->klaim_id" />
