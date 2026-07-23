@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Illuminate\Support\Facades\DB;
 use App\Support\OracleLob;
 use Carbon\Carbon;
@@ -23,20 +24,31 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['daftar-ri-bulanan-toolbar'];
 
+    // Filter dipersist per-tab (Session) supaya tak reset saat pindah tab di /transaksi/casemix
+    // (komponen anak di-unmount/remount oleh @if tab). Key di-namespace 'daftar-ri-bulanan-*'.
+    #[Session(key: 'daftar-ri-bulanan-searchKeyword')]
     public string $searchKeyword = '';
+    #[Session(key: 'daftar-ri-bulanan-filterMode')]
     public string $filterMode = 'bulanan'; // 'bulanan' | 'harian'
+    #[Session(key: 'daftar-ri-bulanan-filterBulan')]
     public string $filterBulan = ''; // m/Y — dipakai mode bulanan
+    #[Session(key: 'daftar-ri-bulanan-filterTanggal')]
     public string $filterTanggal = ''; // d/m/Y — dipakai mode harian
+    #[Session(key: 'daftar-ri-bulanan-filterStatus')]
     public string $filterStatus = 'P'; // default: Pulang (RI status code untuk selesai)
+    #[Session(key: 'daftar-ri-bulanan-filterKlaim')]
     public string $filterKlaim = 'BPJS'; // default: BPJS | '' | 'UMUM'
+    #[Session(key: 'daftar-ri-bulanan-filterDokter')]
     public string $filterDokter = '';
+    #[Session(key: 'daftar-ri-bulanan-itemsPerPage')]
     public int $itemsPerPage = 25;
 
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
-        $this->filterBulan = Carbon::now()->format('m/Y');
-        $this->filterTanggal = Carbon::now()->format('d/m/Y');
+        // Hanya default bila belum ada nilai tersimpan (Session) — jaga filter saat remount.
+        $this->filterBulan = $this->filterBulan ?: Carbon::now()->format('m/Y');
+        $this->filterTanggal = $this->filterTanggal ?: Carbon::now()->format('d/m/Y');
     }
 
     public function updatedSearchKeyword(): void

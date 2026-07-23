@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Illuminate\Support\Facades\DB;
 use App\Support\OracleLob;
 use Carbon\Carbon;
@@ -18,17 +19,22 @@ new class extends Component {
     /* -------------------------
      | Filter & Pagination state
      * ------------------------- */
+    #[Session(key: 'antrian-kasir-ri-searchKeyword')]
     public string $searchKeyword = '';
+    #[Session(key: 'antrian-kasir-ri-filterTanggal')]
     public string $filterTanggal = '';
+    #[Session(key: 'antrian-kasir-ri-filterStatus')]
     public string $filterStatus = 'A';
+    #[Session(key: 'antrian-kasir-ri-filterDokter')]
     public string $filterDokter = '';
+    #[Session(key: 'antrian-kasir-ri-itemsPerPage')]
     public int $itemsPerPage = 10;
     public string $autoRefresh = 'Ya';
 
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
-        $this->filterTanggal = Carbon::now()->format('d/m/Y');
+        $this->filterTanggal = $this->filterTanggal ?: Carbon::now()->format('d/m/Y');
     }
 
     /* -------------------------

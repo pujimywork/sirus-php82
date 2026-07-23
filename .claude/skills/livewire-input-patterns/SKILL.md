@@ -72,3 +72,20 @@ di-REMOUNT setiap respons Livewire → fokus hilang di tengah ketik. Sama juga u
 <x-text-input wire:model.live.debounce.300ms="searchKeyword" />
 ```
 Di `updatedSearchKeyword()` cukup `resetPage()` — JANGAN `incrementVersion` area yang memuat input search (acuan: daftar-laborat).
+
+## 9. Persist filter antar tab (wrapper server-mode) — `#[Session]`
+Wrapper tab mode Server (`@if ($activeTab==='rj') <livewire:.../> @elseif...`, mis. `/transaksi/apotek`, `/kasir`, `/casemix`) meng-**unmount/remount** komponen anak saat ganti tab → `mount()` jalan lagi → filter (mis. `filterTanggal = today`) **ter-reset**.
+
+Fix: `#[Session(key: '<komponen>-<properti>')]` di TIAP properti filter/search/itemsPerPage + guard `mount()`:
+```php
+use Livewire\Attributes\Session;
+#[Session(key: 'antrian-apotek-rj-filterTanggal')]
+public string $filterTanggal = '';
+public function mount(): void {
+    $this->filterTanggal = $this->filterTanggal ?: Carbon::now()->format('d/m/Y'); // guard: default hanya bila kosong
+}
+```
+- Key WAJIB namespaced per komponen (bentrok = filter bocor antar komponen).
+- JANGAN Session-kan `autoRefresh`/`renderVersions`/cache data. JANGAN guard `resetFilters()` (Reset harus memaksa default).
+- JANGAN ganti tab jadi Alpine `x-show` untuk mengatasinya — komponen `wire:poll` akan polling semua tab sekaligus.
+- Detail + contoh lengkap: `docs/tabs-pattern.md` §"Persist state anak saat ganti tab".

@@ -87,6 +87,115 @@ File: `resources/views/components/tabs.blade.php` (track) + `resources/views/com
 
 ---
 
+## Halaman Wrapper Hub (kompose komponen standalone via tab) — "model kasir"
+
+Pola untuk **menggabungkan beberapa halaman/komponen yang SUDAH ada** ke satu layar lewat tab —
+dipakai `/transaksi/apotek`, `/transaksi/kasir`, `/transaksi/casemix`. Wrapper hanya "rangka tab";
+isi tiap tab = komponen Livewire penuh yang **juga punya route sendiri** (dipakai-ulang, bukan disalin).
+
+**Ciri:**
+- **Wrapper tipis** (± 60–120 baris): hanya `public string $activeTab` + `setTab()` (dengan whitelist),
+  opsional pembuka modal berbagi. **NOL logika bisnis** — semua ada di komponen anak.
+- **Anak = komponen standalone** (mis. `antrian-kasir-rj` juga di `/transaksi/rj/antrian-kasir-rj`;
+  `daftar-rj-bulanan` juga di `/rawat-jalan/daftar-bulanan`). Wrapper tak menduplikasi query/aksi.
+- **Modal berbagi** (mis. Cek Saldo Kas) di-mount **sekali** di level wrapper, **lazy** via flag boolean.
+
+```php
+new class extends Component {
+    public string $activeTab = 'rj';
+    public bool $showCekSaldo = false; // lazy: modal berat baru mount saat dibuka
+
+    public function setTab(string $tab): void {
+        if (!in_array($tab, ['rj', 'ugd', 'ri'], true)) return;  // whitelist wajib
+        $this->activeTab = $tab;
+    }
+    public function openCekSaldo(): void { $this->showCekSaldo = true; $this->dispatch('open-modal', name: 'cek-saldo-kas'); }
+};
+```
+```blade
+<x-tabs variant="underline">
+    <x-tab :active="$activeTab === 'rj'"  color="emerald" wire:click="setTab('rj')">Rawat Jalan</x-tab>
+    <x-tab :active="$activeTab === 'ugd'" color="rose"    wire:click="setTab('ugd')">UGD</x-tab>
+    <x-tab :active="$activeTab === 'ri'"  color="blue"    wire:click="setTab('ri')">Rawat Inap</x-tab>
+</x-tabs>
+
+@if ($activeTab === 'rj')
+    <livewire:pages::transaksi.rj.antrian-kasir-rj.antrian-kasir-rj wire:key="antrian-kasir-rj-wrapper" />
+@elseif ($activeTab === 'ugd')
+    <livewire:pages::transaksi.ugd.antrian-kasir-ugd.antrian-kasir-ugd wire:key="antrian-kasir-ugd-wrapper" />
+@endif
+{{-- Modal berbagi, mount 1× --}}
+<x-modal name="cek-saldo-kas">@if ($showCekSaldo)<livewire:... wire:key="cek-saldo-kas-inner" />@endif</x-modal>
+```
+
+### Alpine `x-show` vs Server `@if` — pilih sesuai berat komponen
+
+| | **Alpine `x-show`** (semua anak mounted) | **Server `@if`** (lazy, 1 anak) |
+|---|---|---|
+| Mount | Semua tab mount sekaligus | Hanya tab aktif |
+| Switch | Instan (client), **state anak terjaga** | Round-trip; anak lama unmount → **state reset** |
+| Pakai untuk | Sub-komponen **ringan** (form dokumen) | Komponen **berat** (list + query + `wire:poll`) |
+| Contoh | **modul-dokumen** (`modul-dokumen-ri`, sub-form di modal) | **model kasir** (apotek/kasir/casemix) |
+
+Beda dari **modul-dokumen** (lihat `docs/modul-dokumen-ri-pattern.md`): di sana hub membuka **dokumen
+bertanda tangan** (komponen ringan, khusus hub itu, di **modal**, tab **Alpine x-show** — semua mounted).
+Model kasir mengkompose **halaman list standalone** (berat, ber-`wire:poll`) sebagai **halaman penuh**,
+tab **server @if** (lazy) → konsekuensinya filter anak ter-reset saat ganti tab → wajib `#[Session]` (bawah).
+
+## Persist state anak saat ganti tab (mode Server) — `#[Session]`
+
+**Masalah.** Wrapper tab mode Server merender komponen anak lewat `@if ($activeTab === 'rj') <livewire:... /> @elseif ...`.
+Ganti tab → `activeTab` berubah → anak tab lama **di-unmount, anak tab baru di-mount**.
+Saat balik ke tab semula, komponennya **mount ulang** → `mount()` jalan lagi → filter (mis.
+`filterTanggal = today`) **ter-reset**. Contoh: `/transaksi/apotek`, `/transaksi/kasir`, `/transaksi/casemix`.
+
+**JANGAN** memperbaikinya dengan memindah tab ke Alpine `x-show` (semua anak tetap mounted) — komponen
+antrian umumnya `wire:poll` → semua tab akan polling bersamaan (3–5× beban DB). Pertahankan `@if` (lazy).
+
+**Solusi: persist tiap properti filter dengan `#[Session]`** + guard `mount()` supaya nilai tersimpan
+tak tertimpa default saat remount. Lazy-load & polling per-tab tetap terjaga.
+
+```php
+use Livewire\Attributes\Session;
+
+new class extends Component {
+    // Key WAJIB di-namespace unik per komponen (hindari bentrok antar tab/komponen).
+    #[Session(key: 'antrian-apotek-rj-searchKeyword')]
+    public string $searchKeyword = '';
+    #[Session(key: 'antrian-apotek-rj-filterTanggal')]
+    public string $filterTanggal = '';
+    #[Session(key: 'antrian-apotek-rj-filterKlaim')]
+    public string $filterKlaim = '';
+    // …semua properti filter/search/itemsPerPage. JANGAN Session-kan autoRefresh/renderVersions/data.
+
+    public function mount(): void
+    {
+        // GUARD: hanya default bila kosong → nilai dari Session bertahan saat remount.
+        $this->filterTanggal = $this->filterTanggal ?: Carbon::now()->format('d/m/Y');
+        // (idem untuk filterBulan dll. yang di-set default di mount)
+    }
+
+    public function resetFilters(): void
+    {
+        // JANGAN diberi guard — tombol Reset MEMANG harus memaksa default.
+        $this->reset([...]);
+        $this->filterTanggal = Carbon::now()->format('d/m/Y');
+    }
+};
+```
+
+Aturan:
+- **Key namespaced per komponen** (`<komponen>-<properti>`, mis. `daftar-rj-bulanan-filterBulan`) — kalau
+  2 komponen memakai key sama, filter mereka saling bocor.
+- Beri `#[Session]` ke **semua** properti filter/search/pagination; **jangan** ke `autoRefresh`,
+  `renderVersions`, `renderAreas`, atau cache data (mis. `$claims`).
+- **Guard `?:` hanya di `mount()`** untuk properti yang di-set default terhitung (`filterTanggal`/`filterBulan`);
+  `resetFilters()` dibiarkan memaksa default.
+- Bonus: filter juga bertahan lintas reload halaman (sampai logout) — biasanya UX yang diinginkan.
+- Verifikasi: `Livewire::test($comp)->set('filterTanggal','X'); Livewire::test($comp)->get('filterTanggal')` = `X`.
+
+Referensi: `transaksi/apotek` (wrapper) + `antrian-apotek-rj/ugd`, `antrian-ri-resep`; kasir & casemix idem.
+
 ## Migrasi dari pola lama
 
 Acuan migrasi transaksi (merged main `1dee65ef`): 12 tab bar dikonversi, −161 baris. Validasi wajib: `php artisan view:cache` (compile semua Blade dengan resolver komponen asli) lalu `view:clear`.

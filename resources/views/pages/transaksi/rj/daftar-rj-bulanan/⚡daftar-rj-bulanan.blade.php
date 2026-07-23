@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
@@ -17,21 +18,33 @@ new class extends Component {
     /* -------------------------
      | Filter & Pagination state
      * ------------------------- */
+    // Filter dipersist per-tab (Session) supaya tak reset saat pindah tab di /transaksi/casemix
+    // (komponen anak di-unmount/remount oleh @if tab). Key di-namespace 'daftar-rj-bulanan-*'.
+    #[Session(key: 'daftar-rj-bulanan-searchKeyword')]
     public string $searchKeyword = '';
+    #[Session(key: 'daftar-rj-bulanan-filterMode')]
     public string $filterMode = 'bulanan'; // 'bulanan' | 'harian'
+    #[Session(key: 'daftar-rj-bulanan-filterBulan')]
     public string $filterBulan = ''; // format m/Y (mm/yyyy) — dipakai mode bulanan
+    #[Session(key: 'daftar-rj-bulanan-filterTanggal')]
     public string $filterTanggal = ''; // format d/m/Y (dd/mm/yyyy) — dipakai mode harian
+    #[Session(key: 'daftar-rj-bulanan-filterStatus')]
     public string $filterStatus = 'L'; // default: Selesai
+    #[Session(key: 'daftar-rj-bulanan-filterKlaim')]
     public string $filterKlaim = 'BPJS'; // default: BPJS | '' | 'UMUM'
+    #[Session(key: 'daftar-rj-bulanan-filterPoli')]
     public string $filterPoli = '';
+    #[Session(key: 'daftar-rj-bulanan-filterDokter')]
     public string $filterDokter = '';
+    #[Session(key: 'daftar-rj-bulanan-itemsPerPage')]
     public int $itemsPerPage = 25;
 
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
-        $this->filterBulan = Carbon::now()->format('m/Y');
-        $this->filterTanggal = Carbon::now()->format('d/m/Y');
+        // Hanya default bila belum ada nilai tersimpan (Session) — jaga filter saat remount.
+        $this->filterBulan = $this->filterBulan ?: Carbon::now()->format('m/Y');
+        $this->filterTanggal = $this->filterTanggal ?: Carbon::now()->format('d/m/Y');
     }
 
     public function updatedFilterMode(): void

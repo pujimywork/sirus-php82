@@ -343,6 +343,16 @@ Lihat [tabs-pattern.md](tabs-pattern.md) untuk panduan lengkap `x-tabs` / `x-tab
 </x-tabs>
 ```
 
+> **Halaman Wrapper Hub ("model kasir")** — kompose beberapa komponen standalone (yang punya
+> route sendiri) ke satu layar via tab; wrapper tipis (hanya `$activeTab` + `setTab()`), nol
+> logika bisnis. Pilih **Alpine `x-show`** untuk anak ringan (semua mounted, state terjaga —
+> mis. modul-dokumen) vs **server `@if`** untuk anak berat/`wire:poll` (lazy 1 anak — mis.
+> apotek/kasir/casemix). Konsekuensi server-`@if`: anak di-unmount/remount saat ganti tab →
+> `mount()` jalan lagi → **filter ter-reset**. Persist dengan `#[Session]` per properti + guard
+> `mount()` (`$this->x = $this->x ?: default`); JANGAN guard `resetFilters()`. Detail:
+> [tabs-pattern.md](tabs-pattern.md) §"Halaman Wrapper Hub" & §"Persist state anak" + skill
+> `livewire-input-patterns` §9.
+
 ---
 
 ## 7. Tanda Tangan Petugas (`<x-signature.ttd-petugas>`)

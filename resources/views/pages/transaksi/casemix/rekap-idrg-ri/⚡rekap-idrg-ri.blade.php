@@ -8,6 +8,7 @@
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Session;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
@@ -19,14 +20,24 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['rekap-idrg-ri-toolbar'];
 
-    /* Filter & pagination state — pola sama dgn daftar-rj/ri-bulanan */
+    /* Filter & pagination state — pola sama dgn daftar-rj/ri-bulanan.
+     | Dipersist per-tab (Session) supaya tak reset saat pindah tab di /transaksi/casemix
+     | (komponen anak di-unmount/remount oleh @if tab). Key di-namespace 'rekap-idrg-ri-*'. */
+    #[Session(key: 'rekap-idrg-ri-searchKeyword')]
     public string $searchKeyword = '';
+    #[Session(key: 'rekap-idrg-ri-filterMode')]
     public string $filterMode = 'bulanan'; // 'bulanan' | 'harian'
+    #[Session(key: 'rekap-idrg-ri-filterBulan')]
     public string $filterBulan = ''; // m/Y (mm/yyyy)
+    #[Session(key: 'rekap-idrg-ri-filterTanggal')]
     public string $filterTanggal = ''; // d/m/Y (dd/mm/yyyy)
+    #[Session(key: 'rekap-idrg-ri-filterStatus')]
     public string $filterStatus = 'P'; // default: Pulang
+    #[Session(key: 'rekap-idrg-ri-filterKlaim')]
     public string $filterKlaim = 'BPJS'; // BPJS | UMUM | ''
+    #[Session(key: 'rekap-idrg-ri-filterDokter')]
     public string $filterDokter = '';
+    #[Session(key: 'rekap-idrg-ri-itemsPerPage')]
     public int $itemsPerPage = 25;
 
     // Hasil get_claim_data per SEP. key = nomor SEP, value = array hasil parse (+ status/msg).
@@ -41,8 +52,9 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
-        $this->filterBulan = Carbon::now()->format('m/Y');
-        $this->filterTanggal = Carbon::now()->format('d/m/Y');
+        // Hanya default bila belum ada nilai tersimpan (Session) — jaga filter saat remount.
+        $this->filterBulan = $this->filterBulan ?: Carbon::now()->format('m/Y');
+        $this->filterTanggal = $this->filterTanggal ?: Carbon::now()->format('d/m/Y');
     }
 
     public function updatedFilterMode(): void { $this->resetPage(); $this->claims = []; $this->incrementVersion('rekap-idrg-ri-toolbar'); }

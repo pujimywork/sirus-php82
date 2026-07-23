@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Illuminate\Support\Facades\DB;
 use App\Support\OracleLob;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
@@ -14,9 +15,13 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['daftar-kasir-ri-toolbar'];
 
+    #[Session(key: 'daftar-kasir-ri-searchKeyword')]
     public string $searchKeyword = '';
+    #[Session(key: 'daftar-kasir-ri-filterStatus')]
     public string $filterStatus = 'I';
+    #[Session(key: 'daftar-kasir-ri-filterBangsal')]
     public string $filterBangsal = '';
+    #[Session(key: 'daftar-kasir-ri-itemsPerPage')]
     public int $itemsPerPage = 10;
 
     public function mount(): void
