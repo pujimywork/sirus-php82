@@ -16,7 +16,7 @@
 @endphp
 
 @if ($sepVal)
-    <div class="font-mono text-xs text-muted dark:text-gray-300">SEP: {{ $sepVal }}</div>
+    <div class="font-mono text-xs text-emerald-600 dark:text-emerald-400">SEP: {{ $sepVal }}</div>
 @endif
 @if ($spriVal)
     <div class="font-mono text-xs text-purple-600 dark:text-purple-400">SPRI: {{ $spriVal }}</div>

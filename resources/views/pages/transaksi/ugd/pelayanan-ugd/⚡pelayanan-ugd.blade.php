@@ -593,11 +593,7 @@ new class extends Component {
                                             Cara Masuk: {{ $row->entry_desc ?? '-' }}
                                         </div>
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
-                                            @if (!empty($row->vno_sep) && $row->vno_sep !== '-')
-                                                <div class="font-mono text-xs text-muted dark:text-gray-300">
-                                                    {{ $row->vno_sep }}
-                                                </div>
-                                            @endif
+                                            <x-list.sep-spri :sep="$row->vno_sep" />
                                             <div class="text-xs text-muted dark:text-gray-500 leading-tight">
                                                 {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
                                             </div>

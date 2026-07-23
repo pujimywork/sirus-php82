@@ -720,12 +720,7 @@ new class extends Component {
                                                 </div>
                                             @endif --}}
 
-                                            @if (!empty($row->vno_sep) && $row->vno_sep !== '-')
-                                                <div class="flex items-baseline gap-1 text-xs text-body dark:text-gray-300">
-                                                    <span>SEP :</span>
-                                                    <span class="font-mono">{{ $row->vno_sep }}</span>
-                                                </div>
-                                            @endif
+                                            <x-list.sep-spri :sep="$row->vno_sep" />
 
                                             @if (!empty($row->masa_rujukan))
                                                 <div class="px-2 py-1 text-xs text-warning rounded-lg bg-warning/10 dark:bg-warning/20">

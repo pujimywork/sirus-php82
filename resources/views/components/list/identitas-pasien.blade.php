@@ -37,9 +37,24 @@
     <div class="text-base font-medium text-body dark:text-gray-300">
         {{ $regNo ?? '-' }}
     </div>
-    <div class="text-lg font-semibold text-brand dark:text-white">
-        {{ $nama ?? '-' }} /
-        ({{ $sex === 'L' ? 'Laki-Laki' : ($sex === 'P' ? 'Perempuan' : '-') }})
+    <div class="inline-flex items-center gap-1.5 text-lg font-semibold text-brand dark:text-white">
+        <span>{{ $nama ?? '-' }}</span>
+        {{-- Jenis kelamin sebagai simbol: ♂ biru (L) / ♀ rose (P). title utk aksesibilitas. --}}
+        @if ($sex === 'L')
+            <svg class="w-4 h-4 shrink-0 text-blue-500 dark:text-blue-400" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" role="img" aria-label="Laki-Laki">
+                <title>Laki-Laki</title>
+                <circle cx="9.5" cy="14.5" r="5.5" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l5-5m0 0h-5m5 0v5" />
+            </svg>
+        @elseif ($sex === 'P')
+            <svg class="w-4 h-4 shrink-0 text-rose-500 dark:text-rose-400" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" role="img" aria-label="Perempuan">
+                <title>Perempuan</title>
+                <circle cx="12" cy="8.5" r="5.5" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 14v7m-3.5-3.5h7" />
+            </svg>
+        @endif
     </div>
     <div @class(['text-sm text-body dark:text-gray-400']) @if ($collapseUmur) x-show="expanded" x-collapse @endif>
         {{ $tglLahir ?? '-' }}
